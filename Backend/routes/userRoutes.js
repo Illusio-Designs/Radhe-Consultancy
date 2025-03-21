@@ -11,7 +11,10 @@ router.post('/login', userController.loginUser);
 // Route to request a password reset
 router.post('/forgot-password', userController.forgotPassword);
 
-// Route to reset password
-router.post('/reset-password', userController.resetPassword);
+// Route to reset password (for POST requests)
+router.post('/reset-password/:token', userController.resetPassword);
+
+// Route to reset password (for GET requests, optional for testing)
+router.get('/reset-password/:token', userController.resetPassword);
 
 module.exports = router;

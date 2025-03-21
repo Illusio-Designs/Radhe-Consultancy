@@ -29,7 +29,7 @@ app.get('/auth/google/callback',
 );
 
 // User routes
-app.use('/api/users', userRoutes); // Adjust the path as necessary
+app.use('/api/users', userRoutes); // Ensure this is correct
 
 // Sync database
 db.sync()
@@ -43,7 +43,7 @@ db.sync()
         console.error('Error syncing database:', error);
     });
 
-// Basic route
+// Basic route for testing
 app.get('/', (req, res) => {
     res.send('Server is running!');
 });

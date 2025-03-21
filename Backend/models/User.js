@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Adjust the path as necessary
+const sequelize = require('../config/database');
 
 class User extends Model {}
 
@@ -45,6 +45,14 @@ User.init({
         onUpdate: DataTypes.NOW,
     },
     lastLogin: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    resetToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    resetTokenExpiration: {
         type: DataTypes.DATE,
         allowNull: true,
     },
