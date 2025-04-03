@@ -1,155 +1,243 @@
-const User = require('../models/User'); // Adjust the path as necessary
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-const { Op } = require('sequelize');
+const userService = require('../services/userService');
+const { uploadAndCompress } = require('../config/multerConfig');
 
-// JWT secret key
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'; // Use a strong secret key
-
-// Register a new user
-const registerUser = async (req, res) => {
+class UserController {
+  // Get all users
+  async getAllUsers(req, res) {
     try {
-        const { name, email, password, role } = req.body;
-
-        // Check if the user already exists
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create the user
-        const newUser = await User.create({
-            name,
-            email: email.toLowerCase(),
-            password: hashedPassword,
-            role,
-        });
-
-        res.status(201).json(newUser);
+      const users = await userService.getAllUsers();
+      res.json(users);
     } catch (error) {
-        res.status(500).json({ message: 'Error creating user', error });
+      res.status(500).json({ error: error.message });
     }
-};
+  }
 
-// Login user and return JWT
-const loginUser = async (req, res) => {
+  // Get user by ID
+  async getUserById(req, res) {
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ where: { email } });
-
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        // Check password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        // Create JWT token
-        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-
-        res.json({ token, user });
+      const user = await userService.getUserById(req.params.userId);
+      res.json(user);
     } catch (error) {
-        res.status(500).json({ message: 'Error logging in', error });
+      res.status(404).json({ error: error.message });
     }
-};
+  }
 
-// Forgot password
-const forgotPassword = async (req, res) => {
-    const { email } = req.body;
-
+  // Create new user
+  async createUser(req, res) {
     try {
-        const user = await User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // Generate a reset token
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        user.resetToken = resetToken; // Store the token in the database
-        user.resetTokenExpiration = Date.now() + 3600000; // Token valid for 1 hour
-        await user.save();
-
-        console.log('Reset Token:', resetToken);
-
-        // Create the transporter for sending emails
-        const transporter = nodemailer.createTransport({
-            service: 'Gmail', // Use your email service
-            auth: {
-                user: process.env.EMAIL_USER, // Your email
-                pass: process.env.EMAIL_PASS, // Your email password or app password
-            },
-        });
-
-        console.log('Transporter created:', transporter);
-
-        // Create the reset link using environment variables
-        const resetUrl = `${process.env.BASE_URL}${process.env.RESET_URL_PATH}/${resetToken}`;
-
-        console.log('Reset URL:', resetUrl);
-
-        // Send email with reset link
-        await transporter.sendMail({
-            to: email,
-            subject: 'Password Reset',
-            html: `<p>You requested a password reset. Click the link below to reset your password:</p>
-                   <a href="${resetUrl}">${resetUrl}</a>`
-        });
-
-        res.status(200).json({ message: 'Reset link sent to your email' });
+      const user = await userService.createUser(req.body);
+      res.status(201).json(user);
     } catch (error) {
-        console.error('Error during forgot password:', error);
-        res.status(500).json({ message: 'Error during forgot password' });
+      res.status(400).json({ error: error.message });
     }
-};
+  }
 
-// Reset password
-const resetPassword = async (req, res) => {
-    const { token } = req.params;
-    const { password } = req.body;
-
+  // Update user
+  async updateUser(req, res) {
     try {
-        if (!token) {
-            return res.status(400).json({ message: 'Reset token is required' });
-        }
+      const user = await userService.updateUser(req.params.userId, req.body);
+      res.json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 
-        const user = await User.findOne({
-            where: {
-                resetToken: token,
-                resetTokenExpiration: {
-                    [Op.gt]: Date.now()
-                }
+  // Delete user
+  async deleteUser(req, res) {
+    try {
+      await userService.deleteUser(req.params.userId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  // Update profile image
+  async updateProfileImage(req, res) {
+    try {
+      uploadAndCompress('image')(req, res, async () => {
+        const userId = req.params.userId;
+        console.log('Received userId:', userId);
+        if (!userId) {
+          return res.status(400).json({ error: 'User ID is required' });
+        }
+        const user = await userService.updateProfileImage(userId, req.file);
+        res.json(user);
+      });
+    } catch (error) {
+      console.error('Error in updateProfileImage controller:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Get user permissions
+  async getUserPermissions(req, res) {
+    try {
+      const permissions = await userService.getUserPermissions(req.params.userId);
+      res.json(permissions);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+
+  // Forgot Password
+  async forgotPassword(req, res) {
+    try {
+      console.log('Received forgot password request:', req.body);
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      const result = await userService.forgotPassword(email);
+      res.json(result);
+    } catch (error) {
+      console.error('Error in forgotPassword controller:', error);
+      if (error.message === 'User not found') {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      res.status(500).json({ error: 'Failed to process password reset request' });
+    }
+  }
+
+  // Reset Password
+  async resetPassword(req, res) {
+    try {
+      const { token } = req.params;
+      const { password } = req.body;
+      const result = await userService.resetPassword(token, password);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  // Change Password
+  async changePassword(req, res) {
+    try {
+      console.log('Change password request body:', req.body);
+      console.log('User from token:', req.user);
+      const { currentPassword, newPassword } = req.body;
+      const result = await userService.changePassword(req.user.userId, currentPassword, newPassword);
+      res.json(result);
+    } catch (error) {
+      console.error('Error in changePassword:', error);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  // Get Reset Password Form
+  async getResetPasswordForm(req, res) {
+    try {
+      const { token } = req.params;
+      
+      // Verify token exists and is valid
+      const user = await userService.verifyResetToken(token);
+      if (!user) {
+        return res.status(400).json({ error: 'Invalid or expired reset token' });
+      }
+
+      // Send HTML form with token embedded as a data attribute
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Reset Password</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              max-width: 500px;
+              margin: 50px auto;
+              padding: 20px;
             }
-        });
+            .form-group {
+              margin-bottom: 15px;
+            }
+            label {
+              display: block;
+              margin-bottom: 5px;
+            }
+            input {
+              width: 100%;
+              padding: 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+            }
+            button {
+              background-color: #4CAF50;
+              color: white;
+              padding: 10px 15px;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+            }
+            button:hover {
+              background-color: #45a049;
+            }
+            .error {
+              color: red;
+              margin-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>Reset Password</h2>
+          <form id="resetForm" data-token="${token}">
+            <div class="form-group">
+              <label for="password">New Password:</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password:</label>
+              <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <button type="submit">Reset Password</button>
+          </form>
+          <div id="message"></div>
 
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired token' });
-        }
+          <script>
+            document.getElementById('resetForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const password = document.getElementById('password').value;
+              const confirmPassword = document.getElementById('confirmPassword').value;
+              const messageDiv = document.getElementById('message');
+              const token = document.getElementById('resetForm').getAttribute('data-token');
 
-        // Hash the new password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        user.password = hashedPassword; // Update the user's password
-        user.resetToken = null; // Clear the reset token
-        user.resetTokenExpiration = null; // Clear the expiration
-        await user.save(); // Save the updated user
+              if (password !== confirmPassword) {
+                messageDiv.innerHTML = '<p class="error">Passwords do not match</p>';
+                return;
+              }
 
-        res.status(200).json({ message: 'Password has been reset successfully' });
+              try {
+                const response = await fetch('/api/users/reset-password/' + token, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ password }),
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                  messageDiv.innerHTML = '<p style="color: green;">Password reset successful! You can now login with your new password.</p>';
+                  document.getElementById('resetForm').style.display = 'none';
+                } else {
+                  messageDiv.innerHTML = '<p class="error">' + data.error + '</p>';
+                }
+              } catch (error) {
+                messageDiv.innerHTML = '<p class="error">An error occurred. Please try again.</p>';
+              }
+            });
+          </script>
+        </body>
+        </html>
+      `);
     } catch (error) {
-        console.error('Error during reset password:', error);
-        res.status(500).json({ message: 'Error during reset password' });
+      console.error('Error in getResetPasswordForm:', error);
+      res.status(500).json({ error: 'Failed to load reset password form' });
     }
-};
+  }
+}
 
-module.exports = {
-    registerUser,
-    loginUser,
-    forgotPassword,
-    resetPassword,
-};
+module.exports = new UserController(); 
