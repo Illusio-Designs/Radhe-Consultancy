@@ -14,6 +14,9 @@ function Navbar() {
           <Link to="/services" className="nav-link">Services</Link>
           <Link to="/contact" className="nav-link">Contact</Link>
         </div>
+        <div>
+          <Link to="/auth/login" className="nav-link">Login</Link>
+        </div>
       </div>
     </nav>
   );

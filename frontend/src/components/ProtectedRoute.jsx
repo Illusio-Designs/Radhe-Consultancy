@@ -1,16 +1,18 @@
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-function ProtectedRoute({ children }) {
-  // TODO: Replace with actual authentication check
-  const isAuthenticated = false; // This should come from your auth context/state
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
 
-  if (!isAuthenticated) {
-    // Redirect to login page if user is not authenticated
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated()) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Render the protected content if user is authenticated
   return children;
-}
+};
 
 export default ProtectedRoute;

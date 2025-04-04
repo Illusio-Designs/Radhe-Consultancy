@@ -6,14 +6,14 @@ const app = express();
 
 dotenv.config();
 
-const GOOGLE_CLIENT_ID = '581386274432-55uu4p62ml1jai4uvja82d2n3ref9ies.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = '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';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = 'http://localhost:3001/api/auth/google-callback';
 
 const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  'http://localhost:3000/api/vendors/google-callback'
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  REDIRECT_URI
 );
 
 // Generate the URL that will be used for the consent dialog.
@@ -29,14 +29,6 @@ console.log('Authorize this app by visiting this url:', authUrl);
 
 // Serve a simple HTML page with Google login button
 app.get('/', (req, res) => {
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${GOOGLE_CLIENT_ID}&` +
-    `redirect_uri=${REDIRECT_URI}&` +
-    `response_type=code&` +
-    `scope=email profile&` +
-    `access_type=offline&` +
-    `prompt=consent`;
-
   res.send(`
     <html>
       <body>

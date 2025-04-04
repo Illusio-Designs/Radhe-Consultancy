@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Auth.css';
 
 function Register() {
   const [formData, setFormData] = useState({
-    fullName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,14 +23,29 @@ function Register() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match');
       return;
     }
-    // TODO: Implement registration logic
-    console.log('Registration attempt:', formData);
+
+    setLoading(true);
+
+    try {
+      await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      });
+      navigate('/auth/login');
+    } catch (error) {
+      setError(error.response?.data?.error || 'Failed to register');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,14 +54,16 @@ function Register() {
         <h2>Create Account</h2>
         <p className="auth-subtitle">Join Radhe CRM today</p>
         
+        {error && <div className="error-message">{error}</div>}
+        
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="fullName">Full Name</label>
+            <label htmlFor="username">Username</label>
             <input
               type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               required
             />
@@ -83,7 +105,9 @@ function Register() {
             />
           </div>
           
-          <button type="submit" className="auth-button">Create Account</button>
+          <button type="submit" className="auth-button" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
         
         <p className="auth-redirect">
