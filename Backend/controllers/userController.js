@@ -24,11 +24,29 @@ class UserController {
 
   // Create new user
   async createUser(req, res) {
+    const { name, email, password, role } = req.body;
+
+    // Log incoming data for debugging
+    console.log('Incoming user data:', req.body);
+
+    // Check if the role is valid
+    const validRoles = ['Admin', 'User']; // Ensure these match the role names in the database
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Role not found' });
+    }
+
+    // Proceed with user creation logic
     try {
-      const user = await userService.createUser(req.body);
-      res.status(201).json(user);
+      const newUser = await userService.createUser({
+        username: name,
+        email,
+        password,
+        role_id: role === 'Admin' ? 1 : 2 // Assuming Admin is role_id 1 and User is role_id 2
+      });
+      res.status(201).json(newUser);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: 'Failed to create user' });
     }
   }
 

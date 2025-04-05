@@ -1,5 +1,6 @@
 import { Outlet, Link } from 'react-router-dom';
 import './DashboardLayout.css';
+import UserList from '../pages/dashboard/UserList';
 
 function DashboardLayout() {
   return (
@@ -11,6 +12,7 @@ function DashboardLayout() {
         <nav className="sidebar-nav">
           <ul>
             <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/dashboard/users">User List</Link></li>
             <li><Link to="/dashboard/customers">Customers</Link></li>
             <li><Link to="/dashboard/leads">Leads</Link></li>
             <li><Link to="/dashboard/reports">Reports</Link></li>

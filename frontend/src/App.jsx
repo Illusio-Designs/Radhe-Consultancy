@@ -26,6 +26,7 @@ import ChangePassword from './pages/auth/ChangePassword';
 
 // Vendor Pages
 import VendorList from './pages/dashboard/vendor/VendorList';
+import UserList from './pages/dashboard/UserList';
 
 function App() {
   return (
@@ -34,10 +35,10 @@ function App() {
         <Router>
           <Routes>
             {/* Public Routes */}
-              <Route index element={<Home />} />
-              <Route path="about" element={<div>About Page</div>} />
-              <Route path="services" element={<div>Services Page</div>} />
-              <Route path="contact" element={<div>Contact Page</div>} />
+            <Route index element={<Home />} />
+            <Route path="about" element={<div>About Page</div>} />
+            <Route path="services" element={<div>Services Page</div>} />
+            <Route path="contact" element={<div>Contact Page</div>} />
 
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
@@ -55,6 +56,7 @@ function App() {
               }
             >
               <Route index element={<Dashboard />} />
+              <Route path="users" element={<UserList />} />
               <Route path="customers" element={<div>Customers Page</div>} />
               <Route path="leads" element={<div>Leads Page</div>} />
               <Route path="reports" element={<div>Reports Page</div>} />

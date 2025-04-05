@@ -107,7 +107,28 @@ export const userAPI = {
   deleteUser: async (userId) => {
     const response = await api.delete(`/users/${userId}`);
     return response.data;
-  }
+  },
+
+  createUser: async (userData) => {
+    const response = await api.post('/users', userData);
+    return response.data;
+  },
+
+  updateProfileImage: async (userId, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await api.post(`/users/${userId}/profile-image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  getUserPermissions: async (userId) => {
+    const response = await api.get(`/users/${userId}/permissions`);
+    return response.data;
+  },
 };
 
 // Vendor API
