@@ -15,6 +15,7 @@ function DashboardLayout() {
             <li><Link to="/dashboard/leads">Leads</Link></li>
             <li><Link to="/dashboard/reports">Reports</Link></li>
             <li><Link to="/dashboard/settings">Settings</Link></li>
+            <li><Link to="/dashboard/vendors">Vendor List</Link></li>
           </ul>
         </nav>
       </aside>

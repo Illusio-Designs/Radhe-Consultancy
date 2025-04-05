@@ -26,7 +26,6 @@ import ChangePassword from './pages/auth/ChangePassword';
 
 // Vendor Pages
 import VendorList from './pages/dashboard/vendor/VendorList';
-import VendorCreate from './pages/dashboard/vendor/VendorCreate';
 
 function App() {
   return (
@@ -61,7 +60,6 @@ function App() {
               <Route path="reports" element={<div>Reports Page</div>} />
               <Route path="settings" element={<div>Settings Page</div>} />
               <Route path="vendors" element={<VendorList />} />
-              <Route path="vendors/create" element={<VendorCreate />} />
               <Route path="change-password" element={<ChangePassword />} />
               <Route path="profile" element={<Profile />} />
             </Route>
