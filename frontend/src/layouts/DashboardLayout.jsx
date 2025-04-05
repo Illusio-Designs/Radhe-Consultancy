@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import './DashboardLayout.css';
 
 function DashboardLayout() {
@@ -10,11 +10,11 @@ function DashboardLayout() {
         </div>
         <nav className="sidebar-nav">
           <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/dashboard/customers">Customers</a></li>
-            <li><a href="/dashboard/leads">Leads</a></li>
-            <li><a href="/dashboard/reports">Reports</a></li>
-            <li><a href="/dashboard/settings">Settings</a></li>
+            <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/dashboard/customers">Customers</Link></li>
+            <li><Link to="/dashboard/leads">Leads</Link></li>
+            <li><Link to="/dashboard/reports">Reports</Link></li>
+            <li><Link to="/dashboard/settings">Settings</Link></li>
           </ul>
         </nav>
       </aside>
@@ -25,7 +25,9 @@ function DashboardLayout() {
           </div>
           <div className="header-actions">
             <button className="notifications-btn">Notifications</button>
-            <button className="profile-btn">Profile</button>
+            <Link to="/dashboard/profile">
+              <button className="profile-btn">Profile</button>
+            </Link>
           </div>
         </header>
         <main className="dashboard-content">

@@ -15,6 +15,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import Profile from './pages/auth/Profile';
 
 // Public Pages
 import Home from './pages/Home';
@@ -62,6 +63,7 @@ function App() {
               <Route path="vendors" element={<VendorList />} />
               <Route path="vendors/create" element={<VendorCreate />} />
               <Route path="change-password" element={<ChangePassword />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
 
             {/* Redirect to home for unknown routes */}
