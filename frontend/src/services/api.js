@@ -61,6 +61,11 @@ export const authAPI = {
 
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
+  },
+
+  forgotPassword: async (email) => {
+    const response = await api.post('/users/forgot-password', { email });
+    return response.data;
   }
 };
 

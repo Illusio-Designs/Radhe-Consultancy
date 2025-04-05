@@ -18,9 +18,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Set Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers
+// Temporarily remove COOP for testing
 app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  // res.setHeader('Cross-Origin-Opener-Policy', 'same-origin'); // Commented out for testing
   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
   next();
 });

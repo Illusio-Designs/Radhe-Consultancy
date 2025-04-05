@@ -94,10 +94,16 @@ function Login() {
           onFailure={handleGoogleLoginFailure}
           cookiePolicy={'single_host_origin'}
         />
-
+        <p className="auth-redirect">
+          <Link to="/auth/forgot-password">Forgot Password?</Link>
+        </p>
+        <p className="auth-redirect">
+          <Link to="/dashboard/change-password">Change Password</Link>
+        </p>
         <p className="auth-redirect">
           Don't have an account? <Link to="/auth/register">Sign up</Link>
         </p>
+        
       </div>
     </div>
   );

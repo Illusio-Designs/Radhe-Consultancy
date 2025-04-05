@@ -13,12 +13,15 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 // Public Pages
 import Home from './pages/Home';
 
 // Dashboard Pages
 import Dashboard from './pages/dashboard/Dashboard';
+import ChangePassword from './pages/auth/ChangePassword';
 
 // Vendor Pages
 import VendorList from './pages/dashboard/vendor/VendorList';
@@ -39,6 +42,8 @@ function App() {
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/register" element={<Register />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/reset-password/:token" element={<ResetPassword />} />
 
             {/* Protected Dashboard Routes */}
             <Route
@@ -56,6 +61,7 @@ function App() {
               <Route path="settings" element={<div>Settings Page</div>} />
               <Route path="vendors" element={<VendorList />} />
               <Route path="vendors/create" element={<VendorCreate />} />
+              <Route path="change-password" element={<ChangePassword />} />
             </Route>
 
             {/* Redirect to home for unknown routes */}
