@@ -6,8 +6,8 @@ const { authenticateToken } = require('../middleware/auth');
 // Apply authentication middleware to all routes
 router.use(authenticateToken);
 
-// Create new vendor
-router.post('/', vendorController.createVendor);
+// Create new vendor (either company or consumer)
+router.post('/', vendorController.createVendor); // This should handle both types
 
 // Get vendor by ID
 router.get('/:vendorId', vendorController.getVendorById);
@@ -23,5 +23,8 @@ router.delete('/:vendorId', vendorController.deleteVendor);
 
 // Google login for vendors
 router.post('/google-login', vendorController.googleLogin);
+
+// Create new company vendor
+router.post('/company-vendors', vendorController.createCompanyVendor);
 
 module.exports = router; 

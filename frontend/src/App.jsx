@@ -23,6 +23,7 @@ import Home from './pages/Home';
 // Dashboard Pages
 import Dashboard from './pages/dashboard/Dashboard';
 import ChangePassword from './pages/auth/ChangePassword';
+import CompanyVendorList from './pages/dashboard/CompanyVendorList';
 
 // Vendor Pages
 import VendorList from './pages/dashboard/vendor/VendorList';
@@ -62,6 +63,7 @@ function App() {
               <Route path="reports" element={<div>Reports Page</div>} />
               <Route path="settings" element={<div>Settings Page</div>} />
               <Route path="vendors" element={<VendorList />} />
+              <Route path="company-vendors" element={<CompanyVendorList />} />
               <Route path="change-password" element={<ChangePassword />} />
               <Route path="profile" element={<Profile />} />
             </Route>

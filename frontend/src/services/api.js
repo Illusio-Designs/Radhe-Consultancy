@@ -164,4 +164,26 @@ export const vendorAPI = {
   }
 };
 
+export const companyVendorAPI = {
+  createCompanyVendor: async (vendorData) => {
+    const response = await api.post('/vendors', vendorData);
+    return response.data;
+  },
+
+  getAllCompanyVendors: async () => {
+    const response = await api.get('/vendors');
+    return response.data;
+  },
+
+  updateCompanyVendor: async (vendorId, vendorData) => {
+    const response = await api.put(`/vendors/${vendorId}`, vendorData);
+    return response.data;
+  },
+
+  deleteCompanyVendor: async (vendorId) => {
+    const response = await api.delete(`/vendors/${vendorId}`);
+    return response.data;
+  }
+};
+
 export default api; 

@@ -1,7 +1,7 @@
 const vendorService = require('../services/vendorService');
 
 class VendorController {
-  // Create new vendor
+  // Create new vendor (company or consumer)
   async createVendor(req, res) {
     try {
       const vendor = await vendorService.createVendor(req.body);
@@ -59,6 +59,16 @@ class VendorController {
       res.json(vendor);
     } catch (error) {
       res.status(401).json({ error: error.message });
+    }
+  }
+
+  // Create new company vendor
+  async createCompanyVendor(req, res) {
+    try {
+      const vendor = await vendorService.createCompanyVendor(req.body);
+      res.status(201).json(vendor);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   }
 }

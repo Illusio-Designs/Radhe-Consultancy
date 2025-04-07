@@ -9,10 +9,15 @@ class VendorService {
   async createVendor(vendorData) {
     const { vendor_type, ...details } = vendorData;
 
+    // Validate vendor type
+    if (!['Company', 'Consumer'].includes(vendor_type)) {
+      throw new Error('Invalid vendor type');
+    }
+
     // Create base vendor record
     const vendor = await Vendor.create({ vendor_type });
 
-    // Create specific vendor type record
+    // Validate and create specific vendor type record
     if (vendor_type === 'Company') {
       if (!isValidEmail(details.company_email)) {
         throw new Error('Invalid company email');

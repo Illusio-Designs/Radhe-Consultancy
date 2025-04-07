@@ -10,20 +10,24 @@ function VendorList() {
   const [currentVendor, setCurrentVendor] = useState(null);
 
   useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const data = await vendorAPI.getAllVendors(); // Fetch all vendors
-        console.log('Vendors fetched:', data); // Log the fetched vendors
-        setVendors(data); // Set the vendors state
-      } catch (err) {
-        setError('Failed to fetch vendors');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVendors();
   }, []);
+
+  const fetchVendors = async () => {
+    try {
+      const data = await vendorAPI.getAllVendors();
+      console.log('Vendors fetched:', data);
+      // Filter only consumer vendors and ensure ConsumerVendor data exists
+      const consumerVendors = data.filter(vendor => 
+        vendor.vendor_type === 'Consumer' && vendor.ConsumerVendor !== null
+      );
+      setVendors(consumerVendors);
+    } catch (err) {
+      setError('Failed to fetch vendors');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (vendorId) => {
     const vendorToEdit = vendors.find(vendor => vendor.vendor_id === vendorId);
@@ -52,14 +56,15 @@ function VendorList() {
 
   return (
     <div>
-      <h1>Vendor List</h1>
+      <h1>Consumer Vendors</h1>
       <button onClick={() => setIsModalOpen(true)}>Add Vendor</button>
       <table>
         <thead>
           <tr>
-            <th>Vendor ID</th>
-            <th>Vendor Name</th>
-            <th>Vendor Type</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Address</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -67,9 +72,10 @@ function VendorList() {
           {vendors.length > 0 ? (
             vendors.map(vendor => (
               <tr key={vendor.vendor_id}>
-                <td>{vendor.vendor_id}</td>
-                <td>{vendor.ConsumerVendor ? vendor.ConsumerVendor.name : 'Unnamed Vendor'}</td>
-                <td>{vendor.vendor_type}</td>
+                <td>{vendor.ConsumerVendor.name}</td>
+                <td>{vendor.ConsumerVendor.email}</td>
+                <td>{vendor.ConsumerVendor.phone_number}</td>
+                <td>{vendor.ConsumerVendor.contact_address}</td>
                 <td>
                   <button onClick={() => handleEdit(vendor.vendor_id)}>Edit</button>
                   <button onClick={() => handleDelete(vendor.vendor_id)}>Delete</button>
@@ -78,7 +84,7 @@ function VendorList() {
             ))
           ) : (
             <tr>
-              <td colSpan="4">No vendors found.</td> // Message if no vendors are available
+              <td colSpan="5">No consumer vendors found.</td>
             </tr>
           )}
         </tbody>
