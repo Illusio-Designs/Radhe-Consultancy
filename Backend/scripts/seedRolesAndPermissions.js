@@ -1,4 +1,4 @@
-const { Role, RolePermission } = require('../models');
+const { Role, Permission, RolePermission } = require('../models');
 
 async function seedRolesAndPermissions() {
   try {

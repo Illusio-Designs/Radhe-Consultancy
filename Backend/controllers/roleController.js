@@ -1,0 +1,161 @@
+const { Role, Permission, RolePermission } = require('../models');
+const { Op } = require('sequelize');
+
+class RoleController {
+  // Create new role
+  async createRole(req, res) {
+    try {
+      const { role_name, description, permissions } = req.body;
+      
+      // Check if role already exists
+      const existingRole = await Role.findOne({ where: { role_name } });
+      if (existingRole) {
+        return res.status(400).json({ 
+          error: 'Role already exists',
+          existingRole: {
+            role_id: existingRole.role_id,
+            role_name: existingRole.role_name,
+            description: existingRole.description
+          }
+        });
+      }
+
+      // Create new role
+      const role = await Role.create({
+        role_name,
+        description
+      });
+
+      // If permissions are provided, assign them
+      if (permissions && permissions.length > 0) {
+        const permissionRecords = await Permission.findAll({
+          where: {
+            permission_id: permissions
+          }
+        });
+
+        await role.addPermissions(permissionRecords);
+      }
+
+      // Fetch the created role with its permissions
+      const createdRole = await Role.findByPk(role.role_id, {
+        include: [{
+          model: Permission,
+          through: { attributes: [] }
+        }]
+      });
+
+      res.status(201).json(createdRole);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Get all roles with their permissions
+  async getAllRoles(req, res) {
+    try {
+      const roles = await Role.findAll({
+        include: [{
+          model: Permission,
+          through: { attributes: [] }
+        }]
+      });
+      res.json(roles);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Update role
+  async updateRole(req, res) {
+    try {
+      const { role_id } = req.params;
+      const { role_name, description, permissions } = req.body;
+
+      const role = await Role.findByPk(role_id);
+      if (!role) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      // Check if new role_name already exists for a different role
+      if (role_name && role_name !== role.role_name) {
+        const existingRole = await Role.findOne({ 
+          where: { 
+            role_name,
+            role_id: { [Op.ne]: role_id }
+          } 
+        });
+        if (existingRole) {
+          return res.status(400).json({ error: 'Role name already exists' });
+        }
+      }
+
+      // Update role details
+      await role.update({
+        role_name,
+        description
+      });
+
+      // Update permissions if provided
+      if (permissions) {
+        const permissionRecords = await Permission.findAll({
+          where: {
+            permission_id: permissions
+          }
+        });
+
+        await role.setPermissions(permissionRecords);
+      }
+
+      // Fetch the updated role with its permissions
+      const updatedRole = await Role.findByPk(role_id, {
+        include: [{
+          model: Permission,
+          through: { attributes: [] }
+        }]
+      });
+
+      res.json(updatedRole);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Delete role
+  async deleteRole(req, res) {
+    try {
+      const { role_id } = req.params;
+
+      const role = await Role.findByPk(role_id);
+      if (!role) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      // Check if role is being used by any users
+      const usersWithRole = await role.countUsers();
+      if (usersWithRole > 0) {
+        return res.status(400).json({ 
+          error: 'Cannot delete role. It is assigned to users.',
+          usersCount: usersWithRole
+        });
+      }
+
+      await role.destroy();
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Get all permissions
+  async getAllPermissions(req, res) {
+    try {
+      const permissions = await Permission.findAll();
+      res.json(permissions);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+}
+
+module.exports = new RoleController();

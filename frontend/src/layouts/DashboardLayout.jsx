@@ -13,10 +13,10 @@ function DashboardLayout() {
           <ul>
             <li><Link to="/dashboard">Dashboard</Link></li>
             <li><Link to="/dashboard/users">User List</Link></li>
-            <li><Link to="/dashboard/customers">Customers</Link></li>
-            <li><Link to="/dashboard/leads">Leads</Link></li>
-            <li><Link to="/dashboard/reports">Reports</Link></li>
-            <li><Link to="/dashboard/settings">Settings</Link></li>
+            {/* <li><Link to="/dashboard/customers">Customers</Link></li> */}
+            {/* <li><Link to="/dashboard/leads">Leads</Link></li> */}
+            {/* <li><Link to="/dashboard/reports">Reports</Link></li> */}
+            {/* <li><Link to="/dashboard/settings">Settings</Link></li> */}
             <li><Link to="/dashboard/vendors">Vendor List</Link></li>
             <li><Link to="/dashboard/company-vendors">Company Vendors</Link></li>
           </ul>

@@ -13,6 +13,7 @@ const CompanyVendorList = () => {
     company_address: '',
     contact_number: '',
     company_email: '',
+    company_website: '',
     gst_number: '',
     pan_number: '',
     firm_type: '',
@@ -57,6 +58,7 @@ const CompanyVendorList = () => {
       company_address: '',
       contact_number: '',
       company_email: '',
+      company_website: '',
       gst_number: '',
       pan_number: '',
       firm_type: '',
@@ -73,6 +75,7 @@ const CompanyVendorList = () => {
       company_address: vendor.CompanyVendor.company_address || '',
       contact_number: vendor.CompanyVendor.contact_number || '',
       company_email: vendor.CompanyVendor.company_email || '',
+      company_website: vendor.CompanyVendor.company_website || '',
       gst_number: vendor.CompanyVendor.gst_number || '',
       pan_number: vendor.CompanyVendor.pan_number || '',
       firm_type: vendor.CompanyVendor.firm_type || '',
@@ -97,6 +100,7 @@ const CompanyVendorList = () => {
             <th>Owner Name</th>
             <th>Contact Number</th>
             <th>Email</th>
+            <th>Website</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -107,6 +111,7 @@ const CompanyVendorList = () => {
               <td>{vendor.CompanyVendor.owner_name}</td>
               <td>{vendor.CompanyVendor.contact_number}</td>
               <td>{vendor.CompanyVendor.company_email}</td>
+              <td>{vendor.CompanyVendor.company_website}</td>
               <td>
                 <button onClick={() => handleEdit(vendor)}>Edit</button>
                 <button onClick={() => handleDelete(vendor.vendor_id)}>Delete</button>
