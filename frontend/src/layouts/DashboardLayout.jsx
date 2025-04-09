@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import Footer from '../components/dashboard/Footer';
@@ -39,18 +39,6 @@ function DashboardLayout() {
         <div className="sidebar-header">
           <h2>Radhe CRM</h2>
         </div>
-        <nav className="sidebar-nav">
-          <ul>
-            <li><Link to="/dashboard">Dashboard</Link></li>
-            <li><Link to="/dashboard/users">User List</Link></li>
-            {/* <li><Link to="/dashboard/customers">Customers</Link></li> */}
-            {/* <li><Link to="/dashboard/leads">Leads</Link></li> */}
-            {/* <li><Link to="/dashboard/reports">Reports</Link></li> */}
-            {/* <li><Link to="/dashboard/settings">Settings</Link></li> */}
-            <li><Link to="/dashboard/vendors">Vendor List</Link></li>
-            <li><Link to="/dashboard/company-vendors">Company Vendors</Link></li>
-          </ul>
-        </nav>
       </aside>
       <div className={`dashboard-content ${isCollapsed ? 'content-collapsed' : ''}`}>
           <Header 
