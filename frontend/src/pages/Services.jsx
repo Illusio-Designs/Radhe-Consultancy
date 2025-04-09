@@ -1,5 +1,7 @@
 import React from 'react';
 import '../styles/Services.css';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Services = () => {
   const servicesList = [
@@ -22,6 +24,8 @@ const Services = () => {
   ];
 
   return (
+    <>
+    <Navbar />
     <div className="services-container">
       <h1>Our Services</h1>
       <div className="services-grid">
@@ -33,6 +37,8 @@ const Services = () => {
         ))}
       </div>
     </div>
+    <Footer />
+    </>
   );
 };
 

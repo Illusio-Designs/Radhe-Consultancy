@@ -1,8 +1,14 @@
 import React from 'react';
 import '../styles/Contact.css';
+import Navbar from '../components/Navbar';
+import Footer from'../components/Footer';
 
 const Contact = () => {
   return (
+    <div>
+      <Navbar />
+     
+      
     <div className="contact-container">
       <h1>Contact Us</h1>
       <div className="contact-content">
@@ -36,6 +42,8 @@ const Contact = () => {
           <button type="submit" className="submit-button">Send Message</button>
         </form>
       </div>
+    </div>
+    <Footer />
     </div>
   );
 };

@@ -1,0 +1,196 @@
+.sidebar {
+  background: linear-gradient(135deg, rgba(31, 79, 156, 0.85) 0%, rgba(14, 165, 233, 0.85) 100%);
+  color: white;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 16rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sidebar-collapsed {
+  width: 4rem;
+}
+
+.sidebar-expanded {
+  width: 16rem;
+}
+
+.logo-container {
+  padding: 1.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed .logo-container {
+  padding: 1.5rem 0.5rem;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-collapsed .logo-text {
+  font-size: 1.25rem;
+  width: 100%;
+}
+
+.sidebar-mobile-open {
+  transform: translateX(0);
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: -12px;
+  top: 4.5rem;
+  background-color: #1F4F9C;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1001;
+}
+
+.sidebar-toggle:hover {
+  background-color: #1a4280;
+  transform: scale(1.1);
+}
+
+.sidebar-logo {
+  padding: 1rem;
+  text-align: center;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1rem 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  border-radius: 1rem;
+  margin: 0.375rem 0.875rem;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  letter-spacing: 0.025em;
+}
+
+.sidebar-collapsed .sidebar-nav-item {
+  justify-content: center;
+  padding: 0.875rem;
+  margin: 0.25rem 0.5rem;
+  width: auto;
+}
+
+.sidebar-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.sidebar-collapsed .sidebar-nav-item:hover {
+  transform: scale(1.05);
+}
+
+.sidebar-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-nav-icon {
+  font-size: 1.25rem;
+  min-width: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-nav-label {
+  margin-left: 1rem;
+  white-space: nowrap;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  opacity: 1;
+  visibility: visible;
+}
+
+.sidebar-collapsed .sidebar-nav-label {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+  margin-left: 0;
+  position: absolute;
+}
+
+.mobile-menu-button {
+  display: none;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.mobile-menu-button:hover {
+  transform: scale(1.1);
+}
+
+/* Only keeping mobile-specific styles since most styling is handled by Tailwind */
+
+
+/* Tooltip for collapsed sidebar */
+.sidebar-collapsed .sidebar-nav-item {
+  position: relative;
+}
+
+.sidebar-collapsed .sidebar-nav-item:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a4280;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  margin-left: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1002;
+}

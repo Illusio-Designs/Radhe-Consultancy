@@ -1,8 +1,12 @@
 import React from 'react';
 import '../styles/About.css';
+import Navbar from '../components/Navbar';
+import Footer from'../components/Footer';
 
 const About = () => {
   return (
+    <>
+    <Navbar />
     <div className="about-container">
       <h1>About Radhe Consultancy</h1>
       <section className="about-content">
@@ -25,6 +29,8 @@ const About = () => {
         </div>
       </section>
     </div>
+    <Footer />
+    </>
   );
 };
 
