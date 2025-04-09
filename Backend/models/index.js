@@ -13,14 +13,17 @@ const ConsumerVendor = require('./consumerVendorModel');
 User.belongsTo(Role, { foreignKey: 'role_id' });
 Role.hasMany(User, { foreignKey: 'role_id' });
 
-// Many-to-many relationship between Role and Permission using RolePermission
+// Many-to-many relationship between Role and Permission
 Role.belongsToMany(Permission, { 
   through: RolePermission,
-  foreignKey: 'role_id'
+  foreignKey: 'role_id',
+  otherKey: 'permission_id'
 });
+
 Permission.belongsToMany(Role, { 
   through: RolePermission,
-  foreignKey: 'permission_id'
+  foreignKey: 'permission_id',
+  otherKey: 'role_id'
 });
 
 Vendor.hasOne(CompanyVendor, { foreignKey: 'vendor_id' });

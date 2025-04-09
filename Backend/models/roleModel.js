@@ -9,7 +9,17 @@ const Role = sequelize.define('Role', {
   },
   role_name: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    unique: true
+  },
+  description: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
   },
   created_at: {
     type: DataTypes.DATE,
@@ -23,8 +33,9 @@ const Role = sequelize.define('Role', {
   }
 }, {
   tableName: 'Roles',
-  timestamps: false,
-  underscored: true
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 module.exports = Role; 
