@@ -49,7 +49,7 @@ function DashboardLayout() {
             onProfileAction={handleProfileAction}
             profileMenuItems={profileMenuItems}
           />
-        <main className="dashboard-outlet">
+        <main className="dashboard-outlet sidebar-collapsed">
           <Outlet />
         </main>
         <footer className="dashboard-footer">

@@ -1,12 +1,13 @@
 .dashboard-page {
-  padding: 2rem;
-  max-width: 1800px;
   margin: 0 auto;
   animation: fadeIn 0.3s ease;
   background: #f8fafc;
   min-height: calc(100vh - 7rem);
 }
 
+.dashboard-page.sidebar-collapsed {
+  width: calc(100% - 7rem);
+}
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

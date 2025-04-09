@@ -84,7 +84,7 @@
 
 .header.sidebar-collapsed {
   margin-left: 4rem;
-  width: calc(100% - 4rem);
+  width: calc(100% - 7rem);
 .sidebar-collapsed {
     left: 0;
     margin-left: 0;

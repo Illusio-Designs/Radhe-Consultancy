@@ -17,23 +17,29 @@
   height: 100vh;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
 }
 
 .dashboard-content.content-collapsed {
   padding-left: 4rem;
 }
 
-
+.dashboard-outlet.sidebar-collapsed {
+  width: calc(100% - 4rem);
+  padding-left: 5rem;
+}
 
 .dashboard-outlet {
-  padding: 2rem;
+  padding: 2rem 2rem 4rem;
   background-color: #f8fafc;
   flex: 1;
   overflow-y: auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-left: 0;
+  width: calc(100% - 20rem);
+  scrollbar-width: none;
 }
+
+
 
 .sidebar-nav a:hover {
   background-color: rgba(255, 255, 255, 0.1);
