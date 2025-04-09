@@ -123,11 +123,15 @@
   gap: 0.5rem;
 }
 
-.auth-redirect {
+/* .auth-redirect {
   text-align: center;
   margin-top: 1.5rem;
   color: var(--text-secondary);
   font-size: 0.95rem;
+} */
+
+.google-login{
+  margin-top: 20px !important;
 }
 
 .auth-redirect a {
@@ -142,11 +146,24 @@
   text-decoration: underline;
 }
 
+.success-message {
+  background-color: #d1fae5;
+  color: #047857;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+
 /* Google Login Button Styling */
-div[class*='google-login'] {
+/* div[class*='google-login'] {
   margin-top: 2rem;
   width: 100% !important;
-}
+} */
 
 /* Responsive adjustments */
 @media (max-width: 480px) {
