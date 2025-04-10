@@ -6,6 +6,15 @@ require('dotenv').config();
 
 const app = express();
 
+// Serve static files from the public directory
+app.use(express.static('public', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.woff2')) {
+      res.setHeader('Content-Type', 'font/woff2');
+    }
+  }
+}));
+
 // Middleware
 const corsOptions = {
   origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'], // Add your allowed origins here
@@ -58,4 +67,4 @@ const startServer = async () => {
   }
 };
 
-startServer(); 
+startServer();

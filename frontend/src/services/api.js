@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -10,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor to add auth token
+// Add request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -19,9 +18,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export const authAPI = {
@@ -48,9 +45,18 @@ export const authAPI = {
     return response.data;
   },
 
-  googleLogin: async (idToken) => {
-    const response = await api.post('/auth/google-login', { idToken });
-    return response.data;
+  getCurrentUser: () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  },
+
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 };
 

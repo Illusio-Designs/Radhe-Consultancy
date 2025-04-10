@@ -73,7 +73,12 @@
 }
 
 @font-face {
-  font-family: 'Roboto';
-  src: url('https://fonts.gstatic.com/s/roboto/v18/KFOlCnqEu92Fr1MmEU9fBBc9.ttf') format('truetype');
-  font-display: swap; /* This will help with loading */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/inter.woff2') format('woff2');
+}
+
+body {
+  font-family: 'Inter', sans-serif;
 }
