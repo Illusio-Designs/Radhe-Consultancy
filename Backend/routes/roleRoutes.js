@@ -1,13 +1,9 @@
 const express = require('express');
-const router = express.Router();
 const roleController = require('../controllers/roleController');
-const { authenticateToken } = require('../middleware/auth');
 
-// Apply authentication middleware to all routes
-router.use(authenticateToken);
+const router = express.Router();
 
-// Role management routes
-router.post('/', roleController.createRole);
+router.post('/assign-role', roleController.assignRole);
 router.get('/', roleController.getAllRoles);
 router.put('/:role_id', roleController.updateRole);
 router.delete('/:role_id', roleController.deleteRole);

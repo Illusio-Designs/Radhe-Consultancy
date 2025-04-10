@@ -1,7 +1,60 @@
 const vendorService = require('../services/vendorService');
-const { Vendor, CompanyVendor, ConsumerVendor, Role } = require('../models');
+const { Vendor, Company, Consumer, User, UserType } = require('../models');
 
 class VendorController {
+  async createCompany(req, res) {
+    try {
+      const { email, companyData } = req.body;
+      
+      // Verify user exists and is Office type
+      const user = await User.findOne({ 
+        where: { email },
+        include: [UserType]
+      });
+
+      if (!user || user.UserType.type_name !== 'Office') {
+        return res.status(403).json({ error: 'Only Office users can create companies' });
+      }
+
+      // Create vendor and company
+      const vendor = await Vendor.create({ vendor_type: 'Company' });
+      const company = await Company.create({
+        vendor_id: vendor.vendor_id,
+        ...companyData
+      });
+
+      res.status(201).json(company);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async createConsumer(req, res) {
+    try {
+      const { email, consumerData } = req.body;
+      
+      // Verify user exists and is Office type
+      const user = await User.findOne({ 
+        where: { email },
+        include: [UserType]
+      });
+
+      if (!user || user.UserType.type_name !== 'Office') {
+        return res.status(403).json({ error: 'Only Office users can create consumers' });
+      }
+
+      // Create vendor and consumer
+      const vendor = await Vendor.create({ vendor_type: 'Consumer' });
+      const consumer = await Consumer.create({
+        vendor_id: vendor.vendor_id,
+        ...consumerData
+      });
+
+      res.status(201).json(consumer);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
   // Create new vendor (company or consumer)
   async createVendor(req, res) {
     try {
@@ -127,4 +180,4 @@ class VendorController {
   }
 }
 
-module.exports = new VendorController(); 
+module.exports = new VendorController();

@@ -1,4 +1,5 @@
 const userService = require('../services/userService');
+const { User, Role } = require('../models');
 const { uploadAndCompress } = require('../config/multerConfig');
 
 class UserController {
@@ -256,6 +257,29 @@ class UserController {
       res.status(500).json({ error: 'Failed to load reset password form' });
     }
   }
+
+  async assignRole(req, res) {
+    try {
+      const { user_id, role_id } = req.body;
+      
+      // Verify role exists
+      const role = await Role.findByPk(role_id);
+      if (!role) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      // Update user role
+      const user = await User.findByPk(user_id);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      await user.update({ role_id });
+      res.json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 }
 
-module.exports = new UserController(); 
+module.exports = new UserController();

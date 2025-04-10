@@ -1,5 +1,5 @@
-const { Role, Permission, RolePermission } = require('../models');
 const { Op } = require('sequelize');
+const { Role, User, UserType, Permission, } = require('../models');
 
 class RoleController {
   // Create new role
@@ -154,6 +154,32 @@ class RoleController {
       res.json(permissions);
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  async assignRole(req, res) {
+    try {
+      const { user_id, role_id } = req.body;
+      
+      // Verify user exists
+      const user = await User.findByPk(user_id, {
+        include: [UserType]
+      });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Verify role exists
+      const role = await Role.findByPk(role_id);
+      if (!role) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      // Update user role
+      await user.update({ role_id });
+      res.json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   }
 }
