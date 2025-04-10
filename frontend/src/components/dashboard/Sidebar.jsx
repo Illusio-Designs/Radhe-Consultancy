@@ -62,7 +62,10 @@ const Sidebar = ({ onCollapse }) => {
         },
       ],
     },
+    { path: "/insurance", icon: <BiGroup />, label: "Insurance" },
+    
   ];
+  
 
   const isActive = (path) => location.pathname.startsWith(path);
 

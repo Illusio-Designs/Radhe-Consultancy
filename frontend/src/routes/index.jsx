@@ -20,6 +20,7 @@ const Dashboard = lazy(() => import('../pages/dashboard/home/Dashboard'));
 const User = lazy(() => import('../pages/dashboard/users/User'));
 const Company = lazy(() => import('../pages/dashboard/vendors/Company'));
 const Consumer = lazy(() => import('../pages/dashboard/vendors/Consumer'));
+const Insurance = lazy(() => import('../pages/dashboard/insurance/insurance'));
 
 const AppRoutes = () => {
   return (
@@ -48,6 +49,7 @@ const AppRoutes = () => {
             <Route path="/users" element={<User />} />
             <Route path="/vendors/company" element={<Company />} />
             <Route path="/vendors/consumer" element={<Consumer />} />
+            <Route path="/insurance" element={<Insurance />} />
           </Route>
         </Route>
       </Routes>
