@@ -7,22 +7,29 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 class AuthService {
   // Regular login
   async login(email, password) {
-    const user = await User.findOne({
-      where: { email },
-      include: [{ model: Role }]
-    });
-
-    if (!user) {
-      throw new Error('User not found');
+    try {
+      const user = await User.findOne({
+        where: { email },
+        include: [{ model: Role }]
+      });
+  
+      if (!user) {
+        throw new Error('User not found');
+      }
+  
+      // Check if password is correct
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        throw new Error('Invalid password');
+      }
+  
+      // Generate token
+      const token = generateToken(user.user_id, user.Role.role_name);
+      return { user, token };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw new Error('Failed to login. Please check your credentials');
     }
-
-    const isValidPassword = await comparePassword(password, user.password);
-    if (!isValidPassword) {
-      throw new Error('Invalid password');
-    }
-
-    const token = generateToken(user.user_id, user.Role.role_name);
-    return { user, token };
   }
 
   // Generate unique username
@@ -140,4 +147,4 @@ class AuthService {
   }
 }
 
-module.exports = new AuthService(); 
+module.exports = new AuthService();

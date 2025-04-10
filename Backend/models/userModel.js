@@ -72,6 +72,14 @@ User.beforeCreate(async (user) => {
   }
 });
 
+// Hash password before updating if it's changed
+User.beforeUpdate(async (user) => {
+  if (user.changed('password')) {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+  }
+});
+
 // Add validation hook for role_id
 User.beforeValidate(async (user) => {
   if (user.role_id) {
