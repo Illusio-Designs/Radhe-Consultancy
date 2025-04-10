@@ -47,6 +47,14 @@ const User = sequelize.define('User', {
   reset_token_expiry: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  user_type_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'UserTypes',
+      key: 'user_type_id'
+    }
   }
 }, {
   tableName: 'Users',
@@ -63,4 +71,4 @@ User.beforeCreate(async (user) => {
   }
 });
 
-module.exports = User; 
+module.exports = User;
