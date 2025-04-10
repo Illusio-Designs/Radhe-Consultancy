@@ -61,9 +61,7 @@ const Sidebar = ({ onCollapse }) => {
           label: "Consumer Vendors",
         },
       ],
-    },
-    { path: "/insurance", icon: <BiGroup />, label: "Insurance" },
-    
+    },    
   ];
   
 

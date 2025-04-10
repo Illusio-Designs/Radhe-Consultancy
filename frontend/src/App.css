@@ -30,3 +30,14 @@
     padding: 0 1.5rem;
   }
 }
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/inter.woff2') format('woff2');
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
