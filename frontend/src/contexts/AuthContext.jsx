@@ -33,9 +33,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (userData) => {
+  const register = async (email, password, role_id) => {
     try {
-      const data = await authAPI.register(userData);
+      const data = await authAPI.register(email, password, role_id);
       return data;
     } catch (error) {
       throw error;
@@ -70,4 +70,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
