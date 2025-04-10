@@ -1,10 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { roleAPI } from '../../services/api'; // Adjust the import based on your API service structure
+import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle } from 'react-icons/fi';
+import { roleAPI } from '../../../services/api';
+import TableWithControl from '../../../components/common/Table/TableWithControl';
+import Button from '../../../components/common/Button/Button';
+import ActionButton from '../../../components/common/ActionButton/ActionButton';
+import Modal from '../../../components/common/Modal/Modal';
+import Loader from '../../../components/common/Loader/Loader';
+import '../../../styles/dashboard/Role.css';
 
-const RoleManagement = () => {
+const RoleForm = ({ role, onClose, onRoleUpdated }) => {
+  const [formData, setFormData] = useState({
+    role_name: '',
+    description: ''
+  });
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (role) {
+      setFormData({
+        role_name: role.role_name || '',
+        description: role.description || ''
+      });
+    }
+  }, [role]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (role) {
+        await roleAPI.updateRole(role.role_id, formData);
+      } else {
+        await roleAPI.createRole(formData);
+      }
+      onRoleUpdated();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save role');
+    }
+  };
+
+  return (
+    <>
+      {error && (
+        <div className="role-management-error">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="role-management-form">
+        <div className="role-management-form-group">
+          <input
+            type="text"
+            name="role_name"
+            value={formData.role_name}
+            onChange={handleChange}
+            className="role-management-form-input"
+            placeholder="Role Name"
+            required
+          />
+        </div>
+
+        <div className="role-management-form-group">
+          <input
+            type="text"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="role-management-form-input"
+            placeholder="Description"
+          />
+        </div>
+
+        <div className="role-management-form-actions">
+          <Button type="button" variant="outlined" onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="contained">{role ? 'Update' : 'Create'}</Button>
+        </div>
+      </form>
+    </>
+  );
+};
+
+function RoleManagement() {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
   const [roles, setRoles] = useState([]);
-  const [roleName, setRoleName] = useState('');
-  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchRoles();
@@ -12,53 +100,116 @@ const RoleManagement = () => {
 
   const fetchRoles = async () => {
     try {
+      setLoading(true);
       const data = await roleAPI.getAllRoles();
       setRoles(data);
-    } catch (error) {
-      console.error('Error fetching roles:', error);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch roles');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCreateRole = async (e) => {
-    e.preventDefault();
-    try {
-      const newRole = { role_name: roleName, description };
-      await roleAPI.createRole(newRole);
-      fetchRoles(); // Refresh the roles list
-      setRoleName('');
-      setDescription('');
-    } catch (error) {
-      console.error('Error creating role:', error);
+  const handleDelete = async (roleId) => {
+    if (window.confirm('Are you sure you want to delete this role?')) {
+      try {
+        await roleAPI.deleteRole(roleId);
+        await fetchRoles();
+      } catch (err) {
+        setError('Failed to delete role');
+        console.error(err);
+      }
     }
   };
+
+  const handleEdit = (role) => {
+    setSelectedRole(role);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setSelectedRole(null);
+    setShowModal(false);
+  };
+
+  const handleRoleUpdated = async () => {
+    await fetchRoles();
+    handleModalClose();
+  };
+
+  const columns = [
+    { key: 'role_name', label: 'Role Name', sortable: true },
+    { key: 'description', label: 'Description', sortable: true },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_, role) => (
+        <div className="role-management-actions">
+          <ActionButton
+            onClick={() => handleEdit(role)}
+            variant="secondary"
+            size="small"
+          >
+            <FiEdit2 />
+          </ActionButton>
+          <ActionButton
+            onClick={() => handleDelete(role.role_id)}
+            variant="danger"
+            size="small"
+          >
+            <FiTrash2 />
+          </ActionButton>
+        </div>
+      )
+    }
+  ];
 
   return (
-    <div>
-      <h1>Role Management</h1>
-      <form onSubmit={handleCreateRole}>
-        <input
-          type="text"
-          placeholder="Role Name"
-          value={roleName}
-          onChange={(e) => setRoleName(e.target.value)}
-          required
+    <div className="role-management">
+      <div className="role-management-content">
+        <div className="role-management-header">
+          <h1 className="role-management-title">Role Management</h1>
+          <Button 
+            variant="contained" 
+            onClick={() => setShowModal(true)} 
+            icon={<FiPlus />}
+          >
+            Add Role
+          </Button>
+        </div>
+
+        {error && (
+          <div className="role-management-error">
+            <FiAlertCircle className="inline mr-2" /> {error}
+          </div>
+        )}
+
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={roles}
+            columns={columns}
+            defaultPageSize={10}
+          />
+        )}
+      </div>
+
+      <Modal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        title={selectedRole ? 'Edit Role' : 'Add New Role'}
+      >
+        <RoleForm 
+          role={selectedRole} 
+          onClose={handleModalClose} 
+          onRoleUpdated={handleRoleUpdated} 
         />
-        <input
-          type="text"
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button type="submit">Create Role</button>
-      </form>
-      <h2>Existing Roles</h2>
-      <ul>
-        {roles.map((role) => (
-          <li key={role.role_id}>{role.role_name} - {role.description}</li>
-        ))}
-      </ul>
+      </Modal>
     </div>
   );
-};
+}
 
 export default RoleManagement;

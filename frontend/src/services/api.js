@@ -71,6 +71,31 @@ export const authAPI = {
 
 // User API
 export const userAPI = {
+  getAllUsers: async () => {
+    const response = await api.get('/users');
+    return response.data;
+  },
+
+  getUserById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  createUser: async (userData) => {
+    const response = await api.post('/users', userData);
+    return response.data;
+  },
+
+  updateUser: async (id, userData) => {
+    const response = await api.put(`/users/${id}`, userData);
+    return response.data;
+  },
+
+  deleteUser: async (id) => {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  },
+
   changePassword: async (currentPassword, newPassword) => {
     const response = await api.post('/users/change-password', {
       currentPassword,
@@ -89,31 +114,6 @@ export const userAPI = {
     return response.data;
   },
 
-  getUserById: async (userId) => {
-    const response = await api.get(`/users/${userId}`);
-    return response.data;
-  },
-
-  getAllUsers: async () => {
-    const response = await api.get('/users');
-    return response.data;
-  },
-
-  updateUser: async (userId, userData) => {
-    const response = await api.put(`/users/${userId}`, userData);
-    return response.data;
-  },
-
-  deleteUser: async (userId) => {
-    const response = await api.delete(`/users/${userId}`);
-    return response.data;
-  },
-
-  createUser: async (userData) => {
-    const response = await api.post('/users', userData);
-    return response.data;
-  },
-
   updateProfileImage: async (userId, file) => {
     const formData = new FormData();
     formData.append('image', file);
@@ -128,33 +128,38 @@ export const userAPI = {
   getUserPermissions: async (userId) => {
     const response = await api.get(`/users/${userId}/permissions`);
     return response.data;
-  },
+  }
 };
 
 // Vendor API
 export const vendorAPI = {
-  createVendor: async (vendorData) => {
-    const response = await api.post('/vendors', vendorData);
-    return response.data;
-  },
-
-  getVendorById: async (vendorId) => {
-    const response = await api.get(`/vendors/${vendorId}`);
-    return response.data;
-  },
-
   getAllVendors: async () => {
     const response = await api.get('/vendors');
     return response.data;
   },
 
-  updateVendor: async (vendorId, vendorData) => {
-    const response = await api.put(`/vendors/${vendorId}`, vendorData);
+  getVendorById: async (id) => {
+    const response = await api.get(`/vendors/${id}`);
     return response.data;
   },
 
-  deleteVendor: async (vendorId) => {
-    const response = await api.delete(`/vendors/${vendorId}`);
+  createVendor: async (vendorData) => {
+    const response = await api.post('/vendors', vendorData);
+    return response.data;
+  },
+
+  updateVendor: async (id, vendorData) => {
+    const response = await api.put(`/vendors/${id}`, vendorData);
+    return response.data;
+  },
+
+  deleteVendor: async (id) => {
+    const response = await api.delete(`/vendors/${id}`);
+    return response.data;
+  },
+
+  updateVendorStatus: async (id, status) => {
+    const response = await api.patch(`/vendors/${id}/status`, { status });
     return response.data;
   },
 
@@ -164,6 +169,7 @@ export const vendorAPI = {
   }
 };
 
+// Company Vendor API
 export const companyVendorAPI = {
   createCompanyVendor: async (vendorData) => {
     const response = await api.post('/vendors', vendorData);
@@ -196,7 +202,7 @@ export const roleAPI = {
   getAllRoles: async () => {
     const response = await api.get('/roles');
     return response.data;
-  },
+  }
 };
 
-export default api; 
+export default api;
