@@ -57,7 +57,19 @@ const AppRoutes = () => {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <>
+    <Helmet>
+      <link
+        rel="preload"
+        href="/fonts/inter.woff2"
+        as="font"
+        type="font/woff2"
+        crossOrigin="anonymous"
+      />
+    </Helmet>
+    
+    <Suspense fallback={<Loader />}>
+
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
@@ -87,6 +99,28 @@ const AppRoutes = () => {
         </Route>
       </Routes>
     </Suspense>
+      
+    <CookieConsent
+        location="bottom"
+        buttonText="Accept"
+        declineButtonText="Decline"
+        enableDeclineButton
+        cookieName="mySiteCookieConsent"
+        style={{ background: "#2B373B" }}
+        buttonStyle={{ color: "#4e503b", fontSize: "13px" }}
+        declineButtonStyle={{ color: "#fff", background: "#c00", fontSize: "13px" }}
+        expires={365}
+        onAccept={() => {
+          console.log("Cookies accepted");
+        }}
+        onDecline={() => {
+          console.log("Cookies declined");
+        }}
+      >
+        This website uses cookies to ensure you get the best experience on our website.
+        <a href="/privacy-policy" style={{ color: "#ffd700" }}> Learn more</a>
+      </CookieConsent>
+    </>
   );
 };
 
