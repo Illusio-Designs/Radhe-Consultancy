@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const sequelize = require('./config/db');
+const initializeDatabase = require('./scripts/dbInit');
 require('dotenv').config();
 
 const app = express();
@@ -49,22 +49,14 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-
-const startServer = async () => {
-  try {
-    // Sync database without seeding
-    await sequelize.sync();
-    console.log('Database synced successfully');
-
-    // Start server
+initializeDatabase()
+  .then(() => {
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
-  } catch (error) {
-    console.error('Unable to start server:', error);
+  })
+  .catch(error => {
+    console.error('Failed to start server:', error);
     process.exit(1);
-  }
-};
-
-startServer();
+  });

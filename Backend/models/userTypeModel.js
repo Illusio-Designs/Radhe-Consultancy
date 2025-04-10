@@ -23,4 +23,4 @@ const UserType = sequelize.define('UserType', {
   updatedAt: 'updated_at'
 });
 
-module.exports = UserType;
+module.exports = UserType; // Ensure this export exists

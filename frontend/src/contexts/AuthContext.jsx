@@ -33,9 +33,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password, role_id) => {
+  const register = async (username, email, password, role_id) => {
     try {
-      const data = await authAPI.register(email, password, role_id);
+      const data = await authAPI.register(username, email, password, role_id);
       return data;
     } catch (error) {
       throw error;

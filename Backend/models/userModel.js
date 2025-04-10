@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const bcrypt = require('bcryptjs');
+const UserType = require('./userTypeModel'); // Add this import
 
 const User = sequelize.define('User', {
   user_id: {
@@ -68,6 +69,24 @@ User.beforeCreate(async (user) => {
   if (user.password) {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
+  }
+});
+
+// Add validation hook for role_id
+User.beforeValidate(async (user) => {
+  if (user.role_id) {
+    const Role = require('./roleModel');
+    const role = await Role.findByPk(user.role_id);
+    if (!role) {
+      throw new Error('Invalid role');
+    }
+  }
+  
+  if (user.user_type_id) {
+    const userType = await UserType.findByPk(user.user_type_id);
+    if (!userType) {
+      throw new Error('Invalid user type');
+    }
   }
 });
 

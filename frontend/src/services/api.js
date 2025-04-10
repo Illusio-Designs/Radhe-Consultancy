@@ -40,8 +40,13 @@ export const authAPI = {
     return response.data;
   },
 
-  register: async (email, password, role_id) => {
-    const response = await api.post('/auth/register', { email, password, role_id });
+  register: async (username, email, password, role_id) => {
+    const response = await api.post('/auth/register', { 
+      username,
+      email,
+      password,
+      role_id 
+    });
     return response.data;
   },
 

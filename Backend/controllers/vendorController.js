@@ -23,6 +23,10 @@ class VendorController {
         ...companyData
       });
 
+      // Update user type to Company
+      const companyType = await UserType.findOne({ where: { type_name: 'Company' } });
+      await user.update({ user_type_id: companyType.user_type_id });
+
       res.status(201).json(company);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -49,6 +53,10 @@ class VendorController {
         vendor_id: vendor.vendor_id,
         ...consumerData
       });
+
+      // Update user type to Consumer
+      const consumerType = await UserType.findOne({ where: { type_name: 'Consumer' } });
+      await user.update({ user_type_id: consumerType.user_type_id });
 
       res.status(201).json(consumer);
     } catch (error) {

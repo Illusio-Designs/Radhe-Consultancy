@@ -35,12 +35,12 @@ function Register() {
     setLoading(true);
 
     try {
-      await authAPI.register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        role_id: 2 // Default to User role
-      });
+      await register(
+        formData.username,
+        formData.email,
+        formData.password,
+        2 // Default role_id
+      );
       navigate('/auth/login');
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to register');

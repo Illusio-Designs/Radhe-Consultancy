@@ -4,7 +4,7 @@ const { User, UserType } = require('../models');
 class AuthController {
   async register(req, res) {
     try {
-      const { email, password, role_id } = req.body;
+      const { username, email, password } = req.body;
       
       // Find Office user type
       const officeType = await UserType.findOne({ where: { type_name: 'Office' } });
@@ -14,10 +14,11 @@ class AuthController {
 
       // Create user with Office type
       const user = await User.create({
+        username,
         email,
         password,
-        role_id: role_id || 2, // Default to User role
-        user_type_id: officeType.user_type_id
+        user_type_id: officeType.user_type_id,
+        role_id: 2 // Default to User role
       });
 
       res.status(201).json(user);
@@ -29,19 +30,29 @@ class AuthController {
   async googleLogin(req, res) {
     try {
       const { idToken } = req.body;
-      const { email } = await verifyGoogleToken(idToken); // Implement this function
+      const { email } = await verifyGoogleToken(idToken);
 
-      // Find user by email and include user type
-      const user = await User.findOne({ 
+      // Find or create user with Office type
+      const officeType = await UserType.findOne({ where: { type_name: 'Office' } });
+      if (!officeType) {
+        return res.status(500).json({ error: 'Office user type not found' });
+      }
+
+      let user = await User.findOne({ 
         where: { email },
-        include: [UserType]
+        include: [UserType, Role]
       });
 
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        // Create new Office user
+        user = await User.create({
+          email,
+          google_id: idToken,
+          user_type_id: officeType.user_type_id,
+          role_id: 2 // Default to User role
+        });
       }
 
-      // Return user with type information
       res.json({
         user_id: user.user_id,
         email: user.email,
