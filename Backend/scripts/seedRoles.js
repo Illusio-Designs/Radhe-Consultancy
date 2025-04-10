@@ -12,37 +12,30 @@ const seedRoles = async () => {
   try {
     console.log('Starting to seed roles...');
     
-    // Force sync to ensure tables are created
-    await sequelize.sync({ force: true });
-    console.log('Database synced');
-    
-    // Create roles one by one
-    for (const role of defaultRoles) {
-      try {
-        const [createdRole, created] = await Role.findOrCreate({
-          where: { role_name: role.role_name },
-          defaults: role
-        });
-        
-        if (created) {
-          console.log(`Created role: ${role.role_name}`);
-        } else {
-          console.log(`Role already exists: ${role.role_name}`);
-        }
-      } catch (error) {
-        console.error(`Error creating role ${role.role_name}:`, error);
-        throw error;
+    const rolesToCreate = [
+      { role_name: 'Admin', description: 'Super Admin with all permissions' },
+      { role_name: 'User', description: 'Regular user with limited permissions' },
+      { role_name: 'Vendor Manager', description: 'Can manage vendors' },
+      { role_name: 'Insurance Manager', description: 'Can manage insurance' }
+    ];
+
+    for (const role of rolesToCreate) {
+      const [createdRole, created] = await Role.findOrCreate({
+        where: { role_name: role.role_name },
+        defaults: role
+      });
+
+      if (created) {
+        console.log(`Created role: ${role.role_name}`);
+      } else {
+        console.log(`Role already exists: ${role.role_name}`);
       }
     }
 
-    // Verify roles were created
-    const roles = await Role.findAll();
-    console.log('Current roles in database:', roles.map(r => r.role_name));
-    
     console.log('Default roles seeded successfully');
   } catch (error) {
     console.error('Error seeding roles:', error);
-    process.exit(1);
+    throw error;
   }
 };
 

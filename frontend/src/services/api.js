@@ -186,4 +186,17 @@ export const companyVendorAPI = {
   }
 };
 
+// Role API
+export const roleAPI = {
+  createRole: async (roleData) => {
+    const response = await api.post('/roles', roleData);
+    return response.data;
+  },
+
+  getAllRoles: async () => {
+    const response = await api.get('/roles');
+    return response.data;
+  },
+};
+
 export default api; 
