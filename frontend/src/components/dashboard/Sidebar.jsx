@@ -53,15 +53,16 @@ const Sidebar = ({ onCollapse }) => {
         {
           path: "/vendors/company",
           icon: <BiBuilding />,
-          label: "Company Vendors",
+          label: "Company",
         },
         {
           path: "/vendors/consumer",
           icon: <BiGroup />,
-          label: "Consumer Vendors",
+          label: "Consumer",
         },
       ],
-    },    
+    },
+    { path: "/roles", icon: <BiUser />, label: "Roles" },
   ];
   
 

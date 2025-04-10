@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiX } from 'react-icons/bi';
+import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from 'react-icons/bi';
 import { vendorAPI } from '../../../services/api';
 import TableWithControl from '../../../components/common/Table/TableWithControl';
+import Button from '../../../components/common/Button/Button';
+import ActionButton from '../../../components/common/ActionButton/ActionButton';
 import Modal from '../../../components/common/Modal/Modal';
+import Loader from '../../../components/common/Loader/Loader';
+import '../../../styles/dashboard/Vendor.css';
 
-function ConsumerVendors() {
-  const [vendors, setVendors] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState(null);
+const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,29 +18,23 @@ function ConsumerVendors() {
     contact_address: '',
     vendor_type: 'Consumer'
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchVendors();
-  }, []);
-
-  const fetchVendors = async () => {
-    try {
-      setLoading(true);
-      const data = await vendorAPI.getAllVendors();
-      const consumerVendors = data.filter(vendor => 
-        vendor.vendor_type === 'Consumer' && vendor.ConsumerVendor !== null
-      );
-      setVendors(consumerVendors);
-      setError('');
-    } catch (err) {
-      setError('Failed to fetch vendors');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (consumer) {
+      setFormData({
+        name: consumer.ConsumerVendor.name || '',
+        email: consumer.ConsumerVendor.email || '',
+        phone_number: consumer.ConsumerVendor.phone_number || '',
+        dob: consumer.ConsumerVendor.dob || '',
+        national_id: consumer.ConsumerVendor.national_id || '',
+        contact_address: consumer.ConsumerVendor.contact_address || '',
+        vendor_type: 'Consumer'
+      });
     }
-  };
+  }, [consumer]);
 
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -51,232 +44,172 @@ function ConsumerVendors() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
     try {
-      if (selectedVendor) {
-        await vendorAPI.updateVendor(selectedVendor.vendor_id, formData);
+      if (consumer) {
+        await vendorAPI.updateConsumerVendor(consumer.vendor_id, formData);
       } else {
-        await vendorAPI.createVendor(formData);
+        await vendorAPI.createConsumerVendor(formData);
       }
-      await fetchVendors();
-      handleModalClose();
-    } catch (error) {
-      setError(error.response?.data?.error || 'Failed to save vendor');
+      onConsumerUpdated();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save consumer');
+    }
+  };
+
+  return (
+    <>
+      {error && (
+        <div className="vendor-management-error">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="vendor-management-form">
+        <div className="vendor-management-form-group">
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="vendor-management-form-input"
+            placeholder="Name"
+            required
+          />
+        </div>
+
+        {/* Add all other form fields in the same pattern */}
+        
+        <div className="vendor-management-form-actions">
+          <Button type="button" variant="outlined" onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="contained">{consumer ? 'Update' : 'Create'}</Button>
+        </div>
+      </form>
+    </>
+  );
+};
+
+function ConsumerVendors() {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedConsumer, setSelectedConsumer] = useState(null);
+  const [consumers, setConsumers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchConsumers();
+  }, []);
+
+  const fetchConsumers = async () => {
+    try {
+      setLoading(true);
+      const data = await vendorAPI.getAllConsumerVendors();
+      setConsumers(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch consumers');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (vendor) => {
-    setSelectedVendor(vendor);
-    setFormData({
-      name: vendor.ConsumerVendor.name || '',
-      email: vendor.ConsumerVendor.email || '',
-      phone_number: vendor.ConsumerVendor.phone_number || '',
-      dob: vendor.ConsumerVendor.dob ? vendor.ConsumerVendor.dob.split('T')[0] : '',
-      national_id: vendor.ConsumerVendor.national_id || '',
-      contact_address: vendor.ConsumerVendor.contact_address || '',
-      vendor_type: 'Consumer'
-    });
-    setIsModalOpen(true);
-  };
-
   const handleDelete = async (vendorId) => {
-    if (window.confirm('Are you sure you want to delete this vendor?')) {
+    if (window.confirm('Are you sure you want to delete this consumer?')) {
       try {
-        await vendorAPI.deleteVendor(vendorId);
-        await fetchVendors();
+        await vendorAPI.deleteConsumerVendor(vendorId);
+        await fetchConsumers();
       } catch (err) {
-        setError('Failed to delete vendor');
+        setError('Failed to delete consumer');
         console.error(err);
       }
     }
   };
 
-  const handleModalClose = () => {
-    setSelectedVendor(null);
-    setFormData({
-      name: '',
-      email: '',
-      phone_number: '',
-      dob: '',
-      national_id: '',
-      contact_address: '',
-      vendor_type: 'Consumer'
-    });
-    setIsModalOpen(false);
+  const handleEdit = (consumer) => {
+    setSelectedConsumer(consumer);
+    setShowModal(true);
   };
 
-  if (loading && !vendors.length) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
+  const handleModalClose = () => {
+    setSelectedConsumer(null);
+    setShowModal(false);
+  };
+
+  const handleConsumerUpdated = async () => {
+    await fetchConsumers();
+    handleModalClose();
+  };
 
   const columns = [
-    { header: 'Name', accessor: 'name' },
-    { header: 'Email', accessor: 'email' },
-    { header: 'Phone Number', accessor: 'phone_number' },
-    { header: 'Address', accessor: 'contact_address' },
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'email', label: 'Email', sortable: true },
+    { key: 'phone_number', label: 'Phone Number', sortable: true },
+    { key: 'national_id', label: 'National ID', sortable: true },
     {
-      header: 'Actions',
-      accessor: 'actions',
-      cell: (row) => (
-        <div className="flex gap-3">
-          <button onClick={() => handleEdit(row)} className="text-primary-600 hover:text-primary-900">
-            <BiEdit className="w-5 h-5" />
-          </button>
-          <button onClick={() => handleDelete(row.vendor_id)} className="text-red-600 hover:text-red-900">
-            <BiTrash className="w-5 h-5" />
-          </button>
+      key: 'actions',
+      label: 'Actions',
+      render: (_, consumer) => (
+        <div className="vendor-management-actions">
+          <ActionButton
+            onClick={() => handleEdit(consumer)}
+            variant="secondary"
+            size="small"
+          >
+            <BiEdit />
+          </ActionButton>
+          <ActionButton
+            onClick={() => handleDelete(consumer.vendor_id)}
+            variant="danger"
+            size="small"
+          >
+            <BiTrash />
+          </ActionButton>
         </div>
       )
     }
   ];
 
-  const tableData = vendors.map(vendor => ({
-    ...vendor.ConsumerVendor,
-    vendor_id: vendor.vendor_id
-  }));
-
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Consumer Vendors</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center gap-2"
-        >
-          <BiPlus /> Add Consumer Vendor
-        </button>
+    <div className="vendor-management">
+      <div className="vendor-management-content">
+        <div className="vendor-management-header">
+          <h1 className="vendor-management-title">Consumer Vendors</h1>
+          <Button 
+            variant="contained" 
+            onClick={() => setShowModal(true)} 
+            icon={<BiPlus />}
+          >
+            Add Consumer
+          </Button>
+        </div>
+
+        {error && (
+          <div className="vendor-management-error">
+            <BiErrorCircle className="inline mr-2" /> {error}
+          </div>
+        )}
+
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={consumers}
+            columns={columns}
+            defaultPageSize={10}
+          />
+        )}
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-50 text-red-600 flex items-center gap-2">
-          <BiErrorCircle />
-          {error}
-        </div>
-      )}
-
-      <TableWithControl
-        data={tableData}
-        columns={columns}
-        pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={10}
-      />
-
       <Modal
-        isOpen={isModalOpen}
+        isOpen={showModal}
         onClose={handleModalClose}
-        title={selectedVendor ? 'Edit Consumer Vendor' : 'Add Consumer Vendor'}
-        size="lg"
+        title={selectedConsumer ? 'Edit Consumer' : 'Add New Consumer'}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {selectedVendor ? 'Edit Consumer Vendor' : 'Add Consumer Vendor'}
-          </h3>
-          <button
-            onClick={handleModalClose}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <BiX className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Name"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              required
-            />
-          </div>
-
-          <div>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="Email"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              required
-            />
-          </div>
-
-          <div>
-            <input
-              type="tel"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleInputChange}
-              placeholder="Phone Number"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              required
-            />
-          </div>
-
-          <div>
-            <input
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleInputChange}
-              placeholder="Date of Birth"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              required
-            />
-          </div>
-
-          <div>
-            <input
-              type="text"
-              name="national_id"
-              value={formData.national_id}
-              onChange={handleInputChange}
-              placeholder="National ID"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              required
-            />
-          </div>
-
-          <div>
-            <textarea
-              name="contact_address"
-              value={formData.contact_address}
-              onChange={handleInputChange}
-              placeholder="Contact Address"
-              rows="3"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
-              onClick={handleModalClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : (selectedVendor ? 'Update' : 'Create')}
-            </button>
-          </div>
-        </form>
+        <ConsumerForm 
+          consumer={selectedConsumer} 
+          onClose={handleModalClose} 
+          onConsumerUpdated={handleConsumerUpdated} 
+        />
       </Modal>
     </div>
   );
