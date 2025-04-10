@@ -13,10 +13,9 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     name: '',
     email: '',
     password: '',
-    role: 'user',
-    status: 'Active',
+    role_id: 2, // Default to User role
+    user_type_id: null
   });
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -24,19 +23,11 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         name: user.username || '',
         email: user.email || '',
         password: '',
-        role: user.role_id === 1 ? 'admin' : 'user',
-        status: user.status || 'Active',
+        role_id: user.role_id || 2,
+        user_type_id: user.user_type_id || null
       });
     }
   }, [user]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,8 +37,8 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
           username: formData.name,
           email: formData.email,
           password: formData.password || undefined,
-          role: formData.role,
-          status: formData.status,
+          role_id: formData.role_id,
+          user_type_id: formData.user_type_id
         });
         onUserUpdated(updatedUser);
       } else {
@@ -55,8 +46,8 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
           username: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role,
-          status: formData.status,
+          role_id: formData.role_id,
+          user_type_id: formData.user_type_id
         });
         onUserUpdated(newUser);
       }

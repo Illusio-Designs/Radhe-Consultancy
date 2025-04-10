@@ -25,14 +25,11 @@ function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
+      const response = await authAPI.login(formData.email, formData.password);
+      login(response); // Update auth context with full response
       navigate("/dashboard");
     } catch (err) {
-      console.error("Login error:", err);
-      setError(
-        err.response?.data?.error ||
-          "Failed to login. Please check your credentials."
-      );
+      setError(err.response?.data?.error || "Failed to login. Please check your credentials.");
     } finally {
       setLoading(false);
     }

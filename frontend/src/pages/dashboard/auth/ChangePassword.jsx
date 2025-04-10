@@ -18,16 +18,9 @@ function ChangePassword() {
     try {
       await userAPI.changePassword(currentPassword, newPassword);
       setSuccess('Password changed successfully.');
-
-      // Redirect to login page after successful change
-      setTimeout(() => {
-        console.log('Redirecting to login page...');
-        navigate('/auth/login'); // Redirect to login page
-      }, 2000); // Optional: wait for 2 seconds before redirecting
+      setTimeout(() => navigate('/auth/login'), 2000);
     } catch (err) {
-      console.error('Error during password change:', err);
-      const errorMessage = err.response?.data?.error || 'Failed to change password.';
-      setError(errorMessage);
+      setError(err.response?.data?.error || 'Failed to change password.');
     }
   };
 

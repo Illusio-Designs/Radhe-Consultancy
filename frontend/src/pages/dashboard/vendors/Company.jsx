@@ -18,8 +18,27 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     gst_number: '',
     pan_number: '',
     firm_type: '',
-    vendor_type: 'Company'
+    vendor_type: 'Company',
+    office_user_email: '' // Add office user email field
   });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (company) {
+        await companyVendorAPI.updateCompanyVendor(company.vendor_id, formData);
+      } else {
+        await companyVendorAPI.createCompanyVendor({
+          ...formData,
+          email: formData.office_user_email
+        });
+      }
+      onCompanyUpdated();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save company');
+    }
+  };
+
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -44,20 +63,6 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (company) {
-        await companyVendorAPI.updateCompanyVendor(company.vendor_id, formData);
-      } else {
-        await companyVendorAPI.createCompanyVendor(formData);
-      }
-      onCompanyUpdated();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save company');
-    }
   };
 
   return (

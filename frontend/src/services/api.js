@@ -44,27 +44,13 @@ export const authAPI = {
     return response.data;
   },
 
-  register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
+  register: async (email, password, role_id) => {
+    const response = await api.post('/auth/register', { email, password, role_id });
     return response.data;
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
-  getCurrentUser: () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  },
-
-  isAuthenticated: () => {
-    return !!localStorage.getItem('token');
-  },
-
-  forgotPassword: async (email) => {
-    const response = await api.post('/users/forgot-password', { email });
+  googleLogin: async (idToken) => {
+    const response = await api.post('/auth/google-login', { idToken });
     return response.data;
   }
 };

@@ -16,8 +16,27 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
     dob: '',
     national_id: '',
     contact_address: '',
-    vendor_type: 'Consumer'
+    vendor_type: 'Consumer',
+    office_user_email: '' // Add office user email field
   });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (consumer) {
+        await vendorAPI.updateConsumerVendor(consumer.vendor_id, formData);
+      } else {
+        await vendorAPI.createConsumerVendor({
+          ...formData,
+          email: formData.office_user_email
+        });
+      }
+      onConsumerUpdated();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save consumer');
+    }
+  };
+
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -40,20 +59,6 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (consumer) {
-        await vendorAPI.updateConsumerVendor(consumer.vendor_id, formData);
-      } else {
-        await vendorAPI.createConsumerVendor(formData);
-      }
-      onConsumerUpdated();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save consumer');
-    }
   };
 
   return (

@@ -35,10 +35,11 @@ function Register() {
     setLoading(true);
 
     try {
-      await register({
+      await authAPI.register({
         username: formData.username,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        role_id: 2 // Default to User role
       });
       navigate('/auth/login');
     } catch (error) {

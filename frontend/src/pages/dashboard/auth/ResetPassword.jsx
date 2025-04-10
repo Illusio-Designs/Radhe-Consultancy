@@ -18,15 +18,9 @@ function ResetPassword() {
     try {
       await authAPI.resetPassword(token, password);
       setSuccess('Password has been reset successfully.');
-      
-      // Redirect to login page after successful reset
-      setTimeout(() => {
-        navigate('/auth/login'); // Redirect to login page
-      }, 2000); // Optional: wait for 2 seconds before redirecting
+      setTimeout(() => navigate('/auth/login'), 2000);
     } catch (err) {
-      console.error('Error during password reset:', err);
-      const errorMessage = err.response?.data?.error || 'Failed to reset password.';
-      setError(errorMessage);
+      setError(err.response?.data?.error || 'Failed to reset password.');
     }
   };
 

@@ -11,8 +11,24 @@ import '../../../styles/dashboard/Role.css';
 const RoleForm = ({ role, onClose, onRoleUpdated }) => {
   const [formData, setFormData] = useState({
     role_name: '',
-    description: ''
+    description: '',
+    permissions: []
   });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (role) {
+        await roleAPI.updateRole(role.role_id, formData);
+      } else {
+        await roleAPI.createRole(formData);
+      }
+      onRoleUpdated();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save role');
+    }
+  };
+
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -30,20 +46,6 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (role) {
-        await roleAPI.updateRole(role.role_id, formData);
-      } else {
-        await roleAPI.createRole(formData);
-      }
-      onRoleUpdated();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save role');
-    }
   };
 
   return (
