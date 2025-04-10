@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { BiSupport } from 'react-icons/bi';
 import '../../styles/dashboard/components/Footer.css'
 
 function DashboardFooter({ isCollapsed }) {
@@ -11,9 +12,9 @@ function DashboardFooter({ isCollapsed }) {
             &copy; {new Date().getFullYear()} Radhe Consultancy
           </div>
           <nav className="footer-nav">
-            <Link to="/dashboard/help" className="footer-link" title="Help">Help</Link>
-            <Link to="/dashboard/settings" className="footer-link" title="Settings">Settings</Link>
-            <Link to="/dashboard/support" className="footer-link" title="Support">Support</Link>
+            <Link to="/dashboard/support" className="footer-link" title="Support">
+              <BiSupport /> Support
+            </Link>
           </nav>
         </div>
       </div>

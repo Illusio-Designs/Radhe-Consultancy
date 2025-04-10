@@ -4,7 +4,6 @@ import { FaSpinner } from 'react-icons/fa';
 
 const Button = ({
   children,
-  variant = 'primary',
   size = 'medium',
   fullWidth = false,
   disabled = false,
@@ -16,7 +15,6 @@ const Button = ({
 }) => {
   const buttonClasses = [
     'custom-button',
-    `button-${variant}`,
     `button-${size}`,
     fullWidth ? 'button-full-width' : '',
     loading ? 'button-loading' : '',

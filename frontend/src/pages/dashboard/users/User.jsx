@@ -75,64 +75,61 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 
       <form onSubmit={handleSubmit} className="user-management-form">
         <div className="user-management-form-group">
-          <label className="user-management-form-label">Name</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
             className="user-management-form-input"
+            placeholder='Enter Your Name'
             required
           />
         </div>
 
         <div className="user-management-form-group">
-          <label className="user-management-form-label">Email</label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
             className="user-management-form-input"
+            placeholder='Enter Your Email'
             required
           />
         </div>
 
         {!user && (
           <div className="user-management-form-group">
-            <label className="user-management-form-label">Password</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               className="user-management-form-input"
+              placeholder='Password'
               required={!user}
             />
           </div>
         )}
 
         <div className="user-management-form-group">
-          <label className="user-management-form-label">Role</label>
           <select
             name="role"
             value={formData.role}
             onChange={handleChange}
+            placeholder="Role"
             className="user-management-form-input"
           >
-            <option value="user">User</option>
-            <option value="manager">Manager</option>
-            <option value="admin">Admin</option>
           </select>
         </div>
 
         <div className="user-management-form-group">
-          <label className="user-management-form-label">Status</label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
             className="user-management-form-input"
+            placeholder = "Status"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>

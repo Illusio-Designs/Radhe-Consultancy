@@ -44,20 +44,20 @@
 }
 
 .footer-link {
-  color: white;
+  color: #1F4F9C;
   text-decoration: none;
   padding: 0.625rem 1.25rem;
   border-radius: 1rem;
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.875rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
   letter-spacing: 0.025em;
+  background: white;
 }
 
 .footer-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(26, 66, 128, 0.8);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 

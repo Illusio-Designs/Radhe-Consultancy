@@ -43,6 +43,14 @@
   padding: 1.5rem 0.5rem;
 }
 
+.logo-container .main{
+  width: 100%;
+}
+
+.logo-container .collapsed-img{
+  width: 100%;
+}
+
 .logo-text {
   font-size: 1.5rem;
   font-weight: bold;

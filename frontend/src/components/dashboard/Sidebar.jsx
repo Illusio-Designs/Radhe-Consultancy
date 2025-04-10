@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  FaUsers,
-  FaBuilding,
-  FaTachometerAlt,
-  FaUserCircle,
-  FaBars,
-  FaTimes,
-  FaCaretDown,
-  FaCaretUp,
-} from "react-icons/fa";
-import { FiUsers } from "react-icons/fi";
+  BiGroup,
+  BiBuilding,
+  BiTachometer,
+  BiUser,
+  BiMenu,
+  BiX,
+  BiChevronDown,
+  BiChevronUp,
+} from "react-icons/bi";
+import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
 import "../../styles/dashboard/components/Sidebar.css";
 
 const Sidebar = ({ onCollapse }) => {
@@ -41,23 +41,23 @@ const Sidebar = ({ onCollapse }) => {
   };
 
   const menuItems = [
-    { path: "/dashboard", icon: <FaTachometerAlt />, label: "Dashboard" },
-    { path: "/users", icon: <FaUsers />, label: "Users" },
+    { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
+    { path: "/users", icon: <BiGroup />, label: "Users" },
     {
       label: "Vendors",
-      icon: <FiUsers />,
+      icon: <BiGroup />,
       isDropdown: true,
       isOpen: vendorsDropdownOpen,
       toggle: () => setVendorsDropdownOpen(!vendorsDropdownOpen),
       items: [
         {
           path: "/vendors/company",
-          icon: <FaBuilding />,
+          icon: <BiBuilding />,
           label: "Company Vendors",
         },
         {
           path: "/vendors/consumer",
-          icon: <FaUsers />,
+          icon: <BiGroup />,
           label: "Consumer Vendors",
         },
       ],
@@ -71,8 +71,7 @@ const Sidebar = ({ onCollapse }) => {
       <div
         className={`sidebar ${
           isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"
-        }
-          ${isMobileMenuOpen ? "sidebar-mobile-open" : "sidebar-mobile"}`}
+        } ${isMobileMenuOpen ? "sidebar-mobile-open" : "sidebar-mobile"}`}
       >
         {/* Toggle Button */}
         <button
@@ -80,13 +79,17 @@ const Sidebar = ({ onCollapse }) => {
           onClick={handleCollapse}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {isCollapsed ? <FaBars /> : <FaTimes />}
+          {isCollapsed ? <BiMenu /> : <BiX />}
         </button>
 
         {/* Logo */}
         <div className="logo-container">
           <h1 className={`logo-text ${isCollapsed ? "logo-collapsed" : ""}`}>
-            {isCollapsed ? "R" : "Radhe"}
+            {isCollapsed ? (
+              <img src={img} alt="img" className="collapsed-img" />
+            ) : (
+              <img src={img} alt="img" className="main" />
+            )}
           </h1>
         </div>
 
@@ -112,7 +115,7 @@ const Sidebar = ({ onCollapse }) => {
                           {item.label}
                         </span>
                         <span className="ml-4 text-sm">
-                          {item.isOpen ? <FaCaretUp /> : <FaCaretDown />}
+                          {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
                         </span>
                       </>
                     )}
@@ -147,7 +150,9 @@ const Sidebar = ({ onCollapse }) => {
                 >
                   <span className="text-2xl">{item.icon}</span>
                   {!isCollapsed && (
-                    <span className="ml-4 sidebar-nav-label">{item.label}</span>
+                    <span className="ml-4 sidebar-nav-label">
+                      {item.label}
+                    </span>
                   )}
                 </Link>
               )}
