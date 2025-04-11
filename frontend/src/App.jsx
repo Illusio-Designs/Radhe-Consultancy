@@ -17,7 +17,6 @@ function App() {
       <AuthProvider>
         <Router>
           <Suspense fallback={<Loader />}>
-            <LazyImage {...imageData} alt="Hero image" loading="lazy" />
             <AppRoutes />
           </Suspense>
         </Router>
