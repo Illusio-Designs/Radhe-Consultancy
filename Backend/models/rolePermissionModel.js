@@ -1,28 +1,32 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const Role = require('./roleModel');
+const Permission = require('./permissionModel');
 
 const RolePermission = sequelize.define('RolePermission', {
   role_id: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
     references: {
-      model: 'Roles',
-      key: 'role_id'
-    }
+      model: Role,
+      key: 'id',
+    },
+    primaryKey: true,
   },
   permission_id: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
     references: {
-      model: 'Permissions',
-      key: 'permission_id'
-    }
-  }
+      model: Permission,
+      key: 'id',
+    },
+    primaryKey: true,
+  },
 }, {
   tableName: 'RolePermissions',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false,
 });
+
+// Define associations
+Role.belongsToMany(Permission, { through: RolePermission, foreignKey: 'role_id' });
+Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permission_id' });
 
 module.exports = RolePermission; 

@@ -1,5 +1,5 @@
 const vendorService = require('../services/vendorService');
-const { Vendor, Company, Consumer, User, UserType } = require('../models');
+const { Vendor, Company, Consumer, User, UserType, Role } = require('../models');
 
 class VendorController {
   async createCompany(req, res) {
@@ -140,18 +140,49 @@ class VendorController {
   }
 
   // Create new company vendor
+  // Add role validation middleware
+  static checkRole(roleName) {
+    return async (req, res, next) => {
+      try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const role = await Role.findOne({ where: { role_name: roleName } });
+        if (!role) {
+          return res.status(404).json({ error: 'Role not found' });
+        }
+    
+        if (user.role_id !== role.role_id) {
+          return res.status(403).json({ error: 'Forbidden' });
+        }
+    
+        next();
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    };
+  }
+  
+  // Update the createCompanyVendor method
   async createCompanyVendor(req, res) {
     try {
       const { vendor_id, company_name, owner_name, company_address, gst_number, pan_number, company_email, company_website, contact_number, firm_type } = req.body;
-
-      // Check if the role exists
-      const role = await Role.findOne({ where: { role_name: 'Vendor Manager' } });
-      if (!role) {
-        return res.status(400).json({ error: 'Role not found' });
+  
+      // Check if the user has permission
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
       }
-
+  
       // Create the vendor
-      const vendor = await Vendor.create({ vendor_type: 'Company', google_id: vendor_id });
+      const vendor = await Vendor.create({ 
+        vendor_type: 'Company', 
+        google_id: vendor_id,
+        created_by: user.user_id
+      });
+  
       const companyVendor = await CompanyVendor.create({
         vendor_id: vendor.vendor_id,
         company_name,
@@ -164,7 +195,7 @@ class VendorController {
         contact_number,
         firm_type
       });
-
+  
       res.status(201).json(companyVendor);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -199,6 +230,24 @@ class VendorController {
       res.status(201).json(consumerVendor);
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  }
+  // Add specific company vendor methods
+  async getAllCompanyVendors(req, res) {
+    try {
+      const vendors = await Vendor.findAll({
+        where: { vendor_type: 'Company' },
+        include: [
+          {
+            model: Company,
+            as: 'Company'
+          }
+        ]
+      });
+      res.json(vendors);
+    } catch (error) {
+      console.error('Error fetching company vendors:', error);
+      res.status(500).json({ error: 'Failed to fetch company vendors' });
     }
   }
 }

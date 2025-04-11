@@ -1,31 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const vendorController = require('../controllers/vendorController');
-const { authenticateToken } = require('../middleware/auth');
 const checkPermission = require('../middleware/checkPermission');
 
-// Apply authentication middleware to all routes
-router.use(authenticateToken);
-
-// Create new vendor (either company or consumer)
-router.post('/', checkPermission('create_vendor'), vendorController.createVendor); // This should handle both types
-
-// Get vendor by ID
-router.get('/:vendorId', checkPermission('view_vendor'), vendorController.getVendorById);
-
-// Get all vendors
-router.get('/', vendorController.getAllVendors);
-
-// Update vendor
-router.put('/:vendorId', checkPermission('edit_vendor'), vendorController.updateVendor);
-
-// Delete vendor
-router.delete('/:vendorId', checkPermission('delete_vendor'), vendorController.deleteVendor);
-
-// Google login for vendors
-router.post('/google-login', vendorController.googleLogin);
-
+// Company Vendor Routes
 // Create new company vendor
-router.post('/company-vendors', vendorController.createCompanyVendor);
+router.post('/companies', checkPermission('create_vendor'), vendorController.createCompanyVendor);
 
-module.exports = router; 
+// Get all company vendors
+router.get('/companies', checkPermission('view_vendor'), vendorController.getAllCompanyVendors);
+
+// Update company vendor
+router.put('/companies/:vendorId', checkPermission('edit_vendor'), vendorController.updateVendor);
+
+// Delete company vendor
+router.delete('/companies/:vendorId', checkPermission('delete_vendor'), vendorController.deleteVendor);
+
+// Consumer Vendor Routes
+// Create new consumer vendor
+router.post('/consumers', checkPermission('create_vendor'), vendorController.createConsumerVendor);
+
+// Get all consumer vendors
+router.get('/consumers', checkPermission('view_vendor'), vendorController.getAllVendors); // Assuming this fetches consumer data
+
+// Update consumer vendor
+router.put('/consumers/:vendorId', checkPermission('edit_vendor'), vendorController.updateVendor);
+
+// Delete consumer vendor
+router.delete('/consumers/:vendorId', checkPermission('delete_vendor'), vendorController.deleteVendor);
+
+module.exports = router;

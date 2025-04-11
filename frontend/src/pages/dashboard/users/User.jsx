@@ -7,15 +7,45 @@ import Modal from '../../../components/common/Modal/Modal';
 import Loader from '../../../components/common/Loader/Loader';
 import { userAPI } from '../../../services/api';
 import '../../../styles/dashboard/User.css';
+import { roleAPI } from '../../../services/api';
 
 const UserForm = ({ user, onClose, onUserUpdated }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role_id: 2, // Default to User role
+    role_id: 2,
     user_type_id: null
   });
+  const [error, setError] = useState(null);
+  const [roles, setRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
+
+  // Fetch roles on component mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoadingRoles(true);
+        const rolesData = await roleAPI.getAllRoles();
+        setRoles(rolesData);
+      } catch (err) {
+        setError('Failed to fetch roles');
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+    fetchRoles();
+  }, []);
+
+
+  // Add handleChange function
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   useEffect(() => {
     if (user) {
@@ -104,14 +134,23 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         )}
 
         <div className="user-management-form-group">
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            placeholder="Role"
-            className="user-management-form-input"
-          >
-          </select>
+          {loadingRoles ? (
+            <Loader size="small" />
+          ) : (
+            <select
+              name="role_id"
+              value={formData.role_id}
+              onChange={handleChange}
+              className="user-management-form-input"
+              required
+            >
+              {roles.map(role => (
+                <option key={role.role_id} value={role.role_id}>
+                  {role.role_name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="user-management-form-group">

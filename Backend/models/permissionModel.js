@@ -1,37 +1,20 @@
 // Backend/models/permissionModel.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Ensure this path is correct
 
 const Permission = sequelize.define('Permission', {
-  permission_id: {
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   permission_name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
   },
-  description: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
-  }
 }, {
   tableName: 'Permissions',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false, // Assuming you don't need createdAt/updatedAt for this table
 });
 
 module.exports = Permission;

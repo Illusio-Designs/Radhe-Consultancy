@@ -65,21 +65,23 @@ class AuthController {
   }
 
   async login(req, res) {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ 
-          error: 'Both email and password are required' 
-        });
-      }
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email }, include: [UserType] });
 
-      const result = await authService.login(email, password);
-      res.json(result);
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(401).json({ error: error.message });
+    if (!user || !user.validatePassword(password)) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    // Generate token and return user data based on user type
+    const userData = {
+      id: user.id,
+      email: user.email,
+      userType: user.UserType.type_name,
+      // Add other relevant user data
+    };
+
+    // Return user data and token
+    res.json({ user: userData, token: 'generated_token' });
   }
 }
 

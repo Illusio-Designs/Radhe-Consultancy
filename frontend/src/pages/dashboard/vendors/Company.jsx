@@ -217,11 +217,14 @@ function CompanyVendors() {
     try {
       setLoading(true);
       const data = await companyVendorAPI.getAllCompanyVendors();
+      if (!data) {
+        throw new Error('No data received');
+      }
       setVendors(data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch vendors');
-      console.error(err);
+      console.error('Fetch vendors error:', err);
+      setError(err.message || 'Failed to fetch vendors');
     } finally {
       setLoading(false);
     }
