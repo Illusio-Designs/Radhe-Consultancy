@@ -198,6 +198,29 @@ export const roleAPI = {
   getAllRoles: async () => {
     const response = await api.get('/roles');
     return response.data;
+  },
+
+  updateRole: async (roleId, roleData) => {
+    const response = await api.put(`/roles/${roleId}`, roleData);
+    return response.data;
+  },
+
+  deleteRole: async (roleId) => {
+    const response = await api.delete(`/roles/${roleId}`);
+    return response.data;
+  },
+
+  getAllPermissions: async () => {
+    const response = await api.get('/roles/permissions');
+    return response.data;
+  },
+
+  assignRole: async (userId, roleId) => {
+    const response = await api.post('/roles/assign-role', { 
+      user_id: userId, 
+      role_id: roleId 
+    });
+    return response.data;
   }
 };
 

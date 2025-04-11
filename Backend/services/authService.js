@@ -1,4 +1,5 @@
 const { OAuth2Client } = require('google-auth-library');
+const bcrypt = require('bcrypt'); // Add this import
 const { User, Role } = require('../models');
 const { generateToken, comparePassword } = require('../utils/helperFunctions');
 
@@ -8,24 +9,33 @@ class AuthService {
   // Regular login
   async login(email, password) {
     try {
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+  
       const user = await User.findOne({
         where: { email },
         include: [{ model: Role }]
       });
   
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('No account found with this email');
       }
   
-      // Check if password is correct
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        throw new Error('Invalid password');
+        throw new Error('Incorrect password');
       }
   
-      // Generate token
       const token = generateToken(user.user_id, user.Role.role_name);
-      return { user, token };
+      return { 
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          role: user.Role.role_name
+        },
+        token 
+      };
     } catch (error) {
       console.error('Login error:', error);
       throw new Error('Failed to login. Please check your credentials');

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const initializeDatabase = require('./scripts/dbInit');
+const initializeDatabase = require('./scripts/dbInitSync'); // Update this import
 require('dotenv').config();
 
 const app = express();

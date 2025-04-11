@@ -69,7 +69,9 @@ class AuthController {
       const { email, password } = req.body;
       
       if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+        return res.status(400).json({ 
+          error: 'Both email and password are required' 
+        });
       }
 
       const result = await authService.login(email, password);

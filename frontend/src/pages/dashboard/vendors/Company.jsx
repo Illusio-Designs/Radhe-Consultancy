@@ -19,7 +19,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     pan_number: '',
     firm_type: '',
     vendor_type: 'Company',
-    office_user_email: '' // Add office user email field
+    office_user_email: ''
   });
 
   const handleSubmit = async (e) => {
@@ -74,23 +74,128 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       )}
 
       <form onSubmit={handleSubmit} className="vendor-management-form">
-        <div className="vendor-management-form-group">
-          <input
-            type="text"
-            name="company_name"
-            value={formData.company_name}
-            onChange={handleChange}
-            className="vendor-management-form-input"
-            placeholder="Company Name"
-            required
-          />
+        <div className="vendor-management-form-grid">
+          <div className="vendor-management-form-group">
+            <label>Company Name</label>
+            <input
+              type="text"
+              name="company_name"
+              value={formData.company_name}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>Owner Name</label>
+            <input
+              type="text"
+              name="owner_name"
+              value={formData.owner_name}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>Company Address</label>
+            <input
+              type="text"
+              name="company_address"
+              value={formData.company_address}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>Contact Number</label>
+            <input
+              type="tel"
+              name="contact_number"
+              value={formData.contact_number}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>Company Email</label>
+            <input
+              type="email"
+              name="company_email"
+              value={formData.company_email}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>GST Number</label>
+            <input
+              type="text"
+              name="gst_number"
+              value={formData.gst_number}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>PAN Number</label>
+            <input
+              type="text"
+              name="pan_number"
+              value={formData.pan_number}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>Firm Type</label>
+            <select
+              name="firm_type"
+              value={formData.firm_type}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-select"
+            >
+              <option value="">Select Firm Type</option>
+              <option value="Proprietorship">Proprietorship</option>
+              <option value="Partnership">Partnership</option>
+              <option value="LLP">LLP</option>
+              <option value="Private Limited">Private Limited</option>
+            </select>
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label>Office User Email</label>
+            <input
+              type="email"
+              name="office_user_email"
+              value={formData.office_user_email}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
         </div>
 
-        {/* Add all other form fields in the same pattern */}
-        
         <div className="vendor-management-form-actions">
-          <Button type="button" variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">{company ? 'Update' : 'Create'}</Button>
+          <Button type="button" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="contained">
+            {company ? 'Update' : 'Create'}
+          </Button>
         </div>
       </form>
     </>

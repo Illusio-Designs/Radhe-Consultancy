@@ -3,6 +3,8 @@ const UserType = require('../models/userTypeModel');
 
 async function initializeDatabase() {
   try {
+    console.log('Starting database initialization and synchronization...');
+    
     // Test the database connection
     await sequelize.authenticate();
     console.log('Database connection established successfully');
@@ -28,7 +30,8 @@ async function initializeDatabase() {
     // Create default roles if they don't exist
     const defaultRoles = [
       { role_name: 'Admin' },
-      { role_name: 'User' }
+      { role_name: 'User' },
+      { role_name: 'Vendor Manager' },
     ];
 
     const Role = require('../models/roleModel');

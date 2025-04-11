@@ -40,7 +40,10 @@ class VendorController {
       // Verify user exists and is Office type
       const user = await User.findOne({ 
         where: { email },
-        include: [UserType]
+        include: [{
+          model: UserType,
+          as: 'UserType' // Use the correct association alias
+        }]
       });
 
       if (!user || user.UserType.type_name !== 'Office') {
@@ -86,9 +89,21 @@ class VendorController {
   // Get all vendors
   async getAllVendors(req, res) {
     try {
-      const vendors = await vendorService.getAllVendors();
+      const vendors = await Vendor.findAll({
+        include: [
+          {
+            model: Company,
+            as: 'Company' // Use the correct association alias if defined
+          },
+          {
+            model: Consumer,
+            as: 'Consumer' // Use the correct association alias if defined
+          }
+        ]
+      });
       res.json(vendors);
     } catch (error) {
+      console.error('Error fetching vendors:', error);
       res.status(500).json({ error: error.message });
     }
   }
