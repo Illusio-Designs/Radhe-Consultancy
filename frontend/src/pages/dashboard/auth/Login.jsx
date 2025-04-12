@@ -36,19 +36,26 @@ function Login() {
   };
 
   const handleGoogleLoginSuccess = async (credentialResponse) => {
-    const { credential } = credentialResponse;
     try {
-      await authAPI.googleLogin(credential);
+      setError("");
+      setLoading(true);
+      const response = await authAPI.googleLogin(credentialResponse.credential);
+      login(response);
       navigate("/dashboard");
     } catch (err) {
       console.error("Google login error:", err);
-      setError(err.response?.data?.error || "Failed to login with Google.");
+      setError(
+        err.response?.data?.error ||
+        "Failed to authenticate with Google. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleLoginFailure = (response) => {
-    console.error("Google login failed:", response);
-    setError("Failed to login with Google. Please try again.");
+  const handleGoogleLoginFailure = (error) => {
+    console.error("Google login failed:", error);
+    setError("Failed to connect with Google. Please try again.");
   };
 
   return (
@@ -92,8 +99,11 @@ function Login() {
         <div className="google-login">
           <GoogleLogin
             onSuccess={handleGoogleLoginSuccess}
-            onFailure={handleGoogleLoginFailure}
-            cookiePolicy={"single_host_origin"}
+            onError={handleGoogleLoginFailure}
+            useOneTap
+            flow="implicit"
+            auto_select={false}
+            context="signin"
           />
         </div>
 

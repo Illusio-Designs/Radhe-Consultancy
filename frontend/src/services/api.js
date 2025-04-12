@@ -32,7 +32,7 @@ export const authAPI = {
   },
 
   googleLogin: async (idToken) => {
-    const response = await api.post('/auth/google-login', { idToken });
+    const response = await api.post('/auth/google-login', { token: idToken });
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
