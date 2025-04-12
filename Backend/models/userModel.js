@@ -59,9 +59,7 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Users',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false
 });
 
 // Hash password before saving
@@ -97,5 +95,10 @@ User.beforeValidate(async (user) => {
     }
   }
 });
+
+// Add instance method for password validation
+User.prototype.validatePassword = function(password) {
+  return bcrypt.compareSync(password, this.password);
+};
 
 module.exports = User;

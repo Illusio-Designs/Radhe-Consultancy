@@ -146,6 +146,16 @@ function ConsumerVendors() {
   };
 
   const columns = [
+    { 
+      key: 'sr_no', 
+      label: 'Sr No.', 
+      sortable: true, 
+      render: (_, __, index, pagination = {}) => {
+        const { currentPage = 1, pageSize = 10 } = pagination;
+        const serialNumber = (currentPage - 1) * pageSize + index + 1;
+        return serialNumber;
+      }
+    },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
     { key: 'phone_number', label: 'Phone Number', sortable: true },

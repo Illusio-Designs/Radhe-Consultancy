@@ -22,23 +22,6 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     office_user_email: ''
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (company) {
-        await companyVendorAPI.updateCompanyVendor(company.vendor_id, formData);
-      } else {
-        await companyVendorAPI.createCompanyVendor({
-          ...formData,
-          email: formData.office_user_email
-        });
-      }
-      onCompanyUpdated();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save company');
-    }
-  };
-
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -57,12 +40,78 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     }
   }, [company]);
 
+  const validateGST = (gst) => {
+    // Remove any spaces and convert to uppercase
+    gst = gst.replace(/\s/g, '').toUpperCase();
+    
+    // GST format: 22AAAAA0000A1Z5
+    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[Z]{1}[0-9]{1}$/;
+    return gstRegex.test(gst);
+  };
+
+  const handleGSTChange = (e) => {
+    let value = e.target.value;
+    
+    // Remove any spaces and convert to uppercase
+    value = value.replace(/\s/g, '').toUpperCase();
+    
+    // Only allow alphanumeric characters
+    value = value.replace(/[^A-Z0-9]/g, '');
+    
+    // Limit to 15 characters (GST number length)
+    value = value.slice(0, 15);
+    
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        gst_number: value
+      };
+      
+      // If GST is valid (15 characters), auto-fill PAN
+      if (value.length === 15) {
+        // Extract PAN from GST (characters 2-12)
+        const pan = value.substring(2, 12);
+        newData.pan_number = pan;
+      }
+      
+      return newData;
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'gst_number') {
+      handleGSTChange(e);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate GST number
+    if (formData.gst_number && !validateGST(formData.gst_number)) {
+      setError('Invalid GST number format. Please enter a valid 15-digit GST number.');
+      return;
+    }
+    
+    try {
+      if (company) {
+        await companyVendorAPI.updateCompanyVendor(company.vendor_id, formData);
+      } else {
+        await companyVendorAPI.createCompanyVendor({
+          ...formData,
+          email: formData.office_user_email
+        });
+      }
+      onCompanyUpdated();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save company');
+    }
   };
 
   return (
@@ -76,97 +125,98 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       <form onSubmit={handleSubmit} className="vendor-management-form">
         <div className="vendor-management-form-grid">
           <div className="vendor-management-form-group">
-            <label>Company Name</label>
             <input
               type="text"
               name="company_name"
               value={formData.company_name}
               onChange={handleChange}
+              placeholder="Company Name"
               required
               className="vendor-management-form-input"
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>Owner Name</label>
             <input
               type="text"
               name="owner_name"
               value={formData.owner_name}
               onChange={handleChange}
+              placeholder="Owner Name"
               required
               className="vendor-management-form-input"
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>Company Address</label>
             <input
               type="text"
               name="company_address"
               value={formData.company_address}
               onChange={handleChange}
+              placeholder="Company Address"
               required
               className="vendor-management-form-input"
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>Contact Number</label>
             <input
               type="tel"
               name="contact_number"
               value={formData.contact_number}
               onChange={handleChange}
+              placeholder="Contact Number"
               required
               className="vendor-management-form-input"
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>Company Email</label>
             <input
               type="email"
               name="company_email"
               value={formData.company_email}
               onChange={handleChange}
+              placeholder="Company Email"
               required
               className="vendor-management-form-input"
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>GST Number</label>
             <input
               type="text"
               name="gst_number"
               value={formData.gst_number}
               onChange={handleChange}
+              placeholder="GST Number (15 digits)"
               required
               className="vendor-management-form-input"
+              maxLength={15}
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>PAN Number</label>
             <input
               type="text"
               name="pan_number"
               value={formData.pan_number}
               onChange={handleChange}
+              placeholder="PAN Number"
               required
               className="vendor-management-form-input"
+              readOnly
             />
           </div>
 
           <div className="vendor-management-form-group">
-            <label>Firm Type</label>
             <select
               name="firm_type"
               value={formData.firm_type}
               onChange={handleChange}
               required
-              className="vendor-management-form-select"
+              className="vendor-management-form-input"
             >
               <option value="">Select Firm Type</option>
               <option value="Proprietorship">Proprietorship</option>
@@ -177,12 +227,12 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
           </div>
 
           <div className="vendor-management-form-group">
-            <label>Office User Email</label>
             <input
               type="email"
               name="office_user_email"
               value={formData.office_user_email}
               onChange={handleChange}
+              placeholder="Office User Email"
               required
               className="vendor-management-form-input"
             />
@@ -258,6 +308,16 @@ function CompanyVendors() {
   };
 
   const columns = [
+    { 
+      key: 'sr_no', 
+      label: 'Sr No.', 
+      sortable: true, 
+      render: (_, __, index, pagination = {}) => {
+        const { currentPage = 1, pageSize = 10 } = pagination;
+        const serialNumber = (currentPage - 1) * pageSize + index + 1;
+        return serialNumber;
+      }
+    },
     { key: 'company_name', label: 'Company Name', sortable: true },
     { key: 'owner_name', label: 'Owner Name', sortable: true },
     { key: 'contact_number', label: 'Contact Number', sortable: true },

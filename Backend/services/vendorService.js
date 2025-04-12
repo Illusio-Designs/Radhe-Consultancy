@@ -135,74 +135,84 @@ class VendorService {
       const payload = ticket.getPayload();
       console.log('Google payload:', payload);
 
-      let vendor = await Vendor.findOne({
-        where: { google_id: payload.sub }
+      // First try to find company vendor by email
+      const companyVendor = await CompanyVendor.findOne({
+        where: { company_email: payload.email },
+        include: [{
+          model: Vendor,
+          required: true
+        }]
       });
 
-      if (!vendor) {
-        console.log('Creating new vendor...');
-        // Create new vendor
-        vendor = await Vendor.create({
-          vendor_type: 'Consumer',
-          google_id: payload.sub
-        });
-        console.log('Created vendor:', vendor.toJSON());
-
-        console.log('Creating consumer vendor details...');
-        // Create consumer vendor details with Google information
-        const consumerVendor = await ConsumerVendor.create({
-          vendor_id: vendor.vendor_id,
-          email: payload.email,
-          name: payload.name,
-          profile_image: payload.picture,
-          phone_number: payload.phone_number || 'Not provided',
-          dob: new Date(), // Default to current date
-          gender: 'Not Specified',
-          national_id: `GOOGLE_${payload.sub}`,
-          contact_address: 'Address not provided'
-        });
-        console.log('Created consumer vendor:', consumerVendor.toJSON());
+      let vendor;
+      if (companyVendor) {
+        vendor = companyVendor.Vendor;
+        // Update google_id if not set
+        if (!vendor.google_id) {
+          await vendor.update({ google_id: payload.sub });
+        }
       } else {
-        console.log('Found existing vendor:', vendor.toJSON());
+        // If not found by email, try finding by google_id
+        vendor = await Vendor.findOne({
+          where: { google_id: payload.sub },
+          include: [
+            { model: CompanyVendor, required: false },
+            { model: ConsumerVendor, required: false }
+          ]
+        });
+      }
+
+      if (!vendor) {
+        throw new Error('Vendor not found. Please register first.');
+      }
+
+      // Check if it's a company vendor
+      if (vendor.vendor_type === 'Company') {
+        const companyVendor = await CompanyVendor.findOne({
+          where: { vendor_id: vendor.vendor_id }
+        });
         
-        // Update ConsumerVendor with Google information
+        if (companyVendor) {
+          // Verify the email matches
+          if (companyVendor.company_email !== payload.email) {
+            throw new Error('Email mismatch. Please use the registered company email.');
+          }
+          
+          // Update company information if needed
+          await companyVendor.update({
+            company_email: payload.email
+          });
+        }
+      } else if (vendor.vendor_type === 'Consumer') {
+        // Handle consumer login (existing code)
         const consumerVendor = await ConsumerVendor.findOne({
           where: { vendor_id: vendor.vendor_id }
         });
         
         if (consumerVendor) {
-          console.log('Updating consumer vendor with Google information...');
           await consumerVendor.update({
             email: payload.email,
             name: payload.name,
             profile_image: payload.picture,
             phone_number: payload.phone_number || consumerVendor.phone_number
           });
-          console.log('Updated consumer vendor:', consumerVendor.toJSON());
         }
       }
 
       // Fetch the complete vendor with associations
       const completeVendor = await Vendor.findByPk(vendor.vendor_id, {
         include: [
-          {
-            model: CompanyVendor,
-            required: false
-          },
-          {
-            model: ConsumerVendor,
-            required: false
-          }
+          { model: CompanyVendor, required: false },
+          { model: ConsumerVendor, required: false }
         ]
       });
-      console.log('Complete vendor data:', completeVendor.toJSON());
 
       return completeVendor;
     } catch (error) {
       console.error('Google login error:', error);
-      throw new Error('Invalid Google token');
+      throw new Error(error.message || 'Invalid Google token');
     }
   }
 }
 
-module.exports = new VendorService(); 
+module.exports = new VendorService();

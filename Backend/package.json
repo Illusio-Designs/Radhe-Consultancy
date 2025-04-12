@@ -8,6 +8,7 @@
     "dev": "set NODE_OPTIONS=--no-deprecation && nodemon server.js",
     "seed": "node scripts/seedRoles.js",
     "seed:permissions": "node scripts/seedRolesAndPermissions.js",
+    "setup:permissions": "node scripts/runSetup.js",
     "test-google": "node scripts/getGoogleToken.js",
     "sync:consumers": "node scripts/syncConsumerVendors.js",
     "fix:consumers": "node scripts/fixConsumerVendors.js"

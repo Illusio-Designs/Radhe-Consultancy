@@ -93,11 +93,11 @@ class VendorController {
         include: [
           {
             model: Company,
-            as: 'Company' // Use the correct association alias if defined
+            as: 'Company'
           },
           {
             model: Consumer,
-            as: 'Consumer' // Use the correct association alias if defined
+            as: 'Consumer'
           }
         ]
       });
@@ -183,7 +183,7 @@ class VendorController {
         created_by: user.user_id
       });
   
-      const companyVendor = await CompanyVendor.create({
+      const company = await Company.create({
         vendor_id: vendor.vendor_id,
         company_name,
         owner_name,
@@ -196,7 +196,7 @@ class VendorController {
         firm_type
       });
   
-      res.status(201).json(companyVendor);
+      res.status(201).json(company);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -240,11 +240,35 @@ class VendorController {
         include: [
           {
             model: Company,
-            as: 'Company'
+            required: true,
+            attributes: [
+              'company_id',
+              'company_name',
+              'owner_name',
+              'company_address',
+              'contact_number',
+              'company_email',
+              'gst_number',
+              'pan_number',
+              'company_website',
+              'firm_type',
+              'created_at',
+              'updated_at'
+            ]
           }
-        ]
+        ],
+        order: [['created_at', 'DESC']]
       });
-      res.json(vendors);
+
+      // Transform the data to include serial numbers and flatten the structure
+      const formattedVendors = vendors.map((vendor, index) => ({
+        sr_no: index + 1,
+        vendor_id: vendor.vendor_id,
+        vendor_type: vendor.vendor_type,
+        ...vendor.Company.dataValues
+      }));
+
+      res.json(formattedVendors);
     } catch (error) {
       console.error('Error fetching company vendors:', error);
       res.status(500).json({ error: 'Failed to fetch company vendors' });

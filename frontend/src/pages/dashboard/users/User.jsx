@@ -9,26 +9,42 @@ import { userAPI } from '../../../services/api';
 import '../../../styles/dashboard/User.css';
 import { roleAPI } from '../../../services/api';
 
+// UserForm component that uses 'id' instead of 'role_id'
 const UserForm = ({ user, onClose, onUserUpdated }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    username: user?.username || '',
+    email: user?.email || '',
     password: '',
-    role_id: 2,
-    user_type_id: null
+    role_id: user?.role_id ? String(user.role_id) : '', // Keep as role_id for form state
+    user_type_id: user?.user_type_id || 1,
+    status: user?.status || 'Active'
   });
   const [error, setError] = useState(null);
   const [roles, setRoles] = useState([]);
   const [loadingRoles, setLoadingRoles] = useState(false);
 
-  // Fetch roles on component mount
+  // Enhanced role fetching with debug logging
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         setLoadingRoles(true);
         const rolesData = await roleAPI.getAllRoles();
+        console.log("Fetched roles:", rolesData); // Debug log
+        
+        // Use the roles as they are - they use 'id' rather than 'role_id'
         setRoles(rolesData);
+        
+        // Only set default role if creating a new user and no role is selected
+        if (!user && !formData.role_id && rolesData.length > 0) {
+          // Find the regular user role (usually id: 2) or default to the first role
+          const defaultRole = rolesData.find(role => role.id === 2) || rolesData[0];
+          setFormData(prev => ({
+            ...prev,
+            role_id: String(defaultRole.id)
+          }));
+        }
       } catch (err) {
+        console.error('Error fetching roles:', err);
         setError('Failed to fetch roles');
       } finally {
         setLoadingRoles(false);
@@ -37,24 +53,27 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     fetchRoles();
   }, []);
 
-
-  // Add handleChange function
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
+  // Update form data when user prop changes (for edit mode)
   useEffect(() => {
     if (user) {
+      console.log('Setting form data for user:', user);
       setFormData({
-        name: user.username || '',
+        username: user.username || '',
         email: user.email || '',
         password: '',
-        role_id: user.role_id || 2,
-        user_type_id: user.user_type_id || null
+        role_id: user.role_id ? String(user.role_id) : '', // Keep as role_id for form state
+        user_type_id: user.user_type_id || 1,
+        status: user.status || 'Active'
+      });
+    } else {
+      // Reset form data when creating new user
+      setFormData({
+        username: '',
+        email: '',
+        password: '',
+        role_id: '',
+        user_type_id: 1,
+        status: 'Active'
       });
     }
   }, [user]);
@@ -62,28 +81,58 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!formData.role_id) {
+        setError('Please select a valid role');
+        return;
+      }
+      
+      // Convert role_id to number for API submission
+      const roleId = Number(formData.role_id);
+      if (isNaN(roleId)) {
+        setError('Selected role ID is not a valid number');
+        return;
+      }
+      
+      // Check if the role exists using the 'id' property
+      const roleExists = roles.some(role => role && role.id === roleId);
+      if (!roleExists) {
+        setError('Selected role is not valid');
+        return;
+      }
+
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        role_id: roleId, // Send numeric role_id to API
+        user_type_id: formData.user_type_id,
+        status: formData.status
+      };
+
+      if (formData.password && !user) {
+        userData.password = formData.password;
+      }
+
       if (user) {
-        const updatedUser = await userAPI.updateUser(user.user_id, {
-          username: formData.name,
-          email: formData.email,
-          password: formData.password || undefined,
-          role_id: formData.role_id,
-          user_type_id: formData.user_type_id
-        });
+        const updatedUser = await userAPI.updateUser(user.user_id, userData);
         onUserUpdated(updatedUser);
       } else {
-        const newUser = await userAPI.createUser({
-          username: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role_id: formData.role_id,
-          user_type_id: formData.user_type_id
-        });
+        const newUser = await userAPI.createUser(userData);
         onUserUpdated(newUser);
       }
     } catch (err) {
+      console.error('Error saving user:', err);
       setError(err.response?.data?.error || 'Failed to save user');
     }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log('Form field changed:', { name, value });
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -98,8 +147,8 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         <div className="user-management-form-group">
           <input
             type="text"
-            name="name"
-            value={formData.name}
+            name="username"
+            value={formData.username}
             onChange={handleChange}
             className="user-management-form-input"
             placeholder='Enter Your Name'
@@ -144,10 +193,14 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
               className="user-management-form-input"
               required
             >
+              <option value="">Select Role</option>
               {roles.map(role => (
-                <option key={role.role_id} value={role.role_id}>
-                  {role.role_name}
-                </option>
+                // Use 'id' instead of 'role_id'
+                role && role.id !== undefined ? (
+                  <option key={role.id} value={String(role.id)}>
+                    {role.role_name || `Role ID: ${role.id}`}
+                  </option>
+                ) : null
               ))}
             </select>
           )}
@@ -159,7 +212,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             value={formData.status}
             onChange={handleChange}
             className="user-management-form-input"
-            placeholder = "Status"
+            placeholder="Status"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -176,6 +229,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 };
 
 function UserList() {
+  // Rest of component code remains the same
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState([]);
@@ -218,6 +272,7 @@ function UserList() {
   };
 
   const handleEdit = (user) => {
+    console.log("Editing user:", user); // Debug log
     setSelectedUser(user);
     setShowModal(true);
   };
@@ -233,6 +288,16 @@ function UserList() {
   };
 
   const columns = [
+    { 
+      key: 'sr_no', 
+      label: 'Sr No.', 
+      sortable: true, 
+      render: (_, __, index, pagination = {}) => {
+        const { currentPage = 1, pageSize = 10 } = pagination;
+        const serialNumber = (currentPage - 1) * pageSize + index + 1;
+        return serialNumber;
+      }
+    },
     { key: 'username', label: 'Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
     {
@@ -246,9 +311,7 @@ function UserList() {
       label: 'Status',
       sortable: true,
       render: (value) => (
-        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-          value === 'Active' ? 'user-management-status-active' : 'user-management-status-inactive'
-        }`}>
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'Active' ? 'user-management-status-active' : 'user-management-status-inactive'}`}>
           {value || 'Active'}
         </span>
       )

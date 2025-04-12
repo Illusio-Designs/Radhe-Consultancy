@@ -48,19 +48,79 @@ class UserService {
 
   // Update user
   async updateUser(userId, userData) {
-    const user = await User.findByPk(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    console.log('Updating user in service:', {
+      userId,
+      userData
+    });
 
-    if (userData.role_id) {
-      const role = await Role.findByPk(userData.role_id);
-      if (!role) {
-        throw new Error('Role not found');
+    // Start a transaction
+    const transaction = await User.sequelize.transaction();
+
+    try {
+      const user = await User.findByPk(userId, { transaction });
+      if (!user) {
+        console.error('User not found:', userId);
+        throw new Error('User not found');
       }
-    }
 
-    return user.update(userData);
+      console.log('Found user:', user.toJSON());
+
+      // Handle role update separately
+      if (userData.role_id !== undefined) {
+        console.log('Processing role update:', userData.role_id);
+        const role = await Role.findByPk(userData.role_id, { transaction });
+        if (!role) {
+          console.error('Role not found:', userData.role_id);
+          throw new Error('Role not found');
+        }
+        console.log('Found role:', role.toJSON());
+        
+        // Update role_id using raw update within transaction
+        await User.update(
+          { role_id: userData.role_id },
+          { 
+            where: { user_id: userId },
+            transaction 
+          }
+        );
+        console.log('Role updated successfully');
+      }
+
+      // Handle other user data updates
+      const updateData = { ...userData };
+      delete updateData.role_id; // Remove role_id as it's already handled
+
+      // If password is provided, hash it
+      if (updateData.password) {
+        console.log('Password provided, hashing...');
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(updateData.password, salt);
+      }
+
+      // Update other user data
+      if (Object.keys(updateData).length > 0) {
+        await User.update(updateData, { 
+          where: { user_id: userId },
+          transaction 
+        });
+        console.log('User data updated successfully');
+      }
+      
+      // Commit the transaction
+      await transaction.commit();
+      
+      // Fetch the complete updated user with role information
+      const completeUser = await User.findByPk(userId, {
+        include: [{ model: Role }]
+      });
+      console.log('Final user state:', completeUser.toJSON());
+      return completeUser;
+    } catch (error) {
+      // If anything goes wrong, rollback the transaction
+      await transaction.rollback();
+      console.error('Error updating user:', error);
+      throw error;
+    }
   }
 
   // Delete user

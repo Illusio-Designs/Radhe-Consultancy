@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../../styles/components/common/Table.css';
 
-const Table = ({ data, columns }) => {
+const Table = ({ data, columns, pagination }) => {
   return (
     <table>
       <thead>
@@ -19,7 +19,7 @@ const Table = ({ data, columns }) => {
             <tr key={index}>
               {columns.map((col) => (
                 <td key={col.key}>
-                  {col.render ? col.render(row[col.key], row) : row[col.key]}
+                  {col.render ? col.render(row[col.key], row, index, pagination) : row[col.key]}
                 </td>
               ))}
             </tr>

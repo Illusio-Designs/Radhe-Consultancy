@@ -68,7 +68,11 @@ const TableWithControl = ({
       </div>
 
       <div className="table-container">
-        <Table data={getCurrentPageData()} columns={columns} />
+        <Table 
+          data={getCurrentPageData()} 
+          columns={columns} 
+          pagination={{ currentPage, pageSize }}
+        />
       </div>
 
       <Pagination

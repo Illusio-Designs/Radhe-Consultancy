@@ -57,7 +57,9 @@ async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS Vendors (
         vendor_id INT PRIMARY KEY AUTO_INCREMENT,
         vendor_type ENUM('Company', 'Consumer') NOT NULL,
-        google_id VARCHAR(255) NULL
+        google_id VARCHAR(255) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
     `);
 
@@ -75,6 +77,8 @@ async function initializeDatabase() {
         company_website VARCHAR(255) NULL,
         contact_number VARCHAR(15) NULL,
         firm_type VARCHAR(50) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (vendor_id) REFERENCES Vendors(vendor_id)
       );
     `);
@@ -92,8 +96,29 @@ async function initializeDatabase() {
         gender ENUM('Male', 'Female', 'Other') NULL,
         national_id VARCHAR(50) NULL,
         contact_address VARCHAR(255) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (vendor_id) REFERENCES Vendors(vendor_id)
       );
+    `);
+
+    // Add timestamp columns to existing tables if they don't exist
+    await sequelize.query(`
+      ALTER TABLE Vendors 
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+    `);
+
+    await sequelize.query(`
+      ALTER TABLE Companies 
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+    `);
+
+    await sequelize.query(`
+      ALTER TABLE Consumers 
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
     `);
 
     // Check and create Users table if it doesn't exist

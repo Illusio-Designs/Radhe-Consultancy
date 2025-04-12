@@ -1,5 +1,7 @@
 const authService = require('../services/authService');
 const { User, UserType } = require('../models');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 class AuthController {
   async register(req, res) {
@@ -65,23 +67,56 @@ class AuthController {
   }
 
   async login(req, res) {
-    const { email, password } = req.body;
-    const user = await User.findOne({ where: { email }, include: [UserType] });
+    try {
+      const { email, password } = req.body;
+      
+      // Add better validation
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+      }
 
-    if (!user || !user.validatePassword(password)) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      const user = await User.findOne({ 
+        where: { email },
+        include: [UserType] // Include user type information
+      });
+
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // Check password using the instance method
+      const isValidPassword = await user.validatePassword(password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          userId: user.user_id,
+          email: user.email,
+          roleId: user.role_id
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      // Send successful response
+      res.json({
+        token,
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          username: user.username,
+          role_id: user.role_id,
+          user_type: user.UserType?.type_name
+        }
+      });
+
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Generate token and return user data based on user type
-    const userData = {
-      id: user.id,
-      email: user.email,
-      userType: user.UserType.type_name,
-      // Add other relevant user data
-    };
-
-    // Return user data and token
-    res.json({ user: userData, token: 'generated_token' });
   }
 }
 
