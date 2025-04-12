@@ -131,8 +131,8 @@ class VendorController {
   // Google login for vendors
   async googleLogin(req, res) {
     try {
-      const { token } = req.body;
-      const vendor = await vendorService.googleLogin(token);
+      const { idToken } = req.body;
+      const vendor = await vendorService.googleLogin(idToken);
       res.json(vendor);
     } catch (error) {
       res.status(401).json({ error: error.message });

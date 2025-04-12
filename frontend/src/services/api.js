@@ -160,7 +160,7 @@ export const vendorAPI = {
   },
 
   googleLogin: async (token) => {
-    const response = await api.post('/vendors/google-login', { token });
+    const response = await api.post('/vendors/google-login', { idToken: token });
     return response.data;
   }
 };
