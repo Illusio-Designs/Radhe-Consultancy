@@ -23,10 +23,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleLogin = async (idToken) => {
+  const googleLogin = async (idToken, userType = 'office') => {
     try {
-      const data = await authAPI.googleLogin(idToken);
-      setUser(data.user);
+      const data = await authAPI.googleLogin(idToken, userType);
+      if (userType === 'vendor') {
+        setUser(data.vendor);
+      } else {
+        setUser(data.user);
+      }
       return data;
     } catch (error) {
       throw error;

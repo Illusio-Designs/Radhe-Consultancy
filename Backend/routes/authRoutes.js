@@ -9,7 +9,7 @@ router.post('/login', authController.login);
 // Register route
 router.post('/register', authController.register);
 
-// Google login route
+// Universal Google login route for all user types
 router.post('/google-login', authController.googleLogin);
 
 module.exports = router;

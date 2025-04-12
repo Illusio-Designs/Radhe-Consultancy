@@ -31,22 +31,20 @@ export const authAPI = {
     return response.data;
   },
 
-  googleLogin: async (idToken) => {
-    const response = await api.post('/auth/google-login', { token: idToken });
+  googleLogin: async (idToken, userType) => {
+    const response = await api.post('/auth/google-login', { 
+      token: idToken,
+      userType: userType 
+    });
+    
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      if (userType === 'vendor') {
+        localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
+      } else {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
     }
-    return response.data;
-  },
-
-  register: async (username, email, password, role_id) => {
-    const response = await api.post('/auth/register', { 
-      username,
-      email,
-      password,
-      role_id 
-    });
     return response.data;
   },
 
@@ -62,6 +60,7 @@ export const authAPI = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('vendor');
   }
 };
 
@@ -159,9 +158,27 @@ export const vendorAPI = {
     return response.data;
   },
 
-  googleLogin: async (token) => {
-    const response = await api.post('/vendors/google-login', { idToken: token });
+  vendorGoogleLogin: async (token) => {
+    const response = await api.post('/auth/vendor/google-login', { token });
+    if (response.data.token) {
+      localStorage.setItem('vendorToken', response.data.token);
+      localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
+    }
     return response.data;
+  },
+
+  getCurrentVendor: () => {
+    const vendor = localStorage.getItem('vendor');
+    return vendor ? JSON.parse(vendor) : null;
+  },
+
+  isVendorAuthenticated: () => {
+    return !!localStorage.getItem('vendorToken');
+  },
+
+  vendorLogout: () => {
+    localStorage.removeItem('vendorToken');
+    localStorage.removeItem('vendor');
   }
 };
 

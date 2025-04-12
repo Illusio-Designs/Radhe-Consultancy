@@ -58,102 +58,85 @@ class AuthService {
   }
 
   // Google login
-  async googleLogin(token) {
+  async googleLogin(token, userType) {
     try {
-      console.log('Verifying Google token...');
       const ticket = await client.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID
       });
 
       const payload = ticket.getPayload();
-      console.log('Token verified, payload:', payload);
-
-      // First try to find user by google_id
-      let user = await User.findOne({
-        where: { google_id: payload.sub },
-        include: [{ model: Role }]
-      });
-
-      // If not found by google_id, try to find by email
-      if (!user) {
-        user = await User.findOne({
-          where: { email: payload.email },
-          include: [{ model: Role }]
-        });
+      
+      if (userType === 'vendor') {
+        return this.handleVendorGoogleLogin(payload);
+      } else {
+        return this.handleOfficeGoogleLogin(payload);
       }
-
-      if (!user) {
-        console.log('Creating new user...');
-        // Create new user if doesn't exist
-        const defaultRole = await Role.findOne({ where: { role_name: 'User' } });
-        if (!defaultRole) {
-          throw new Error('Default role not found');
-        }
-
-        // Generate unique username from email
-        const baseUsername = payload.email.split('@')[0];
-        const username = await this.generateUniqueUsername(baseUsername);
-
-        user = await User.create({
-          email: payload.email,
-          username: username,
-          google_id: payload.sub,
-          profile_image: payload.picture,
-          role_id: defaultRole.role_id
-        });
-
-        // Fetch the created user with role
-        user = await User.findOne({
-          where: { user_id: user.user_id },
-          include: [{ model: Role }]
-        });
-      } else if (!user.google_id) {
-        // Update existing user with google_id if not set
-        await user.update({ google_id: payload.sub });
-      }
-
-      const jwtToken = generateToken(user.user_id, user.Role.role_name);
-      return { user, token: jwtToken };
     } catch (error) {
       console.error('Google login error:', error);
       throw new Error('Invalid Google token');
     }
   }
 
-  // Register new user
-  async register(userData) {
-    try {
-      // Check if user already exists
-      const existingUser = await User.findOne({
-        where: { email: userData.email }
-      });
-
-      if (existingUser) {
-        throw new Error('User already exists');
+  async handleVendorGoogleLogin(payload) {
+    let vendor = await Vendor.findOne({
+      where: { 
+        [Op.or]: [
+          { google_id: payload.sub },
+          { email: payload.email }
+        ]
       }
+    });
 
-      // Find or create default role
-      let role = await Role.findOne({ where: { role_name: 'User' } });
-      if (!role) {
-        role = await Role.create({ role_name: 'User' });
-      }
-
-      // Generate unique username
-      const username = await this.generateUniqueUsername(userData.username);
-
-      // Create user with role_id
-      const user = await User.create({
-        ...userData,
-        username,
-        role_id: role.role_id
+    if (!vendor) {
+      vendor = await Vendor.create({
+        email: payload.email,
+        name: payload.name,
+        google_id: payload.sub,
+        profile_image: payload.picture,
+        status: 'Active',
+        vendor_type: 'Individual'
       });
-
-      const token = generateToken(user.user_id, role.role_name);
-      return { user, token };
-    } catch (error) {
-      throw new Error(error.message || 'Error creating user');
+    } else if (!vendor.google_id) {
+      await vendor.update({ 
+        google_id: payload.sub,
+        profile_image: payload.picture
+      });
     }
+
+    const token = generateToken(vendor.vendor_id, 'vendor');
+    return { user: vendor, token };
+  }
+
+  async handleOfficeGoogleLogin(payload) {
+    const officeType = await UserType.findOne({ 
+      where: { type_name: 'Office' } 
+    });
+
+    let user = await User.findOne({
+      where: { email: payload.email },
+      include: [UserType, Role]
+    });
+
+    if (!user) {
+      user = await User.create({
+        email: payload.email,
+        username: payload.name,
+        google_id: payload.sub,
+        profile_image: payload.picture,
+        user_type_id: officeType.user_type_id,
+        role_id: 2 // Default to User role
+      });
+      
+      // Fetch the complete user data with associations
+      user = await User.findOne({
+        where: { user_id: user.user_id },
+        include: [UserType, Role]
+      });
+    }
+
+    const token = generateToken(user.user_id, user.Role.role_name);
+    return { user, token };
   }
 }
 

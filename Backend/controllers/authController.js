@@ -31,93 +31,53 @@ class AuthController {
 
   async googleLogin(req, res) {
     try {
-      const { idToken } = req.body;
-      const { email } = await verifyGoogleToken(idToken);
-
-      // Find or create user with Office type
-      const officeType = await UserType.findOne({ where: { type_name: 'Office' } });
-      if (!officeType) {
-        return res.status(500).json({ error: 'Office user type not found' });
+      const { token, userType } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: 'Google token is required' });
       }
 
-      let user = await User.findOne({ 
-        where: { email },
-        include: [UserType, Role]
-      });
+      if (!userType) {
+        return res.status(400).json({ error: 'User type is required' });
+      }
 
-      if (!user) {
-        // Create new Office user
-        user = await User.create({
-          email,
-          google_id: idToken,
-          user_type_id: officeType.user_type_id,
-          role_id: 2 // Default to User role
+      const result = await authService.googleLogin(token, userType);
+
+      // Response based on user type
+      if (userType === 'vendor') {
+        res.json({
+          token: result.token,
+          vendor: {
+            vendor_id: result.user.vendor_id,
+            email: result.user.email,
+            name: result.user.name,
+            profile_image: result.user.profile_image,
+            vendor_type: result.user.vendor_type,
+            status: result.user.status
+          },
+          userType: 'vendor'
+        });
+      } else {
+        res.json({
+          token: result.token,
+          user: {
+            user_id: result.user.user_id,
+            email: result.user.email,
+            username: result.user.username,
+            role_id: result.user.role_id,
+            user_type: result.user.UserType?.type_name,
+            profile_image: result.user.profile_image
+          },
+          userType: 'office'
         });
       }
-
-      res.json({
-        user_id: user.user_id,
-        email: user.email,
-        user_type: user.UserType.type_name,
-        role_id: user.role_id
-      });
     } catch (error) {
+      console.error('Google login error:', error);
       res.status(401).json({ error: error.message });
     }
   }
 
-  async login(req, res) {
-    try {
-      const { email, password } = req.body;
-      
-      // Add better validation
-      if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
-      }
-
-      const user = await User.findOne({ 
-        where: { email },
-        include: [UserType] // Include user type information
-      });
-
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      // Check password using the instance method
-      const isValidPassword = await user.validatePassword(password);
-      if (!isValidPassword) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { 
-          userId: user.user_id,
-          email: user.email,
-          roleId: user.role_id
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-
-      // Send successful response
-      res.json({
-        token,
-        user: {
-          user_id: user.user_id,
-          email: user.email,
-          username: user.username,
-          role_id: user.role_id,
-          user_type: user.UserType?.type_name
-        }
-      });
-
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
+  // Remove the separate vendorGoogleLogin method as it's now handled in the main googleLogin
 }
 
 module.exports = new AuthController();
