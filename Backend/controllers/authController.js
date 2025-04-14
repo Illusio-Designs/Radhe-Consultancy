@@ -1,7 +1,9 @@
 const authService = require('../services/authService');
-const { User, UserType } = require('../models');
+const { User, UserType, Company, Consumer, Vendor, Role } = require('../models');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 class AuthController {
   async register(req, res) {
@@ -29,6 +31,48 @@ class AuthController {
     }
   }
 
+  async login(req, res) {
+    try {
+      const { email, password } = req.body;
+      
+      // Find the user
+      const user = await User.findOne({ where: { email } });
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Check password
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Create token
+      const token = jwt.sign(
+        { userId: user.user_id, role: user.role_id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      
+      // Return user info and token
+      res.json({
+        token,
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          username: user.username,
+          role_id: user.role_id,
+          user_type: user.UserType?.type_name,
+          profile_image: user.profile_image
+        },
+        userType: 'office'
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
   async googleLogin(req, res) {
     try {
       const { token, userType } = req.body;
@@ -37,47 +81,206 @@ class AuthController {
         return res.status(400).json({ error: 'Google token is required' });
       }
 
-      if (!userType) {
-        return res.status(400).json({ error: 'User type is required' });
+      // Verify the Google token
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+      
+      const payload = ticket.getPayload();
+      const { email, name, picture } = payload;
+
+      // Check if user exists
+      let user = await User.findOne({
+        where: { email },
+        include: [{
+          model: UserType,
+          attributes: ['type_name']
+        }]
+      });
+
+      if (!user) {
+        // Find the appropriate user type
+        const userTypeRecord = await UserType.findOne({
+          where: { type_name: userType }
+        });
+
+        if (!userTypeRecord) {
+          return res.status(400).json({ error: 'Invalid user type' });
+        }
+
+        // Create new user
+        user = await User.create({
+          username: name,
+          email,
+          profile_image: picture,
+          user_type_id: userTypeRecord.user_type_id,
+          role_id: 2 // Default to User role
+        });
+
+        // If user type is Company, create company record
+        if (userType.toLowerCase() === 'company') {
+          const vendor = await Vendor.create({
+            vendor_name: name,
+            vendor_email: email,
+            vendor_type: 'Company'
+          });
+
+          await Company.create({
+            company_name: name,
+            owner_name: name,
+            company_email: email,
+            contact_number: '', // Will be updated later
+            company_address: '', // Will be updated later
+            gst_number: '', // Will be updated later
+            pan_number: '', // Will be updated later
+            firm_type: 'Proprietorship', // Default value
+            user_type_id: userTypeRecord.user_type_id,
+            vendor_id: vendor.vendor_id
+          });
+        }
       }
 
-      const result = await authService.googleLogin(token, userType);
+      // Generate JWT token
+      const authToken = jwt.sign(
+        { userId: user.user_id, role: user.role_id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
 
-      // Response based on user type
-      if (userType === 'vendor') {
-        res.json({
-          token: result.token,
-          vendor: {
-            vendor_id: result.user.vendor_id,
-            email: result.user.email,
-            name: result.user.name,
-            profile_image: result.user.profile_image,
-            vendor_type: result.user.vendor_type,
-            status: result.user.status
-          },
-          userType: 'vendor'
-        });
-      } else {
-        res.json({
-          token: result.token,
-          user: {
-            user_id: result.user.user_id,
-            email: result.user.email,
-            username: result.user.username,
-            role_id: result.user.role_id,
-            user_type: result.user.UserType?.type_name,
-            profile_image: result.user.profile_image
-          },
-          userType: 'office'
+      // Get vendor info if exists
+      let vendor = null;
+      if (userType.toLowerCase() === 'company') {
+        vendor = await Vendor.findOne({
+          where: { vendor_email: email },
+          include: [{
+            model: Company,
+            attributes: ['company_id', 'company_name']
+          }]
         });
       }
+
+      res.json({
+        token: authToken,
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          username: user.username,
+          role_id: user.role_id,
+          user_type: user.UserType?.type_name,
+          profile_image: user.profile_image
+        },
+        vendor,
+        userType: user.UserType?.type_name || userType
+      });
     } catch (error) {
       console.error('Google login error:', error);
       res.status(401).json({ error: error.message });
     }
   }
 
-  // Remove the separate vendorGoogleLogin method as it's now handled in the main googleLogin
+  async checkUserType(req, res) {
+    try {
+      const { email } = req.body;
+      
+      // Check if user exists in User table
+      const existingUser = await User.findOne({
+        where: { email },
+        include: [{
+          model: UserType,
+          attributes: ['type_name']
+        }]
+      });
+
+      if (existingUser) {
+        return res.json({
+          exists: true,
+          userType: existingUser.UserType.type_name,
+          userId: existingUser.user_id,
+          userTypeId: existingUser.user_type_id,
+          canDelete: false // Users cannot delete their own accounts
+        });
+      }
+
+      // Check if company exists
+      const company = await Company.findOne({
+        where: { company_email: email },
+        include: [{
+          model: UserType,
+          attributes: ['type_name']
+        }]
+      });
+
+      if (company) {
+        return res.json({
+          exists: true,
+          userType: company.UserType.type_name,
+          companyId: company.company_id,
+          userTypeId: company.user_type_id,
+          vendorId: company.vendor_id,
+          canDelete: false, // Company users cannot delete their accounts
+          canEdit: true // Company users can edit their info
+        });
+      }
+
+      // Check if consumer exists
+      const consumer = await Consumer.findOne({
+        where: { email },
+        include: [{
+          model: UserType,
+          attributes: ['type_name']
+        }]
+      });
+
+      if (consumer) {
+        return res.json({
+          exists: true,
+          userType: consumer.UserType.type_name,
+          consumerId: consumer.consumer_id,
+          userTypeId: consumer.user_type_id,
+          vendorId: consumer.vendor_id,
+          canDelete: false, // Consumers cannot delete their accounts
+          canEdit: true // Consumers can edit their info
+        });
+      }
+
+      // Check if vendor exists
+      const vendor = await Vendor.findOne({
+        where: { vendor_email: email }
+      });
+
+      if (vendor) {
+        const userType = await UserType.findOne({
+          where: { type_name: vendor.vendor_type }
+        });
+
+        return res.json({
+          exists: true,
+          userType: vendor.vendor_type,
+          vendorId: vendor.vendor_id,
+          userTypeId: userType.user_type_id,
+          canDelete: false, // Vendors cannot delete their accounts
+          canEdit: true // Vendors can edit their info
+        });
+      }
+
+      // Default to Office user type
+      const officeType = await UserType.findOne({
+        where: { type_name: 'Office' }
+      });
+
+      return res.json({
+        exists: false,
+        userType: 'Office',
+        userTypeId: officeType.user_type_id,
+        canDelete: false, // Default users cannot delete their accounts
+        canEdit: true // Default users can edit their info
+      });
+    } catch (error) {
+      console.error('Error checking user type:', error);
+      res.status(500).json({ error: 'Error checking user type' });
+    }
+  }
 }
 
 module.exports = new AuthController();

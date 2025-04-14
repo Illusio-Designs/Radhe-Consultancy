@@ -1,9 +1,9 @@
 :root {
-  --primary-color: #1F4F9C;
+  --primary-color: #1f4f9c;
   --primary-hover: #163b76;
   --text-primary: #2d3748;
   --text-secondary: #4a5568;
-  --background-gradient: linear-gradient(135deg, #1F4F9C 0%, #0ea5e9 100%);
+  --background-gradient: linear-gradient(135deg, #1f4f9c 0%, #0ea5e9 100%);
 }
 
 .auth-container {
@@ -130,7 +130,7 @@
   font-size: 0.95rem;
 } */
 
-.google-login{
+.google-login {
   margin-top: 20px !important;
 }
 
@@ -157,7 +157,6 @@
   align-items: center;
   gap: 0.5rem;
 }
-
 
 /* Google Login Button Styling */
 /* div[class*='google-login'] {

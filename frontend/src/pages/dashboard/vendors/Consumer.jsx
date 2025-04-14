@@ -1,92 +1,207 @@
-import React, { useState, useEffect } from 'react';
-import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from 'react-icons/bi';
-import { vendorAPI } from '../../../services/api';
-import TableWithControl from '../../../components/common/Table/TableWithControl';
-import Button from '../../../components/common/Button/Button';
-import ActionButton from '../../../components/common/ActionButton/ActionButton';
-import Modal from '../../../components/common/Modal/Modal';
-import Loader from '../../../components/common/Loader/Loader';
-import '../../../styles/dashboard/Vendor.css';
+import React, { useState, useEffect } from "react";
+import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from "react-icons/bi";
+import { vendorAPI } from "../../../services/api";
+import TableWithControl from "../../../components/common/Table/TableWithControl";
+import Button from "../../../components/common/Button/Button";
+import ActionButton from "../../../components/common/ActionButton/ActionButton";
+import Modal from "../../../components/common/Modal/Modal";
+import Loader from "../../../components/common/Loader/Loader";
+import "../../../styles/dashboard/Vendor.css";
 
 const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone_number: '',
-    dob: '',
-    national_id: '',
-    contact_address: '',
-    vendor_type: 'Consumer',
-    office_user_email: '' // Add office user email field
+    name: "",
+    email: "",
+    phone_number: "",
+    dob: "",
+    gender: "",
+    national_id: "",
+    contact_address: "",
+    profile_image: "",
+    vendor_type: "Consumer",
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (consumer) {
-        await vendorAPI.updateConsumerVendor(consumer.vendor_id, formData);
-      } else {
-        await vendorAPI.createConsumerVendor({
-          ...formData,
-          email: formData.office_user_email
-        });
-      }
-      onConsumerUpdated();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save consumer');
-    }
-  };
-
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (consumer) {
       setFormData({
-        name: consumer.ConsumerVendor.name || '',
-        email: consumer.ConsumerVendor.email || '',
-        phone_number: consumer.ConsumerVendor.phone_number || '',
-        dob: consumer.ConsumerVendor.dob || '',
-        national_id: consumer.ConsumerVendor.national_id || '',
-        contact_address: consumer.ConsumerVendor.contact_address || '',
-        vendor_type: 'Consumer'
+        name: consumer.name || "",
+        email: consumer.email || "",
+        phone_number: consumer.phone_number || "",
+        dob: consumer.dob || "",
+        gender: consumer.gender || "",
+        national_id: consumer.national_id || "",
+        contact_address: consumer.contact_address || "",
+        profile_image: consumer.profile_image || "",
+        vendor_type: "Consumer",
       });
     }
   }, [consumer]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    console.log("Submitting form data:", formData); // Debugging line
+
+    try {
+      if (consumer) {
+        await vendorAPI.updateVendor(consumer.vendor_id, formData);
+      } else {
+        await vendorAPI.createConsumerVendor(formData);
+      }
+      onConsumerUpdated();
+    } catch (err) {
+      console.error("Error during submission:", err); // Debugging line
+      setError(err.response?.data?.error || "Failed to save consumer");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (e.g., limit to 5 MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("File size exceeds 5 MB limit.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          profile_image: reader.result, // Set the base64 URL
+        }));
+      };
+      reader.readAsDataURL(file); // Convert the file to base64 URL
+    }
   };
 
   return (
     <>
-      {error && (
-        <div className="vendor-management-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="vendor-management-error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="vendor-management-form">
-        <div className="vendor-management-form-group">
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="vendor-management-form-input"
-            placeholder="Name"
-            required
-          />
+        <div className="vendor-management-form-grid">
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Consumer Name"
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="tel"
+              name="phone_number"
+              value={formData.phone_number}
+              onChange={handleChange}
+              placeholder="Phone Number"
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="national_id"
+              value={formData.national_id}
+              onChange={handleChange}
+              placeholder="National ID"
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <textarea
+              name="contact_address"
+              value={formData.contact_address}
+              onChange={handleChange}
+              placeholder="Contact Address"
+              required
+              className="vendor-management-form-input"
+              rows="3"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <label htmlFor="profile_image">Upload Profile Image</label>
+            <input
+              type="file"
+              id="profile_image"
+              name="profile_image"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="vendor-management-form-input"
+            />
+          </div>
         </div>
 
-        {/* Add all other form fields in the same pattern */}
-        
         <div className="vendor-management-form-actions">
-          <Button type="button" variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">{consumer ? 'Update' : 'Create'}</Button>
+          <Button type="button" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="contained">
+            {consumer ? "Update" : "Create"}
+          </Button>
         </div>
       </form>
     </>
@@ -111,7 +226,7 @@ function ConsumerVendors() {
       setConsumers(data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch consumers');
+      setError("Failed to fetch consumers");
       console.error(err);
     } finally {
       setLoading(false);
@@ -119,12 +234,12 @@ function ConsumerVendors() {
   };
 
   const handleDelete = async (vendorId) => {
-    if (window.confirm('Are you sure you want to delete this consumer?')) {
+    if (window.confirm("Are you sure you want to delete this consumer?")) {
       try {
         await vendorAPI.deleteConsumerVendor(vendorId);
         await fetchConsumers();
       } catch (err) {
-        setError('Failed to delete consumer');
+        setError("Failed to delete consumer");
         console.error(err);
       }
     }
@@ -146,23 +261,23 @@ function ConsumerVendors() {
   };
 
   const columns = [
-    { 
-      key: 'sr_no', 
-      label: 'Sr No.', 
-      sortable: true, 
+    {
+      key: "sr_no",
+      label: "Sr No.",
+      sortable: true,
       render: (_, __, index, pagination = {}) => {
         const { currentPage = 1, pageSize = 10 } = pagination;
         const serialNumber = (currentPage - 1) * pageSize + index + 1;
         return serialNumber;
-      }
+      },
     },
-    { key: 'name', label: 'Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'phone_number', label: 'Phone Number', sortable: true },
-    { key: 'national_id', label: 'National ID', sortable: true },
+    { key: "name", label: "Name", sortable: true },
+    { key: "email", label: "Email", sortable: true },
+    { key: "phone_number", label: "Phone Number", sortable: true },
+    { key: "national_id", label: "National ID", sortable: true },
     {
-      key: 'actions',
-      label: 'Actions',
+      key: "actions",
+      label: "Actions",
       render: (_, consumer) => (
         <div className="vendor-management-actions">
           <ActionButton
@@ -180,8 +295,8 @@ function ConsumerVendors() {
             <BiTrash />
           </ActionButton>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -189,9 +304,9 @@ function ConsumerVendors() {
       <div className="vendor-management-content">
         <div className="vendor-management-header">
           <h1 className="vendor-management-title">Consumer Vendors</h1>
-          <Button 
-            variant="contained" 
-            onClick={() => setShowModal(true)} 
+          <Button
+            variant="contained"
+            onClick={() => setShowModal(true)}
             icon={<BiPlus />}
           >
             Add Consumer
@@ -218,12 +333,12 @@ function ConsumerVendors() {
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
-        title={selectedConsumer ? 'Edit Consumer' : 'Add New Consumer'}
+        title={selectedConsumer ? "Edit Consumer" : "Add New Consumer"}
       >
-        <ConsumerForm 
-          consumer={selectedConsumer} 
-          onClose={handleModalClose} 
-          onConsumerUpdated={handleConsumerUpdated} 
+        <ConsumerForm
+          consumer={selectedConsumer}
+          onClose={handleModalClose}
+          onConsumerUpdated={handleConsumerUpdated}
         />
       </Modal>
     </div>

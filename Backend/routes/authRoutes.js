@@ -3,6 +3,9 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+// Check user type by email
+router.post('/check-user-type', authController.checkUserType);
+
 // Login route
 router.post('/login', authController.login);
 

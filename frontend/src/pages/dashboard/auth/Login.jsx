@@ -6,7 +6,10 @@ import { GoogleLogin } from "@react-oauth/google";
 import { authAPI } from "../../../services/api";
 
 function Login() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -26,10 +29,13 @@ function Login() {
     setLoading(true);
     try {
       const response = await authAPI.login(formData.email, formData.password);
-      login(response); // Update auth context with full response
+      login(response);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to login. Please check your credentials.");
+      setError(
+        err.response?.data?.error ||
+          "Failed to login. Please check your credentials."
+      );
     } finally {
       setLoading(false);
     }
@@ -46,7 +52,7 @@ function Login() {
       console.error("Google login error:", err);
       setError(
         err.response?.data?.error ||
-        "Failed to authenticate with Google. Please try again."
+          "Failed to authenticate with Google. Please try again."
       );
     } finally {
       setLoading(false);
@@ -110,7 +116,7 @@ function Login() {
         <p className="auth-redirect">
           <Link to="/auth/forgot-password">Forgot Password?</Link>
         </p>
-        
+
         <p className="auth-redirect">
           Don't have an account? <Link to="/auth/register">Sign up</Link>
         </p>

@@ -19,15 +19,15 @@ router.delete('/company/:vendorId', authenticateToken, checkPermission('delete_v
 
 // Consumer Vendor Routes
 // Create new consumer vendor
-router.post('/consumers', authenticateToken, checkPermission('create_vendor'), vendorController.createConsumerVendor);
+router.post('/consumer', authenticateToken, checkPermission('create_vendor'), vendorController.createConsumerVendor);
 
 // Get all consumer vendors
-router.get('/consumers', authenticateToken, checkPermission('view_vendor'), vendorController.getAllVendors); // Assuming this fetches consumer data
+router.get('/consumer', authenticateToken, checkPermission('view_vendor'), vendorController.getAllConsumerVendors);
 
 // Update consumer vendor
-router.put('/consumers/:vendorId', authenticateToken, checkPermission('edit_vendor'), vendorController.updateVendor);
+router.put('/consumer/:vendorId', authenticateToken, checkPermission('edit_vendor'), vendorController.updateVendor);
 
 // Delete consumer vendor
-router.delete('/consumers/:vendorId', authenticateToken, checkPermission('delete_vendor'), vendorController.deleteVendor);
+router.delete('/consumer/:vendorId', authenticateToken, checkPermission('delete_vendor'), vendorController.deleteVendor);
 
 module.exports = router;

@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -15,18 +15,19 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const data = await authAPI.login(email, password);
-      setUser(data.user);
-      return data;
+      const { user, token, userType } = await authAPI.login(email, password);
+      setUser(user);
+      return { user, token, userType };
     } catch (error) {
+      console.error("Login error:", error);
       throw error;
     }
   };
 
-  const googleLogin = async (idToken, userType = 'office') => {
+  const googleLogin = async (idToken, userType = "office") => {
     try {
       const data = await authAPI.googleLogin(idToken, userType);
-      if (userType === 'vendor') {
+      if (userType === "vendor") {
         setUser(data.vendor);
       } else {
         setUser(data.user);
@@ -58,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     googleLogin,
     register,
     logout,
-    isAuthenticated: authAPI.isAuthenticated
+    isAuthenticated: authAPI.isAuthenticated,
   };
 
   return (
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

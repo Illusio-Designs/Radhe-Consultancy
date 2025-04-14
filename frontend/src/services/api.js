@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -21,31 +21,91 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export const authAPI = {
-  login: async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('API Error:', error.response.data);
+      return Promise.reject(error.response.data);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Network Error:', error.request);
+      return Promise.reject({ error: 'Network error. Please check your connection.' });
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error:', error.message);
+      return Promise.reject({ error: error.message });
     }
-    return response.data;
+  }
+);
+
+export const authAPI = {
+  async checkUserType(email) {
+    try {
+      const response = await api.post('/auth/check-user-type', { email });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking user type:', error);
+      throw error;
+    }
   },
 
-  googleLogin: async (idToken, userType) => {
-    const response = await api.post('/auth/google-login', { 
-      token: idToken,
-      userType: userType 
-    });
-    
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      if (userType === 'vendor') {
-        localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
-      } else {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+  async login(email, password) {
+    try {
+      // First check user type
+      const userTypeResponse = await this.checkUserType(email);
+      
+      // Then perform login with the determined user type
+      const response = await api.post('/auth/login', {
+        email,
+        password,
+        userType: userTypeResponse.userType
+      });
+
+      const { token, user, vendor, userType: responseUserType } = response.data;
+      
+      // Store token and user data
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      if (vendor) {
+        localStorage.setItem('vendor', JSON.stringify(vendor));
       }
+      localStorage.setItem('userType', responseUserType);
+      localStorage.setItem('canEdit', userTypeResponse.canEdit);
+      localStorage.setItem('canDelete', userTypeResponse.canDelete);
+
+      return { token, user, vendor, userType: responseUserType, permissions: {
+        canEdit: userTypeResponse.canEdit,
+        canDelete: userTypeResponse.canDelete
+      }};
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    return response.data;
+  },
+
+  async googleLogin(token, userType = 'office') {
+    try {
+      const response = await api.post('/auth/google-login', { token, userType });
+      const { token: authToken, user, vendor, userType: responseUserType } = response.data;
+      
+      if (authToken) {
+        localStorage.setItem('token', authToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userType', responseUserType);
+        if (vendor) {
+          localStorage.setItem('vendor', JSON.stringify(vendor));
+        }
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Google login error:', error.response?.data || error);
+      throw error;
+    }
   },
 
   getCurrentUser: () => {
@@ -61,6 +121,21 @@ export const authAPI = {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('vendor');
+  },
+
+  register: async (username, email, password, role_id) => {
+    try {
+      const response = await api.post('/auth/register', {
+        username,
+        email,
+        password,
+        role_id
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   }
 };
 
@@ -133,23 +208,28 @@ export const vendorAPI = {
     return response.data;
   },
 
+  getAllConsumerVendors: async () => {
+    const response = await api.get('/vendors/consumer');
+    return response.data;
+  },
+
   getVendorById: async (id) => {
     const response = await api.get(`/vendors/${id}`);
     return response.data;
   },
 
-  createVendor: async (vendorData) => {
-    const response = await api.post('/vendors', vendorData);
+  createConsumerVendor: async (data) => {
+    const response = await api.post('/vendors/consumer', data);
     return response.data;
   },
 
   updateVendor: async (id, vendorData) => {
-    const response = await api.put(`/vendors/${id}`, vendorData);
+    const response = await api.put(`/vendors/consumer/${id}`, vendorData);
     return response.data;
   },
 
   deleteVendor: async (id) => {
-    const response = await api.delete(`/vendors/${id}`);
+    const response = await api.delete(`/vendors/consumer/${id}`);
     return response.data;
   },
 
@@ -179,7 +259,7 @@ export const vendorAPI = {
   vendorLogout: () => {
     localStorage.removeItem('vendorToken');
     localStorage.removeItem('vendor');
-  }
+  },
 };
 
 // Company Vendor API

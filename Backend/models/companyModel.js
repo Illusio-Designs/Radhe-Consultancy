@@ -1,19 +1,13 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const UserType = require('./userTypeModel');
+const Vendor = require('./vendorModel');
 
 const Company = sequelize.define('Company', {
   company_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
-  },
-  vendor_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Vendors',
-      key: 'vendor_id'
-    }
   },
   company_name: {
     type: DataTypes.STRING,
@@ -24,27 +18,25 @@ const Company = sequelize.define('Company', {
     allowNull: false
   },
   company_address: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: false
   },
   contact_number: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(20),
     allowNull: false
   },
   company_email: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: {
-      isEmail: true
-    }
+    unique: true
   },
   gst_number: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(15),
     allowNull: false,
     unique: true
   },
   pan_number: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(10),
     allowNull: false,
     unique: true
   },
@@ -54,14 +46,33 @@ const Company = sequelize.define('Company', {
   },
   company_website: {
     type: DataTypes.STRING,
-    validate: {
-      isUrl: true
+    allowNull: true
+  },
+  user_type_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'UserTypes',
+      key: 'user_type_id'
+    }
+  },
+  vendor_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Vendors',
+      key: 'vendor_id'
     }
   }
 }, {
+  tableName: 'companies',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'
 });
+
+// Define associations
+Company.belongsTo(UserType, { foreignKey: 'user_type_id' });
+Company.belongsTo(Vendor, { foreignKey: 'vendor_id' });
 
 module.exports = Company;

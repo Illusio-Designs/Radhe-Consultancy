@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const initializeDatabase = require('./scripts/dbInitSync'); // Ensure this path is correct
 require('dotenv').config();
+const bodyParser = require('body-parser');
 
 const app = express();
 
@@ -12,8 +13,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

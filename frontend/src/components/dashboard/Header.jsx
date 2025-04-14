@@ -8,6 +8,10 @@ const Header = ({ isCollapsed }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const profileMenuRef = useRef(null);
+  const userType = localStorage.getItem("userType");
+  const vendor = JSON.parse(localStorage.getItem("vendor") || "{}");
+  const consumer = JSON.parse(localStorage.getItem("consumer") || "{}");
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -28,6 +32,32 @@ const Header = ({ isCollapsed }) => {
       await logout();
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  const getDisplayName = () => {
+    switch (userType) {
+      case "company":
+        return vendor?.owner_name || vendor?.company_name || "Company User";
+      case "consumer":
+        return consumer?.first_name
+          ? `${consumer.first_name} ${consumer.last_name || ""}`.trim()
+          : "Consumer User";
+      case "office":
+      default:
+        return storedUser?.username || user?.username || "Office User";
+    }
+  };
+
+  const getProfileLink = () => {
+    switch (userType) {
+      case "company":
+        return "/company-profile";
+      case "consumer":
+        return "/consumer-profile";
+      case "office":
+      default:
+        return "/profile";
     }
   };
 
@@ -62,7 +92,7 @@ const Header = ({ isCollapsed }) => {
               aria-expanded={isProfileMenuOpen}
             >
               <BiUser className="text-xl" />
-              <span className="hidden md:inline">{user?.name || "User"}</span>
+              <span className="hidden md:inline">{getDisplayName()}</span>
             </button>
 
             {isProfileMenuOpen && (
@@ -72,7 +102,7 @@ const Header = ({ isCollapsed }) => {
               >
                 <div className="py-2">
                   <Link
-                    to="/profile"
+                    to={getProfileLink()}
                     className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
                     onClick={() => setIsProfileMenuOpen(false)}
                   >

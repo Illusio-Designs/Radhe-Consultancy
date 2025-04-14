@@ -274,6 +274,47 @@ class VendorController {
       res.status(500).json({ error: 'Failed to fetch company vendors' });
     }
   }
+  
+  async getAllConsumerVendors(req, res) {
+    try {
+      const vendors = await Vendor.findAll({
+        where: { vendor_type: 'Consumer' },
+        include: [
+          {
+            model: Consumer,
+            required: true,
+            attributes: [
+              'consumer_id',
+              'name',
+              'email',
+              'profile_image',
+              'phone_number',
+              'dob',
+              'gender',
+              'national_id',
+              'contact_address',
+              'created_at',
+              'updated_at'
+            ]
+          }
+        ],
+        order: [['created_at', 'DESC']]
+      });
+
+      // Transform the data to include serial numbers and flatten the structure
+      const formattedVendors = vendors.map((vendor, index) => ({
+        sr_no: index + 1,
+        vendor_id: vendor.vendor_id,
+        vendor_type: vendor.vendor_type,
+        ...vendor.Consumer.dataValues
+      }));
+
+      res.json(formattedVendors);
+    } catch (error) {
+      console.error('Error fetching consumer vendors:', error);
+      res.status(500).json({ error: 'Failed to fetch consumer vendors' });
+    }
+  }
 }
 
 module.exports = new VendorController();

@@ -17,7 +17,7 @@ const UserType = sequelize.define('UserType', {
     allowNull: true
   }
 }, {
-  tableName: 'UserTypes',
+  tableName: 'usertypes',
   timestamps: false
 });
 

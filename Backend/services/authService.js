@@ -1,7 +1,8 @@
 const { OAuth2Client } = require('google-auth-library');
 const bcrypt = require('bcrypt'); // Add this import
-const { User, Role } = require('../models');
+const { User, Role, Vendor, Company, Consumer, UserType } = require('../models');
 const { generateToken, comparePassword } = require('../utils/helperFunctions');
+const { Op } = require('sequelize');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -137,6 +138,116 @@ class AuthService {
 
     const token = generateToken(user.user_id, user.Role.role_name);
     return { user, token };
+  }
+
+  // Verify Google token
+  async verifyGoogleToken(token) {
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+      return ticket;
+    } catch (error) {
+      console.error('Google token verification error:', error);
+      throw new Error('Invalid Google token');
+    }
+  }
+
+  // Handle Google login for all user types
+  async handleGoogleLogin(payload) {
+    try {
+      // First check if user exists with this Google ID
+      const existingUser = await User.findOne({
+        where: { google_id: payload.sub },
+        include: [UserType, Role]
+      });
+
+      if (existingUser) {
+        const token = generateToken(existingUser.user_id, existingUser.Role.role_name);
+        return {
+          user: existingUser,
+          token,
+          userType: existingUser.UserType.type_name.toLowerCase()
+        };
+      }
+
+      // Check if email exists in Company table
+      const companyUser = await Company.findOne({
+        where: { company_email: payload.email },
+        include: [UserType]
+      });
+
+      if (companyUser) {
+        const user = await User.create({
+          email: payload.email,
+          username: payload.name,
+          google_id: payload.sub,
+          profile_image: payload.picture,
+          user_type_id: companyUser.user_type_id,
+          role_id: 2 // Default to User role
+        });
+
+        const token = generateToken(user.user_id, 'user');
+        return {
+          user,
+          token,
+          userType: companyUser.UserType.type_name.toLowerCase()
+        };
+      }
+
+      // Check if email exists in Consumer table
+      const consumerUser = await Consumer.findOne({
+        where: { email: payload.email },
+        include: [UserType]
+      });
+
+      if (consumerUser) {
+        const user = await User.create({
+          email: payload.email,
+          username: payload.name,
+          google_id: payload.sub,
+          profile_image: payload.picture,
+          user_type_id: consumerUser.user_type_id,
+          role_id: 2 // Default to User role
+        });
+
+        const token = generateToken(user.user_id, 'user');
+        return {
+          user,
+          token,
+          userType: consumerUser.UserType.type_name.toLowerCase()
+        };
+      }
+
+      // If not found in Company or Consumer, create as Office user
+      const officeType = await UserType.findOne({
+        where: { type_name: 'Office' }
+      });
+
+      if (!officeType) {
+        throw new Error('Office user type not found');
+      }
+
+      const user = await User.create({
+        email: payload.email,
+        username: payload.name,
+        google_id: payload.sub,
+        profile_image: payload.picture,
+        user_type_id: officeType.user_type_id,
+        role_id: 2 // Default to User role
+      });
+
+      const token = generateToken(user.user_id, 'user');
+      return {
+        user,
+        token,
+        userType: 'office'
+      };
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
   }
 }
 
