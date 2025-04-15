@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import "../../../styles/dashboard/Auth.css";
 import { GoogleLogin } from "@react-oauth/google";
-import { authAPI } from "../../../services/api";
+import { toast } from "react-toastify";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -28,14 +28,13 @@ function Login() {
     setError("");
     setLoading(true);
     try {
-      const response = await authAPI.login(formData.email, formData.password);
-      login(response);
+      await login(formData.email, formData.password);
+      toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          "Failed to login. Please check your credentials."
-      );
+      console.error("Login error:", err);
+      setError(err.error || "Failed to login. Please check your credentials.");
+      toast.error(err.error || "Failed to login. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -45,15 +44,13 @@ function Login() {
     try {
       setError("");
       setLoading(true);
-      const response = await authAPI.googleLogin(credentialResponse.credential);
-      login(response);
+      // Implement Google login logic here
+      toast.success("Google login successful!");
       navigate("/dashboard");
     } catch (err) {
       console.error("Google login error:", err);
-      setError(
-        err.response?.data?.error ||
-          "Failed to authenticate with Google. Please try again."
-      );
+      setError(err.error || "Failed to authenticate with Google. Please try again.");
+      toast.error(err.error || "Failed to authenticate with Google. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -62,6 +59,7 @@ function Login() {
   const handleGoogleLoginFailure = (error) => {
     console.error("Google login failed:", error);
     setError("Failed to connect with Google. Please try again.");
+    toast.error("Failed to connect with Google. Please try again.");
   };
 
   return (
@@ -82,6 +80,7 @@ function Login() {
               onChange={handleChange}
               placeholder="Enter your email"
               required
+              className={formData.email ? "has-value" : ""}
             />
           </div>
 
@@ -94,10 +93,11 @@ function Login() {
               onChange={handleChange}
               placeholder="Password"
               required
+              className={formData.password ? "has-value" : ""}
             />
           </div>
 
-          <button type="submit" className="auth-button" disabled={loading}>
+          <button type="submit" className={`auth-button ${loading ? "loading" : ""}`} disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>

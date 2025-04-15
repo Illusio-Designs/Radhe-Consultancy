@@ -16,12 +16,7 @@ function Register() {
   const navigate = useNavigate();
 
   const validateForm = () => {
-    if (
-      !formData.username ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
+    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       toast.error("All fields are required");
       return false;
     }
@@ -58,7 +53,7 @@ function Register() {
         formData.username,
         formData.email,
         formData.password,
-        2 // Default role_id
+        2 // Default role_id for consumer
       );
       toast.success("Registration successful! Redirecting to login...");
       setTimeout(() => {
@@ -66,21 +61,14 @@ function Register() {
       }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
-      const errorMessage =
-        error.error || error.message || "Failed to register. Please try again.";
+      const errorMessage = error.error || error.message || "Failed to register. Please try again.";
 
       if (error.error === "Network error. Please check your connection.") {
-        toast.error(
-          "Unable to connect to the server. Please check your internet connection."
-        );
+        toast.error("Unable to connect to the server. Please check your internet connection.");
       } else if (error.error?.includes("email")) {
-        toast.error(
-          "This email is already registered. Please use a different email or try logging in."
-        );
+        toast.error("This email is already registered. Please use a different email or try logging in.");
       } else if (error.error?.includes("username")) {
-        toast.error(
-          "This username is already taken. Please choose another username."
-        );
+        toast.error("This username is already taken. Please choose another username.");
       } else {
         toast.error(errorMessage);
       }

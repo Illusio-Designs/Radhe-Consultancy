@@ -5,17 +5,12 @@ const User = require('./userModel');
 const Role = require('./roleModel');
 const Permission = require('./permissionModel');
 const RolePermission = require('./rolePermissionModel');
-const Vendor = require('./vendorModel');
 const Company = require('./companyModel');
 const Consumer = require('./consumerModel');
-const UserType = require('./userTypeModel');
 
 // Define associations
-User.belongsTo(Role, { foreignKey: 'role_id' });
-Role.hasMany(User, { foreignKey: 'role_id' });
-
-User.belongsTo(UserType, { foreignKey: 'user_type_id' });
-UserType.hasMany(User, { foreignKey: 'user_type_id' });
+User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });
+Role.hasMany(User, { foreignKey: 'role_id', sourceKey: 'id' });
 
 // Many-to-many relationship between Role and Permission
 Role.belongsToMany(Permission, { 
@@ -30,11 +25,12 @@ Permission.belongsToMany(Role, {
   otherKey: 'role_id'
 });
 
-Vendor.hasOne(Company, { foreignKey: 'vendor_id' });
-Company.belongsTo(Vendor, { foreignKey: 'vendor_id' });
+// Company and Consumer associations
+User.hasOne(Company, { foreignKey: 'user_id' });
+Company.belongsTo(User, { foreignKey: 'user_id' });
 
-Vendor.hasOne(Consumer, { foreignKey: 'vendor_id' });
-Consumer.belongsTo(Vendor, { foreignKey: 'vendor_id' });
+User.hasOne(Consumer, { foreignKey: 'user_id' });
+Consumer.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = {
   sequelize,
@@ -42,8 +38,6 @@ module.exports = {
   Role,
   Permission,
   RolePermission,
-  Vendor,
   Company,
-  Consumer,
-  UserType
+  Consumer
 };

@@ -1,65 +1,87 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI } from "../services/api";
+import axios from "axios";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = authAPI.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchUserData(token);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  const login = async (email, password) => {
+  const fetchUserData = async (token) => {
     try {
-      const { user, token, userType } = await authAPI.login(email, password);
-      setUser(user);
-      return { user, token, userType };
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      console.error("Error fetching user data:", error);
+      logout();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const googleLogin = async (idToken, userType = "office") => {
+  const login = async (email, password) => {
     try {
-      const data = await authAPI.googleLogin(idToken, userType);
-      if (userType === "vendor") {
-        setUser(data.vendor);
-      } else {
-        setUser(data.user);
-      }
-      return data;
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        email,
+        password
+      });
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
+      setIsAuthenticated(true);
+      return { token, user };
     } catch (error) {
-      throw error;
+      throw error.response?.data || { error: "Login failed" };
     }
   };
 
   const register = async (username, email, password, role_id) => {
     try {
-      const data = await authAPI.register(username, email, password, role_id);
-      return data;
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
+        username,
+        email,
+        password,
+        role_id
+      });
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
+      setIsAuthenticated(true);
+      return { token, user };
     } catch (error) {
-      throw error;
+      throw error.response?.data || { error: "Registration failed" };
     }
   };
 
   const logout = () => {
-    authAPI.logout();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   const value = {
     user,
+    isAuthenticated,
     loading,
     login,
-    googleLogin,
     register,
-    logout,
-    isAuthenticated: authAPI.isAuthenticated,
+    logout
   };
 
   return (

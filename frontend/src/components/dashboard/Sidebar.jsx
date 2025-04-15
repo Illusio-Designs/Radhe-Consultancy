@@ -7,17 +7,21 @@ import {
   BiUser,
   BiMenu,
   BiX,
+  BiCog,
+  BiFolder,
   BiChevronDown,
-  BiChevronUp,
+  BiChevronUp
 } from "react-icons/bi";
 import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
 import "../../styles/dashboard/components/Sidebar.css";
+import { roleAPI } from "../../services/api";
 
 const Sidebar = ({ onCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState(null);
   const location = useLocation();
-  const [vendorsDropdownOpen, setVendorsDropdownOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -33,6 +37,22 @@ const Sidebar = ({ onCollapse }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    const fetchCurrentUserRole = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData) {
+          const roles = await roleAPI.getAllRoles();
+          const userRole = roles.find(role => role.id === userData.role_id);
+          setCurrentUserRole(userRole);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+    fetchCurrentUserRole();
+  }, []);
+
   const handleCollapse = () => {
     setIsCollapsed(!isCollapsed);
     if (onCollapse) {
@@ -40,129 +60,239 @@ const Sidebar = ({ onCollapse }) => {
     }
   };
 
-  const menuItems = [
-    { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
-    { path: "/users", icon: <BiGroup />, label: "Users" },
-    {
-      label: "Vendors",
-      icon: <BiGroup />,
-      isDropdown: true,
-      isOpen: vendorsDropdownOpen,
-      toggle: () => setVendorsDropdownOpen(!vendorsDropdownOpen),
-      items: [
-        {
-          path: "/vendors/company",
-          icon: <BiBuilding />,
-          label: "Company",
-        },
-        {
-          path: "/vendors/consumer",
-          icon: <BiGroup />,
-          label: "Consumer",
-        },
-      ],
-    },
-    { path: "/roles", icon: <BiUser />, label: "Roles" },
-  ];
-  
+  const toggleDropdown = (label) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const getMenuItems = () => {
+    if (!currentUserRole) return [];
+
+    switch (currentUserRole.role_name) {
+      case 'admin':
+        return [
+          { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
+          {
+            label: "Users",
+            icon: <BiGroup />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/users",
+                icon: <BiUser />,
+                label: "All Users",
+              },
+              {
+                path: "/users/company",
+                icon: <BiBuilding />,
+                label: "Company Users",
+              },
+              {
+                path: "/users/consumer",
+                icon: <BiGroup />,
+                label: "Consumer Users",
+              },
+            ],
+          },
+          {
+            label: "Companies",
+            icon: <BiBuilding />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/companies",
+                icon: <BiBuilding />,
+                label: "All Companies",
+              },
+            ],
+          },
+          {
+            label: "Consumers",
+            icon: <BiGroup />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/consumers",
+                icon: <BiGroup />,
+                label: "All Consumers",
+              },
+            ],
+          },
+          { path: "/roles", icon: <BiUser />, label: "Roles" },
+        ];
+
+      case 'vendor_manager':
+        return [
+          { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
+          {
+            label: "Companies",
+            icon: <BiBuilding />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/companies",
+                icon: <BiBuilding />,
+                label: "All Companies",
+              },
+            ],
+          },
+        ];
+
+      case 'user_manager':
+        return [
+          { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
+          {
+            label: "Users",
+            icon: <BiGroup />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/users",
+                icon: <BiUser />,
+                label: "All Users",
+              },
+              {
+                path: "/users/company",
+                icon: <BiBuilding />,
+                label: "Company Users",
+              },
+              {
+                path: "/users/consumer",
+                icon: <BiGroup />,
+                label: "Consumer Users",
+              },
+            ],
+          },
+          {
+            label: "Consumers",
+            icon: <BiGroup />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/consumers",
+                icon: <BiGroup />,
+                label: "All Consumers",
+              },
+            ],
+          },
+        ];
+
+      case 'company':
+        return [
+          { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
+          {
+            label: "Company",
+            icon: <BiBuilding />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/company/profile",
+                icon: <BiUser />,
+                label: "Profile",
+              },
+              {
+                path: "/company/services",
+                icon: <BiFolder />,
+                label: "Services",
+              },
+            ],
+          },
+        ];
+
+      case 'consumer':
+        return [
+          { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
+          {
+            label: "Consumer",
+            icon: <BiUser />,
+            isDropdown: true,
+            items: [
+              {
+                path: "/consumer/profile",
+                icon: <BiUser />,
+                label: "Profile",
+              },
+              {
+                path: "/consumer/services",
+                icon: <BiFolder />,
+                label: "Services",
+              },
+            ],
+          },
+        ];
+
+      default:
+        return [];
+    }
+  };
+
+  const renderMenuItem = (item, index) => {
+    const isActive = location.pathname === item.path;
+    const isDropdownActive = item.items?.some(subItem => location.pathname === subItem.path);
+
+    if (item.isDropdown) {
+      const isOpen = openDropdowns[item.label];
+      return (
+        <div key={index} className="sidebar-dropdown">
+          <button
+            className={`sidebar-dropdown-button ${isDropdownActive ? 'active' : ''}`}
+            onClick={() => toggleDropdown(item.label)}
+          >
+            <span className="sidebar-icon">{item.icon}</span>
+            {!isCollapsed && (
+              <>
+                <span className="sidebar-label">{item.label}</span>
+                {isOpen ? <BiChevronUp /> : <BiChevronDown />}
+              </>
+            )}
+          </button>
+          {isOpen && !isCollapsed && (
+            <div className="sidebar-dropdown-content">
+              {item.items.map((subItem, subIndex) => (
+                <Link
+                  key={subIndex}
+                  to={subItem.path}
+                  className={`sidebar-dropdown-item ${location.pathname === subItem.path ? 'active' : ''}`}
+                >
+                  <span className="sidebar-icon">{subItem.icon}</span>
+                  <span className="sidebar-label">{subItem.label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={index}
+        to={item.path}
+        className={`sidebar-item ${isActive ? 'active' : ''}`}
+      >
+        <span className="sidebar-icon">{item.icon}</span>
+        {!isCollapsed && <span className="sidebar-label">{item.label}</span>}
+      </Link>
+    );
+  };
 
   return (
-    <>
-      <div
-        className={`sidebar ${
-          isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"
-        } ${isMobileMenuOpen ? "sidebar-mobile-open" : "sidebar-mobile"}`}
-      >
-        {/* Toggle Button */}
-        <button
-          className="sidebar-toggle"
-          onClick={handleCollapse}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? <BiMenu /> : <BiX />}
-        </button>
-
-        {/* Logo */}
-        <div className="logo-container">
-          <h1 className={`logo-text ${isCollapsed ? "logo-collapsed" : ""}`}>
-            {isCollapsed ? (
-              <img src={img} alt="img" className="collapsed-img" />
-            ) : (
-              <img src={img} alt="img" className="main" />
-            )}
-          </h1>
-        </div>
-
-        {/* Navigation */}
-        <nav className="mt-8">
-          {menuItems.map((item, index) => (
-            <div key={item.path || index}>
-              {item.isDropdown ? (
-                <div className="relative">
-                  <a
-                    onClick={item.toggle}
-                    className={`sidebar-nav-item ${
-                      item.items.some((sub) => isActive(sub.path))
-                        ? "active"
-                        : ""
-                    }`}
-                    data-tooltip={isCollapsed ? item.label : undefined}
-                  >
-                    <span className="text-2xl">{item.icon}</span>
-                    {!isCollapsed && (
-                      <>
-                        <span className="ml-4 sidebar-nav-label">
-                          {item.label}
-                        </span>
-                        <span className="ml-4 text-sm">
-                          {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
-                        </span>
-                      </>
-                    )}
-                  </a>
-                  {/* dropdown children */}
-                  {item.isOpen && (
-                    <div className="pl-4">
-                      {item.items.map((subItem) => (
-                        <Link
-                          key={subItem.path}
-                          to={subItem.path}
-                          className={`sidebar-nav-item ${
-                            isActive(subItem.path) ? "active" : ""
-                          }`}
-                        >
-                          <span className="text-lg">{subItem.icon}</span>
-                          <span className="ml-4 sidebar-nav-label">
-                            {subItem.label}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  to={item.path}
-                  className={`sidebar-nav-item ${
-                    isActive(item.path) ? "active" : ""
-                  }`}
-                  data-tooltip={isCollapsed ? item.label : undefined}
-                >
-                  <span className="text-2xl">{item.icon}</span>
-                  {!isCollapsed && (
-                    <span className="ml-4 sidebar-nav-label">
-                      {item.label}
-                    </span>
-                  )}
-                </Link>
-              )}
-            </div>
-          ))}
-        </nav>
+    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className="sidebar-header">
+        <img src={img} alt="Logo" className="sidebar-logo" />
+        {!isCollapsed && <h1 className="sidebar-title">Radhe Consultancy</h1>}
       </div>
-    </>
+
+      <button className="sidebar-collapse-button" onClick={handleCollapse}>
+        {isCollapsed ? <BiMenu /> : <BiX />}
+      </button>
+
+      <nav className="sidebar-nav">
+        {getMenuItems().map((item, index) => renderMenuItem(item, index))}
+      </nav>
+    </div>
   );
 };
 

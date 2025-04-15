@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { FiUsers, FiPackage, FiHome, FiTarget, FiRefreshCw, FiCalendar, FiClock } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiUsers, FiBriefcase, FiTarget, FiRefreshCw, FiClock } from 'react-icons/fi';
 import '../../../styles/dashboard/Dashboard.css';
+import { userAPI } from '../../../services/api';
+import { roleAPI } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const StatCard = ({ icon: Icon, title, value, change }) => (
   <div className="stat-card">
@@ -11,7 +14,7 @@ const StatCard = ({ icon: Icon, title, value, change }) => (
         </div>
         <div className="stat-info">
           <h3 className="stat-title">{title}</h3>
-          <div className="stat-value">{value}</div>
+          <div className="stat-value">{value || '0'}</div>
         </div>
       </div>
       <div className={`stat-change ${change >= 0 ? 'positive' : 'negative'}`}>
@@ -23,50 +26,170 @@ const StatCard = ({ icon: Icon, title, value, change }) => (
 );
 
 function Dashboard() {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [timeFilter, setTimeFilter] = useState('7days');
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
+  const [stats, setStats] = useState({
+    companies: 0,
+    consumers: 0,
+    services: 0,
+    activeServices: 0,
+    views: 0
+  });
 
-  const stats = [
-    { id: 1, title: 'Total Users', value: '2,845', change: 12.5, icon: FiUsers },
-    { id: 2, title: 'Active Projects', value: '45', change: 8.2, icon: FiPackage },
-    { id: 3, title: 'Total Revenue', value: '$89,242', change: -2.4, icon: FiTarget },
-    { id: 4, title: 'New Clients', value: '124', change: 15.3, icon: FiHome },
-  ];
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      const [users, roles] = await Promise.all([
+        userAPI.getAllUsers(),
+        roleAPI.getAllRoles()
+      ]);
 
-  const recentActivities = [
-    { id: 1, text: 'John Doe completed Project A', time: '2 hours ago', user: 'John Doe', type: 'completion' },
-    { id: 2, text: 'New client onboarded: XYZ Corp', time: '4 hours ago', user: 'Admin', type: 'client' },
-    { id: 3, text: 'System maintenance completed', time: '6 hours ago', user: 'System', type: 'system' },
-    { id: 4, text: 'Sarah updated Project B documentation', time: '8 hours ago', user: 'Sarah', type: 'update' },
-  ];
+      const companyRole = roles.find(role => role.role_name === 'Company');
+      const consumerRole = roles.find(role => role.role_name === 'Consumer');
 
-  const upcomingTasks = [
-    { id: 1, text: 'Client meeting with ABC Inc', date: 'Today, 2:00 PM', priority: 'high' },
-    { id: 2, text: 'Project deadline: Website Redesign', date: 'Tomorrow, 5:00 PM', priority: 'medium' },
-    { id: 3, text: 'Team review meeting', date: 'Wed, 11:00 AM', priority: 'low' },
-    { id: 4, text: 'Quarterly planning session', date: 'Fri, 10:00 AM', priority: 'medium' },
-  ];
-  
-  const handleRefresh = () => {
-    setIsLoading(true);
-    // Simulate data refresh
-    setTimeout(() => {
-      setIsLoading(false);
+      let statsData = {
+        companies: 0,
+        consumers: 0,
+        services: 0,
+        activeServices: 0,
+        views: 0
+      };
+
+      if (user.role === 'admin') {
+        // Admin sees counts of all companies and consumers
+        statsData = {
+          companies: users.filter(user => user.role_id === companyRole?.id).length,
+          consumers: users.filter(user => user.role_id === consumerRole?.id).length,
+          services: 0 // You can add actual services count here
+        };
+      } else if (user.role === 'company') {
+        // Company sees their own stats
+        statsData = {
+          services: 0, // Company's active services
+          consumers: 0, // Consumers using their services
+          views: 0 // Profile views
+        };
+      } else if (user.role === 'consumer') {
+        // Consumer sees available companies and services
+        statsData = {
+          companies: users.filter(user => user.role_id === companyRole?.id).length,
+          services: 0, // Available services
+          activeServices: 0 // Services they're using
+        };
+      }
+
+      setStats(statsData);
       setLastUpdated(new Date().toLocaleTimeString());
-    }, 800);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleFilterChange = (e) => {
-    setTimeFilter(e.target.value);
-    handleRefresh();
+  useEffect(() => {
+    fetchStats();
+  }, [user.role]);
+
+  const getStatsCards = () => {
+    switch (user.role) {
+      case 'admin':
+        return [
+          { 
+            id: 1, 
+            title: 'Total Companies', 
+            value: stats.companies || 0, 
+            change: 0,
+            icon: FiBriefcase 
+          },
+          { 
+            id: 2, 
+            title: 'Total Consumers', 
+            value: stats.consumers || 0, 
+            change: 0,
+            icon: FiUsers 
+          },
+          { 
+            id: 3, 
+            title: 'Total Services', 
+            value: stats.services || 0, 
+            change: 0,
+            icon: FiTarget 
+          }
+        ];
+
+      case 'company':
+        return [
+          { 
+            id: 1, 
+            title: 'Active Services', 
+            value: stats.services || 0, 
+            change: 0,
+            icon: FiTarget 
+          },
+          { 
+            id: 2, 
+            title: 'Active Consumers', 
+            value: stats.consumers || 0, 
+            change: 0,
+            icon: FiUsers 
+          },
+          { 
+            id: 3, 
+            title: 'Profile Views', 
+            value: stats.views || 0, 
+            change: 0,
+            icon: FiBriefcase 
+          }
+        ];
+
+      case 'consumer':
+        return [
+          { 
+            id: 1, 
+            title: 'Available Companies', 
+            value: stats.companies || 0, 
+            change: 0,
+            icon: FiBriefcase 
+          },
+          { 
+            id: 2, 
+            title: 'Available Services', 
+            value: stats.services || 0, 
+            change: 0,
+            icon: FiTarget 
+          },
+          { 
+            id: 3, 
+            title: 'Active Services', 
+            value: stats.activeServices || 0, 
+            change: 0,
+            icon: FiUsers 
+          }
+        ];
+
+      default:
+        return [];
+    }
+  };
+
+  const handleRefresh = async () => {
+    await fetchStats();
   };
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
         <div className="dashboard-title-area">
-          <h1>Dashboard Overview</h1>
+          <h1>
+            {user.role === 'admin' 
+              ? 'Admin Dashboard' 
+              : user.role === 'company'
+              ? 'Company Dashboard'
+              : 'Consumer Dashboard'
+            }
+          </h1>
           <div className="dashboard-meta">
             <span className="last-updated">
               <FiClock className="meta-icon" /> Last updated: {lastUpdated}
@@ -81,18 +204,10 @@ function Dashboard() {
             </button>
           </div>
         </div>
-        <div className="date-filter">
-          <FiCalendar className="filter-icon" />
-          <select value={timeFilter} onChange={handleFilterChange}>
-            <option value="7days">Last 7 days</option>
-            <option value="30days">Last 30 days</option>
-            <option value="90days">Last 3 months</option>
-          </select>
-        </div>
       </div>
 
       <div className="stats-grid">
-        {stats.map((stat) => (
+        {getStatsCards().map((stat) => (
           <StatCard
             key={stat.id}
             icon={stat.icon}
@@ -101,48 +216,6 @@ function Dashboard() {
             change={stat.change}
           />
         ))}
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="dashboard-card activities-card">
-          <div className="card-header">
-            <h2>Recent Activities</h2>
-            <span className="card-count">{recentActivities.length} activities</span>
-          </div>
-          <ul className="activity-list">
-            {recentActivities.map((activity) => (
-              <li key={activity.id} className={`activity-item activity-${activity.type}`}>
-                <div className="activity-content">
-                  <span className="activity-text">{activity.text}</span>
-                  <div className="activity-meta">
-                    <span className="activity-user">{activity.user}</span>
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="dashboard-card tasks-card">
-          <div className="card-header">
-            <h2>Upcoming Tasks</h2>
-            <span className="card-count">{upcomingTasks.length} tasks</span>
-          </div>
-          <ul className="task-list">
-            {upcomingTasks.map((task) => (
-              <li key={task.id} className={`task-item priority-${task.priority}`}>
-                <div className="task-content">
-                  <span className="task-text">{task.text}</span>
-                  <div className="task-meta">
-                    <span className="task-priority">{task.priority}</span>
-                    <span className="task-date">{task.date}</span>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>
   );

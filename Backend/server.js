@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const initializeDatabase = require('./scripts/dbInitSync'); // Ensure this path is correct
+const setupDatabase = require('./scripts/dbSetup'); // Updated to use new consolidated script
 require('dotenv').config();
 const bodyParser = require('body-parser');
+const { sequelize } = require('./models');
 
 const app = express();
 
@@ -21,18 +22,36 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/vendors', require('./routes/vendorRoutes'));
 app.use('/api/roles', require('./routes/roleRoutes'));
+app.use('/api/companies', require('./routes/companyRoutes'));
+app.use('/api/consumers', require('./routes/consumerRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({
+    success: false,
+    error: 'Something went wrong!'
+  });
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}`);
-  await initializeDatabase(); // Initialize the database
-});
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    await sequelize.sync();
+    console.log('Database connected successfully');
+    
+    await setupDatabase(); // Initialize the database with our consolidated setup
+    console.log('Database setup completed');
+    
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Unable to start server:', error);
+  }
+};
+
+startServer();

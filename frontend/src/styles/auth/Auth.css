@@ -1,0 +1,138 @@
+/* 404 Page Specific Styles */
+.auth-title {
+  font-size: 6rem;
+  font-weight: 700;
+  color: #1890ff;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+.auth-subtitle {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-gray-600 {
+  color: #666;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+/* Responsive styles for 404 page */
+@media (max-width: 640px) {
+  .auth-title {
+    font-size: 4rem;
+  }
+  
+  .auth-subtitle {
+    font-size: 1.5rem;
+  }
+}
+
+/* Coming Soon Page Styles */
+.coming-soon {
+  background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+}
+
+.coming-soon .auth-title {
+  font-size: 3.5rem;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.coming-soon .auth-subtitle {
+  font-size: 1.5rem;
+  color: #e2e8f0;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.countdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.countdown-details {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  min-width: 100px;
+}
+
+.countdown-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.countdown-label {
+  font-size: 1rem;
+  color: #e2e8f0;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
+.coming-soon-footer {
+  text-align: center;
+  color: #e2e8f0;
+  margin-top: 2rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .coming-soon .auth-title {
+    font-size: 2.5rem;
+  }
+
+  .coming-soon .auth-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .countdown-details {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .countdown-item {
+    min-width: 80px;
+    padding: 0.8rem 1.5rem;
+  }
+
+  .countdown-value {
+    font-size: 2rem;
+  }
+} 

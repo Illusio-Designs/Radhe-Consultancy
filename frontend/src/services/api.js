@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -43,62 +43,34 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  async checkUserType(email) {
-    try {
-      const response = await api.post('/auth/check-user-type', { email });
-      return response.data;
-    } catch (error) {
-      console.error('Error checking user type:', error);
-      throw error;
-    }
-  },
-
   async login(email, password) {
     try {
-      // First check user type
-      const userTypeResponse = await this.checkUserType(email);
-      
-      // Then perform login with the determined user type
       const response = await api.post('/auth/login', {
         email,
-        password,
-        userType: userTypeResponse.userType
+        password
       });
 
-      const { token, user, vendor, userType: responseUserType } = response.data;
+      const { token, user } = response.data;
       
       // Store token and user data
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      if (vendor) {
-        localStorage.setItem('vendor', JSON.stringify(vendor));
-      }
-      localStorage.setItem('userType', responseUserType);
-      localStorage.setItem('canEdit', userTypeResponse.canEdit);
-      localStorage.setItem('canDelete', userTypeResponse.canDelete);
 
-      return { token, user, vendor, userType: responseUserType, permissions: {
-        canEdit: userTypeResponse.canEdit,
-        canDelete: userTypeResponse.canDelete
-      }};
+      return { token, user };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   },
 
-  async googleLogin(token, userType = 'office') {
+  async googleLogin(token) {
     try {
-      const response = await api.post('/auth/google-login', { token, userType });
-      const { token: authToken, user, vendor, userType: responseUserType } = response.data;
+      const response = await api.post('/auth/google-login', { token });
+      const { token: authToken, user } = response.data;
       
       if (authToken) {
         localStorage.setItem('token', authToken);
         localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('userType', responseUserType);
-        if (vendor) {
-          localStorage.setItem('vendor', JSON.stringify(vendor));
-        }
       }
       
       return response.data;
@@ -120,7 +92,6 @@ export const authAPI = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('vendor');
   },
 
   register: async (username, email, password, role_id) => {
@@ -201,123 +172,86 @@ export const userAPI = {
   }
 };
 
-// Vendor API
-export const vendorAPI = {
-  getAllVendors: async () => {
-    const response = await api.get('/vendors');
-    return response.data;
-  },
-
-  getAllConsumerVendors: async () => {
-    const response = await api.get('/vendors/consumer');
-    return response.data;
-  },
-
-  getVendorById: async (id) => {
-    const response = await api.get(`/vendors/${id}`);
-    return response.data;
-  },
-
-  createConsumerVendor: async (data) => {
-    const response = await api.post('/vendors/consumer', data);
-    return response.data;
-  },
-
-  updateVendor: async (id, vendorData) => {
-    const response = await api.put(`/vendors/consumer/${id}`, vendorData);
-    return response.data;
-  },
-
-  deleteVendor: async (id) => {
-    const response = await api.delete(`/vendors/consumer/${id}`);
-    return response.data;
-  },
-
-  updateVendorStatus: async (id, status) => {
-    const response = await api.patch(`/vendors/${id}/status`, { status });
-    return response.data;
-  },
-
-  vendorGoogleLogin: async (token) => {
-    const response = await api.post('/auth/vendor/google-login', { token });
-    if (response.data.token) {
-      localStorage.setItem('vendorToken', response.data.token);
-      localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
-    }
-    return response.data;
-  },
-
-  getCurrentVendor: () => {
-    const vendor = localStorage.getItem('vendor');
-    return vendor ? JSON.parse(vendor) : null;
-  },
-
-  isVendorAuthenticated: () => {
-    return !!localStorage.getItem('vendorToken');
-  },
-
-  vendorLogout: () => {
-    localStorage.removeItem('vendorToken');
-    localStorage.removeItem('vendor');
-  },
-};
-
-// Company Vendor API
-// Update the company vendor API methods
-export const companyVendorAPI = {
-  createCompanyVendor: async (vendorData) => {
-    const response = await api.post('/vendors/company', vendorData);
-    return response.data;
-  },
-
-  getAllCompanyVendors: async () => {
-    const response = await api.get('/vendors/company');
-    return response.data;
-  },
-
-  updateCompanyVendor: async (vendorId, vendorData) => {
-    const response = await api.put(`/vendors/company/${vendorId}`, vendorData);
-    return response.data;
-  },
-
-  deleteCompanyVendor: async (vendorId) => {
-    const response = await api.delete(`/vendors/company/${vendorId}`);
-    return response.data;
-  }
-};
-
 // Role API
 export const roleAPI = {
-  createRole: async (roleData) => {
-    const response = await api.post('/roles', roleData);
-    return response.data;
-  },
-
   getAllRoles: async () => {
     const response = await api.get('/roles');
     return response.data;
   },
 
-  updateRole: async (roleId, roleData) => {
-    const response = await api.put(`/roles/${roleId}`, roleData);
+  getRoleById: async (id) => {
+    const response = await api.get(`/roles/${id}`);
     return response.data;
   },
 
-  deleteRole: async (roleId) => {
-    const response = await api.delete(`/roles/${roleId}`);
+  createRole: async (roleData) => {
+    const response = await api.post('/roles', roleData);
     return response.data;
   },
 
-  getAllPermissions: async () => {
-    const response = await api.get('/roles/permissions');
+  updateRole: async (id, roleData) => {
+    const response = await api.put(`/roles/${id}`, roleData);
     return response.data;
   },
 
-  assignRole: async (userId, roleId) => {
-    const response = await api.post('/roles/assign-role', { 
-      user_id: userId, 
-      role_id: roleId 
-    });
+  deleteRole: async (id) => {
+    const response = await api.delete(`/roles/${id}`);
+    return response.data;
+  }
+};
+
+// Company API
+export const companyAPI = {
+  getAllCompanies: async () => {
+    const response = await api.get('/companies');
+    return response.data;
+  },
+
+  getCompanyById: async (id) => {
+    const response = await api.get(`/companies/${id}`);
+    return response.data;
+  },
+
+  createCompany: async (companyData) => {
+    const response = await api.post('/companies', companyData);
+    return response.data;
+  },
+
+  updateCompany: async (id, companyData) => {
+    const response = await api.put(`/companies/${id}`, companyData);
+    return response.data;
+  },
+
+  deleteCompany: async (id) => {
+    const response = await api.delete(`/companies/${id}`);
+    return response.data;
+  }
+};
+
+// Consumer API
+export const consumerAPI = {
+  getAllConsumers: async () => {
+    const response = await api.get('/consumers');
+    return response.data;
+  },
+
+  getConsumerById: async (id) => {
+    const response = await api.get(`/consumers/${id}`);
+    return response.data;
+  },
+
+  createConsumer: async (consumerData) => {
+    const response = await api.post('/consumers', consumerData);
+    return response.data;
+  },
+
+  updateConsumer: async (id, consumerData) => {
+    const response = await api.put(`/consumers/${id}`, consumerData);
+    return response.data;
+  },
+
+  deleteConsumer: async (id) => {
+    const response = await api.delete(`/consumers/${id}`);
     return response.data;
   }
 };

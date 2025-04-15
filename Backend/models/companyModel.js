@@ -1,7 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const UserType = require('./userTypeModel');
-const Vendor = require('./vendorModel');
 
 const Company = sequelize.define('Company', {
   company_id: {
@@ -48,20 +46,12 @@ const Company = sequelize.define('Company', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  user_type_id: {
+  user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'UserTypes',
-      key: 'user_type_id'
-    }
-  },
-  vendor_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Vendors',
-      key: 'vendor_id'
+      model: 'Users',
+      key: 'user_id'
     }
   }
 }, {
@@ -70,9 +60,5 @@ const Company = sequelize.define('Company', {
   createdAt: 'created_at',
   updatedAt: 'updated_at'
 });
-
-// Define associations
-Company.belongsTo(UserType, { foreignKey: 'user_type_id' });
-Company.belongsTo(Vendor, { foreignKey: 'vendor_id' });
 
 module.exports = Company;

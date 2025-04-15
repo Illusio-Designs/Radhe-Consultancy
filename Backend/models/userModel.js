@@ -1,7 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const bcrypt = require('bcryptjs');
-const UserType = require('./userTypeModel'); // Add this import
 
 const User = sequelize.define('User', {
   user_id: {
@@ -35,10 +34,10 @@ const User = sequelize.define('User', {
   role_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 2, // Default to User role
+    defaultValue: 1, // Default to 'user' role
     references: {
       model: 'Roles',
-      key: 'role_id'
+      key: 'id'
     }
   },
   reset_token: {
@@ -48,14 +47,6 @@ const User = sequelize.define('User', {
   reset_token_expiry: {
     type: DataTypes.DATE,
     allowNull: true
-  },
-  user_type_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'UserTypes',
-      key: 'user_type_id'
-    }
   }
 }, {
   tableName: 'Users',
@@ -85,13 +76,6 @@ User.beforeValidate(async (user) => {
     const role = await Role.findByPk(user.role_id);
     if (!role) {
       throw new Error('Invalid role');
-    }
-  }
-  
-  if (user.user_type_id) {
-    const userType = await UserType.findByPk(user.user_type_id);
-    if (!userType) {
-      throw new Error('Invalid user type');
     }
   }
 });

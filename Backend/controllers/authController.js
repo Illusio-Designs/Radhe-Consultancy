@@ -8,25 +8,83 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 class AuthController {
   async register(req, res) {
     try {
-      const { username, email, password } = req.body;
-      
-      // Find Office user type
-      const officeType = await UserType.findOne({ where: { type_name: 'Office' } });
-      if (!officeType) {
-        return res.status(500).json({ error: 'Office user type not found' });
+      const { email, password, username } = req.body;
+
+      // Validate required fields
+      if (!email || !password || !username) {
+        return res.status(400).json({ error: 'All fields are required' });
       }
 
-      // Create user with Office type
-      const user = await User.create({
-        username,
-        email,
-        password,
-        user_type_id: officeType.user_type_id,
-        role_id: 2 // Default to User role
+      // Check if user already exists
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ error: 'User already exists' });
+      }
+
+      // Determine role based on existing records
+      let role_id;
+      
+      // Get all roles
+      const roles = await Role.findAll();
+      const companyRole = roles.find(r => r.role_name.toLowerCase() === 'company');
+      const consumerRole = roles.find(r => r.role_name.toLowerCase() === 'consumer');
+      const userRole = roles.find(r => r.role_name.toLowerCase() === 'user');
+
+      // Check if email exists in Company table
+      const existingCompany = await Company.findOne({ 
+        where: { company_email: email }
+      });
+      
+      // Check if email exists in Consumer table
+      const existingConsumer = await Consumer.findOne({ 
+        where: { email: email }
       });
 
-      res.status(201).json(user);
+      // Assign role based on where the email was found
+      if (existingCompany) {
+        role_id = companyRole.id;
+      } else if (existingConsumer) {
+        role_id = consumerRole.id;
+      } else {
+        role_id = userRole.id;
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await User.create({
+        email,
+        password: hashedPassword,
+        username,
+        role_id
+      });
+
+      // Get role information
+      const roleInfo = await Role.findByPk(role_id, {
+        attributes: ['role_name']
+      });
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: user.user_id, role: roleInfo.role_name },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.status(201).json({
+        message: 'User registered successfully',
+        token,
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          username: user.username,
+          role_id: user.role_id,
+          role_name: roleInfo.role_name
+        }
+      });
     } catch (error) {
+      console.error('Register error:', error);
       res.status(400).json({ error: error.message });
     }
   }
@@ -34,42 +92,52 @@ class AuthController {
   async login(req, res) {
     try {
       const { email, password } = req.body;
-      
-      // Find the user
-      const user = await User.findOne({ where: { email } });
+
+      // Validate required fields
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+      }
+
+      // Find user
+      const user = await User.findOne({ 
+        where: { email },
+        include: [{
+          model: Role,
+          attributes: ['role_name']
+        }]
+      });
+
       if (!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
-      
+
       // Check password
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
-      
-      // Create token
+
+      // Generate JWT token
       const token = jwt.sign(
-        { userId: user.user_id, role: user.role_id },
+        { userId: user.user_id, role: user.Role.role_name },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
-      
-      // Return user info and token
+
       res.json({
+        message: 'Login successful',
         token,
         user: {
           user_id: user.user_id,
           email: user.email,
           username: user.username,
           role_id: user.role_id,
-          user_type: user.UserType?.type_name,
-          profile_image: user.profile_image
-        },
-        userType: 'office'
+          role_name: user.Role.role_name
+        }
       });
     } catch (error) {
       console.error('Login error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(400).json({ error: error.message });
     }
   }
 
@@ -279,6 +347,33 @@ class AuthController {
     } catch (error) {
       console.error('Error checking user type:', error);
       res.status(500).json({ error: 'Error checking user type' });
+    }
+  }
+
+  async getCurrentUser(req, res) {
+    try {
+      const user = await User.findByPk(req.user.userId, {
+        attributes: ['user_id', 'email', 'username', 'role_id'],
+        include: [{
+          model: Role,
+          attributes: ['role_name']
+        }]
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json({
+        user_id: user.user_id,
+        email: user.email,
+        username: user.username,
+        role_id: user.role_id,
+        role_name: user.Role.role_name
+      });
+    } catch (error) {
+      console.error('Get current user error:', error);
+      res.status(400).json({ error: error.message });
     }
   }
 }
