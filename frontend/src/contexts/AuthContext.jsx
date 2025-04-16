@@ -25,7 +25,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       const response = await api.get('/auth/me');
-      setUser(response.data);
+      console.log('AuthContext: User data from /me endpoint:', response.data);
+      setUser(response.data.user);
     } catch (error) {
       console.error('AuthContext: Auth check error:', error);
       localStorage.removeItem('token');
@@ -40,6 +41,8 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
+      
+      console.log('AuthContext: Login response:', { token, user });
 
       localStorage.setItem('token', token);
       setUser(user);
@@ -58,6 +61,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Get the role from either role_name or role property
+  const userRole = user?.role_name || user?.role;
+
   const value = {
     user,
     loading,
@@ -65,9 +71,9 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isCompany: user?.role === 'company',
-    isConsumer: user?.role === 'consumer'
+    isAdmin: userRole === 'admin',
+    isCompany: userRole === 'company',
+    isConsumer: userRole === 'consumer'
   };
 
   console.log('AuthContext: Providing context value:', value);
