@@ -355,6 +355,18 @@ export const companyAPI = {
     }
   },
 
+  getAllCompanyVendors: async () => {
+    try {
+      console.log('API Service: Fetching all company vendors');
+      const response = await api.get('/companies/vendors');
+      console.log('API Service: Company vendors fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching company vendors:', error);
+      throw error;
+    }
+  },
+
   getCompanyById: async (id) => {
     try {
       console.log('API Service: Fetching company by ID:', id);
