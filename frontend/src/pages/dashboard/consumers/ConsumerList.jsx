@@ -173,7 +173,7 @@ function ConsumerVendors() {
   const fetchConsumers = async () => {
     try {
       setLoading(true);
-      const data = await vendorAPI.getAllConsumerVendors();
+      const data = await vendorAPI.getConsumerVendors();
       setConsumers(data);
       setError(null);
     } catch (err) {
@@ -187,7 +187,7 @@ function ConsumerVendors() {
   const handleDelete = async (vendorId) => {
     if (window.confirm("Are you sure you want to delete this consumer?")) {
       try {
-        await vendorAPI.deleteConsumerVendor(vendorId);
+        await vendorAPI.deleteVendor(vendorId);
         await fetchConsumers();
       } catch (err) {
         setError("Failed to delete consumer");

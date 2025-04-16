@@ -9,6 +9,7 @@ import {
   FiCalendar,
   FiClock,
 } from "react-icons/fi";
+import { adminAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/home/Dashboard.css";
 
 const StatCard = ({ icon: Icon, title, value, change }) => (
@@ -43,18 +44,21 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch("/api/admin/stats");
-        const data = await response.json();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching admin stats:", error);
-      }
-    };
-
     fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      const data = await adminAPI.getAdminStats();
+      setStats(data);
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const adminStats = [
     {
@@ -132,13 +136,15 @@ const AdminDashboard = () => {
     },
   ];
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsLoading(true);
-    // Simulate data refresh
-    setTimeout(() => {
+    try {
+      await fetchStats();
+    } catch (error) {
+      console.error("Error refreshing admin stats:", error);
+    } finally {
       setIsLoading(false);
-      setLastUpdated(new Date().toLocaleTimeString());
-    }, 800);
+    }
   };
 
   const handleFilterChange = (e) => {

@@ -56,7 +56,10 @@ const companyController = {
       const companies = await Company.findAll({
         include: [{
           model: User,
-          include: [Role]
+          include: [{
+            model: Role,
+            attributes: ['role_name']
+          }]
         }]
       });
 
@@ -78,7 +81,10 @@ const companyController = {
       const company = await Company.findByPk(req.params.id, {
         include: [{
           model: User,
-          include: [Role]
+          include: [{
+            model: Role,
+            attributes: ['role_name']
+          }]
         }]
       });
 

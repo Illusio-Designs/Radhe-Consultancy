@@ -9,6 +9,9 @@ import {
   BiX,
   BiChevronDown,
   BiChevronUp,
+  BiShield,
+  BiStore,
+  BiUserCircle,
 } from "react-icons/bi";
 import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
 import "../../styles/components/dashboard/Sidebar.css";
@@ -17,6 +20,7 @@ const Sidebar = ({ onCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
   const [vendorsDropdownOpen, setVendorsDropdownOpen] = useState(false);
 
   useEffect(() => {
@@ -41,30 +45,109 @@ const Sidebar = ({ onCollapse }) => {
   };
 
   const menuItems = [
-    { path: "/dashboard", icon: <BiTachometer />, label: "Dashboard" },
-    { path: "/users", icon: <BiGroup />, label: "Users" },
+    { 
+      path: "/dashboard", 
+      icon: <BiTachometer />, 
+      label: "Dashboard",
+      items: [
+        { path: "/dashboard", icon: <BiTachometer />, label: "Home" }
+      ]
+    },
+    { path: "/dashboard/roles", icon: <BiShield />, label: "Roles" },
+    {
+      label: "Users",
+      icon: <BiUser />,
+      isDropdown: true,
+      isOpen: usersDropdownOpen,
+      toggle: () => setUsersDropdownOpen(!usersDropdownOpen),
+      items: [
+        { path: "/dashboard/users/company", icon: <BiBuilding />, label: "Company Users" },
+        { path: "/dashboard/users/consumer", icon: <BiUserCircle />, label: "Consumer Users" },
+        { path: "/dashboard/users/other", icon: <BiGroup />, label: "Other Users" }
+      ]
+    },
     {
       label: "Vendors",
-      icon: <BiGroup />,
+      icon: <BiStore />,
       isDropdown: true,
       isOpen: vendorsDropdownOpen,
       toggle: () => setVendorsDropdownOpen(!vendorsDropdownOpen),
       items: [
-        {
-          path: "/companylist",
-          icon: <BiBuilding />,
-          label: "Company",
-        },
-        {
-          path: "/vendors/consumer",
-          icon: <BiGroup />,
-          label: "Consumer",
-        },
-      ],
-    },
+        { path: "/dashboard/companies", icon: <BiBuilding />, label: "Companies" },
+        { path: "/dashboard/consumers", icon: <BiUserCircle />, label: "Consumers" }
+      ]
+    }
   ];
 
   const isActive = (path) => location.pathname.startsWith(path);
+
+  const renderMenuItem = (item, index) => {
+    if (item.isDropdown) {
+      return (
+        <div key={index} className="relative">
+          <a
+            onClick={item.toggle}
+            className={`sidebar-nav-item ${
+              item.items.some((sub) => isActive(sub.path))
+                ? "active"
+                : ""
+            }`}
+            data-tooltip={isCollapsed ? item.label : undefined}
+          >
+            <span className="text-2xl">{item.icon}</span>
+            {!isCollapsed && (
+              <>
+                <span className="ml-4 sidebar-nav-label">
+                  {item.label}
+                </span>
+                <span className="ml-4 text-sm">
+                  {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
+                </span>
+              </>
+            )}
+          </a>
+          {item.isOpen && (
+            <div className="pl-4">
+              {item.items.map((subItem, subIndex) => (
+                subItem.isDropdown ? (
+                  renderMenuItem(subItem, `${index}-${subIndex}`)
+                ) : (
+                  <Link
+                    key={subItem.path}
+                    to={subItem.path}
+                    className={`sidebar-nav-item ${
+                      isActive(subItem.path) ? "active" : ""
+                    }`}
+                  >
+                    <span className="text-lg">{subItem.icon}</span>
+                    <span className="ml-4 sidebar-nav-label">
+                      {subItem.label}
+                    </span>
+                  </Link>
+                )
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.path || index}
+        to={item.path}
+        className={`sidebar-nav-item ${
+          isActive(item.path) ? "active" : ""
+        }`}
+        data-tooltip={isCollapsed ? item.label : undefined}
+      >
+        <span className="text-2xl">{item.icon}</span>
+        {!isCollapsed && (
+          <span className="ml-4 sidebar-nav-label">{item.label}</span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -95,67 +178,7 @@ const Sidebar = ({ onCollapse }) => {
 
         {/* Navigation */}
         <nav className="mt-8">
-          {menuItems.map((item, index) => (
-            <div key={item.path || index}>
-              {item.isDropdown ? (
-                <div className="relative">
-                  <a
-                    onClick={item.toggle}
-                    className={`sidebar-nav-item ${
-                      item.items.some((sub) => isActive(sub.path))
-                        ? "active"
-                        : ""
-                    }`}
-                    data-tooltip={isCollapsed ? item.label : undefined}
-                  >
-                    <span className="text-2xl">{item.icon}</span>
-                    {!isCollapsed && (
-                      <>
-                        <span className="ml-4 sidebar-nav-label">
-                          {item.label}
-                        </span>
-                        <span className="ml-4 text-sm">
-                          {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
-                        </span>
-                      </>
-                    )}
-                  </a>
-                  {/* dropdown children */}
-                  {item.isOpen && (
-                    <div className="pl-4">
-                      {item.items.map((subItem) => (
-                        <Link
-                          key={subItem.path}
-                          to={subItem.path}
-                          className={`sidebar-nav-item ${
-                            isActive(subItem.path) ? "active" : ""
-                          }`}
-                        >
-                          <span className="text-lg">{subItem.icon}</span>
-                          <span className="ml-4 sidebar-nav-label">
-                            {subItem.label}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  to={item.path}
-                  className={`sidebar-nav-item ${
-                    isActive(item.path) ? "active" : ""
-                  }`}
-                  data-tooltip={isCollapsed ? item.label : undefined}
-                >
-                  <span className="text-2xl">{item.icon}</span>
-                  {!isCollapsed && (
-                    <span className="ml-4 sidebar-nav-label">{item.label}</span>
-                  )}
-                </Link>
-              )}
-            </div>
-          ))}
+          {menuItems.map((item, index) => renderMenuItem(item, index))}
         </nav>
       </div>
     </>

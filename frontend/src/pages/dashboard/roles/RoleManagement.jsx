@@ -6,7 +6,7 @@ import Button from '../../../components/common/Button/Button';
 import ActionButton from '../../../components/common/ActionButton/ActionButton';
 import Modal from '../../../components/common/Modal/Modal';
 import Loader from '../../../components/common/Loader/Loader';
-import '../../../styles/dashboard/Role.css';
+import '../../../styles/pages/dashboard/roles/Role.css';
 
 const RoleForm = ({ role, onClose, onRoleUpdated }) => {
   const [formData, setFormData] = useState({

@@ -48,7 +48,10 @@ const consumerController = {
       const consumers = await Consumer.findAll({
         include: [{
           model: User,
-          include: [Role]
+          include: [{
+            model: Role,
+            attributes: ['role_name']
+          }]
         }]
       });
 
@@ -70,7 +73,10 @@ const consumerController = {
       const consumer = await Consumer.findByPk(req.params.id, {
         include: [{
           model: User,
-          include: [Role]
+          include: [{
+            model: Role,
+            attributes: ['role_name']
+          }]
         }]
       });
 

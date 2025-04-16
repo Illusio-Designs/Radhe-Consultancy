@@ -6,11 +6,16 @@ import ComingSoon from "../pages/ComingSoon";
 import Login from "../pages/dashboard/auth/Login";
 import Register from "../pages/dashboard/auth/Register";
 import Dashboard from "../pages/dashboard/home/Dashboard";
+import AdminDashboard from "../pages/dashboard/home/AdminDashboard";
+import CompanyDashboard from "../pages/dashboard/home/CompanyDashboard";
+import ConsumerDashboard from "../pages/dashboard/home/ConsumerDashboard";
 import Unauthorized from "../pages/dashboard/auth/Unauthorized";
-import UserRoleManagement from "../pages/dashboard/users/UserRoleManagement";
+import RoleManagement from "../pages/dashboard/roles/RoleManagement";
 import CompanyUsers from "../pages/dashboard/users/CompanyUsers";
 import ConsumerUsers from "../pages/dashboard/users/ConsumerUsers";
-import CompanyList from "../pages/dashboard/companies/CompanyList"; // Added CompanyList route
+import OtherUsers from "../pages/dashboard/users/OtherUsers";
+import CompanyList from "../pages/dashboard/companies/CompanyList";
+import ConsumerList from "../pages/dashboard/consumers/ConsumerList";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 const router = createBrowserRouter([
@@ -57,45 +62,49 @@ const router = createBrowserRouter([
         index: true,
         element: <Dashboard />,
       },
-      // Admin Routes
+      // Role-based Dashboard Routes
       {
-        path: "users",
-        element: <UserRoleManagement />,
+        path: "admin",
+        element: <AdminDashboard />,
       },
+      {
+        path: "company",
+        element: <CompanyDashboard />,
+      },
+      {
+        path: "consumer",
+        element: <ConsumerDashboard />,
+      },
+      // Admin Management Routes
       {
         path: "roles",
-        element: <UserRoleManagement />,
+        element: (
+          <ProtectedRoute allowedRoles={['admin']}>
+            <RoleManagement />
+          </ProtectedRoute>
+        ),
       },
-      // Company Management Routes
+      // User Management Routes
+      {
+        path: "users/company",
+        element: <CompanyUsers />,
+      },
+      {
+        path: "users/consumer",
+        element: <ConsumerUsers />,
+      },
+      {
+        path: "users/other",
+        element: <OtherUsers />,
+      },
+      // Vendor Management Routes
       {
         path: "companies",
-        element: <CompanyUsers />,
-      },
-      {
-        path: "companies/:companyId",
-        element: <CompanyUsers />,
-      },
-      {
-        path: "companies/:companyId/edit",
-        element: <CompanyUsers />,
-      },
-      // Company List Route
-      {
-        path: "companylist",
         element: <CompanyList />,
       },
-      // Consumer Management Routes
       {
         path: "consumers",
-        element: <ConsumerUsers />,
-      },
-      {
-        path: "consumers/:consumerId",
-        element: <ConsumerUsers />,
-      },
-      {
-        path: "consumers/:consumerId/edit",
-        element: <ConsumerUsers />,
+        element: <ConsumerList />,
       },
     ],
   },

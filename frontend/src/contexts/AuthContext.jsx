@@ -76,7 +76,10 @@ export const AuthProvider = ({ children }) => {
   console.log('AuthContext: Current user role:', userRole);
 
   const value = {
-    user,
+    user: {
+      ...user,
+      role: userRole // Ensure role is always available
+    },
     loading,
     error,
     login,

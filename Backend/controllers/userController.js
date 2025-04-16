@@ -1,12 +1,69 @@
 const userService = require('../services/userService');
-const { User, Role, Vendor } = require('../models');
+const { User, Role, Company, Consumer } = require('../models');
 const { uploadAndCompress } = require('../config/multerConfig');
 const { Op } = require('sequelize');
 
 // Get all users
 const getAllUsers = async (req, res) => {
   try {
-    const users = await userService.getAllUsers();
+    const users = await User.findAll({
+      include: [{
+        model: Role,
+        attributes: ['role_name']
+      }]
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get company users
+const getCompanyUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      include: [{
+        model: Role,
+        where: { role_name: 'company' },
+        attributes: ['role_name']
+      }]
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get consumer users
+const getConsumerUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      include: [{
+        model: Role,
+        where: { role_name: 'consumer' },
+        attributes: ['role_name']
+      }]
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get other users (not company or consumer)
+const getOtherUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      include: [{
+        model: Role,
+        where: {
+          role_name: {
+            [Op.notIn]: ['company', 'consumer']
+          }
+        },
+        attributes: ['role_name']
+      }]
+    });
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -16,56 +73,46 @@ const getAllUsers = async (req, res) => {
 // Get user by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await userService.getUserById(req.params.userId);
+    const user = await User.findByPk(req.params.id, {
+      include: [{
+        model: Role,
+        attributes: ['role_name']
+      }]
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     res.json(user);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
 // Create new user
 const createUser = async (req, res) => {
-  const { username, email, password, role_id } = req.body;
-
-  // Check if the role_id is valid
-  const role = await Role.findByPk(role_id);
-  if (!role) {
-    return res.status(400).json({ error: 'Role not found' });
-  }
-
-  // Proceed with user creation logic
   try {
-    const newUser = await userService.createUser({
+    const { username, email, password, role_id } = req.body;
+    const user = await User.create({
       username,
       email,
       password,
       role_id
     });
-    res.status(201).json(newUser);
+    res.status(201).json(user);
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Failed to create user' });
+    res.status(400).json({ error: error.message });
   }
 };
 
 // Update user
 const updateUser = async (req, res) => {
   try {
-    // Validate required fields
-    if (!req.body.username || !req.body.email) {
-      return res.status(400).json({ error: 'Username and email are required' });
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-
-    // Validate role if provided
-    if (req.body.role_id) {
-      const role = await Role.findByPk(req.body.role_id);
-      if (!role) {
-        return res.status(400).json({ error: 'Role not found' });
-      }
-    }
-
-    const updatedUser = await userService.updateUser(req.params.userId, req.body);
-    res.json(updatedUser);
+    await user.update(req.body);
+    res.json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -74,7 +121,11 @@ const updateUser = async (req, res) => {
 // Delete user
 const deleteUser = async (req, res) => {
   try {
-    await userService.deleteUser(req.params.userId);
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    await user.destroy();
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -212,6 +263,9 @@ const getCurrentUser = async (req, res) => {
 
 module.exports = {
   getAllUsers,
+  getCompanyUsers,
+  getConsumerUsers,
+  getOtherUsers,
   getUserById,
   createUser,
   updateUser,
