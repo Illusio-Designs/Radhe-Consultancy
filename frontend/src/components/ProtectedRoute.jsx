@@ -7,12 +7,18 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
+  // Get the role from either role_name or role property
+  const userRole = user?.role_name || user?.role;
+
   console.log('ProtectedRoute: Rendering with props:', {
     path: location.pathname,
     allowedRoles,
     isAuthenticated,
     loading,
-    user: user ? { id: user.id, role: user.role } : null
+    user: user ? { 
+      id: user.id || user.user_id, 
+      role: userRole 
+    } : null
   });
 
   if (loading) {
@@ -25,9 +31,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
     console.log('ProtectedRoute: User role not authorized:', {
-      userRole: user.role,
+      userRole,
       allowedRoles
     });
     return <Navigate to="/unauthorized" replace />;

@@ -217,8 +217,13 @@ class AuthController {
 
   async getCurrentUser(req, res) {
     try {
-      const userId = req.user.userId;
-      const userRole = req.user.role;
+      console.log('getCurrentUser: Request user object:', req.user);
+      
+      // Use user_id instead of userId
+      const userId = req.user.user_id;
+      const userRole = req.user.role_name;
+      
+      console.log('getCurrentUser: Looking up user with ID:', userId);
       
       // Fetch the user with their role and permissions
       const user = await User.findOne({
@@ -234,8 +239,15 @@ class AuthController {
       });
 
       if (!user) {
+        console.log('getCurrentUser: User not found for ID:', userId);
         return res.status(404).json({ message: 'User not found' });
       }
+
+      console.log('getCurrentUser: User found:', { 
+        id: user.user_id, 
+        email: user.email, 
+        role: userRole 
+      });
 
       // Get role-specific data
       let additionalData = {};

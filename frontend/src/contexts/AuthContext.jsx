@@ -20,13 +20,23 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
+        console.log('AuthContext: No token found, skipping auth check');
         setLoading(false);
         return;
       }
 
+      console.log('AuthContext: Checking authentication with token');
       const response = await api.get('/auth/me');
       console.log('AuthContext: User data from /me endpoint:', response.data);
-      setUser(response.data.user);
+      
+      // Extract user data from the response
+      if (response.data && response.data.user) {
+        setUser(response.data.user);
+        console.log('AuthContext: User data set from /me endpoint');
+      } else {
+        console.error('AuthContext: Invalid response format from /me endpoint');
+        localStorage.removeItem('token');
+      }
     } catch (error) {
       console.error('AuthContext: Auth check error:', error);
       localStorage.removeItem('token');
@@ -63,6 +73,7 @@ export const AuthProvider = ({ children }) => {
 
   // Get the role from either role_name or role property
   const userRole = user?.role_name || user?.role;
+  console.log('AuthContext: Current user role:', userRole);
 
   const value = {
     user,
