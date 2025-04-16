@@ -1,4 +1,4 @@
-const { Company, User, Role } = require('../models');
+const { Company, User, Role, Vendor } = require('../models');
 const { Op } = require('sequelize');
 
 const companyController = {
@@ -72,6 +72,27 @@ const companyController = {
         success: false,
         error: error.message
       });
+    }
+  },
+
+  // Get all company vendors
+  async getAllCompanyVendors(req, res) {
+    try {
+      const vendors = await Vendor.findAll({
+        include: [{
+          model: Company,
+          include: [{
+            model: User,
+            include: [{
+              model: Role,
+              attributes: ['role_name']
+            }]
+          }]
+        }]
+      });
+      res.json(vendors);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   },
 
