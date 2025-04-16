@@ -8,12 +8,15 @@ const resetAdminPassword = require('./scripts/resetAdminPassword');
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
+// CORS configuration
+const corsOptions = {
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'https://radheconsultancy.co.in'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
-}));
+};
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static('public'));
@@ -54,6 +57,7 @@ const startServer = async () => {
     
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
+      console.log(`CORS is enabled for origins: ${corsOptions.origin.join(', ')}`);
     });
   } catch (error) {
     console.error('Unable to start server:', error);

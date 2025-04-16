@@ -34,11 +34,13 @@ const User = sequelize.define('User', {
   role_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 1, // Default to 'user' role
+    defaultValue: 1,
     references: {
       model: 'Roles',
       key: 'id'
-    }
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'NO ACTION'
   },
   reset_token: {
     type: DataTypes.STRING,
@@ -50,7 +52,9 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Users',
-  timestamps: false
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 // Hash password before saving

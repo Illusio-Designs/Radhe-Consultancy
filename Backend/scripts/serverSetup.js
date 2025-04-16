@@ -13,8 +13,8 @@ async function initializeDatabase() {
     await sequelize.authenticate();
     console.log('Database connection established successfully');
 
-    // Sync all models
-    await sequelize.sync({ alter: true });
+    // Sync all models with force: false to prevent table recreation
+    await sequelize.sync({ force: false });
     console.log('Database models synchronized');
 
     // Create default roles if they don't exist
@@ -122,13 +122,12 @@ async function initializeDatabase() {
     
     const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
     if (adminRole) {
-      // Use the User model's built-in password hashing
       await User.findOrCreate({
         where: { email: adminEmail },
         defaults: {
           username: 'admin',
           email: adminEmail,
-          password: adminPassword, // Will be hashed by the model's beforeCreate hook
+          password: adminPassword,
           role_id: adminRole.id
         }
       });

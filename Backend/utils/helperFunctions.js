@@ -1,6 +1,5 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -24,22 +23,6 @@ const generateToken = (userId, role) => {
   );
 };
 
-// Image processing and saving
-const processAndSaveImage = async (file, uploadPath) => {
-  const fileName = `${Date.now()}-${file.originalname}`;
-  const filePath = path.join(uploadPath, fileName);
-
-  await sharp(file.buffer)
-    .resize(800, 800, {
-      fit: 'inside',
-      withoutEnlargement: true
-    })
-    .jpeg({ quality: 80 })
-    .toFile(filePath);
-
-  return fileName;
-};
-
 // Delete file
 const deleteFile = async (filePath) => {
   try {
@@ -49,13 +32,13 @@ const deleteFile = async (filePath) => {
   }
 };
 
-// Validate email format
+// Email validation
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-// Validate phone number format
+// Phone number validation
 const isValidPhoneNumber = (phone) => {
   const phoneRegex = /^\+?[\d\s-]{10,}$/;
   return phoneRegex.test(phone);
@@ -65,7 +48,6 @@ module.exports = {
   hashPassword,
   comparePassword,
   generateToken,
-  processAndSaveImage,
   deleteFile,
   isValidEmail,
   isValidPhoneNumber

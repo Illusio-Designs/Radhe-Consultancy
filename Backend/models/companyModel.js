@@ -61,8 +61,26 @@ const Company = sequelize.define('Company', {
 // Add indexes after model definition
 Company.afterSync(async () => {
   try {
-    await sequelize.query('CREATE INDEX idx_gst_number ON companies (gst_number)');
-    await sequelize.query('CREATE INDEX idx_pan_number ON companies (pan_number)');
+    // Check if indexes exist before creating them
+    const [results] = await sequelize.query(
+      "SELECT COUNT(*) as count FROM information_schema.statistics WHERE table_schema = ? AND table_name = 'companies' AND index_name = 'idx_gst_number'",
+      { replacements: [sequelize.config.database], type: sequelize.QueryTypes.SELECT }
+    );
+    
+    if (results.count === 0) {
+      await sequelize.query('CREATE INDEX idx_gst_number ON companies (gst_number)');
+      console.log('Created index idx_gst_number on companies table');
+    }
+    
+    const [panResults] = await sequelize.query(
+      "SELECT COUNT(*) as count FROM information_schema.statistics WHERE table_schema = ? AND table_name = 'companies' AND index_name = 'idx_pan_number'",
+      { replacements: [sequelize.config.database], type: sequelize.QueryTypes.SELECT }
+    );
+    
+    if (panResults.count === 0) {
+      await sequelize.query('CREATE INDEX idx_pan_number ON companies (pan_number)');
+      console.log('Created index idx_pan_number on companies table');
+    }
   } catch (error) {
     console.error('Error creating indexes:', error);
   }
