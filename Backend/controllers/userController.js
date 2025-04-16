@@ -1,5 +1,5 @@
 const userService = require('../services/userService');
-const { User, Role } = require('../models');
+const { User, Role, Vendor } = require('../models');
 const { uploadAndCompress } = require('../config/multerConfig');
 const { Op } = require('sequelize');
 
@@ -170,6 +170,46 @@ const getResetPasswordForm = async (req, res) => {
   }
 };
 
+// Get current user information
+const getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    // Get user from database
+    const user = await User.findByPk(userId, {
+      attributes: ['user_id', 'email', 'username', 'role_id'],
+      include: [{
+        model: Role,
+        attributes: ['role_name']
+      }]
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // If user is a vendor, get vendor information
+    let vendorInfo = null;
+    if (user.role_id === 3) { // Assuming 3 is the vendor role ID
+      vendorInfo = await Vendor.findOne({ where: { user_id: userId } });
+    }
+
+    res.json({
+      user: {
+        user_id: user.user_id,
+        email: user.email,
+        username: user.username,
+        role_id: user.role_id,
+        role_name: user.Role.role_name,
+        vendorInfo
+      }
+    });
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    res.status(500).json({ message: 'Error getting user information' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -181,5 +221,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
-  getResetPasswordForm
+  getResetPasswordForm,
+  getCurrentUser
 };

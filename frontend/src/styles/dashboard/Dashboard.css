@@ -332,3 +332,77 @@
     grid-template-columns: 1fr;
   }
 }
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #2563eb;
+  gap: 1rem;
+}
+
+.loading-spinner .spinner-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner span {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-message .error-icon {
+  width: 3rem;
+  height: 3rem;
+  color: #dc2626;
+}
+
+.error-message p {
+  font-size: 1rem;
+  color: #4b5563;
+  max-width: 400px;
+  margin: 0;
+}
+
+.error-message .retry-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-message .retry-button:hover {
+  background-color: #1d4ed8;
+}
+
+.error-message .retry-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -3,14 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 
 console.log('ProtectedRoute: Component loaded');
 
-const ProtectedRoute = ({ children, requiredRoles = [], requiredPermissions = [] }) => {
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
   console.log('ProtectedRoute: Rendering with props:', {
     path: location.pathname,
-    requiredRoles,
-    requiredPermissions,
+    allowedRoles,
     isAuthenticated,
     loading,
     user: user ? { id: user.id, role: user.role } : null
@@ -26,26 +25,12 @@ const ProtectedRoute = ({ children, requiredRoles = [], requiredPermissions = []
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     console.log('ProtectedRoute: User role not authorized:', {
       userRole: user.role,
-      requiredRoles
+      allowedRoles
     });
     return <Navigate to="/unauthorized" replace />;
-  }
-
-  if (requiredPermissions.length > 0) {
-    const hasRequiredPermissions = requiredPermissions.every(permission =>
-      user.permissions?.includes(permission)
-    );
-
-    if (!hasRequiredPermissions) {
-      console.log('ProtectedRoute: User missing required permissions:', {
-        userPermissions: user.permissions,
-        requiredPermissions
-      });
-      return <Navigate to="/unauthorized" replace />;
-    }
   }
 
   console.log('ProtectedRoute: Access granted to:', location.pathname);

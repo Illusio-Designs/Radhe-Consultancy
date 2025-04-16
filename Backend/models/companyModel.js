@@ -25,18 +25,15 @@ const Company = sequelize.define('Company', {
   },
   company_email: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   gst_number: {
     type: DataTypes.STRING(15),
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   pan_number: {
     type: DataTypes.STRING(10),
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   firm_type: {
     type: DataTypes.ENUM('Proprietorship', 'Partnership', 'LLP', 'Private Limited'),
@@ -59,6 +56,16 @@ const Company = sequelize.define('Company', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'
+});
+
+// Add indexes after model definition
+Company.afterSync(async () => {
+  try {
+    await sequelize.query('CREATE INDEX idx_gst_number ON companies (gst_number)');
+    await sequelize.query('CREATE INDEX idx_pan_number ON companies (pan_number)');
+  } catch (error) {
+    console.error('Error creating indexes:', error);
+  }
 });
 
 module.exports = Company;

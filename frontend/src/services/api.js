@@ -138,13 +138,27 @@ export const authAPI = {
 // User API
 export const userAPI = {
   getAllUsers: async () => {
-    const response = await api.get('/users');
-    return response.data;
+    try {
+      console.log('API Service: Fetching all users');
+      const response = await api.get('/users');
+      console.log('API Service: Users fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching users:', error);
+      throw error;
+    }
   },
 
   getUserById: async (id) => {
-    const response = await api.get(`/users/${id}`);
-    return response.data;
+    try {
+      console.log('API Service: Fetching user by ID:', id);
+      const response = await api.get(`/users/${id}`);
+      console.log('API Service: User fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching user:', error);
+      throw error;
+    }
   },
 
   createUser: async (userData) => {
@@ -201,10 +215,12 @@ export const userAPI = {
 export const roleAPI = {
   async getRoles() {
     try {
+      console.log('API Service: Fetching all roles');
       const response = await api.get('/roles');
+      console.log('API Service: Roles fetched successfully');
       return response.data;
     } catch (error) {
-      console.error('Error fetching roles:', error);
+      console.error('API Service: Error fetching roles:', error);
       throw error;
     }
   },

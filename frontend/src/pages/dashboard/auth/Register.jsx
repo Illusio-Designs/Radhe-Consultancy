@@ -57,7 +57,7 @@ function Register() {
       );
       toast.success("Registration successful! Redirecting to login...");
       setTimeout(() => {
-        navigate("/auth/login");
+        navigate("/login");
       }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
@@ -146,7 +146,7 @@ function Register() {
         </form>
 
         <p className="auth-redirect">
-          Already have an account? <Link to="/auth/login">Sign in</Link>
+          Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </div>

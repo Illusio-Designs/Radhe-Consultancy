@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from "react-icons/bi";
-import { companyVendorAPI } from "../../../services/api";
+import { companyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
@@ -113,13 +113,13 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
           pan_number: formData.pan_number,
           firm_type: formData.firm_type,
         };
-        await companyVendorAPI.updateCompanyVendor(
+        await companyAPI.updateCompanyVendor(
           company.vendor_id,
           updateData
         );
       } else {
         // For new companies
-        await companyVendorAPI.createCompanyVendor(formData);
+        await companyAPI.createCompanyVendor(formData);
       }
       onCompanyUpdated();
     } catch (err) {
@@ -264,7 +264,7 @@ function CompanyVendors() {
     try {
       setLoading(true);
       console.log('Fetching company vendors...');
-      const response = await companyVendorAPI.getAllCompanyVendors();
+      const response = await companyAPI.getAllCompanyVendors();
       console.log('Company vendors response:', response);
 
       if (!response || !Array.isArray(response)) {
@@ -287,7 +287,7 @@ function CompanyVendors() {
   const handleDelete = async (vendorId) => {
     if (window.confirm("Are you sure you want to delete this vendor?")) {
       try {
-        await companyVendorAPI.deleteCompanyVendor(vendorId);
+        await companyAPI.deleteCompanyVendor(vendorId);
         await fetchVendors();
       } catch (err) {
         setError("Failed to delete vendor");

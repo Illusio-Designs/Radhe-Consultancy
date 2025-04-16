@@ -1,37 +1,67 @@
-const User = require('../models/userModel');
-const Company = require('../models/companyModel');
-const Consumer = require('../models/consumerModel');
-const Role = require('../models/roleModel');
+const { User, Company, Consumer, Role } = require('../models');
 
-async function determineUserRole(email) {
+const determineUserRole = async (email) => {
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return existingUser.role_id;
+    // Check in User table first
+    const user = await User.findOne({
+      where: { email },
+      include: [{
+        model: Role,
+        attributes: ['role_name']
+      }]
+    });
+
+    if (user) {
+      return {
+        found: true,
+        role: user.Role.role_name,
+        userData: user
+      };
     }
 
-    // Check if email exists in company table
-    const company = await Company.findOne({ where: { email } });
+    // Check in Company table
+    const company = await Company.findOne({
+      where: { company_email: email },
+      include: [{
+        model: User,
+        include: [Role]
+      }]
+    });
+
     if (company) {
-      const companyRole = await Role.findOne({ where: { role_name: 'company' } });
-      return companyRole.id;
+      return {
+        found: true,
+        role: 'company',
+        userData: company.User
+      };
     }
 
-    // Check if email exists in consumer table
-    const consumer = await Consumer.findOne({ where: { email } });
+    // Check in Consumer table
+    const consumer = await Consumer.findOne({
+      where: { email },
+      include: [{
+        model: User,
+        include: [Role]
+      }]
+    });
+
     if (consumer) {
-      const consumerRole = await Role.findOne({ where: { role_name: 'consumer' } });
-      return consumerRole.id;
+      return {
+        found: true,
+        role: 'consumer',
+        userData: consumer.User
+      };
     }
 
-    // If email not found in any table, assign default user role
-    const defaultRole = await Role.findOne({ where: { role_name: 'user' } });
-    return defaultRole.id;
+    return {
+      found: false,
+      role: null,
+      userData: null
+    };
   } catch (error) {
-    console.error('Error determining user role:', error);
+    console.error('Error in determineUserRole:', error);
     throw error;
   }
-}
+};
 
 module.exports = determineUserRole; 

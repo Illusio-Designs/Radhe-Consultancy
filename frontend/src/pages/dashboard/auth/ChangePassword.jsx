@@ -18,7 +18,7 @@ function ChangePassword() {
     try {
       await userAPI.changePassword(currentPassword, newPassword);
       setSuccess('Password changed successfully.');
-      setTimeout(() => navigate('/auth/login'), 2000);
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to change password.');
     }

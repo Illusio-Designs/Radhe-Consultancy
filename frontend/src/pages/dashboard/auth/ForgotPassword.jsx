@@ -47,7 +47,7 @@ function ForgotPassword() {
           <button className="auth-button" type="submit">
             Send Reset Link
           </button>
-          <button className="auth-button" type="button" onClick={() => navigate('/auth/login')}>
+          <button className="auth-button" type="button" onClick={() => navigate('/login')}>
             Back to Login
           </button>
 

@@ -11,9 +11,10 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token:', decoded);
     
     const user = await User.findOne({
-      where: { user_id: decoded.user_id },
+      where: { user_id: decoded.userId },
       include: [{
         model: Role,
         attributes: ['role_name']

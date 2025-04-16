@@ -18,7 +18,7 @@ function ResetPassword() {
     try {
       await authAPI.resetPassword(token, password);
       setSuccess('Password has been reset successfully.');
-      setTimeout(() => navigate('/auth/login'), 2000);
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to reset password.');
     }

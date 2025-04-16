@@ -1,94 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { Progress } from 'antd';
-import '../styles/auth/Auth.css';
+import { Link } from 'react-router-dom';
 
 const ComingSoon = () => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    progress: 0
-  });
-
-  useEffect(() => {
-    // Set launch date to 120 days from now
-    const launchDate = new Date();
-    launchDate.setDate(launchDate.getDate() + 120);
-
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = launchDate.getTime() - now;
-
-      // Calculate time units
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      // Calculate progress (inverse of days left as a percentage)
-      const progress = Math.floor(((120 - days) / 120) * 100);
-
-      setTimeLeft({
-        days,
-        hours,
-        minutes,
-        seconds,
-        progress
-      });
-
-      if (distance < 0) {
-        clearInterval(timer);
-        setTimeLeft({
-          days: 0,
-          hours: 0,
-          minutes: 0,
-          seconds: 0,
-          progress: 100
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <div className="auth-container coming-soon">
-      <div className="auth-card">
-        <div className="auth-content">
-          <h1 className="auth-title">Coming Soon</h1>
-          <h2 className="auth-subtitle">We're Working Hard to Bring You Something Amazing</h2>
-          
-          <div className="countdown-container">
-            <Progress
-              type="circle"
-              percent={timeLeft.progress}
-              format={() => `${timeLeft.days} Days`}
-              size={200}
-              strokeColor={{
-                '0%': '#108ee9',
-                '100%': '#87d068',
-              }}
-            />
-            
-            <div className="countdown-details">
-              <div className="countdown-item">
-                <span className="countdown-value">{timeLeft.hours}</span>
-                <span className="countdown-label">Hours</span>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
+      <div className="max-w-4xl w-full text-center">
+        <div className="mb-8">
+          <h1 className="text-5xl md:text-6xl font-bold text-primary-900 mb-4">
+            Coming Soon
+          </h1>
+          <p className="text-xl md:text-2xl text-primary-700 mb-8">
+            We're working hard to bring you something amazing. Stay tuned!
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-6 bg-primary-50 rounded-xl">
+              <div className="text-primary-600 text-4xl mb-4">
+                <i className="lni lni-users"></i>
               </div>
-              <div className="countdown-item">
-                <span className="countdown-value">{timeLeft.minutes}</span>
-                <span className="countdown-label">Minutes</span>
+              <h3 className="text-lg font-semibold text-primary-900 mb-2">For Consumers</h3>
+              <p className="text-primary-700">Find and connect with trusted consultants</p>
+            </div>
+            <div className="p-6 bg-primary-50 rounded-xl">
+              <div className="text-primary-600 text-4xl mb-4">
+                <i className="lni lni-briefcase"></i>
               </div>
-              <div className="countdown-item">
-                <span className="countdown-value">{timeLeft.seconds}</span>
-                <span className="countdown-label">Seconds</span>
+              <h3 className="text-lg font-semibold text-primary-900 mb-2">For Companies</h3>
+              <p className="text-primary-700">Grow your business with expert guidance</p>
+            </div>
+            <div className="p-6 bg-primary-50 rounded-xl">
+              <div className="text-primary-600 text-4xl mb-4">
+                <i className="lni lni-customer"></i>
               </div>
+              <h3 className="text-lg font-semibold text-primary-900 mb-2">For Consultants</h3>
+              <p className="text-primary-700">Share your expertise and grow your network</p>
             </div>
           </div>
+        </div>
 
-          <div className="coming-soon-footer">
-            <p>Stay tuned for something amazing!</p>
+        <div className="space-y-4">
+          <Link
+            to="/login"
+            className="inline-block px-8 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors duration-200"
+          >
+            Get Started
+          </Link>
+          <div className="text-primary-600">
+            <p>Want to learn more?</p>
+            <a href="mailto:contact@radheconsultancy.com" className="hover:text-primary-700">
+              contact@radheconsultancy.com
+            </a>
           </div>
         </div>
       </div>
