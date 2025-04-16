@@ -54,7 +54,8 @@ const User = sequelize.define('User', {
   tableName: 'Users',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  underscored: true
 });
 
 // Hash password before saving
