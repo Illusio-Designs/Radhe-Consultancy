@@ -34,22 +34,19 @@ function DashboardLayout() {
 
   return (
     <div className="dashboard-main">
-      <aside className="dashboard-sidebar">
+      <aside className={`dashboard-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
         <Sidebar onCollapse={handleSidebarCollapse} />
-        <div className="sidebar-header">
-          <h2>Radhe CRM</h2>
-        </div>
       </aside>
       <div className={`dashboard-content ${isCollapsed ? 'content-collapsed' : ''}`}>
-          <Header 
-            isCollapsed={isCollapsed}
-            notifications={notifications}
-            showNotifications={showNotifications}
-            setShowNotifications={setShowNotifications}
-            onProfileAction={handleProfileAction}
-            profileMenuItems={profileMenuItems}
-          />
-        <main className="dashboard-outlet sidebar-collapsed">
+        <Header 
+          isCollapsed={isCollapsed}
+          notifications={notifications}
+          showNotifications={showNotifications}
+          setShowNotifications={setShowNotifications}
+          onProfileAction={handleProfileAction}
+          profileMenuItems={profileMenuItems}
+        />
+        <main className="dashboard-outlet">
           <Outlet />
         </main>
         <footer className="dashboard-footer">

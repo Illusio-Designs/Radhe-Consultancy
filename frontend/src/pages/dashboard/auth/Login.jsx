@@ -1,22 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import "../../../styles/dashboard/Auth.css";
 import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
 
+console.log('Login component: Module loaded');
+
 function Login() {
+  console.log('Login component: Rendering');
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    console.log("Login component: Checking authentication state", { isAuthenticated });
+    if (isAuthenticated) {
+      console.log("Login component: User is already authenticated, redirecting to dashboard");
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log('Login component: Form field changed', { field: name, value });
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -25,16 +39,21 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Login component: Form submission started');
     setError("");
     setLoading(true);
+    
     try {
-      await login(formData.email, formData.password);
+      console.log('Login component: Submitting login form with email:', formData.email);
+      const result = await login(formData.email, formData.password);
+      console.log('Login component: Login successful, result:', result);
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.error || "Failed to login. Please check your credentials.");
-      toast.error(err.error || "Failed to login. Please check your credentials.");
+      console.error("Login component: Login error:", err);
+      const errorMessage = err.error || "Failed to login. Please check your credentials.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -48,18 +67,20 @@ function Login() {
       toast.success("Google login successful!");
       navigate("/dashboard");
     } catch (err) {
-      console.error("Google login error:", err);
-      setError(err.error || "Failed to authenticate with Google. Please try again.");
-      toast.error(err.error || "Failed to authenticate with Google. Please try again.");
+      console.error("Login component: Google login error:", err);
+      const errorMessage = err.error || "Failed to authenticate with Google. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLoginFailure = (error) => {
-    console.error("Google login failed:", error);
-    setError("Failed to connect with Google. Please try again.");
-    toast.error("Failed to connect with Google. Please try again.");
+    console.error("Login component: Google login failed:", error);
+    const errorMessage = "Failed to connect with Google. Please try again.";
+    setError(errorMessage);
+    toast.error(errorMessage);
   };
 
   return (

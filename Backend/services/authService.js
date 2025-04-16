@@ -1,5 +1,5 @@
 const { OAuth2Client } = require('google-auth-library');
-const bcrypt = require('bcrypt'); // Add this import
+const bcrypt = require('bcryptjs'); // Add this import
 const { User, Role, Vendor, Company, Consumer, UserType } = require('../models');
 const { generateToken, comparePassword } = require('../utils/helperFunctions');
 const { Op } = require('sequelize');

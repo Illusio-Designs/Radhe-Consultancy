@@ -1,37 +1,41 @@
 const jwt = require('jsonwebtoken');
-const { User, Role } = require('../models');
+const User = require('../models/userModel');
+const Role = require('../models/roleModel');
 
-const authenticateToken = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: 'Access token is required'
-      });
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.user_id, {
-      include: [Role]
+    
+    const user = await User.findOne({
+      where: { user_id: decoded.user_id },
+      include: [{
+        model: Role,
+        attributes: ['role_name']
+      }]
     });
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token'
-      });
+      return res.status(401).json({ message: 'User not found' });
     }
 
-    req.user = user;
+    // Add user and role information to request
+    req.user = {
+      user_id: user.user_id,
+      email: user.email,
+      role_id: user.role_id,
+      role_name: user.Role.role_name
+    };
+
     next();
   } catch (error) {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid token'
-    });
+    console.error('Auth middleware error:', error);
+    res.status(401).json({ message: 'Invalid token' });
   }
 };
 
@@ -44,7 +48,7 @@ const checkRole = (allowedRoles) => {
       });
     }
 
-    const userRole = req.user.Role.role_name;
+    const userRole = req.user.role_name;
     
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({
@@ -58,6 +62,6 @@ const checkRole = (allowedRoles) => {
 };
 
 module.exports = {
-  authenticateToken,
+  auth,
   checkRole
 };

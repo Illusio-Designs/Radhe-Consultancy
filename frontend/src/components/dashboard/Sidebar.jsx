@@ -15,11 +15,18 @@ import {
 import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
 import "../../styles/dashboard/components/Sidebar.css";
 import { roleAPI } from "../../services/api";
+import { toast } from "react-toastify";
+
+console.log('Sidebar component: Module loaded');
 
 const Sidebar = ({ onCollapse }) => {
+  console.log('Sidebar component: Rendering');
+  
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const location = useLocation();
   const [openDropdowns, setOpenDropdowns] = useState({});
 
@@ -40,20 +47,40 @@ const Sidebar = ({ onCollapse }) => {
   useEffect(() => {
     const fetchCurrentUserRole = async () => {
       try {
+        console.log('Sidebar: Fetching current user role');
+        setIsLoading(true);
+        setError(null);
+        
         const userData = JSON.parse(localStorage.getItem('user'));
-        if (userData) {
-          const roles = await roleAPI.getAllRoles();
-          const userRole = roles.find(role => role.id === userData.role_id);
-          setCurrentUserRole(userRole);
+        if (!userData) {
+          throw new Error('No user data found');
         }
+        
+        console.log('Sidebar: Found user data:', userData);
+        const roles = await roleAPI.getAllRoles();
+        console.log('Sidebar: Fetched roles:', roles);
+        
+        const userRole = roles.find(role => role.id === userData.role_id);
+        if (!userRole) {
+          throw new Error('User role not found');
+        }
+        
+        console.log('Sidebar: Setting user role:', userRole);
+        setCurrentUserRole(userRole);
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Sidebar: Error fetching user role:', error);
+        setError(error.message || 'Failed to load user role');
+        toast.error('Failed to load navigation menu');
+      } finally {
+        setIsLoading(false);
       }
     };
+    
     fetchCurrentUserRole();
   }, []);
 
   const handleCollapse = () => {
+    console.log('Sidebar: Toggling collapse state');
     setIsCollapsed(!isCollapsed);
     if (onCollapse) {
       onCollapse(!isCollapsed);
@@ -61,6 +88,7 @@ const Sidebar = ({ onCollapse }) => {
   };
 
   const toggleDropdown = (label) => {
+    console.log('Sidebar: Toggling dropdown:', label);
     setOpenDropdowns(prev => ({
       ...prev,
       [label]: !prev[label]

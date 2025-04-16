@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { authenticateToken } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Debug check
 console.log('User controller methods:', Object.keys(userController));
@@ -13,15 +13,15 @@ router.get('/reset-password/:token', userController.getResetPasswordForm);
 router.post('/reset-password/:token', userController.resetPassword);
 
 // Protected routes with authentication
-router.get('/', authenticateToken, userController.getAllUsers);
-router.get('/:userId', authenticateToken, userController.getUserById);
-router.post('/', authenticateToken, userController.createUser);
-router.put('/:userId', authenticateToken, userController.updateUser);
-router.delete('/:userId', authenticateToken, userController.deleteUser);
-router.post('/:userId/profile-image', authenticateToken, userController.updateProfileImage);
-router.get('/:userId/permissions', authenticateToken, userController.getUserPermissions);
+router.get('/', auth, userController.getAllUsers);
+router.get('/:userId', auth, userController.getUserById);
+router.post('/', auth, userController.createUser);
+router.put('/:userId', auth, userController.updateUser);
+router.delete('/:userId', auth, userController.deleteUser);
+router.post('/:userId/profile-image', auth, userController.updateProfileImage);
+router.get('/:userId/permissions', auth, userController.getUserPermissions);
 
 // Change password (requires authentication)
-router.post('/change-password', authenticateToken, userController.changePassword);
+router.post('/change-password', auth, userController.changePassword);
 
 module.exports = router;

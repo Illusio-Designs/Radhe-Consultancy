@@ -81,8 +81,20 @@ User.beforeValidate(async (user) => {
 });
 
 // Add instance method for password validation
-User.prototype.validatePassword = function(password) {
-  return bcrypt.compareSync(password, this.password);
+User.prototype.validatePassword = async function(password) {
+  try {
+    console.log('Validating password for user:', this.email);
+    console.log('Stored password hash:', this.password);
+    console.log('Provided password:', password);
+    
+    const isValid = await bcrypt.compare(password, this.password);
+    console.log('Password validation result:', isValid);
+    
+    return isValid;
+  } catch (error) {
+    console.error('Error validating password:', error);
+    return false;
+  }
 };
 
 module.exports = User;

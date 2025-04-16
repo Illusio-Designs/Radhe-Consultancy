@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+console.log('API Service: Initializing with base URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -14,29 +16,45 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      console.log('API Service: Adding token to request:', config.url);
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.log('API Service: No token found for request:', config.url);
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('API Service: Request error:', error);
+    return Promise.reject(error);
+  }
 );
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Service: Successful response from:', response.config.url);
+    return response;
+  },
   (error) => {
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('API Error:', error.response.data);
+      // Handle specific error cases
+      if (error.response.status === 401) {
+        console.log('API Service: Unauthorized error (401) for:', error.config.url);
+        // Clear auth data on unauthorized but don't redirect automatically
+        // This prevents redirect loops
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Don't redirect automatically - let the component handle it
+        // window.location.href = '/auth/login';
+      } else {
+        console.error('API Service: Error response:', error.response.status, error.config.url);
+      }
       return Promise.reject(error.response.data);
     } else if (error.request) {
-      // The request was made but no response was received
-      console.error('Network Error:', error.request);
+      console.error('API Service: Network Error:', error.request);
       return Promise.reject({ error: 'Network error. Please check your connection.' });
     } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Error:', error.message);
+      console.error('API Service: Error:', error.message);
       return Promise.reject({ error: error.message });
     }
   }
@@ -45,68 +63,75 @@ api.interceptors.response.use(
 export const authAPI = {
   async login(email, password) {
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password
-      });
-
+      console.log('API Service: Attempting login for:', email);
+      const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
       
-      // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      return { token, user };
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  },
-
-  async googleLogin(token) {
-    try {
-      const response = await api.post('/auth/google-login', { token });
-      const { token: authToken, user } = response.data;
-      
-      if (authToken) {
-        localStorage.setItem('token', authToken);
+      if (token && user) {
+        console.log('API Service: Login successful, storing token and user data');
+        localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        console.error('API Service: Invalid login response - missing token or user');
       }
       
-      return response.data;
+      return { token, user };
     } catch (error) {
-      console.error('Google login error:', error.response?.data || error);
+      console.error('API Service: Login error:', error);
       throw error;
     }
   },
 
-  getCurrentUser: () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  },
-
-  isAuthenticated: () => {
-    return !!localStorage.getItem('token');
-  },
-
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
-  register: async (username, email, password, role_id) => {
+  async getCurrentUser() {
     try {
+      console.log('API Service: Fetching current user data');
+      const response = await api.get('/auth/me');
+      const userData = response.data;
+      console.log('API Service: Current user data fetched successfully');
+      localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
+    } catch (error) {
+      console.error('API Service: Error fetching user data:', error);
+      throw error;
+    }
+  },
+
+  async register(username, email, password, role_id) {
+    try {
+      console.log('API Service: Attempting registration for:', email);
       const response = await api.post('/auth/register', {
         username,
         email,
         password,
         role_id
       });
-      return response.data;
+      const { token, user } = response.data;
+      
+      if (token && user) {
+        console.log('API Service: Registration successful, storing token and user data');
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        console.error('API Service: Invalid registration response - missing token or user');
+      }
+      
+      return { token, user };
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('API Service: Registration error:', error);
       throw error;
     }
+  },
+
+  logout() {
+    console.log('API Service: Logging out user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+
+  isAuthenticated() {
+    const token = localStorage.getItem('token');
+    console.log('API Service: Checking authentication status:', !!token);
+    return !!token;
   }
 };
 
@@ -174,29 +199,24 @@ export const userAPI = {
 
 // Role API
 export const roleAPI = {
-  getAllRoles: async () => {
-    const response = await api.get('/roles');
-    return response.data;
+  async getRoles() {
+    try {
+      const response = await api.get('/roles');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      throw error;
+    }
   },
 
-  getRoleById: async (id) => {
-    const response = await api.get(`/roles/${id}`);
-    return response.data;
-  },
-
-  createRole: async (roleData) => {
-    const response = await api.post('/roles', roleData);
-    return response.data;
-  },
-
-  updateRole: async (id, roleData) => {
-    const response = await api.put(`/roles/${id}`, roleData);
-    return response.data;
-  },
-
-  deleteRole: async (id) => {
-    const response = await api.delete(`/roles/${id}`);
-    return response.data;
+  async getRolePermissions(roleId) {
+    try {
+      const response = await api.get(`/roles/${roleId}/permissions`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching role permissions:', error);
+      throw error;
+    }
   }
 };
 

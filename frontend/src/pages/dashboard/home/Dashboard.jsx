@@ -4,6 +4,9 @@ import '../../../styles/dashboard/Dashboard.css';
 import { userAPI } from '../../../services/api';
 import { roleAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { toast } from 'react-toastify';
+
+console.log('Dashboard component: Module loaded');
 
 const StatCard = ({ icon: Icon, title, value, change }) => (
   <div className="stat-card">
@@ -26,8 +29,11 @@ const StatCard = ({ icon: Icon, title, value, change }) => (
 );
 
 function Dashboard() {
+  console.log('Dashboard component: Rendering');
+  
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
   const [stats, setStats] = useState({
     companies: 0,
@@ -39,14 +45,19 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
+      console.log('Dashboard: Fetching stats for user role:', user.role);
       setIsLoading(true);
+      setError(null);
+      
       const [users, roles] = await Promise.all([
         userAPI.getAllUsers(),
         roleAPI.getAllRoles()
       ]);
 
-      const companyRole = roles.find(role => role.role_name === 'Company');
-      const consumerRole = roles.find(role => role.role_name === 'Consumer');
+      console.log('Dashboard: Fetched users and roles:', { users, roles });
+
+      const companyRole = roles.find(role => role.role_name === 'company');
+      const consumerRole = roles.find(role => role.role_name === 'consumer');
 
       let statsData = {
         companies: 0,
@@ -79,16 +90,20 @@ function Dashboard() {
         };
       }
 
+      console.log('Dashboard: Setting stats data:', statsData);
       setStats(statsData);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Dashboard: Error fetching stats:', error);
+      setError(error.message || 'Failed to fetch dashboard data');
+      toast.error('Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('Dashboard: Initial mount, fetching stats');
     fetchStats();
   }, [user.role]);
 

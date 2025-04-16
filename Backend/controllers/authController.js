@@ -1,9 +1,10 @@
 const authService = require('../services/authService');
-const { User, UserType, Company, Consumer, Vendor, Role } = require('../models');
+const { User, UserType, Company, Consumer, Vendor, Role, Permission } = require('../models');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const determineUserRole = require('../utils/roleDetermination');
 
 class AuthController {
   async register(req, res) {
@@ -21,41 +22,13 @@ class AuthController {
         return res.status(400).json({ error: 'User already exists' });
       }
 
-      // Determine role based on existing records
-      let role_id;
-      
-      // Get all roles
-      const roles = await Role.findAll();
-      const companyRole = roles.find(r => r.role_name.toLowerCase() === 'company');
-      const consumerRole = roles.find(r => r.role_name.toLowerCase() === 'consumer');
-      const userRole = roles.find(r => r.role_name.toLowerCase() === 'user');
+      // Determine user role based on email
+      const role_id = await determineUserRole(email);
 
-      // Check if email exists in Company table
-      const existingCompany = await Company.findOne({ 
-        where: { company_email: email }
-      });
-      
-      // Check if email exists in Consumer table
-      const existingConsumer = await Consumer.findOne({ 
-        where: { email: email }
-      });
-
-      // Assign role based on where the email was found
-      if (existingCompany) {
-        role_id = companyRole.id;
-      } else if (existingConsumer) {
-        role_id = consumerRole.id;
-      } else {
-        role_id = userRole.id;
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create user
+      // Create user (password will be hashed by the model's beforeCreate hook)
       const user = await User.create({
         email,
-        password: hashedPassword,
+        password,
         username,
         role_id
       });
@@ -91,53 +64,82 @@ class AuthController {
 
   async login(req, res) {
     try {
+      console.log('Login attempt:', { email: req.body.email });
+      
       const { email, password } = req.body;
-
-      // Validate required fields
+      
       if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+        console.log('Login failed: Missing credentials');
+        return res.status(400).json({
+          success: false,
+          error: 'Email and password are required'
+        });
       }
 
-      // Find user
-      const user = await User.findOne({ 
+      const user = await User.findOne({
         where: { email },
-        include: [{
-          model: Role,
-          attributes: ['role_name']
-        }]
+        include: [
+          { model: Role, include: [Permission] },
+          { model: Company },
+          { model: Consumer }
+        ]
       });
 
       if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        console.log('Login failed: User not found for email:', email);
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials'
+        });
       }
 
-      // Check password
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      console.log('User found:', {
+        id: user.user_id,
+        email: user.email,
+        role: user.Role?.role_name
+      });
+
+      const isValidPassword = await user.validatePassword(password);
+      console.log('Password validation result:', isValidPassword);
+
       if (!isValidPassword) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        console.log('Login failed: Invalid password for user:', email);
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials'
+        });
       }
 
-      // Generate JWT token
+      // Generate JWT token directly
       const token = jwt.sign(
-        { userId: user.user_id, role: user.Role.role_name },
+        { 
+          userId: user.user_id, 
+          role: user.Role?.role_name,
+          email: user.email
+        },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
+      
+      console.log('Login successful for user:', email);
 
       res.json({
-        message: 'Login successful',
+        success: true,
         token,
         user: {
-          user_id: user.user_id,
-          email: user.email,
+          id: user.user_id,
           username: user.username,
-          role_id: user.role_id,
-          role_name: user.Role.role_name
+          email: user.email,
+          role: user.Role?.role_name,
+          permissions: user.Role?.Permissions?.map(p => p.permission_name) || []
         }
       });
     } catch (error) {
       console.error('Login error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(500).json({
+        success: false,
+        error: 'An error occurred during login'
+      });
     }
   }
 

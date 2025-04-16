@@ -66,6 +66,46 @@ class RoleController {
     }
   }
 
+  // Get role by ID
+  async getRoleById(req, res) {
+    try {
+      const role = await Role.findByPk(req.params.id, {
+        include: [{
+          model: Permission,
+          through: { attributes: [] }
+        }]
+      });
+
+      if (!role) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      res.json(role);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Get role permissions
+  async getRolePermissions(req, res) {
+    try {
+      const role = await Role.findByPk(req.params.id, {
+        include: [{
+          model: Permission,
+          through: { attributes: [] }
+        }]
+      });
+
+      if (!role) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      res.json(role.Permissions);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
   // Update role
   async updateRole(req, res) {
     try {

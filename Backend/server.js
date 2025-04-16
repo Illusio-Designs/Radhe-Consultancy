@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const setupDatabase = require('./scripts/dbSetup'); // Updated to use new consolidated script
 require('dotenv').config();
-const bodyParser = require('body-parser');
 const { sequelize } = require('./models');
+const { initializeDatabase } = require('./scripts/serverSetup');
+const resetAdminPassword = require('./scripts/resetAdminPassword');
 
 const app = express();
 
@@ -14,8 +14,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -36,21 +36,28 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
-    await sequelize.sync();
-    console.log('Database connected successfully');
+    // Initialize database and setup required data
+    const initialized = await initializeDatabase();
+    if (!initialized) {
+      throw new Error('Failed to initialize database');
+    }
     
-    await setupDatabase(); // Initialize the database with our consolidated setup
-    console.log('Database setup completed');
+    // Reset admin password to ensure it's properly set
+    const passwordReset = await resetAdminPassword();
+    if (!passwordReset) {
+      console.warn('Failed to reset admin password, but continuing server startup');
+    }
     
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
     console.error('Unable to start server:', error);
+    process.exit(1);
   }
 };
 

@@ -6,6 +6,7 @@ const Company = require('../models/companyModel');
 const Consumer = require('../models/consumerModel');
 const User = require('../models/userModel');
 const { Op } = require('sequelize');
+const bcrypt = require('bcryptjs');
 
 async function setupDatabase() {
   try {
@@ -236,6 +237,32 @@ async function setupDatabase() {
           }
         }
       }
+    }
+
+    // Create default admin user if not exists
+    const adminEmail = 'admin@radheconsultancy.com';
+    const adminPassword = 'Admin@123';
+    
+    // Find admin role
+    const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
+    if (!adminRole) {
+      console.error('Admin role not found. Cannot create admin user.');
+      return;
+    }
+    
+    const adminUser = await User.findOne({ where: { email: adminEmail } });
+    
+    if (!adminUser) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await User.create({
+        email: adminEmail,
+        username: 'admin',
+        password: hashedPassword,
+        role_id: adminRole.id
+      });
+      console.log('Default admin user created');
+    } else {
+      console.log('Admin user already exists');
     }
 
     console.log('Database setup completed successfully');

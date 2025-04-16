@@ -5,17 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "set NODE_OPTIONS=--no-deprecation && node server.js",
-    "dev": "set NODE_OPTIONS=--no-deprecation && nodemon server.js",
-    "seed": "node scripts/seedRoles.js",
-    "seed:permissions": "node scripts/seedRolesAndPermissions.js",
-    "setup:permissions": "node scripts/runSetup.js",
-    "test-google": "node scripts/getGoogleToken.js",
-    "sync:consumers": "node scripts/syncConsumerVendors.js",
-    "fix:consumers": "node scripts/fixConsumerVendors.js"
+    "start:unix": "NODE_OPTIONS=--no-deprecation node server.js",
+    "dev": "set NODE_OPTIONS=--no-deprecation && nodemon",
+    "dev:unix": "NODE_OPTIONS=--no-deprecation nodemon",
+    "setup:permissions": "node scripts/setupRolesAndPermissions.js"
   },
   "dependencies": {
-    "axios": "^1.6.7",
-    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -26,12 +21,10 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.9.1",
     "nodemailer": "^6.9.9",
-    "sequelize": "^6.37.1",
-    "sharp": "^0.33.2"
+    "sequelize": "^6.37.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.3",
-    "sequelize-cli": "^6.6.2"
+    "nodemon": "^3.0.3"
   },
   "engines": {
     "node": ">=18.0.0"
