@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
+import PublicLayout from '../layouts/PublicLayout';
 import AuthLayout from '../layouts/AuthLayout';
 import ComingSoon from '../pages/ComingSoon';
 import Login from '../pages/dashboard/auth/Login';
@@ -12,9 +13,10 @@ import ConsumerUsers from '../pages/dashboard/users/ConsumerUsers';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const router = createBrowserRouter([
+  // Public Routes
   {
     path: '/',
-    element: <MainLayout />,
+    element: <PublicLayout />,
     children: [
       {
         index: true,
@@ -26,6 +28,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+  // Auth Routes
   {
     path: '/',
     element: <AuthLayout />,
@@ -40,80 +43,55 @@ const router = createBrowserRouter([
       },
     ],
   },
+  // Dashboard Routes (Protected)
   {
     path: '/dashboard',
     element: (
       <ProtectedRoute>
-        <Dashboard />
+        <MainLayout />
       </ProtectedRoute>
     ),
-  },
-  // Admin Routes
-  {
-    path: '/dashboard/users',
-    element: (
-      <ProtectedRoute allowedRoles={['admin']}>
-        <UserRoleManagement />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard/roles',
-    element: (
-      <ProtectedRoute allowedRoles={['admin']}>
-        <UserRoleManagement />
-      </ProtectedRoute>
-    ),
-  },
-  // Company Management Routes
-  {
-    path: '/dashboard/companies',
-    element: (
-      <ProtectedRoute allowedRoles={['admin']}>
-        <CompanyUsers />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard/companies/:companyId',
-    element: (
-      <ProtectedRoute allowedRoles={['admin', 'company']}>
-        <CompanyUsers />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard/companies/:companyId/edit',
-    element: (
-      <ProtectedRoute allowedRoles={['admin', 'company']}>
-        <CompanyUsers />
-      </ProtectedRoute>
-    ),
-  },
-  // Consumer Management Routes
-  {
-    path: '/dashboard/consumers',
-    element: (
-      <ProtectedRoute allowedRoles={['admin', 'company']}>
-        <ConsumerUsers />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard/consumers/:consumerId',
-    element: (
-      <ProtectedRoute allowedRoles={['admin', 'company']}>
-        <ConsumerUsers />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard/consumers/:consumerId/edit',
-    element: (
-      <ProtectedRoute allowedRoles={['admin', 'company']}>
-        <ConsumerUsers />
-      </ProtectedRoute>
-    ),
+    children: [
+      {
+        index: true,
+        element: <Dashboard />,
+      },
+      // Admin Routes
+      {
+        path: 'users',
+        element: <UserRoleManagement />,
+      },
+      {
+        path: 'roles',
+        element: <UserRoleManagement />,
+      },
+      // Company Management Routes
+      {
+        path: 'companies',
+        element: <CompanyUsers />,
+      },
+      {
+        path: 'companies/:companyId',
+        element: <CompanyUsers />,
+      },
+      {
+        path: 'companies/:companyId/edit',
+        element: <CompanyUsers />,
+      },
+      // Consumer Management Routes
+      {
+        path: 'consumers',
+        element: <ConsumerUsers />,
+      },
+      {
+        path: 'consumers/:consumerId',
+        element: <ConsumerUsers />,
+      },
+      {
+        path: 'consumers/:consumerId/edit',
+        element: <ConsumerUsers />,
+      },
+    ],
   },
 ]);
 

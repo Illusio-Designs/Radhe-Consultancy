@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import React from 'react';
 
 const ComingSoon = () => {
   return (
@@ -40,12 +40,6 @@ const ComingSoon = () => {
         </div>
 
         <div className="space-y-4">
-          <Link
-            to="/login"
-            className="inline-block px-8 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors duration-200"
-          >
-            Get Started
-          </Link>
           <div className="text-primary-600">
             <p>Want to learn more?</p>
             <a href="mailto:contact@radheconsultancy.com" className="hover:text-primary-700">
