@@ -7,13 +7,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 .dashboard-sidebar {
   width: 16rem;
   height: 100vh;
-  background: linear-gradient(180deg, #1F4F9C 0%, #2563eb 100%);
+  background: linear-gradient(180deg, #1f4f9c 0%, #2563eb 100%);
   color: white;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
@@ -44,7 +44,7 @@
 
 .dashboard-outlet {
   flex: 1;
-  padding: 2rem;
+  padding: 6rem 2rem;
   overflow-y: auto;
   background-color: #f8fafc;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -130,7 +130,7 @@
 
 .header-search input:focus {
   outline: none;
-  border-color: #1F4F9C;
+  border-color: #1f4f9c;
   box-shadow: 0 0 0 3px rgba(31, 79, 156, 0.1);
 }
 
