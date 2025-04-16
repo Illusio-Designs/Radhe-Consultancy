@@ -6,7 +6,7 @@ import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
-import "../../../styles/dashboard/Vendor.css";
+import "../../../styles/pages/dashboard/companies/Vendor.css";
 
 const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const [formData, setFormData] = useState({
@@ -113,10 +113,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
           pan_number: formData.pan_number,
           firm_type: formData.firm_type,
         };
-        await companyAPI.updateCompanyVendor(
-          company.vendor_id,
-          updateData
-        );
+        await companyAPI.updateCompanyVendor(company.vendor_id, updateData);
       } else {
         // For new companies
         await companyAPI.createCompanyVendor(formData);
@@ -263,21 +260,21 @@ function CompanyVendors() {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      console.log('Fetching company vendors...');
+      console.log("Fetching company vendors...");
       const response = await companyAPI.getAllCompanyVendors();
-      console.log('Company vendors response:', response);
+      console.log("Company vendors response:", response);
 
       if (!response || !Array.isArray(response)) {
-        console.error('Invalid response format:', response);
-        throw new Error('Invalid data format received from server');
+        console.error("Invalid response format:", response);
+        throw new Error("Invalid data format received from server");
       }
 
       setVendors(response);
-      console.log('Vendors set:', response);
+      console.log("Vendors set:", response);
       setError(null);
     } catch (err) {
-      console.error('Fetch vendors error:', err);
-      setError(err.message || 'Failed to fetch vendors');
+      console.error("Fetch vendors error:", err);
+      setError(err.message || "Failed to fetch vendors");
       setVendors([]); // Reset vendors on error
     } finally {
       setLoading(false);

@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import '../../../styles/dashboard/AdminDashboard.css';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import "../../../styles/pages/dashboard/home/AdminDashboard.css";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalCompanies: 0,
     totalConsumers: 0,
     activeCompanies: 0,
-    activeConsumers: 0
+    activeConsumers: 0,
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('/api/admin/stats');
+        const response = await axios.get("/api/admin/stats");
         setStats(response.data);
       } catch (error) {
-        console.error('Error fetching admin stats:', error);
+        console.error("Error fetching admin stats:", error);
       }
     };
 
@@ -27,7 +27,7 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard">
       <h1>Admin Dashboard</h1>
-      
+
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Total Companies</h3>
@@ -62,4 +62,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

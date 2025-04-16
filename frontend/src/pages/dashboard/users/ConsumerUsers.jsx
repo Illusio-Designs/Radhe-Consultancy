@@ -5,7 +5,7 @@ import ActionButton from '../../../components/common/ActionButton/ActionButton';
 import Modal from '../../../components/common/Modal/Modal';
 import Loader from '../../../components/common/Loader/Loader';
 import { userAPI } from '../../../services/api';
-import '../../../styles/dashboard/User.css';
+import "../../../styles/pages/dashboard/users/User.css";
 import { roleAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 

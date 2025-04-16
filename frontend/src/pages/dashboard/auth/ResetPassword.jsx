@@ -1,26 +1,26 @@
-import { useState } from 'react';
-import { authAPI } from '../../../services/api';
-import { useNavigate, useParams } from 'react-router-dom';
-import '../../../styles/dashboard/Auth.css';
+import { useState } from "react";
+import { authAPI } from "../../../services/api";
+import { useNavigate, useParams } from "react-router-dom";
+import "../../../styles/pages/dashboard/auth/Auth.css";
 
 function ResetPassword() {
   const { token } = useParams();
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       await authAPI.resetPassword(token, password);
-      setSuccess('Password has been reset successfully.');
-      setTimeout(() => navigate('/login'), 2000);
+      setSuccess("Password has been reset successfully.");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to reset password.');
+      setError(err.response?.data?.error || "Failed to reset password.");
     }
   };
 
@@ -41,7 +41,9 @@ function ResetPassword() {
               required
             />
           </div>
-          <button type="submit" className="auth-button">Reset Password</button>
+          <button type="submit" className="auth-button">
+            Reset Password
+          </button>
         </form>
       </div>
     </div>

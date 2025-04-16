@@ -1,16 +1,17 @@
-import { Outlet } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import { useAuth } from '../contexts/AuthContext';
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import { useAuth } from "../contexts/AuthContext";
+import "../styles/layout/MainLayout.css";
 
 const MainLayout = () => {
   const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar user={user} onLogout={logout} />
+    <div className="main-layout">
+      <Navbar />
       <div className="flex">
-        {user && <Sidebar />}
+        <Sidebar />
         <main className="flex-1 p-6">
           <Outlet />
         </main>
@@ -19,4 +20,4 @@ const MainLayout = () => {
   );
 };
 
-export default MainLayout; 
+export default MainLayout;

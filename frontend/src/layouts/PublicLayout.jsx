@@ -1,8 +1,9 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet } from "react-router-dom";
+import "../styles/layout/PublicLayout.css";
 
 const PublicLayout = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
+    <div className="public-layout">
       <main>
         <Outlet />
       </main>
@@ -10,4 +11,4 @@ const PublicLayout = () => {
   );
 };
 
-export default PublicLayout; 
+export default PublicLayout;

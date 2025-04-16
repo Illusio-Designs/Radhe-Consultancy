@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext';
-import '../../../styles/pages/Unauthorized.css';
+import { Link } from "react-router-dom";
+import { useAuth } from "../../../contexts/AuthContext";
+import "../../../styles/pages/dashboard/auth/Auth.css";
 
 const Unauthorized = () => {
   const { user } = useAuth();
@@ -20,8 +20,12 @@ const Unauthorized = () => {
         <p>Sorry, you don't have permission to access this page.</p>
         {user ? (
           <div className="user-info">
-            <p>You are logged in as: <strong>{user.email}</strong></p>
-            <p>Role: <strong>{user.role}</strong></p>
+            <p>
+              You are logged in as: <strong>{user.email}</strong>
+            </p>
+            <p>
+              Role: <strong>{user.role}</strong>
+            </p>
           </div>
         ) : (
           <p>Please log in to access this page.</p>
@@ -45,4 +49,4 @@ const Unauthorized = () => {
   );
 };
 
-export default Unauthorized; 
+export default Unauthorized;

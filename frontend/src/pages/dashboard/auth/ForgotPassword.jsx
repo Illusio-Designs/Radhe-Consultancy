@@ -1,25 +1,27 @@
-import { useState } from 'react';
-import { authAPI } from '../../../services/api';
-import { useNavigate } from 'react-router-dom';
-import '../../../styles/dashboard/Auth.css';
+import { useState } from "react";
+import { authAPI } from "../../../services/api";
+import { useNavigate } from "react-router-dom";
+import "../../../styles/pages/dashboard/auth/Auth.css";
 
 function ForgotPassword() {
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       await authAPI.forgotPassword(email);
-      setSuccess('Check your email for the reset link.');
+      setSuccess("Check your email for the reset link.");
     } catch (err) {
-      console.error('Error during forgot password:', err);
-      const errorMessage = err.response?.data?.error || 'Failed to send reset link. Please try again later.';
+      console.error("Error during forgot password:", err);
+      const errorMessage =
+        err.response?.data?.error ||
+        "Failed to send reset link. Please try again later.";
       setError(errorMessage);
     }
   };
@@ -47,10 +49,13 @@ function ForgotPassword() {
           <button className="auth-button" type="submit">
             Send Reset Link
           </button>
-          <button className="auth-button" type="button" onClick={() => navigate('/login')}>
+          <button
+            className="auth-button"
+            type="button"
+            onClick={() => navigate("/login")}
+          >
             Back to Login
           </button>
-
         </form>
       </div>
     </div>

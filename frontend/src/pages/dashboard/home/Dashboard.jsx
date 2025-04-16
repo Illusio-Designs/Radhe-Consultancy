@@ -1,9 +1,9 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext';
-import AdminDashboard from './AdminDashboard';
-import CompanyDashboard from './CompanyDashboard';
-import ConsumerDashboard from './ConsumerDashboard';
-import '../../../styles/dashboard/Dashboard.css';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../../contexts/AuthContext";
+import AdminDashboard from "./AdminDashboard";
+import CompanyDashboard from "./CompanyDashboard";
+import ConsumerDashboard from "./ConsumerDashboard";
+import "../../../styles/pages/dashboard/home/Dashboard.css";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -13,15 +13,15 @@ const Dashboard = () => {
   }
 
   switch (user.role) {
-    case 'admin':
+    case "admin":
       return <AdminDashboard />;
-    case 'company':
+    case "company":
       return <CompanyDashboard />;
-    case 'consumer':
+    case "consumer":
       return <ConsumerDashboard />;
     default:
       return <Navigate to="/unauthorized" replace />;
   }
 };
 
-export default Dashboard; 
+export default Dashboard;

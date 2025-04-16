@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
-import "../../../styles/dashboard/Auth.css";
+import "../../../styles/pages/dashboard/auth/Auth.css";
 import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
 
-console.log('Login component: Module loaded');
+console.log("Login component: Module loaded");
 
 function Login() {
-  console.log('Login component: Rendering');
-  
+  console.log("Login component: Rendering");
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,16 +21,20 @@ function Login() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    console.log("Login component: Checking authentication state", { isAuthenticated });
+    console.log("Login component: Checking authentication state", {
+      isAuthenticated,
+    });
     if (isAuthenticated) {
-      console.log("Login component: User is already authenticated, redirecting to dashboard");
+      console.log(
+        "Login component: User is already authenticated, redirecting to dashboard"
+      );
       navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log('Login component: Form field changed', { field: name, value });
+    console.log("Login component: Form field changed", { field: name, value });
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -39,19 +43,23 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login component: Form submission started');
+    console.log("Login component: Form submission started");
     setError("");
     setLoading(true);
-    
+
     try {
-      console.log('Login component: Submitting login form with email:', formData.email);
+      console.log(
+        "Login component: Submitting login form with email:",
+        formData.email
+      );
       const result = await login(formData.email, formData.password);
-      console.log('Login component: Login successful, result:', result);
+      console.log("Login component: Login successful, result:", result);
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
       console.error("Login component: Login error:", err);
-      const errorMessage = err.error || "Failed to login. Please check your credentials.";
+      const errorMessage =
+        err.error || "Failed to login. Please check your credentials.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -68,7 +76,8 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error("Login component: Google login error:", err);
-      const errorMessage = err.error || "Failed to authenticate with Google. Please try again.";
+      const errorMessage =
+        err.error || "Failed to authenticate with Google. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -118,7 +127,11 @@ function Login() {
             />
           </div>
 
-          <button type="submit" className={`auth-button ${loading ? "loading" : ""}`} disabled={loading}>
+          <button
+            type="submit"
+            className={`auth-button ${loading ? "loading" : ""}`}
+            disabled={loading}
+          >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>

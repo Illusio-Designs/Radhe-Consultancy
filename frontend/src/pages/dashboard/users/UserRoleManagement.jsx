@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { FiUsers, FiShield, FiPlus, FiEdit2, FiTrash2, FiAlertCircle } from 'react-icons/fi';
-import { userAPI, roleAPI } from '../../../services/api';
-import TableWithControl from '../../../components/common/Table/TableWithControl';
-import Button from '../../../components/common/Button/Button';
-import ActionButton from '../../../components/common/ActionButton/ActionButton';
-import Modal from '../../../components/common/Modal/Modal';
-import Loader from '../../../components/common/Loader/Loader';
-import { useAuth } from '../../../contexts/AuthContext';
-import '../../../styles/dashboard/UserRoleManagement.css';
+import React, { useState, useEffect } from "react";
+import {
+  FiUsers,
+  FiShield,
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiAlertCircle,
+} from "react-icons/fi";
+import { userAPI, roleAPI } from "../../../services/api";
+import TableWithControl from "../../../components/common/Table/TableWithControl";
+import Button from "../../../components/common/Button/Button";
+import ActionButton from "../../../components/common/ActionButton/ActionButton";
+import Modal from "../../../components/common/Modal/Modal";
+import Loader from "../../../components/common/Loader/Loader";
+import { useAuth } from "../../../contexts/AuthContext";
+import "../../../styles/pages/dashboard/users/UserRoleManagement.css";
 
 const UserRoleManagement = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('users'); // 'users' or 'roles'
+  const [activeTab, setActiveTab] = useState("users"); // 'users' or 'roles'
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [items, setItems] = useState([]);
@@ -25,7 +32,7 @@ const UserRoleManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      if (activeTab === 'users') {
+      if (activeTab === "users") {
         const data = await userAPI.getAllUsers();
         setItems(data);
       } else {
@@ -42,9 +49,13 @@ const UserRoleManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm(`Are you sure you want to delete this ${activeTab.slice(0, -1)}?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete this ${activeTab.slice(0, -1)}?`
+      )
+    ) {
       try {
-        if (activeTab === 'users') {
+        if (activeTab === "users") {
           await userAPI.deleteUser(id);
         } else {
           await roleAPI.deleteRole(id);
@@ -73,15 +84,15 @@ const UserRoleManagement = () => {
   };
 
   const getColumns = () => {
-    if (activeTab === 'users') {
+    if (activeTab === "users") {
       return [
-        { key: 'username', label: 'Username', sortable: true },
-        { key: 'email', label: 'Email', sortable: true },
-        { key: 'role_name', label: 'Role', sortable: true },
-        { key: 'status', label: 'Status', sortable: true },
+        { key: "username", label: "Username", sortable: true },
+        { key: "email", label: "Email", sortable: true },
+        { key: "role_name", label: "Role", sortable: true },
+        { key: "status", label: "Status", sortable: true },
         {
-          key: 'actions',
-          label: 'Actions',
+          key: "actions",
+          label: "Actions",
           render: (_, user) => (
             <div className="management-actions">
               <ActionButton
@@ -99,16 +110,16 @@ const UserRoleManagement = () => {
                 <FiTrash2 />
               </ActionButton>
             </div>
-          )
-        }
+          ),
+        },
       ];
     } else {
       return [
-        { key: 'role_name', label: 'Role Name', sortable: true },
-        { key: 'description', label: 'Description', sortable: true },
+        { key: "role_name", label: "Role Name", sortable: true },
+        { key: "description", label: "Description", sortable: true },
         {
-          key: 'actions',
-          label: 'Actions',
+          key: "actions",
+          label: "Actions",
           render: (_, role) => (
             <div className="management-actions">
               <ActionButton
@@ -126,8 +137,8 @@ const UserRoleManagement = () => {
                 <FiTrash2 />
               </ActionButton>
             </div>
-          )
-        }
+          ),
+        },
       ];
     }
   };
@@ -137,15 +148,15 @@ const UserRoleManagement = () => {
       <div className="management-header">
         <div className="management-tabs">
           <Button
-            variant={activeTab === 'users' ? 'contained' : 'outlined'}
-            onClick={() => setActiveTab('users')}
+            variant={activeTab === "users" ? "contained" : "outlined"}
+            onClick={() => setActiveTab("users")}
             icon={<FiUsers />}
           >
             Users
           </Button>
           <Button
-            variant={activeTab === 'roles' ? 'contained' : 'outlined'}
-            onClick={() => setActiveTab('roles')}
+            variant={activeTab === "roles" ? "contained" : "outlined"}
+            onClick={() => setActiveTab("roles")}
             icon={<FiShield />}
           >
             Roles
@@ -179,9 +190,9 @@ const UserRoleManagement = () => {
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
-        title={`${selectedItem ? 'Edit' : 'Add'} ${activeTab.slice(0, -1)}`}
+        title={`${selectedItem ? "Edit" : "Add"} ${activeTab.slice(0, -1)}`}
       >
-        {activeTab === 'users' ? (
+        {activeTab === "users" ? (
           <UserForm
             user={selectedItem}
             onClose={handleModalClose}
@@ -199,4 +210,4 @@ const UserRoleManagement = () => {
   );
 };
 
-export default UserRoleManagement; 
+export default UserRoleManagement;
