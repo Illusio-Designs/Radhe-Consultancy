@@ -9,17 +9,26 @@ const TableWithControl = ({
   pageSizeOptions = [10, 20, 50, 100],
   defaultPageSize = 10,
 }) => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState(Array.isArray(initialData) ? initialData : []);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredData, setFilteredData] = useState(data);
 
   useEffect(() => {
+    setData(Array.isArray(initialData) ? initialData : []);
+  }, [initialData]);
+
+  useEffect(() => {
     setFilteredData(data);
   }, [data]);
 
   useEffect(() => {
+    if (!Array.isArray(data)) {
+      setFilteredData([]);
+      return;
+    }
+    
     const filtered = data.filter((item) =>
       Object.values(item).some(
         (value) =>
@@ -35,6 +44,10 @@ const TableWithControl = ({
   const totalPages = Math.ceil(totalItems / pageSize);
 
   const getCurrentPageData = () => {
+    if (!Array.isArray(filteredData)) {
+      return [];
+    }
+    
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredData.slice(startIndex, endIndex);

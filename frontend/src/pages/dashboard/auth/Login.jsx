@@ -4,6 +4,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import "../../../styles/pages/dashboard/auth/Auth.css";
 import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
+import { authAPI } from "../../../services/api";
 
 console.log("Login component: Module loaded");
 
@@ -52,14 +53,19 @@ function Login() {
         "Login component: Submitting login form with email:",
         formData.email
       );
-      const result = await login(formData.email, formData.password);
-      console.log("Login component: Login successful, result:", result);
+      
+      // First try using the authAPI directly
+      const response = await authAPI.login(formData.email, formData.password);
+      console.log("Login component: Login successful, response:", response);
+      
+      // Then use the context login to update the auth state
+      await login(formData.email, formData.password);
+      
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
       console.error("Login component: Login error:", err);
-      const errorMessage =
-        err.error || "Failed to login. Please check your credentials.";
+      const errorMessage = err.error || err.message || "Failed to login. Please check your credentials.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -71,13 +77,16 @@ function Login() {
     try {
       setError("");
       setLoading(true);
-      // Implement Google login logic here
+      console.log("Login component: Google login response:", credentialResponse);
+      
+      const response = await authAPI.googleLogin(credentialResponse.credential);
+      console.log("Login component: Google login successful, response:", response);
+      
       toast.success("Google login successful!");
       navigate("/dashboard");
     } catch (err) {
       console.error("Login component: Google login error:", err);
-      const errorMessage =
-        err.error || "Failed to authenticate with Google. Please try again.";
+      const errorMessage = err.error || err.message || "Failed to authenticate with Google. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

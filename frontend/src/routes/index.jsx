@@ -100,11 +100,19 @@ const router = createBrowserRouter([
       // Vendor Management Routes
       {
         path: "companies",
-        element: <CompanyList />,
+        element: (
+          <ProtectedRoute allowedRoles={['admin']}>
+            <CompanyList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "consumers",
-        element: <ConsumerList />,
+        element: (
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ConsumerList />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

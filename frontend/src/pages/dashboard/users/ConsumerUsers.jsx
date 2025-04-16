@@ -205,15 +205,8 @@ function ConsumerUserList() {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      const rolesData = await roleAPI.getAllRoles();
-      const consumerRole = rolesData.find(role => role.role_name === 'Consumer');
-      
-      if (consumerRole) {
-        const consumerUsers = allUsers.filter(user => user.role_id === consumerRole.id);
-        setUsers(consumerUsers);
-      } else {
-        setUsers([]);
-      }
+      const consumerUsers = allUsers.filter(user => user.role_id === 6);
+      setUsers(consumerUsers);
       setError(null);
     } catch (err) {
       setError('Failed to fetch consumer users');
@@ -224,8 +217,7 @@ function ConsumerUserList() {
   };
 
   const getRoleName = (roleId) => {
-    const role = roles.find(r => r.id === roleId);
-    return role ? role.role_name : 'Unknown';
+    return roleId === 6 ? "Consumer" : "Unknown";
   };
 
   const filteredUsers = users.filter(user => {

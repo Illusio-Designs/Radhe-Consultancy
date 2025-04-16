@@ -19,13 +19,16 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
     e.preventDefault();
     try {
       if (role) {
+        if (!role.role_id) {
+          throw new Error('Invalid role ID');
+        }
         await roleAPI.updateRole(role.role_id, formData);
       } else {
         await roleAPI.createRole(formData);
       }
       onRoleUpdated();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save role');
+      setError(err.response?.data?.error || err.message || 'Failed to save role');
     }
   };
 
@@ -35,7 +38,8 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
     if (role) {
       setFormData({
         role_name: role.role_name || '',
-        description: role.description || ''
+        description: role.description || '',
+        permissions: role.permissions || []
       });
     }
   }, [role]);
@@ -108,7 +112,7 @@ function RoleManagement() {
       setError(null);
     } catch (err) {
       setError('Failed to fetch roles');
-      console.error(err);
+      console.error('Error fetching roles:', err);
     } finally {
       setLoading(false);
     }
@@ -121,12 +125,16 @@ function RoleManagement() {
         await fetchRoles();
       } catch (err) {
         setError('Failed to delete role');
-        console.error(err);
+        console.error('Error deleting role:', err);
       }
     }
   };
 
   const handleEdit = (role) => {
+    if (!role || !role.role_id) {
+      setError('Invalid role data');
+      return;
+    }
     setSelectedRole(role);
     setShowModal(true);
   };

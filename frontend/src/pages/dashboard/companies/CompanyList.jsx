@@ -10,18 +10,18 @@ import "../../../styles/pages/dashboard/companies/Vendor.css";
 
 const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const [formData, setFormData] = useState({
-    company_name: "",
-    owner_name: "",
-    company_address: "",
-    contact_number: "",
-    company_email: "",
-    gst_number: "",
-    pan_number: "",
-    firm_type: "",
-    vendor_type: "Company",
+    company_name: company?.company_name || "",
+    owner_name: company?.owner_name || "",
+    company_address: company?.company_address || "",
+    contact_number: company?.contact_number || "",
+    company_email: company?.company_email || "",
+    gst_number: company?.gst_number || "",
+    pan_number: company?.pan_number || "",
+    firm_type: company?.firm_type || "",
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (company) {
@@ -34,7 +34,6 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
         gst_number: company.gst_number || "",
         pan_number: company.pan_number || "",
         firm_type: company.firm_type || "",
-        vendor_type: "Company",
       });
     }
   }, [company]);
@@ -77,6 +76,35 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // Validate GST number
+    if (formData.gst_number && !validateGST(formData.gst_number)) {
+      setError(
+        "Invalid GST number format. Please enter a valid 15-digit GST number."
+      );
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (company) {
+        await companyAPI.updateCompany(company.company_id, formData);
+      } else {
+        await companyAPI.createCompany(formData);
+      }
+      onCompanyUpdated();
+    } catch (err) {
+      console.error("Error during submission:", err);
+      setError(err.response?.data?.error || "Failed to save company");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "gst_number") {
@@ -86,41 +114,6 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
         ...prev,
         [name]: value,
       }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Validate GST number
-    if (formData.gst_number && !validateGST(formData.gst_number)) {
-      setError(
-        "Invalid GST number format. Please enter a valid 15-digit GST number."
-      );
-      return;
-    }
-
-    try {
-      if (company) {
-        // For updates, only send the changed fields
-        const updateData = {
-          company_name: formData.company_name,
-          owner_name: formData.owner_name,
-          company_address: formData.company_address,
-          contact_number: formData.contact_number,
-          company_email: formData.company_email,
-          gst_number: formData.gst_number,
-          pan_number: formData.pan_number,
-          firm_type: formData.firm_type,
-        };
-        await companyAPI.updateCompanyVendor(company.vendor_id, updateData);
-      } else {
-        // For new companies
-        await companyAPI.createCompanyVendor(formData);
-      }
-      onCompanyUpdated();
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to save company");
     }
   };
 
@@ -155,14 +148,14 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
           </div>
 
           <div className="vendor-management-form-group">
-            <input
-              type="text"
+            <textarea
               name="company_address"
               value={formData.company_address}
               onChange={handleChange}
-              placeholder="Company Address"
+              placeholder="Address"
               required
               className="vendor-management-form-input"
+              rows="3"
             />
           </div>
 
@@ -184,7 +177,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               name="company_email"
               value={formData.company_email}
               onChange={handleChange}
-              placeholder="Company Email"
+              placeholder="Email"
               required
               className="vendor-management-form-input"
             />
@@ -237,7 +230,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="contained">
+          <Button type="submit" variant="contained" disabled={loading}>
             {company ? "Update" : "Create"}
           </Button>
         </div>
@@ -246,48 +239,57 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   );
 };
 
-function CompanyVendors() {
+function CompanyList() {
   const [showModal, setShowModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [vendors, setVendors] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchVendors();
+    fetchCompanies();
   }, []);
 
-  const fetchVendors = async () => {
+  const fetchCompanies = async () => {
     try {
       setLoading(true);
-      console.log("Fetching company vendors...");
-      const response = await companyAPI.getAllCompanyVendors();
-      console.log("Company vendors response:", response);
-
-      if (!response || !Array.isArray(response)) {
+      const response = await companyAPI.getAllCompanies();
+      
+      // Check if response is an array directly
+      if (Array.isArray(response)) {
+        setCompanies(response);
+        setError(null);
+      } 
+      // Check if response has data property and it's an array
+      else if (response && response.data && Array.isArray(response.data)) {
+        setCompanies(response.data);
+        setError(null);
+      } 
+      // Check if response has data property and it's an object with data array
+      else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+        setCompanies(response.data.data);
+        setError(null);
+      } else {
         console.error("Invalid response format:", response);
-        throw new Error("Invalid data format received from server");
+        setError("Invalid data format received from server");
+        setCompanies([]);
       }
-
-      setVendors(response);
-      console.log("Vendors set:", response);
-      setError(null);
     } catch (err) {
-      console.error("Fetch vendors error:", err);
-      setError(err.message || "Failed to fetch vendors");
-      setVendors([]); // Reset vendors on error
+      setError("Failed to fetch companies");
+      console.error(err);
+      setCompanies([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (vendorId) => {
-    if (window.confirm("Are you sure you want to delete this vendor?")) {
+  const handleDelete = async (companyId) => {
+    if (window.confirm("Are you sure you want to delete this company?")) {
       try {
-        await companyAPI.deleteCompanyVendor(vendorId);
-        await fetchVendors();
+        await companyAPI.deleteCompany(companyId);
+        await fetchCompanies();
       } catch (err) {
-        setError("Failed to delete vendor");
+        setError("Failed to delete company");
         console.error(err);
       }
     }
@@ -304,7 +306,7 @@ function CompanyVendors() {
   };
 
   const handleCompanyUpdated = async () => {
-    await fetchVendors();
+    await fetchCompanies();
     handleModalClose();
   };
 
@@ -324,6 +326,7 @@ function CompanyVendors() {
     { key: "contact_number", label: "Contact Number", sortable: true },
     { key: "company_email", label: "Email", sortable: true },
     { key: "gst_number", label: "GST Number", sortable: true },
+    { key: "firm_type", label: "Firm Type", sortable: true },
     {
       key: "actions",
       label: "Actions",
@@ -337,7 +340,7 @@ function CompanyVendors() {
             <BiEdit />
           </ActionButton>
           <ActionButton
-            onClick={() => handleDelete(company.vendor_id)}
+            onClick={() => handleDelete(company.company_id)}
             variant="danger"
             size="small"
           >
@@ -352,7 +355,7 @@ function CompanyVendors() {
     <div className="vendor-management">
       <div className="vendor-management-content">
         <div className="vendor-management-header">
-          <h1 className="vendor-management-title">Company Vendors</h1>
+          <h1 className="vendor-management-title">Companies</h1>
           <Button
             variant="contained"
             onClick={() => setShowModal(true)}
@@ -372,7 +375,7 @@ function CompanyVendors() {
           <Loader size="large" color="primary" />
         ) : (
           <TableWithControl
-            data={vendors}
+            data={companies}
             columns={columns}
             defaultPageSize={10}
           />
@@ -394,4 +397,4 @@ function CompanyVendors() {
   );
 }
 
-export default CompanyVendors;
+export default CompanyList;

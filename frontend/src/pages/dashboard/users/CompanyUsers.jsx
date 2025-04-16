@@ -219,19 +219,8 @@ function CompanyUserList() {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      const rolesData = await roleAPI.getAllRoles();
-      const companyRole = rolesData.find(
-        (role) => role.role_name === "Company"
-      );
-
-      if (companyRole) {
-        const companyUsers = allUsers.filter(
-          (user) => user.role_id === companyRole.id
-        );
-        setUsers(companyUsers);
-      } else {
-        setUsers([]);
-      }
+      const companyUsers = allUsers.filter(user => user.role_id === 5);
+      setUsers(companyUsers);
       setError(null);
     } catch (err) {
       setError("Failed to fetch company users");
@@ -242,8 +231,7 @@ function CompanyUserList() {
   };
 
   const getRoleName = (roleId) => {
-    const role = roles.find((r) => r.id === roleId);
-    return role ? role.role_name : "Unknown";
+    return roleId === 5 ? "Company" : "Unknown";
   };
 
   const filteredUsers = users.filter((user) => {

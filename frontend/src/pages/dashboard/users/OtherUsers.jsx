@@ -7,9 +7,8 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Input from "../../../components/common/Input/Input";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
-import { userAPI } from "../../../services/api";
+import { userAPI, roleAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/users/User.css";
-import { roleAPI } from "../../../services/api";
 
 // UserForm component
 const UserForm = ({ user, onClose, onUserUpdated }) => {
@@ -235,30 +234,33 @@ function OtherUserList() {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ role: "", status: "" });
 
   useEffect(() => {
+    fetchRoles();
     fetchUsers();
   }, []);
+
+  const fetchRoles = async () => {
+    try {
+      const rolesData = await roleAPI.getAllRoles();
+      setRoles(rolesData);
+    } catch (err) {
+      console.error("Error fetching roles:", err);
+      setError("Failed to fetch roles");
+    }
+  };
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      const rolesData = await roleAPI.getAllRoles();
-      const companyRole = rolesData.find(
-        (role) => role.role_name === "Company"
-      );
-      const consumerRole = rolesData.find(
-        (role) => role.role_name === "Consumer"
-      );
-
-      // Filter out users with Company or Consumer roles
+      // Filter out users with role_id 5 (Company) and 6 (Consumer)
       const otherUsers = allUsers.filter(
-        (user) =>
-          user.role_id !== companyRole?.id && user.role_id !== consumerRole?.id
+        (user) => user.role_id !== 5 && user.role_id !== 6
       );
       setUsers(otherUsers);
       setError(null);
@@ -315,7 +317,10 @@ function OtherUserList() {
       key: "role_id",
       label: "Role",
       sortable: true,
-      render: (value) => (value === 1 ? "Admin" : "User"),
+      render: (value) => {
+        const role = roles.find(r => r.id === value);
+        return role ? role.role_name : "Unknown Role";
+      },
     },
     {
       key: "status",

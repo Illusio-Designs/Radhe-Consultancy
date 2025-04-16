@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from "react-icons/bi";
-import { vendorAPI } from "../../../services/api";
+import { consumerAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
@@ -39,9 +39,9 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
 
     try {
       if (consumer) {
-        await vendorAPI.updateVendor(consumer.vendor_id, formData);
+        await consumerAPI.updateConsumer(consumer.consumer_id, formData);
       } else {
-        await vendorAPI.createConsumerVendor(formData);
+        await consumerAPI.createConsumer(formData);
       }
       onConsumerUpdated();
     } catch (err) {
@@ -159,7 +159,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   );
 };
 
-function ConsumerVendors() {
+function ConsumerList() {
   const [showModal, setShowModal] = useState(false);
   const [selectedConsumer, setSelectedConsumer] = useState(null);
   const [consumers, setConsumers] = useState([]);
@@ -173,21 +173,40 @@ function ConsumerVendors() {
   const fetchConsumers = async () => {
     try {
       setLoading(true);
-      const data = await vendorAPI.getConsumerVendors();
-      setConsumers(data);
-      setError(null);
+      const response = await consumerAPI.getAllConsumers();
+      
+      // Check if response is an array directly
+      if (Array.isArray(response)) {
+        setConsumers(response);
+        setError(null);
+      } 
+      // Check if response has data property and it's an array
+      else if (response && response.data && Array.isArray(response.data)) {
+        setConsumers(response.data);
+        setError(null);
+      } 
+      // Check if response has data property and it's an object with data array
+      else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+        setConsumers(response.data.data);
+        setError(null);
+      } else {
+        console.error("Invalid response format:", response);
+        setError("Invalid data format received from server");
+        setConsumers([]);
+      }
     } catch (err) {
       setError("Failed to fetch consumers");
       console.error(err);
+      setConsumers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (vendorId) => {
+  const handleDelete = async (consumerId) => {
     if (window.confirm("Are you sure you want to delete this consumer?")) {
       try {
-        await vendorAPI.deleteVendor(vendorId);
+        await consumerAPI.deleteConsumer(consumerId);
         await fetchConsumers();
       } catch (err) {
         setError("Failed to delete consumer");
@@ -238,7 +257,7 @@ function ConsumerVendors() {
             <BiEdit />
           </ActionButton>
           <ActionButton
-            onClick={() => handleDelete(consumer.vendor_id)}
+            onClick={() => handleDelete(consumer.consumer_id)}
             variant="danger"
             size="small"
           >
@@ -253,7 +272,7 @@ function ConsumerVendors() {
     <div className="vendor-management">
       <div className="vendor-management-content">
         <div className="vendor-management-header">
-          <h1 className="vendor-management-title">Consumer Vendors</h1>
+          <h1 className="vendor-management-title">Consumers</h1>
           <Button
             variant="contained"
             onClick={() => setShowModal(true)}
@@ -295,4 +314,4 @@ function ConsumerVendors() {
   );
 }
 
-export default ConsumerVendors;
+export default ConsumerList;

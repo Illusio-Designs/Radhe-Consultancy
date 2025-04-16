@@ -60,6 +60,7 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API
 export const authAPI = {
   async login(email, password) {
     try {
@@ -96,14 +97,14 @@ export const authAPI = {
     }
   },
 
-  async register(username, email, password, role_id) {
+  async register(username, email, password, role_name = 'user') {
     try {
       console.log('API Service: Attempting registration for:', email);
       const response = await api.post('/auth/register', {
         username,
         email,
         password,
-        role_id
+        role_name
       });
       const { token, user } = response.data;
       
@@ -118,6 +119,27 @@ export const authAPI = {
       return { token, user };
     } catch (error) {
       console.error('API Service: Registration error:', error);
+      throw error;
+    }
+  },
+
+  async googleLogin(token, role_name = 'user') {
+    try {
+      console.log('API Service: Attempting Google login');
+      const response = await api.post('/auth/google-login', { token, role_name });
+      const { token: authToken, user } = response.data;
+      
+      if (authToken && user) {
+        console.log('API Service: Google login successful, storing token and user data');
+        localStorage.setItem('token', authToken);
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        console.error('API Service: Invalid Google login response - missing token or user');
+      }
+      
+      return { token: authToken, user };
+    } catch (error) {
+      console.error('API Service: Google login error:', error);
       throw error;
     }
   },
@@ -338,6 +360,16 @@ export const roleAPI = {
       console.error('Error fetching role permissions:', error);
       throw error;
     }
+  },
+
+  assignRole: async (user_id, role_id) => {
+    try {
+      const response = await api.post('/roles/assign', { user_id, role_id });
+      return response.data;
+    } catch (error) {
+      console.error('Error assigning role:', error);
+      throw error;
+    }
   }
 };
 
@@ -348,21 +380,32 @@ export const companyAPI = {
       console.log('API Service: Fetching all companies');
       const response = await api.get('/companies');
       console.log('API Service: Companies fetched successfully');
-      return response.data;
+      
+      // Check if response has data property
+      if (response && response.data) {
+        // If response.data is an array, return it directly
+        if (Array.isArray(response.data)) {
+          return response.data;
+        }
+        // If response.data has a data property that's an array, return that
+        else if (response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // If response.data has a success property and a data property that's an array
+        else if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // If none of the above, log the invalid format and return empty array
+        else {
+          console.error('API Service: Invalid response format:', response);
+          return [];
+        }
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        return [];
+      }
     } catch (error) {
       console.error('API Service: Error fetching companies:', error);
-      throw error;
-    }
-  },
-
-  getAllCompanyVendors: async () => {
-    try {
-      console.log('API Service: Fetching all company vendors');
-      const response = await api.get('/companies/vendors');
-      console.log('API Service: Company vendors fetched successfully');
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error fetching company vendors:', error);
       throw error;
     }
   },
@@ -372,7 +415,14 @@ export const companyAPI = {
       console.log('API Service: Fetching company by ID:', id);
       const response = await api.get(`/companies/${id}`);
       console.log('API Service: Company fetched successfully');
-      return response.data;
+      
+      // Check if response has data property
+      if (response && response.data && response.data.success) {
+        return response.data.data;
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        return null;
+      }
     } catch (error) {
       console.error('API Service: Error fetching company:', error);
       throw error;
@@ -382,9 +432,38 @@ export const companyAPI = {
   createCompany: async (companyData) => {
     try {
       console.log('API Service: Creating company');
-      const response = await api.post('/companies', companyData);
+      
+      // First, create a user account for the company
+      const userData = {
+        username: companyData.company_name,
+        email: companyData.company_email,
+        password: Math.random().toString(36).slice(-8), // Generate a random password
+        role_name: 'company'
+      };
+      
+      console.log('API Service: Creating user account for company');
+      const userResponse = await api.post('/auth/register', userData);
+      
+      if (!userResponse.data || !userResponse.data.user) {
+        throw new Error('Failed to create user account for company');
+      }
+      
+      // Now create the company with the user_id
+      const companyWithUserId = {
+        ...companyData,
+        user_id: userResponse.data.user.user_id
+      };
+      
+      const response = await api.post('/companies', companyWithUserId);
       console.log('API Service: Company created successfully');
-      return response.data;
+      
+      // Check if response has data property
+      if (response && response.data && response.data.success) {
+        return response.data.data;
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
       console.error('API Service: Error creating company:', error);
       throw error;
@@ -394,9 +473,41 @@ export const companyAPI = {
   updateCompany: async (id, companyData) => {
     try {
       console.log('API Service: Updating company:', id);
+      
+      // First, get the company to find the associated user_id
+      const companyResponse = await api.get(`/companies/${id}`);
+      if (!companyResponse.data || !companyResponse.data.success) {
+        throw new Error('Failed to fetch company details');
+      }
+      
+      const company = companyResponse.data.data;
+      const userId = company.user_id;
+      
+      if (!userId) {
+        throw new Error('Company has no associated user');
+      }
+      
+      // Update the user's role to 'company' if needed
+      const userResponse = await api.get(`/users/${userId}`);
+      if (userResponse.data && userResponse.data.user) {
+        const user = userResponse.data.user;
+        if (user.role_name !== 'company') {
+          console.log('API Service: Updating user role to company');
+          await roleAPI.assignRole(userId, 'company');
+        }
+      }
+      
+      // Now update the company
       const response = await api.put(`/companies/${id}`, companyData);
       console.log('API Service: Company updated successfully');
-      return response.data;
+      
+      // Check if response has data property
+      if (response && response.data && response.data.success) {
+        return response.data.data;
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
       console.error('API Service: Error updating company:', error);
       throw error;
@@ -408,7 +519,14 @@ export const companyAPI = {
       console.log('API Service: Deleting company:', id);
       const response = await api.delete(`/companies/${id}`);
       console.log('API Service: Company deleted successfully');
-      return response.data;
+      
+      // Check if response has success property
+      if (response && response.data && response.data.success) {
+        return response.data;
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
       console.error('API Service: Error deleting company:', error);
       throw error;
@@ -423,7 +541,30 @@ export const consumerAPI = {
       console.log('API Service: Fetching all consumers');
       const response = await api.get('/consumers');
       console.log('API Service: Consumers fetched successfully');
-      return response.data;
+      
+      // Check if response has data property
+      if (response && response.data) {
+        // If response.data is an array, return it directly
+        if (Array.isArray(response.data)) {
+          return response.data;
+        }
+        // If response.data has a data property that's an array, return that
+        else if (response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // If response.data has a success property and a data property that's an array
+        else if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // If none of the above, log the invalid format and return empty array
+        else {
+          console.error('API Service: Invalid response format:', response);
+          return [];
+        }
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        return [];
+      }
     } catch (error) {
       console.error('API Service: Error fetching consumers:', error);
       throw error;
@@ -445,7 +586,29 @@ export const consumerAPI = {
   createConsumer: async (consumerData) => {
     try {
       console.log('API Service: Creating consumer');
-      const response = await api.post('/consumers', consumerData);
+      
+      // First, create a user account for the consumer
+      const userData = {
+        username: consumerData.name,
+        email: consumerData.email,
+        password: Math.random().toString(36).slice(-8), // Generate a random password
+        role_name: 'consumer'
+      };
+      
+      console.log('API Service: Creating user account for consumer');
+      const userResponse = await api.post('/auth/register', userData);
+      
+      if (!userResponse.data || !userResponse.data.user) {
+        throw new Error('Failed to create user account for consumer');
+      }
+      
+      // Now create the consumer with the user_id
+      const consumerWithUserId = {
+        ...consumerData,
+        user_id: userResponse.data.user.user_id
+      };
+      
+      const response = await api.post('/consumers', consumerWithUserId);
       console.log('API Service: Consumer created successfully');
       return response.data;
     } catch (error) {
@@ -457,6 +620,31 @@ export const consumerAPI = {
   updateConsumer: async (id, consumerData) => {
     try {
       console.log('API Service: Updating consumer:', id);
+      
+      // First, get the consumer to find the associated user_id
+      const consumerResponse = await api.get(`/consumers/${id}`);
+      if (!consumerResponse.data || !consumerResponse.data.success) {
+        throw new Error('Failed to fetch consumer details');
+      }
+      
+      const consumer = consumerResponse.data.data;
+      const userId = consumer.user_id;
+      
+      if (!userId) {
+        throw new Error('Consumer has no associated user');
+      }
+      
+      // Update the user's role to 'consumer' if needed
+      const userResponse = await api.get(`/users/${userId}`);
+      if (userResponse.data && userResponse.data.user) {
+        const user = userResponse.data.user;
+        if (user.role_name !== 'consumer') {
+          console.log('API Service: Updating user role to consumer');
+          await roleAPI.assignRole(userId, 'consumer');
+        }
+      }
+      
+      // Now update the consumer
       const response = await api.put(`/consumers/${id}`, consumerData);
       console.log('API Service: Consumer updated successfully');
       return response.data;
@@ -479,85 +667,7 @@ export const consumerAPI = {
   }
 };
 
-export const vendorAPI = {
-  async getVendors() {
-    try {
-      console.log('API Service: Fetching vendors');
-      const response = await api.get('/vendors');
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error fetching vendors:', error);
-      throw error;
-    }
-  },
-
-  async getVendorById(vendorId) {
-    try {
-      console.log('API Service: Fetching vendor by ID:', vendorId);
-      const response = await api.get(`/vendors/${vendorId}`);
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error fetching vendor:', error);
-      throw error;
-    }
-  },
-
-  async createVendor(vendorData) {
-    try {
-      console.log('API Service: Creating vendor');
-      const response = await api.post('/vendors', vendorData);
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error creating vendor:', error);
-      throw error;
-    }
-  },
-
-  async updateVendor(vendorId, vendorData) {
-    try {
-      console.log('API Service: Updating vendor:', vendorId);
-      const response = await api.put(`/vendors/${vendorId}`, vendorData);
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error updating vendor:', error);
-      throw error;
-    }
-  },
-
-  async deleteVendor(vendorId) {
-    try {
-      console.log('API Service: Deleting vendor:', vendorId);
-      const response = await api.delete(`/vendors/${vendorId}`);
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error deleting vendor:', error);
-      throw error;
-    }
-  },
-
-  async createConsumerVendor(vendorData) {
-    try {
-      console.log('API Service: Creating consumer vendor');
-      const response = await api.post('/vendors/consumer', vendorData);
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error creating consumer vendor:', error);
-      throw error;
-    }
-  },
-
-  async getConsumerVendors() {
-    try {
-      console.log('API Service: Fetching consumer vendors');
-      const response = await api.get('/vendors/consumer');
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error fetching consumer vendors:', error);
-      throw error;
-    }
-  }
-};
-
+// Admin API
 export const adminAPI = {
   async getAdminStats() {
     try {
