@@ -5,6 +5,8 @@ import AuthLayout from "../layouts/AuthLayout";
 import ComingSoon from "../pages/ComingSoon";
 import Login from "../pages/dashboard/auth/Login";
 import Register from "../pages/dashboard/auth/Register";
+import ForgotPassword from "../pages/dashboard/auth/ForgotPassword";
+import ResetPassword from "../pages/dashboard/auth/ResetPassword";
 import Dashboard from "../pages/dashboard/home/Dashboard";
 import AdminDashboard from "../pages/dashboard/home/AdminDashboard";
 import CompanyDashboard from "../pages/dashboard/home/CompanyDashboard";
@@ -47,6 +49,14 @@ const router = createBrowserRouter([
         path: "register",
         element: <Register />,
       },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "reset-password",
+        element: <ResetPassword />,
+      }
     ],
   },
   // Dashboard Routes (Protected)
