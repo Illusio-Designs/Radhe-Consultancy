@@ -123,12 +123,12 @@
   gap: 0.5rem;
 }
 
-/* .auth-redirect {
+.auth-redirect {
   text-align: center;
   margin-top: 1.5rem;
   color: var(--text-secondary);
   font-size: 0.95rem;
-} */
+}
 
 .google-login {
   margin-top: 20px !important;
