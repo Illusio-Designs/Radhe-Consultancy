@@ -75,16 +75,15 @@ const Header = ({ isCollapsed }) => {
               <div className="dropdown-menu" role="menu">
                 <div className="dropdown-content">
                   <Link
-                    to="/profile"
+                    to="/dashboard/profile"
                     className="dropdown-item"
                     onClick={() => setIsProfileMenuOpen(false)}
                   >
                     <BiUser className="dropdown-icon" />
-
                     <span>Profile</span>
                   </Link>
                   <Link
-                    to="/change-password"
+                    to="/dashboard/change-password"
                     className="dropdown-item"
                     onClick={() => setIsProfileMenuOpen(false)}
                   >
@@ -92,7 +91,8 @@ const Header = ({ isCollapsed }) => {
                     <span>Change Password</span>
                   </Link>
                   <hr className="dropdown-divider" />
-                  <button onClick={handleLogout} className="dropdown-item logout-button">
+                  <button onClick={handleLogout} className="custom-button
+                   button-medium">
                     <BiLogOut className="dropdown-icon" />
                     <span>Logout</span>
                   </button>

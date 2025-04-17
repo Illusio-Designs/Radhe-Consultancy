@@ -136,7 +136,7 @@
   cursor: pointer;
   font-weight: 500;
   text-decoration: none;
-  width: 100%;
+  width: 86%;
 }
 
 .dropdown-item:hover {
@@ -147,9 +147,8 @@
   margin: 0 0 0.75rem 0;
 }
 
-.logout-button {
-  background: white;
-  border: none;
+.dropdown-menu .custom-button {
+  width: 100%;
 }
 
 @keyframes dropdown-fade {

@@ -12,7 +12,7 @@ import {
   updatePassword,
   updateNotificationSettings
 } from '../../../services/profileService';
-import '../../../styles/dashboard/Profile.css';
+import '../../../styles/unwanted/Profile.css';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('personal');
