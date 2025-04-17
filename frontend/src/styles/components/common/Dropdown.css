@@ -60,7 +60,7 @@
   position: relative;
 }
 
-.search-icon {
+.dropdown-search .search-icon {
   position: absolute;
   left: 1rem;
   top: 50%;

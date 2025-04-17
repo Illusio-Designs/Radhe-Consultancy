@@ -114,7 +114,9 @@ function RoleManagement() {
       setError('Failed to fetch roles');
       console.error('Error fetching roles:', err);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000); // Ensure loader is displayed for at least 2000ms
     }
   };
 

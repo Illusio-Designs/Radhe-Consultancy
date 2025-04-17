@@ -279,7 +279,9 @@ function CompanyList() {
       console.error(err);
       setCompanies([]);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000); // Ensure loader is displayed for at least 2000ms
     }
   };
 

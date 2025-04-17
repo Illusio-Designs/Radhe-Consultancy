@@ -225,3 +225,8 @@
 .sidebar .sidebar-nav-item span:first-child {
   font-size: 1.5rem;
 }
+
+/* Add margin-left to dropdown menu items */
+.sidebar .pl-4 .sidebar-nav-item {
+  margin-left: 50px;
+}
