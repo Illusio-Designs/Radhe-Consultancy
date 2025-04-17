@@ -71,11 +71,9 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`CORS is enabled for origins: ${corsOptions.origin.join(', ')}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
     console.error('Unable to start server:', error);
-    console.error(error.stack);
     process.exit(1);
   }
 };

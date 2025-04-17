@@ -4,9 +4,6 @@ const userController = require('../controllers/userController');
 const { auth } = require('../middleware/auth');
 const { User, Role, Company, Consumer } = require('../models');
 
-// Debug check
-console.log('User controller methods:', Object.keys(userController));
-console.log('getAllUsers type:', typeof userController.getAllUsers);
 
 // Password management routes (public)
 router.post('/forgot-password', userController.forgotPassword);
