@@ -12,7 +12,8 @@ import {
   updatePassword,
   updateNotificationSettings
 } from '../../../services/profileService';
-import '../../../styles/dashboard/Profile.css';
+import img from "../../../assets/img (1).png";
+import '../../../styles/pages/dashboard/profile/Profile.css';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -149,7 +150,7 @@ const Profile = () => {
         <div className="profile-header">
           <div className="avatar-uploader">
             <img
-              src={profile?.imageUrl || '/default-avatar.png'}
+              src={profile?.imageUrl || img}
               alt="Profile"
               className="profile-avatar"
             />
@@ -163,7 +164,13 @@ const Profile = () => {
               Change Photo
             </label>
           </div>
-          <h2>{profile?.name || 'User Profile'}</h2>
+          <h2>{profile?.role === "admin"
+                  ? profile?.username
+                  : profile?.role === "owner"
+                  ? profile?.owner_name
+                  :profile?.role === "consumer"
+                  ?profile?.name
+                  : "User"}</h2>
           <p className="text-muted">{userType?.charAt(0).toUpperCase() + userType?.slice(1)}</p>
         </div>
 

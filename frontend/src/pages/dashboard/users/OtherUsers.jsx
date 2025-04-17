@@ -258,17 +258,16 @@ function OtherUserList() {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      // Filter out users with role_id 5 (Company) and 6 (Consumer)
-      const otherUsers = allUsers.filter(
-        (user) => user.role_id !== 5 && user.role_id !== 6
-      );
+      const otherUsers = allUsers.filter(user => user.role_id !== 5 && user.role_id !== 6); // Exclude Company and Consumer users
       setUsers(otherUsers);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch users");
+      setError('Failed to fetch users');
       console.error(err);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000); // Ensure loader is displayed for at least 2000ms
     }
   };
 

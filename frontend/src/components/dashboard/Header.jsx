@@ -33,66 +33,67 @@ const Header = ({ isCollapsed }) => {
 
   return (
     <header className={`header ${isCollapsed ? "sidebar-collapsed" : ""}`}>
-      <div className="w-full flex justify-between items-center px-4 py-2">
+      <div className="header-container">
         {/* Left - Title */}
-        <div className="items-center head">
-          <h2 className="header-title text-xl font-semibold">Dashboard</h2>
+        <div className="head">
+          <h2 className="header-title">Dashboard</h2>
           {/* Search Bar */}
           <div className="header-search">
-            <BiSearch style={{ marginRight: "0.5rem" }} />
+            <BiSearch className="search-icon" />
             <input type="text" placeholder="Search..." />
           </div>
         </div>
 
         {/* Right - Search, Notifications, Profile */}
-        <div className="items-center head">
+        <div className="head">
           {/* Notification */}
-          <button className="header-nav-item relative">
-            <BiBell className="text-xl" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-              3
-            </span>
+          <button className="header-nav-item">
+            <BiBell className="notification-icon" />
+            <span className="notification-badge">3</span>
           </button>
 
           {/* Profile */}
-          <div className="relative" ref={profileMenuRef}>
+          <div className="profile-menu" ref={profileMenuRef}>
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="header-nav-item flex items-center gap-1"
+              className="header-nav-item profile-button"
               aria-expanded={isProfileMenuOpen}
             >
-              <BiUser className="text-xl" />
-              <span className="hidden md:inline">{user?.name || "User"}</span>
+              <BiUser className="profile-icon" />
+              <span className="profile-username">
+                {user?.role === "admin"
+                  ? user?.username
+                  : user?.role === "owner"
+                  ? user?.owner_name
+                  : user?.role === "consumer"
+                  ? user?.name
+                  : "User"}
+              </span>
             </button>
 
             {isProfileMenuOpen && (
-              <div
-                className="dropdown-menu absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-md z-10"
-                role="menu"
-              >
-                <div className="py-2">
+              <div className="dropdown-menu" role="menu">
+                <div className="dropdown-content">
                   <Link
-                    to="/profile"
-                    className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    to="/dashboard/profile"
+                    className="dropdown-item"
                     onClick={() => setIsProfileMenuOpen(false)}
                   >
-                    <BiUser className="text-lg" />
+                    <BiUser className="dropdown-icon" />
                     <span>Profile</span>
                   </Link>
                   <Link
-                    to="/change-password"
-                    className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    to="/dashboard/change-password"
+                    className="dropdown-item"
                     onClick={() => setIsProfileMenuOpen(false)}
                   >
-                    <BiKey className="text-lg" />
+                    <BiKey className="dropdown-icon" />
                     <span>Change Password</span>
                   </Link>
-                  <hr className="my-2 border-gray-200" />
-                  <button
-                    onClick={handleLogout}
-                    className="dropdown-item flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-gray-100 w-full"
-                  >
-                    <BiLogOut className="text-lg" />
+                  <hr className="dropdown-divider" />
+                  <button onClick={handleLogout} className="custom-button
+                   button-medium">
+                    <BiLogOut className="dropdown-icon" />
                     <span>Logout</span>
                   </button>
                 </div>

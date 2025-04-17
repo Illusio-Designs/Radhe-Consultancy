@@ -48,7 +48,7 @@
 }
 
 .logo-container .main {
-  width: 100%;
+  width: 75%;
 }
 
 .logo-container .collapsed-img {
@@ -104,7 +104,7 @@
 .sidebar-nav-item {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 5px 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 1rem;
   margin: 0.375rem 0.875rem;
@@ -116,6 +116,7 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   letter-spacing: 0.025em;
+  cursor: pointer;
 }
 
 .sidebar-collapsed .sidebar-nav-item {
@@ -224,4 +225,12 @@
 }
 .sidebar .sidebar-nav-item span:first-child {
   font-size: 1.5rem;
+  margin-top: 5px;
+}
+
+/* Add margin-left to dropdown menu items */
+.sidebar .pl-4 .sidebar-nav-item {
+  margin-left: 50px;
+  color: #1f4f9c;
+  background: white;
 }

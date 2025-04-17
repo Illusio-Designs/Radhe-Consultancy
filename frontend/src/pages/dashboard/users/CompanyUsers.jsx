@@ -219,14 +219,16 @@ function CompanyUserList() {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      const companyUsers = allUsers.filter(user => user.role_id === 5);
+      const companyUsers = allUsers.filter(user => user.role_id === 5); // Example filter for company users
       setUsers(companyUsers);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch company users");
+      setError('Failed to fetch company users');
       console.error(err);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000); // Ensure loader is displayed for at least 2000ms
     }
   };
 

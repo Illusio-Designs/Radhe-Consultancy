@@ -182,7 +182,7 @@ function ConsumerList() {
     try {
       setLoading(true);
       const response = await consumerAPI.getAllConsumers();
-      
+  
       // Check if response is an array directly
       if (Array.isArray(response)) {
         setConsumers(response);
@@ -207,7 +207,9 @@ function ConsumerList() {
       console.error(err);
       setConsumers([]);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000); // Ensure loader is displayed for at least 2000ms
     }
   };
 

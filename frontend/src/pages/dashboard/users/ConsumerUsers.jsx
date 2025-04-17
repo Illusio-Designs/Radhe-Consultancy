@@ -205,14 +205,16 @@ function ConsumerUserList() {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      const consumerUsers = allUsers.filter(user => user.role_id === 6);
+      const consumerUsers = allUsers.filter(user => user.role_id === 6); // Example filter for consumer users
       setUsers(consumerUsers);
       setError(null);
     } catch (err) {
       setError('Failed to fetch consumer users');
       console.error(err);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000); // Ensure loader is displayed for at least 2000ms
     }
   };
 

@@ -14,6 +14,7 @@ export default defineConfig({
       brotliSize: true,
     })
   ],
+  assetsInclude: ['**/*.lottie'], // Add this line
   build: {
     rollupOptions: {
       output: {
