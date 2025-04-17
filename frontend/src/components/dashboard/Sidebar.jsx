@@ -61,9 +61,9 @@ const Sidebar = ({ onCollapse }) => {
       isOpen: usersDropdownOpen,
       toggle: () => setUsersDropdownOpen(!usersDropdownOpen),
       items: [
-        { path: "/dashboard/users/company", icon: <BiBuilding />, label: "Company Users" },
-        { path: "/dashboard/users/consumer", icon: <BiUserCircle />, label: "Consumer Users" },
-        { path: "/dashboard/users/other", icon: <BiGroup />, label: "Other Users" }
+        { path: "/dashboard/users/company", icon: <BiBuilding />, label: "Companies" },
+        { path: "/dashboard/users/consumer", icon: <BiUserCircle />, label: "Consumer" },
+        { path: "/dashboard/users/other", icon: <BiGroup />, label: "Employee" }
       ]
     },
     {
