@@ -24,9 +24,6 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
     // This allows zeros in date fields, which can help with the '0000-00-00' issue
     dateStrings: true,
     typeCast: true,
-    sessionVariables: {
-      sql_mode: 'ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION'
-    }
   },
   define: {
     // Global model options
