@@ -31,11 +31,4 @@ router.put('/:id',
   companyController.updateCompany
 );
 
-// Delete company (admin and vendor manager only)
-router.delete('/:id', 
-  auth, 
-  checkRole(['admin', 'vendor_manager']), 
-  companyController.deleteCompany
-);
-
 module.exports = router; 

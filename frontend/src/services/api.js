@@ -473,62 +473,11 @@ export const companyAPI = {
   updateCompany: async (id, companyData) => {
     try {
       console.log('API Service: Updating company:', id);
-      
-      // First, get the company to find the associated user_id
-      const companyResponse = await api.get(`/companies/${id}`);
-      if (!companyResponse.data || !companyResponse.data.success) {
-        throw new Error('Failed to fetch company details');
-      }
-      
-      const company = companyResponse.data.data;
-      const userId = company.user_id;
-      
-      if (!userId) {
-        throw new Error('Company has no associated user');
-      }
-      
-      // Update the user's role to 'company' if needed
-      const userResponse = await api.get(`/users/${userId}`);
-      if (userResponse.data && userResponse.data.user) {
-        const user = userResponse.data.user;
-        if (user.role_name !== 'company') {
-          console.log('API Service: Updating user role to company');
-          await roleAPI.assignRole(userId, 'company');
-        }
-      }
-      
-      // Now update the company
       const response = await api.put(`/companies/${id}`, companyData);
       console.log('API Service: Company updated successfully');
-      
-      // Check if response has data property
-      if (response && response.data && response.data.success) {
-        return response.data.data;
-      } else {
-        console.error('API Service: Invalid response format:', response);
-        throw new Error('Invalid response format from server');
-      }
+      return response.data;
     } catch (error) {
       console.error('API Service: Error updating company:', error);
-      throw error;
-    }
-  },
-
-  deleteCompany: async (id) => {
-    try {
-      console.log('API Service: Deleting company:', id);
-      const response = await api.delete(`/companies/${id}`);
-      console.log('API Service: Company deleted successfully');
-      
-      // Check if response has success property
-      if (response && response.data && response.data.success) {
-        return response.data;
-      } else {
-        console.error('API Service: Invalid response format:', response);
-        throw new Error('Invalid response format from server');
-      }
-    } catch (error) {
-      console.error('API Service: Error deleting company:', error);
       throw error;
     }
   }
@@ -586,29 +535,7 @@ export const consumerAPI = {
   createConsumer: async (consumerData) => {
     try {
       console.log('API Service: Creating consumer');
-      
-      // First, create a user account for the consumer
-      const userData = {
-        username: consumerData.name,
-        email: consumerData.email,
-        password: Math.random().toString(36).slice(-8), // Generate a random password
-        role_name: 'consumer'
-      };
-      
-      console.log('API Service: Creating user account for consumer');
-      const userResponse = await api.post('/auth/register', userData);
-      
-      if (!userResponse.data || !userResponse.data.user) {
-        throw new Error('Failed to create user account for consumer');
-      }
-      
-      // Now create the consumer with the user_id
-      const consumerWithUserId = {
-        ...consumerData,
-        user_id: userResponse.data.user.user_id
-      };
-      
-      const response = await api.post('/consumers', consumerWithUserId);
+      const response = await api.post('/consumers', consumerData);
       console.log('API Service: Consumer created successfully');
       return response.data;
     } catch (error) {
@@ -620,48 +547,11 @@ export const consumerAPI = {
   updateConsumer: async (id, consumerData) => {
     try {
       console.log('API Service: Updating consumer:', id);
-      
-      // First, get the consumer to find the associated user_id
-      const consumerResponse = await api.get(`/consumers/${id}`);
-      if (!consumerResponse.data || !consumerResponse.data.success) {
-        throw new Error('Failed to fetch consumer details');
-      }
-      
-      const consumer = consumerResponse.data.data;
-      const userId = consumer.user_id;
-      
-      if (!userId) {
-        throw new Error('Consumer has no associated user');
-      }
-      
-      // Update the user's role to 'consumer' if needed
-      const userResponse = await api.get(`/users/${userId}`);
-      if (userResponse.data && userResponse.data.user) {
-        const user = userResponse.data.user;
-        if (user.role_name !== 'consumer') {
-          console.log('API Service: Updating user role to consumer');
-          await roleAPI.assignRole(userId, 'consumer');
-        }
-      }
-      
-      // Now update the consumer
       const response = await api.put(`/consumers/${id}`, consumerData);
       console.log('API Service: Consumer updated successfully');
       return response.data;
     } catch (error) {
       console.error('API Service: Error updating consumer:', error);
-      throw error;
-    }
-  },
-
-  deleteConsumer: async (id) => {
-    try {
-      console.log('API Service: Deleting consumer:', id);
-      const response = await api.delete(`/consumers/${id}`);
-      console.log('API Service: Consumer deleted successfully');
-      return response.data;
-    } catch (error) {
-      console.error('API Service: Error deleting consumer:', error);
       throw error;
     }
   }

@@ -102,7 +102,12 @@ const consumerController = {
   // Update consumer
   async updateConsumer(req, res) {
     try {
-      const consumer = await Consumer.findByPk(req.params.id);
+      const consumer = await Consumer.findByPk(req.params.id, {
+        include: [{
+          model: User,
+          attributes: ['user_id', 'username', 'email']
+        }]
+      });
 
       if (!consumer) {
         return res.status(404).json({
@@ -111,38 +116,49 @@ const consumerController = {
         });
       }
 
-      await consumer.update(req.body);
+      const { name, email, phone_number, contact_address, profile_image } = req.body;
 
-      res.status(200).json({
-        success: true,
-        data: consumer
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  },
+      // Start a transaction to ensure both updates succeed or fail together
+      const transaction = await Consumer.sequelize.transaction();
 
-  // Delete consumer
-  async deleteConsumer(req, res) {
-    try {
-      const consumer = await Consumer.findByPk(req.params.id);
+      try {
+        // Update consumer
+        await consumer.update({
+          name,
+          email,
+          phone_number,
+          contact_address,
+          profile_image
+        }, { transaction });
 
-      if (!consumer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Consumer not found'
+        // Update associated user if it exists
+        if (consumer.User) {
+          await consumer.User.update({
+            username: name,
+            email: email
+          }, { transaction });
+        }
+
+        // Commit the transaction
+        await transaction.commit();
+
+        // Fetch the updated consumer with user details
+        const updatedConsumer = await Consumer.findByPk(req.params.id, {
+          include: [{
+            model: User,
+            attributes: ['user_id', 'username', 'email']
+          }]
         });
+
+        res.status(200).json({
+          success: true,
+          data: updatedConsumer
+        });
+      } catch (error) {
+        // Rollback the transaction if there's an error
+        await transaction.rollback();
+        throw error;
       }
-
-      await consumer.destroy();
-
-      res.status(200).json({
-        success: true,
-        message: 'Consumer deleted successfully'
-      });
     } catch (error) {
       res.status(500).json({
         success: false,

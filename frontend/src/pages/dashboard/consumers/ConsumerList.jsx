@@ -41,7 +41,15 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       if (consumer) {
         await consumerAPI.updateConsumer(consumer.consumer_id, formData);
       } else {
-        await consumerAPI.createConsumer(formData);
+        // Only send consumer data, let backend handle user creation
+        const consumerData = {
+          name: formData.name,
+          email: formData.email,
+          phone_number: formData.phone_number,
+          contact_address: formData.contact_address,
+          profile_image: formData.profile_image
+        };
+        await consumerAPI.createConsumer(consumerData);
       }
       onConsumerUpdated();
     } catch (err) {
@@ -255,13 +263,6 @@ function ConsumerList() {
             size="small"
           >
             <BiEdit />
-          </ActionButton>
-          <ActionButton
-            onClick={() => handleDelete(consumer.consumer_id)}
-            variant="danger"
-            size="small"
-          >
-            <BiTrash />
           </ActionButton>
         </div>
       ),
