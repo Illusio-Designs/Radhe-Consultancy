@@ -21,6 +21,8 @@ import ConsumerList from "../pages/dashboard/consumers/ConsumerList";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Profile from "../pages/dashboard/profile/Profile";
 import ChangePassword from "../pages/dashboard/auth/ChangePassword";
+import Support from "../pages/dashboard/support/Support";
+import Widget from "../pages/dashboard/widget/widget"
 
 const router = createBrowserRouter([
   // Public Routes
@@ -82,6 +84,10 @@ const router = createBrowserRouter([
         path: "change-password",
         element: <ChangePassword />,
       },
+      {
+        path: "support",
+        element: <Support />,
+      },
       // Role-based Dashboard Routes
       {
         path: "admin",
@@ -103,6 +109,11 @@ const router = createBrowserRouter([
             <RoleManagement />
           </ProtectedRoute>
         ),
+      },
+      // Widget Routes  
+      {
+        path: "widget",
+        element: <Widget />,
       },
       // User Management Routes
       {

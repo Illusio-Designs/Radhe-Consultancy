@@ -1,0 +1,83 @@
+/* General styles for the widget page */
+.widget-page {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+.widget-page h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #007bff;
+  text-align: center;
+}
+
+.widget-page section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.widget-page section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 5px;
+}
+
+.widget-page section > *:not(h2) {
+  margin-top: 10px;
+}
+
+/* Button styles */
+.widget-page button {
+  margin-top: 10px;
+}
+
+/* Loader styles */
+.widget-page .loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+/* Table styles */
+.widget-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.widget-page table th,
+.widget-page table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.widget-page table th {
+  background-color: #007bff;
+  color: white;
+}
+
+/* ProfileCard styles */
+.widget-page .profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.widget-page .profile-card h3 {
+  margin: 10px 0;
+  font-size: 1.2rem;
+  color: #333;
+}

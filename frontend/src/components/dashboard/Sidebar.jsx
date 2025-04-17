@@ -54,6 +54,7 @@ const Sidebar = ({ onCollapse }) => {
       ]
     },
     { path: "/dashboard/roles", icon: <BiShield />, label: "Roles" },
+    { path: "/dashboard/widget", icon: <BiBuilding />, label: "Widget" },
     {
       label: "Users",
       icon: <BiUser />,
