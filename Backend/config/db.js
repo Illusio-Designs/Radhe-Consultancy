@@ -1,62 +1,42 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    dialect: 'mysql',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 60000,
-      idle: 30000,
-      evict: 1000,
-    },
-    retry: {
-      match: [
-        /SequelizeConnectionError/,
-        /SequelizeConnectionRefusedError/,
-        /SequelizeHostNotFoundError/,
-        /SequelizeHostNotReachableError/,
-        /SequelizeInvalidConnectionError/,
-        /SequelizeConnectionTimedOutError/,
-        /TimeoutError/,
-        /ECONNRESET/,
-      ],
-      max: 3,
-    },
-    dialectOptions: {
-      connectTimeout: 60000,
-    }
-  }
-);
+// Get database configuration from environment variables
+const DB_HOST = process.env.DB_HOST || 'localhost';
+const DB_USER = process.env.DB_USER || 'root';
+const DB_PASSWORD = process.env.DB_PASSWORD || '';
+const DB_NAME = process.env.DB_NAME || 'radhe_consultancy_crm';
+const DB_PORT = process.env.DB_PORT || 3306;
 
-// Test the connection with retry logic
-const testConnection = async () => {
-  let retries = 3;
-  while (retries > 0) {
-    try {
-      await sequelize.authenticate();
-      console.log('Database connection has been established successfully.');
-      return;
-    } catch (err) {
-      console.error(`Unable to connect to the database (attempt ${4 - retries}/3):`, err);
-      retries--;
-      if (retries === 0) {
-        console.error('Failed to connect to database after 3 attempts');
-        throw err;
-      }
-      await new Promise(resolve => setTimeout(resolve, 5000));
+// Create Sequelize instance
+const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
+  host: DB_HOST,
+  port: DB_PORT,
+  dialect: 'mysql',
+  logging: false, // Set to console.log to see SQL queries
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  dialectOptions: {
+    // This allows zeros in date fields, which can help with the '0000-00-00' issue
+    dateStrings: true,
+    typeCast: true,
+    sessionVariables: {
+      sql_mode: 'ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION'
     }
-  }
-};
-
-testConnection().catch(err => {
-  console.error('Database connection failed:', err);
+  },
+  define: {
+    // Global model options
+    timestamps: true, // Default to include timestamps
+    underscored: true, // Use snake_case for auto-generated fields
+    freezeTableName: false, // Don't pluralize table names
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci'
+  },
+  timezone: '+05:30' // Adjust to your timezone
 });
 
-module.exports = sequelize; 
+module.exports = sequelize;

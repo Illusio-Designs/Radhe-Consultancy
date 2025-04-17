@@ -13,8 +13,8 @@ async function initializeDatabase() {
     await sequelize.authenticate();
     console.log('Database connection established successfully');
 
-    // Sync all models with force: false to prevent table recreation
-    await sequelize.sync({ force: false });
+    // Sync all models with alter to update the schema
+    await sequelize.sync({ alter: true });
     console.log('Database models synchronized');
 
     // Create default roles if they don't exist
@@ -128,7 +128,9 @@ async function initializeDatabase() {
           username: 'admin',
           email: adminEmail,
           password: adminPassword,
-          role_id: adminRole.id
+          role_id: adminRole.id,
+          created_at: new Date(), // Explicitly set created_at
+          updated_at: new Date()  // Explicitly set updated_at
         }
       });
       console.log('Default admin user verified');

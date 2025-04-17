@@ -49,12 +49,19 @@ const User = sequelize.define('User', {
   reset_token_expiry: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'Users',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
   underscored: true
 });
 
