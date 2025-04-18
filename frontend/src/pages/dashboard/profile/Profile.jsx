@@ -1,28 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { FiUser, FiLock, FiBell, FiLogOut } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
-import Button from '../../../components/common/Button/Button';
-import Input from '../../../components/common/Input/Input';
-import Modal from '../../../components/common/Modal/Modal';
-import Loader from '../../../components/common/Loader/Loader';
+import React, { useState, useEffect } from "react";
+import { FiUser, FiLock, FiBell, FiLogOut } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import Button from "../../../components/common/Button/Button";
+import Input from "../../../components/common/Input/Input";
+import Modal from "../../../components/common/Modal/Modal";
+import Loader from "../../../components/common/Loader/Loader";
 import {
   fetchUserProfile,
   updateUserProfile,
   updateProfileImage,
   updatePassword,
-  updateNotificationSettings
-} from '../../../services/profileService';
+  updateNotificationSettings,
+} from "../../../services/profileService";
 import img from "../../../assets/img (1).png";
-import '../../../styles/pages/dashboard/profile/Profile.css';
+import "../../../styles/pages/dashboard/profile/Profile.css";
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState('personal');
+  const [activeTab, setActiveTab] = useState("personal");
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [isEditing, setIsEditing] = useState(false); // Add this line
   const navigate = useNavigate();
-  const userType = localStorage.getItem('userType');
+  const userType = localStorage.getItem("userType");
 
   useEffect(() => {
     loadProfile();
@@ -30,7 +31,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/login');
+    navigate("/login");
   };
 
   const loadProfile = async () => {
@@ -51,13 +52,13 @@ const Profile = () => {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append("image", file);
 
     try {
       setLoading(true);
       await updateProfileImage(userType, formData);
       await loadProfile();
-      setSuccess('Profile image updated successfully');
+      setSuccess("Profile image updated successfully");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -65,6 +66,12 @@ const Profile = () => {
     }
   };
 
+  // Add this function to handle edit mode
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  // Modify handleProfileUpdate
   const handleProfileUpdate = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -74,7 +81,8 @@ const Profile = () => {
       setLoading(true);
       await updateUserProfile(userType, profileData);
       await loadProfile();
-      setSuccess('Profile updated successfully');
+      setSuccess("Profile updated successfully");
+      setIsEditing(false); // Close edit mode after successful update
     } catch (err) {
       setError(err.message);
     } finally {
@@ -88,14 +96,14 @@ const Profile = () => {
     const passwordData = Object.fromEntries(formData.entries());
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match');
+      setError("New passwords do not match");
       return;
     }
 
     try {
       setLoading(true);
       await updatePassword(userType, passwordData);
-      setSuccess('Password updated successfully');
+      setSuccess("Password updated successfully");
       event.target.reset();
     } catch (err) {
       setError(err.message);
@@ -112,7 +120,7 @@ const Profile = () => {
     try {
       setLoading(true);
       await updateNotificationSettings(userType, settings);
-      setSuccess('Notification settings updated successfully');
+      setSuccess("Notification settings updated successfully");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -136,9 +144,9 @@ const Profile = () => {
   }
 
   const tabs = [
-    { id: 'personal', label: 'Personal Info', icon: <FiUser /> },
-    { id: 'security', label: 'Security', icon: <FiLock /> },
-    { id: 'notifications', label: 'Notifications', icon: <FiBell /> }
+    { id: "personal", label: "Personal Info", icon: <FiUser /> },
+    { id: "security", label: "Security", icon: <FiLock /> },
+    { id: "notifications", label: "Notifications", icon: <FiBell /> },
   ];
 
   return (
@@ -161,25 +169,29 @@ const Profile = () => {
                 onChange={handleImageUpload}
                 hidden
               />
-              Change Photo
+              Edit
             </label>
           </div>
-          <h2>{profile?.role === "admin"
-                  ? profile?.username
-                  : profile?.role === "owner"
-                  ? profile?.owner_name
-                  :profile?.role === "consumer"
-                  ?profile?.name
-                  : "User"}</h2>
-          <p className="text-muted">{userType?.charAt(0).toUpperCase() + userType?.slice(1)}</p>
+          <h2>
+            {profile?.role === "admin"
+              ? profile?.username
+              : profile?.role === "owner"
+              ? profile?.owner_name
+              : profile?.role === "consumer"
+              ? profile?.name
+              : "User"}
+          </h2>
+          <p className="text-muted">
+            {userType?.charAt(0).toUpperCase() + userType?.slice(1)}
+          </p>
         </div>
 
         <div className="profile-tabs">
           <div className="tabs-header">
-            {tabs.map(tab => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
-                className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+                className={`tab-button ${activeTab === tab.id ? "active" : ""}`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.icon}
@@ -189,57 +201,92 @@ const Profile = () => {
           </div>
 
           <div className="tab-content">
-            {activeTab === 'personal' && (
-              <form onSubmit={handleProfileUpdate} className="profile-form">
-                <Input
-                  label="Name"
-                  name="name"
-                  defaultValue={profile?.name}
-                  required
-                />
-                <Input
-                  label="Email"
-                  type="email"
-                  name="email"
-                  defaultValue={profile?.email}
-                  required
-                />
-                <Input
-                  label="Phone"
-                  type="tel"
-                  name="phone"
-                  defaultValue={profile?.phone}
-                />
-                <Button type="submit">Update Profile</Button>
-              </form>
+            {activeTab === "personal" && (
+              <>
+                {!isEditing ? (
+                  <div className="profile-details">
+                    <div className="detail-item">
+                      <p>{profile?.name || "Not specified"}</p>
+                    </div>
+                    <div className="detail-item">
+                      <p>{profile?.email || "Not specified"}</p>
+                    </div>
+                    <div className="detail-item">
+                      <p>{profile?.phone || "Not specified"}</p>
+                    </div>
+                    <Button onClick={handleEditToggle}>Edit Profile</Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleProfileUpdate} className="profile-form">
+                    <Input
+                      label="Name"
+                      name="name"
+                      defaultValue={profile?.name}
+                      placeholder="Enter your name"
+                      required
+                    />
+                    <Input
+                      label="Email"
+                      type="email"
+                      name="email"
+                      defaultValue={profile?.email}
+                      placeholder="Enter your email address"
+                      required
+                    />
+                    <Input
+                      label="Phone"
+                      type="tel"
+                      name="phone"
+                      defaultValue={profile?.phone}
+                      placeholder="Enter your phone number"
+                    />
+                    <div className="form-buttons">
+                      <Button type="submit">Save Changes</Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={handleEditToggle}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </>
             )}
 
-            {activeTab === 'security' && (
+            {activeTab === "security" && (
               <form onSubmit={handlePasswordUpdate} className="profile-form">
                 <Input
                   label="Current Password"
                   type="password"
                   name="currentPassword"
+                  placeholder="Enter your current password"
                   required
                 />
                 <Input
                   label="New Password"
                   type="password"
                   name="newPassword"
+                  placeholder="Enter your new password"
                   required
                 />
                 <Input
                   label="Confirm New Password"
                   type="password"
                   name="confirmPassword"
+                  placeholder="Confirm your new password"
                   required
                 />
                 <Button type="submit">Update Password</Button>
               </form>
             )}
 
-            {activeTab === 'notifications' && (
-              <form onSubmit={handleNotificationUpdate} className="profile-form">
+            {activeTab === "notifications" && (
+              <form
+                onSubmit={handleNotificationUpdate}
+                className="profile-form"
+              >
                 <div className="checkbox-group">
                   <label className="checkbox-label">
                     <input
@@ -265,11 +312,7 @@ const Profile = () => {
         </div>
 
         <div className="profile-footer">
-          <Button
-            variant="danger"
-            onClick={handleLogout}
-            icon={<FiLogOut />}
-          >
+          <Button variant="danger" onClick={handleLogout} icon={<FiLogOut />}>
             Logout
           </Button>
         </div>
@@ -278,4 +321,4 @@ const Profile = () => {
   );
 };
 
-export default Profile; 
+export default Profile;

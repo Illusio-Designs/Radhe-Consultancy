@@ -33,11 +33,6 @@
   margin-top: 10px;
 }
 
-/* Button styles */
-.widget-page button {
-  margin-top: 10px;
-}
-
 /* Loader styles */
 .widget-page .loader-container {
   display: flex;

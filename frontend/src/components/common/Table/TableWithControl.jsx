@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Table from './Table';
 import Pagination from '../Pagination/Pagination';
+import FilterButton from '../FilterButton/FilterButton'; // Import the FilterButton component
 import '../../../styles/components/common/TableWithControl.css';
 
 const TableWithControl = ({
@@ -66,6 +67,10 @@ const TableWithControl = ({
     setSearchTerm(e.target.value);
   };
 
+  const handleFilterClick = () => {
+    alert("Filter button clicked! Add your filter logic here.");
+  };
+
   return (
     <div className="table-with-control">
       <div className="table-controls">
@@ -77,6 +82,7 @@ const TableWithControl = ({
             onChange={handleSearch}
             className="search-input"
           />
+          <FilterButton onClick={handleFilterClick} label="Filter" />
         </div>
       </div>
 
