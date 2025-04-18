@@ -117,7 +117,7 @@ async function initializeDatabase() {
     console.log('Role permissions verified');
 
     // Create default admin user if not exists
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@radheconsultancy.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'Admin@radheconsultancy.co.in';
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
     
     const adminRole = await Role.findOne({ where: { role_name: 'admin' } });

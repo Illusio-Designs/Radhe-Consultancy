@@ -131,7 +131,12 @@ const companyController = {
   // Update company
   async updateCompany(req, res) {
     try {
-      const company = await Company.findByPk(req.params.id);
+      const company = await Company.findByPk(req.params.id, {
+        include: [{
+          model: User,
+          attributes: ['user_id', 'username', 'email']
+        }]
+      });
 
       if (!company) {
         return res.status(404).json({
@@ -140,38 +145,63 @@ const companyController = {
         });
       }
 
-      await company.update(req.body);
+      const {
+        company_name,
+        owner_name,
+        company_address,
+        contact_number,
+        company_email,
+        gst_number,
+        pan_number,
+        firm_type,
+        company_website
+      } = req.body;
 
-      res.status(200).json({
-        success: true,
-        data: company
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  },
+      // Start a transaction to ensure both updates succeed or fail together
+      const transaction = await Company.sequelize.transaction();
 
-  // Delete company
-  async deleteCompany(req, res) {
-    try {
-      const company = await Company.findByPk(req.params.id);
+      try {
+        // Update company
+        await company.update({
+          company_name,
+          owner_name,
+          company_address,
+          contact_number,
+          company_email,
+          gst_number,
+          pan_number,
+          firm_type,
+          company_website
+        }, { transaction });
 
-      if (!company) {
-        return res.status(404).json({
-          success: false,
-          error: 'Company not found'
+        // Update associated user if it exists
+        if (company.User) {
+          await company.User.update({
+            username: company_name,
+            email: company_email
+          }, { transaction });
+        }
+
+        // Commit the transaction
+        await transaction.commit();
+
+        // Fetch the updated company with user details
+        const updatedCompany = await Company.findByPk(req.params.id, {
+          include: [{
+            model: User,
+            attributes: ['user_id', 'username', 'email']
+          }]
         });
+
+        res.status(200).json({
+          success: true,
+          data: updatedCompany
+        });
+      } catch (error) {
+        // Rollback the transaction if there's an error
+        await transaction.rollback();
+        throw error;
       }
-
-      await company.destroy();
-
-      res.status(200).json({
-        success: true,
-        message: 'Company deleted successfully'
-      });
     } catch (error) {
       res.status(500).json({
         success: false,

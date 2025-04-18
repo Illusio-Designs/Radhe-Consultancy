@@ -341,13 +341,6 @@ function CompanyList() {
           >
             <BiEdit />
           </ActionButton>
-          <ActionButton
-            onClick={() => handleDelete(company.company_id)}
-            variant="danger"
-            size="small"
-          >
-            <BiTrash />
-          </ActionButton>
         </div>
       ),
     },

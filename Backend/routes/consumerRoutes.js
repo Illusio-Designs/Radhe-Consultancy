@@ -31,11 +31,4 @@ router.put('/:id',
   consumerController.updateConsumer
 );
 
-// Delete consumer (admin and vendor manager only)
-router.delete('/:id', 
-  auth, 
-  checkRole(['admin', 'vendor_manager']), 
-  consumerController.deleteConsumer
-);
-
 module.exports = router; 
