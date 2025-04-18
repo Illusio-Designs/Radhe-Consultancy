@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const ConsumerDashboard = () => {
   const { user } = useAuth();
@@ -17,8 +18,10 @@ const ConsumerDashboard = () => {
       try {
         const response = await axios.get('/api/consumer/profile');
         setConsumerData(response.data);
+        toast.success("Profile data loaded successfully!");
       } catch (error) {
         console.error('Error fetching consumer data:', error);
+        toast.error("Failed to load profile data. Please try again.");
       }
     };
 
@@ -26,8 +29,10 @@ const ConsumerDashboard = () => {
       try {
         const response = await axios.get('/api/consumer/orders');
         setOrders(response.data.orders);
+        toast.success("Orders loaded successfully!");
       } catch (error) {
         console.error('Error fetching orders:', error);
+        toast.error("Failed to load orders. Please try again.");
       }
     };
 
@@ -35,14 +40,16 @@ const ConsumerDashboard = () => {
       try {
         const response = await axios.get('/api/consumer/stats');
         setStats(response.data);
+        toast.success("Statistics loaded successfully!");
       } catch (error) {
         console.error('Error fetching consumer stats:', error);
+        toast.error("Failed to load statistics. Please try again.");
       }
     };
 
-    fetchConsumerData();
-    fetchOrders();
-    fetchStats();
+    Promise.all([fetchConsumerData(), fetchOrders(), fetchStats()])
+      .then(() => toast.success("Dashboard loaded successfully!"))
+      .catch(() => toast.error("Some dashboard data failed to load."));
   }, []);
 
   return (
@@ -112,4 +119,4 @@ const ConsumerDashboard = () => {
   );
 };
 
-export default ConsumerDashboard; 
+export default ConsumerDashboard;

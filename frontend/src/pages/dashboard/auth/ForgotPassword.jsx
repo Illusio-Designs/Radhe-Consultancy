@@ -1,28 +1,31 @@
 import { useState } from "react";
 import { authAPI } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../../../styles/pages/dashboard/auth/Auth.css";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
 
+    setLoading(true);
     try {
       await authAPI.forgotPassword(email);
-      setSuccess("Check your email for the reset link.");
+      toast.success("Password reset link has been sent to your email");
     } catch (err) {
       console.error("Error during forgot password:", err);
-      const errorMessage =
-        err.response?.data?.error ||
-        "Failed to send reset link. Please try again later.";
-      setError(errorMessage);
+      toast.error(err.message || "Failed to send reset link. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,9 +34,6 @@ function ForgotPassword() {
       <div className="auth-card">
         <h2>Forgot Password</h2>
         <p className="auth-subtitle">Enter your email to reset your password</p>
-
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -44,15 +44,21 @@ function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
+              disabled={loading}
             />
           </div>
-          <button className="auth-button" type="submit">
-            Send Reset Link
+          <button 
+            className="auth-button" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Sending..." : "Send Reset Link"}
           </button>
           <button
             className="auth-button"
             type="button"
             onClick={() => navigate("/login")}
+            disabled={loading}
           >
             Back to Login
           </button>
