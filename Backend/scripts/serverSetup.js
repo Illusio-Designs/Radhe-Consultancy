@@ -123,11 +123,11 @@ async function initializeDatabase() {
     const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
     if (adminRole) {
       await User.findOrCreate({
-        where: { email: adminEmail },
+        where: { email: adminEmail }, // Ensure this uses the default email
         defaults: {
           username: 'admin',
           email: adminEmail,
-          password: adminPassword,
+          password: adminPassword, // Ensure this uses the default password
           role_id: adminRole.id,
           created_at: new Date(), // Explicitly set created_at
           updated_at: new Date()  // Explicitly set updated_at

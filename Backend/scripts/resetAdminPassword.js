@@ -14,8 +14,8 @@ async function resetAdminPassword() {
     console.log('Admin role found:', adminRole.role_name);
 
     // Get admin email and password from environment variables or use defaults
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@radheconsultancy.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+    const adminEmail = process.env.ADMIN_EMAIL || 'Admin@radheconsultancy.co.in'; // Ensure this uses the default email
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123'; // Ensure this uses the default password
     
     console.log('Using admin credentials:', {
       email: adminEmail,

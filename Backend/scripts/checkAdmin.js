@@ -15,7 +15,7 @@ async function checkAdmin() {
     // Check for admin user
     console.log('\nChecking for admin user...');
     const adminUser = await User.findOne({
-      where: { email: 'admin@radheconsultancy.com' },
+      where: { email: 'Admin@radheconsultancy.co.in' }, // Ensure this uses the default email
       include: [{
         model: Role,
         attributes: ['role_name']
