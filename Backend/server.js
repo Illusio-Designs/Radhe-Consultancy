@@ -21,10 +21,28 @@ process.on('uncaughtException', (err) => {
 
 const app = express();
 
-// CRITICAL: Apply wildcard CORS before ANY other middleware
-// This is a temporary but effective fix - restrict it once working
+// Define allowed origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://radheconsultancy.co.in',
+  'https://www.radheconsultancy.co.in'
+];
+
+// CRITICAL: Apply CORS before ANY other middleware
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  
+  // Allow requests with no origin (like mobile apps or curl requests)
+  if (!origin) return next();
+  
+  // Check if the origin is allowed
+  if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://radheconsultancy.co.in');
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -38,7 +56,16 @@ app.use((req, res, next) => {
 
 // Standard CORS middleware as backup
 app.use(cors({
-  origin: '*', // Temporary wildcard - change to specific domains once working
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true
@@ -50,27 +77,15 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes - explicitly set CORS headers again on actual routes
-app.use('/api/auth', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  next();
-}, require('./routes/authRoutes'));
-
+// Routes - no need to set CORS headers again as they're already set correctly
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/roles', require('./routes/roleRoutes'));
 app.use('/api/companies', require('./routes/companyRoutes'));
 app.use('/api/consumers', require('./routes/consumerRoutes'));
 
 // Also set up non-prefixed routes
-app.use('/auth', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  next();
-}, require('./routes/authRoutes'));
-
+app.use('/auth', require('./routes/authRoutes'));
 app.use('/users', require('./routes/userRoutes'));
 app.use('/roles', require('./routes/roleRoutes'));
 app.use('/companies', require('./routes/companyRoutes'));
@@ -82,7 +97,7 @@ app.get(['/api/health', '/health'], (req, res) => {
     status: 'UP',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    cors: 'enabled with wildcard'
+    cors: 'enabled for specific origins'
   });
 });
 
@@ -91,8 +106,7 @@ app.use((err, req, res, next) => {
   console.error(`Error: ${err.message}`);
   console.error(err.stack);
   
-  // Set CORS headers again on error responses
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // No need to set CORS headers again here as they're already set by the CORS middleware
   
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
@@ -110,7 +124,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
@@ -129,8 +143,7 @@ const startServer = async () => {
         
     const server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(`CORS is enabled with wildcard (*) for debugging`);
-      console.log(`IMPORTANT: Once CORS is working, restrict the origin to your specific domains`);
+      console.log(`CORS is enabled for specific origins: ${allowedOrigins.join(', ')}`);
     });
     
     server.on('error', (err) => {
