@@ -1,26 +1,59 @@
 import { useState } from "react";
-import { authAPI } from "../../../services/api";
 import { useNavigate, useParams } from "react-router-dom";
+import { authAPI } from "../../../services/api";
+import { toast } from "react-toastify";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../../../styles/pages/dashboard/auth/Auth.css";
 
 function ResetPassword() {
+  const [formData, setFormData] = useState({
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { token } = useParams();
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
 
+    if (!formData.password || !formData.confirmPassword) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
     try {
-      await authAPI.resetPassword(token, password);
-      setSuccess("Password has been reset successfully.");
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to reset password.");
+      await authAPI.resetPassword(token, formData.password);
+      toast.success("Password has been reset successfully!");
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
+    } catch (error) {
+      console.error("Reset password error:", error);
+      toast.error(error.message || "Failed to reset password. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,21 +61,55 @@ function ResetPassword() {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Reset Password</h2>
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
-        <form onSubmit={handleSubmit} className="auth-form">
+        <p className="auth-subtitle">Enter your new password</p>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="password">New Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="password-input-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="New Password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
-          <button type="submit" className="auth-button">
-            Reset Password
+
+          <div className="form-group">
+            <div className="password-input-container">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm New Password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+          </div>
+
+          <button 
+            className="auth-button" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
       </div>

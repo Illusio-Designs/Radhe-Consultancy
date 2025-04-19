@@ -4,6 +4,8 @@ import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import Footer from '../components/dashboard/Footer';
 import '../styles/layout/DashboardLayout.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -34,6 +36,17 @@ function DashboardLayout() {
 
   return (
     <div className="dashboard-main">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <aside className={`dashboard-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
         <Sidebar onCollapse={handleSidebarCollapse} />
       </aside>

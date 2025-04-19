@@ -157,7 +157,7 @@ const Sidebar = ({ onCollapse }) => {
           isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"
         } ${isMobileMenuOpen ? "sidebar-mobile-open" : "sidebar-mobile"}`}
       >
-        {/* Toggle Button */}
+        {/* Move toggle button outside sidebar-content */}
         <button
           className="sidebar-toggle"
           onClick={handleCollapse}
@@ -166,21 +166,23 @@ const Sidebar = ({ onCollapse }) => {
           {isCollapsed ? <BiMenu /> : <BiX />}
         </button>
 
-        {/* Logo */}
-        <div className="logo-container">
-          <h1 className={`logo-text ${isCollapsed ? "logo-collapsed" : ""}`}>
-            {isCollapsed ? (
-              <img src={img} alt="img" className="collapsed-img" />
-            ) : (
-              <img src={img} alt="img" className="main" />
-            )}
-          </h1>
-        </div>
+        <div className="sidebar-content">
+          {/* Logo */}
+          <div className="logo-container">
+            <h1 className={`logo-text ${isCollapsed ? "logo-collapsed" : ""}`}>
+              {isCollapsed ? (
+                <img src={img} alt="img" className="collapsed-img" />
+              ) : (
+                <img src={img} alt="img" className="main" />
+              )}
+            </h1>
+          </div>
 
-        {/* Navigation */}
-        <nav className="mt-8">
-          {menuItems.map((item, index) => renderMenuItem(item, index))}
-        </nav>
+          {/* Navigation */}
+          <nav className="mt-8">
+            {menuItems.map((item, index) => renderMenuItem(item, index))}
+          </nav>
+        </div>
       </div>
     </>
   );

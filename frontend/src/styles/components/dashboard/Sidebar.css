@@ -15,9 +15,29 @@
   width: 16rem;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  -ms-overflow-style: -ms-autohiding-scrollbar; /* IE and Edge */
+}
+
+.sidebar::-webkit-scrollbar {
+  height: 6px; /* for horizontal scrollbar */
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .sidebar::-webkit-scrollbar {
@@ -234,3 +254,8 @@
   color: #1f4f9c;
   background: white;
 }
+
+.sidebar-collapsed.sidebar .pl-4 .sidebar-nav-item {
+  margin-left: 7px;
+}
+

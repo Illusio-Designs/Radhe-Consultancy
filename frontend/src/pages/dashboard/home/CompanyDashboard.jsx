@@ -10,6 +10,7 @@ import {
   FiClock,
 } from "react-icons/fi";
 import "../../../styles/pages/dashboard/home/Dashboard.css";
+import { toast } from 'react-toastify';
 
 const StatCard = ({ icon: Icon, title, value, change }) => (
   <div className="stat-card">
@@ -48,13 +49,17 @@ const CompanyDashboard = () => {
         const response = await fetch("/api/company/stats");
         const data = await response.json();
         setStats(data);
+        toast.success("Dashboard data loaded successfully!");
       } catch (error) {
         console.error("Error fetching company stats:", error);
+        toast.error("Failed to load dashboard data. Please try again.");
       }
     };
 
     fetchStats();
   }, []);
+
+
 
   const companyStats = [
     {
@@ -134,10 +139,12 @@ const CompanyDashboard = () => {
 
   const handleRefresh = () => {
     setIsLoading(true);
+    toast.info("Refreshing dashboard data...");
     // Simulate data refresh
     setTimeout(() => {
       setIsLoading(false);
       setLastUpdated(new Date().toLocaleTimeString());
+      toast.success("Dashboard refreshed successfully!");
     }, 800);
   };
 
@@ -252,4 +259,4 @@ const CompanyDashboard = () => {
   );
 };
 
-export default CompanyDashboard; 
+export default CompanyDashboard;

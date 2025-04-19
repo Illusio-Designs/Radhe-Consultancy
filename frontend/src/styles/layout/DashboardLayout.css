@@ -48,7 +48,7 @@
   overflow-y: auto;
   background-color: #f8fafc;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  scrollbar-width: thin;
+  scrollbar-width: none;
   scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
 

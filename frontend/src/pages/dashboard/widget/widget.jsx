@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import DatePicker from "react-datepicker"; // Import the DatePicker component
+import "react-datepicker/dist/react-datepicker.css"; // Import the DatePicker styles
 import "../../../styles/pages/dashboard/widget/widget.css"; // Import the CSS file
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Button from "../../../components/common/Button/Button";
@@ -13,6 +15,16 @@ import Table from "../../../components/common/Table/Table";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 
 const WidgetPage = () => {
+  const [selectedDate, setSelectedDate] = useState(null); // State for the selected date
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+    alert(`Selected Date Range: ${start?.toLocaleDateString()} - ${end?.toLocaleDateString()}`);
+  };
+
   return (
     <div className="widget-page">
       <h1>Common Components Showcase</h1>
@@ -48,7 +60,7 @@ const WidgetPage = () => {
       {/* Input */}
       <section>
         <h2>Input</h2>
-        <Input label="Name" placeholder="Enter your name" />
+        <Input placeholder="Enter your name" />
       </section>
 
       {/* Loader */}
@@ -59,13 +71,19 @@ const WidgetPage = () => {
         </div>
       </section>
 
-      {/* Modal */}
-      {/* <section>
-        <h2>Modal</h2>
-        <Modal isOpen={true} title="Sample Modal">
-          <p>This is a sample modal content.</p>
-        </Modal>
-      </section> */}
+      {/* DatePicker */}
+      <section>
+        <h2>DatePicker</h2>
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date) => setSelectedDate(date)} // Update the selected date
+          placeholderText="Select a date"
+          className="datepicker-input" // Optional: Add custom styling
+        />
+        {selectedDate && (
+          <p>Selected Date: {selectedDate.toLocaleDateString()}</p>
+        )}
+      </section>
 
       {/* Pagination */}
       <section>
