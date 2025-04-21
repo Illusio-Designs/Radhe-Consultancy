@@ -1,15 +1,15 @@
-import { StrictMode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './index.css';
 import App from './App.jsx';
-import ErrorBoundary from './components/ErrorBoundary';
-import { AuthProvider } from './contexts/AuthContext';
+import './index.css';
 
-const root = createRoot(document.getElementById('root'));
-root.render(
-  <ErrorBoundary>
-    <AuthProvider>
+const rootElement = document.getElementById('root');
+
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
       <App />
-    </AuthProvider>
-  </ErrorBoundary>
-);
+    </React.StrictMode>
+  );
+}

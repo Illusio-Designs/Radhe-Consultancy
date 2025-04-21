@@ -6,12 +6,31 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Loader from "./components/common/Loader/Loader";
 import router from "./routes";
 
+// Check if Google Client ID is available
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+if (!googleClientId) {
+  console.error('Google Client ID is not set in environment variables');
+}
+
 function App() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={googleClientId}>
       <AuthProvider>
-        <Suspense fallback={<Loader />}>
-          <RouterProvider router={router} />
+        <Suspense 
+          fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <Loader />
+            </div>
+          }
+        >
+          <RouterProvider 
+            router={router}
+            fallbackElement={
+              <div className="flex items-center justify-center min-h-screen">
+                <Loader />
+              </div>
+            }
+          />
         </Suspense>
       </AuthProvider>
     </GoogleOAuthProvider>

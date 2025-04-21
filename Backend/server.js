@@ -32,14 +32,22 @@ const allowedOrigins = [
 // CRITICAL: Apply CORS before ANY other middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  console.log('CORS Middleware: Request origin:', origin);
+  console.log('CORS Middleware: Request method:', req.method);
+  console.log('CORS Middleware: Request headers:', req.headers);
   
   // Allow requests with no origin (like mobile apps or curl requests)
-  if (!origin) return next();
+  if (!origin) {
+    console.log('CORS Middleware: No origin header, allowing request');
+    return next();
+  }
   
   // Check if the origin is allowed
   if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    console.log('CORS Middleware: Origin allowed:', origin);
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
+    console.log('CORS Middleware: Origin not allowed:', origin);
     res.setHeader('Access-Control-Allow-Origin', 'https://radheconsultancy.co.in');
   }
   
@@ -49,6 +57,7 @@ app.use((req, res, next) => {
   
   // Handle preflight OPTIONS requests immediately
   if (req.method === 'OPTIONS') {
+    console.log('CORS Middleware: Handling preflight request');
     return res.status(200).end();
   }
   next();
@@ -57,12 +66,18 @@ app.use((req, res, next) => {
 // Standard CORS middleware as backup
 app.use(cors({
   origin: function(origin, callback) {
+    console.log('CORS Backup Middleware: Checking origin:', origin);
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('CORS Backup Middleware: No origin, allowing request');
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      console.log('CORS Backup Middleware: Origin allowed:', origin);
       callback(null, true);
     } else {
+      console.log('CORS Backup Middleware: Origin not allowed:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -93,6 +108,7 @@ app.use('/consumers', require('./routes/consumerRoutes'));
 
 // Health check endpoint
 app.get(['/api/health', '/health'], (req, res) => {
+  console.log('Health check requested');
   res.status(200).json({
     status: 'UP',
     timestamp: new Date().toISOString(),
