@@ -108,7 +108,7 @@ app.use('/consumers', require('./routes/consumerRoutes'));
 
 // Health check endpoint
 app.get(['/api/health', '/health'], (req, res) => {
-  console.log('Health check requested');
+  console.log('Health check requested1');
   res.status(200).json({
     status: 'UP',
     timestamp: new Date().toISOString(),
