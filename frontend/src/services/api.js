@@ -9,12 +9,21 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies in cross-origin requests
 });
 
 // Add request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      baseURL: config.baseURL,
+      withCredentials: config.withCredentials
+    });
+    
     if (token) {
       console.log('API Service: Adding token to request:', config.url);
       config.headers.Authorization = `Bearer ${token}`;
@@ -24,7 +33,11 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('API Service: Request error:', error);
+    console.error('API Service: Request error:', {
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
     return Promise.reject(error);
   }
 );
@@ -32,29 +45,61 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log('API Service: Successful response from:', response.config.url);
+    console.log('API Service: Successful response from:', {
+      url: response.config.url,
+      status: response.status,
+      headers: response.headers,
+      data: response.data
+    });
     return response;
   },
   (error) => {
     if (error.response) {
       // Handle specific error cases
       if (error.response.status === 401) {
-        console.log('API Service: Unauthorized error (401) for:', error.config.url);
+        console.log('API Service: Unauthorized error (401) for:', {
+          url: error.config.url,
+          status: error.response.status,
+          headers: error.response.headers,
+          data: error.response.data
+        });
         // Clear auth data on unauthorized but don't redirect automatically
         // This prevents redirect loops
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Don't redirect automatically - let the component handle it
-        // window.location.href = '/auth/login';
+      } else if (error.response.status === 0) {
+        // CORS error or network error
+        console.error('API Service: CORS/Network Error:', {
+          url: error.config.url,
+          status: error.response.status,
+          message: error.message,
+          config: error.config,
+          stack: error.stack
+        });
       } else {
-        console.error('API Service: Error response:', error.response.status, error.config.url);
+        console.error('API Service: Error response:', {
+          url: error.config.url,
+          status: error.response.status,
+          headers: error.response.headers,
+          data: error.response.data,
+          config: error.config
+        });
       }
       return Promise.reject(error.response.data);
     } else if (error.request) {
-      console.error('API Service: Network Error:', error.request);
+      console.error('API Service: Network Error:', {
+        request: error.request,
+        message: error.message,
+        config: error.config,
+        stack: error.stack
+      });
       return Promise.reject({ error: 'Network error. Please check your connection.' });
     } else {
-      console.error('API Service: Error:', error.message);
+      console.error('API Service: Error:', {
+        message: error.message,
+        config: error.config,
+        stack: error.stack
+      });
       return Promise.reject({ error: error.message });
     }
   }

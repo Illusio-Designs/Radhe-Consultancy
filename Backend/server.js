@@ -5,202 +5,254 @@ require('dotenv').config();
 const sequelize = require('./config/db');
 const { initializeDatabase } = require('./scripts/serverSetup');
 
-// Handle broken pipe errors gracefully
-process.on('EPIPE', (err) => {
-  console.error('EPIPE error (broken pipe):', err.message);
-});
-
-process.on('uncaughtException', (err) => {
-  if (err.code === 'EPIPE' || err.code === 'ECONNRESET') {
-    console.error('Caught connection error:', err.message);
-    return;
-  }
-  console.error('Uncaught exception:', err);
-  process.exit(1);
-});
-
+// Initialize Express app
 const app = express();
 
-// Define allowed origins
+// Basic configuration
+const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://radheconsultancy.co.in',
-  'https://www.radheconsultancy.co.in'
+  'https://www.radheconsultancy.co.in',
+  'https://api.radheconsultancy.co.in'
 ];
 
-// CRITICAL: Apply CORS before ANY other middleware
+// Debug logging middleware
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('CORS Middleware: Request origin:', origin);
-  console.log('CORS Middleware: Request method:', req.method);
-  console.log('CORS Middleware: Request headers:', req.headers);
-  
-  // Allow requests with no origin (like mobile apps or curl requests)
-  if (!origin) {
-    console.log('CORS Middleware: No origin header, allowing request');
-    return next();
-  }
-  
-  // Check if the origin is allowed
-  if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
-    console.log('CORS Middleware: Origin allowed:', origin);
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    console.log('CORS Middleware: Origin not allowed:', origin);
-    res.setHeader('Access-Control-Allow-Origin', 'https://radheconsultancy.co.in');
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight OPTIONS requests immediately
-  if (req.method === 'OPTIONS') {
-    console.log('CORS Middleware: Handling preflight request');
-    return res.status(200).end();
-  }
+  console.log('Incoming request:', {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin,
+    headers: req.headers,
+    timestamp: new Date().toISOString()
+  });
   next();
 });
 
-// Standard CORS middleware as backup
-app.use(cors({
-  origin: function(origin, callback) {
-    console.log('CORS Backup Middleware: Checking origin:', origin);
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      console.log('CORS Backup Middleware: No origin, allowing request');
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
-      console.log('CORS Backup Middleware: Origin allowed:', origin);
-      callback(null, true);
-    } else {
-      console.log('CORS Backup Middleware: Origin not allowed:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true
-}));
+// Middleware setup
+const setupMiddleware = () => {
+  // Enhanced CORS configuration
+  app.use(cors({
+    origin: function(origin, callback) {
+      console.log('CORS check:', {
+        origin,
+        allowedOrigins,
+        isAllowed: !origin || allowedOrigins.includes(origin)
+      });
 
-// Other middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-app.use(express.static('public'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        const error = new Error('Not allowed by CORS');
+        console.error('CORS error:', {
+          origin,
+          allowedOrigins,
+          error: error.message
+        });
+        callback(error);
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    maxAge: 86400 // 24 hours
+  }));
 
-// Routes - no need to set CORS headers again as they're already set correctly
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/roles', require('./routes/roleRoutes'));
-app.use('/api/companies', require('./routes/companyRoutes'));
-app.use('/api/consumers', require('./routes/consumerRoutes'));
+  // Body parsing
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Also set up non-prefixed routes
-app.use('/auth', require('./routes/authRoutes'));
-app.use('/users', require('./routes/userRoutes'));
-app.use('/roles', require('./routes/roleRoutes'));
-app.use('/companies', require('./routes/companyRoutes'));
-app.use('/consumers', require('./routes/consumerRoutes'));
+  // Static files
+  app.use(express.static('public'));
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Health check endpoint
-app.get(['/api/health', '/health'], (req, res) => {
-  console.log('Health check requested1');
-  res.status(200).json({
-    status: 'UP',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    cors: 'enabled for specific origins'
+  // Handle favicon.ico
+  app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
   });
-});
+};
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(`Error: ${err.message}`);
-  console.error(err.stack);
-  
-  // No need to set CORS headers again here as they're already set by the CORS middleware
-  
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  
-  if (res.headersSent) {
-    console.error('Headers already sent, cannot send error response');
-    return next(err);
-  }
-  
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: err.message || 'Something went wrong!',
-    stack: isDevelopment ? err.stack : undefined,
-    timestamp: new Date().toISOString()
+// Route setup
+const setupRoutes = () => {
+  app.use('/api/auth', require('./routes/authRoutes'));
+  app.use('/api/users', require('./routes/userRoutes'));
+  app.use('/api/roles', require('./routes/roleRoutes'));
+  app.use('/api/companies', require('./routes/companyRoutes'));
+  app.use('/api/consumers', require('./routes/consumerRoutes'));
+
+  // Enhanced health check endpoint
+  app.get('/api/health', async (req, res) => {
+    const startTime = Date.now();
+    console.log('Health check request received:', {
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      // Check database connection
+      console.log('Checking database connection...');
+      await sequelize.authenticate();
+      console.log('Database connection successful');
+
+      // Check if database is initialized
+      console.log('Checking database initialization...');
+      const dbInitialized = await sequelize.query("SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' LIMIT 1");
+      console.log('Database initialization check complete');
+
+      const response = {
+        status: 'UP',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        database: {
+          connected: true,
+          initialized: dbInitialized[0].length > 0
+        },
+        responseTime: `${Date.now() - startTime}ms`
+      };
+
+      console.log('Health check successful:', response);
+      res.json(response);
+    } catch (error) {
+      console.error('Health check failed:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+        databaseConfig: {
+          host: process.env.DB_HOST,
+          port: process.env.DB_PORT,
+          database: process.env.DB_NAME,
+          username: process.env.DB_USER
+        }
+      });
+
+      res.status(503).json({
+        status: 'DOWN',
+        timestamp: new Date().toISOString(),
+        error: {
+          message: error.message,
+          type: error.name
+        },
+        database: {
+          connected: false,
+          error: error.message
+        }
+      });
+    }
   });
-});
+};
 
-// Start the server
-const PORT = process.env.PORT || 5000;
+// Error handling
+const setupErrorHandling = () => {
+  app.use((err, req, res, next) => {
+    console.error('Server error:', {
+      error: err.message,
+      stack: err.stack,
+      path: req.path,
+      method: req.method,
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
 
+    // Handle CORS errors specifically
+    if (err.message === 'Not allowed by CORS') {
+      res.status(403).json({
+        error: 'CORS Error',
+        message: 'Request not allowed from this origin',
+        allowedOrigins
+      });
+      return;
+    }
+
+    res.status(err.status || 500).json({
+      error: err.message || 'Internal Server Error'
+    });
+  });
+};
+
+// Server startup
 const startServer = async () => {
   try {
-    await sequelize.authenticate({ 
-      retry: {
-        max: 5,
-        timeout: 10000
+    console.log('Starting server initialization...', {
+      port: PORT,
+      environment: process.env.NODE_ENV,
+      allowedOrigins
+    });
+    
+    // Setup middleware
+    setupMiddleware();
+    
+    // Setup routes
+    setupRoutes();
+    
+    // Setup error handling
+    setupErrorHandling();
+
+    // Initialize database with retry logic
+    console.log('Connecting to database...', {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      database: process.env.DB_NAME,
+      username: process.env.DB_USER
+    });
+
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await sequelize.authenticate();
+        await initializeDatabase();
+        console.log('Database connected successfully');
+        break;
+      } catch (error) {
+        retries--;
+        if (retries === 0) throw error;
+        console.log(`Database connection failed, retrying... (${retries} attempts left)`, {
+          error: error.message,
+          stack: error.stack
+        });
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
-    });
-    console.log('Database connection has been established successfully.');
-    
-    const initialized = await initializeDatabase();
-    if (!initialized) {
-      throw new Error('Failed to initialize database');
     }
-        
+
+    // Start server
     const server = app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`CORS is enabled for specific origins: ${allowedOrigins.join(', ')}`);
+      console.log(`Server running on port ${PORT}`);
     });
-    
-    server.on('error', (err) => {
-      console.error('Server error:', err);
+
+    // Handle server errors
+    server.on('error', (error) => {
+      console.error('Server error:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
     });
-    
-    server.timeout = 120000;
-    server.keepAliveTimeout = 60000;
-    
+
     return server;
   } catch (error) {
-    console.error('Unable to start server:', error);
+    console.error('Failed to start server:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     process.exit(1);
   }
 };
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('SIGINT signal received. Shutting down gracefully...');
+  console.log('Shutting down server...');
   try {
     await sequelize.close();
-    console.log('Database connections closed.');
+    console.log('Server shutdown complete');
     process.exit(0);
   } catch (error) {
-    console.error('Error during graceful shutdown:', error);
+    console.error('Error during shutdown:', error.message);
     process.exit(1);
   }
 });
 
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received. Shutting down gracefully...');
-  try {
-    await sequelize.close();
-    console.log('Database connections closed.');
-    process.exit(0);
-  } catch (error) {
-    console.error('Error during graceful shutdown:', error);
-    process.exit(1);
-  }
-});
-
+// Start the server if this file is run directly
 if (require.main === module) {
   startServer();
 }
