@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-// Determine API URL based on environment
-const isDevelopment = import.meta.env.MODE === 'development';
-const API_URL = isDevelopment 
-  ? 'http://localhost:5000/api'  // Local development
-  : 'https://api.radheconsultancy.co.in/api';  // Production
+// Get API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  console.error('VITE_API_URL environment variable is not set');
+}
 
 console.log('API Service: Initializing with configuration:');
 console.log('- Environment:', import.meta.env.MODE);

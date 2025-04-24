@@ -18,60 +18,112 @@ const allowedOrigins = [
   'https://api.radheconsultancy.co.in'
 ];
 
-// Debug logging middleware
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('\n=== CORS Debug Log ===');
-  console.log('Request Details:');
-  console.log('- Origin:', origin);
-  console.log('- Method:', req.method);
-  console.log('- Path:', req.path);
-  console.log('- Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('- Allowed Origins:', allowedOrigins);
-  console.log('- Environment:', process.env.NODE_ENV);
-  
-  // Allow requests with no origin (like mobile apps or curl requests)
-  if (!origin) {
-    console.log('CORS Decision: No origin header, allowing request');
-    return next();
-  }
-  
-  // In development, allow all origins
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('CORS Decision: Development environment, allowing all origins');
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
+console.log('\n=== Server Configuration ===');
+console.log('Environment:', process.env.NODE_ENV || 'development');
+console.log('Port:', PORT);
+console.log('Allowed Origins:', allowedOrigins);
+console.log('===========================\n');
+
+// Handle broken pipe errors
+process.on('uncaughtException', (err) => {
+  console.error('\n=== Uncaught Exception ===');
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  console.error('========================\n');
+});
+
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log('\n=== CORS Origin Check ===');
+    console.log('Request Origin:', origin);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Is Allowed Origin:', allowedOrigins.includes(origin));
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      console.log('Decision: No origin, allowing request');
+      return callback(null, true);
+    }
+
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Decision: Development environment, allowing request');
+      return callback(null, true);
+    }
+
     // In production, check against allowed origins
     if (allowedOrigins.includes(origin)) {
-      console.log('CORS Decision: Origin allowed in production:', origin);
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    } else {
-      console.log('CORS Decision: Origin not allowed in production:', origin);
-      res.setHeader('Access-Control-Allow-Origin', 'https://radheconsultancy.co.in');
+      console.log('Decision: Origin allowed in production');
+      return callback(null, true);
     }
+
+    console.log('Decision: Origin not allowed');
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Debug logging middleware with error handling
+app.use((req, res, next) => {
+  try {
+    console.log('\n=== Request Debug Log ===');
+    console.log('Request Details:');
+    console.log('- Method:', req.method);
+    console.log('- Path:', req.path);
+    console.log('- Origin:', req.headers.origin);
+    console.log('- Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('- Query:', req.query);
+    console.log('- Body:', req.body);
+    console.log('- Environment:', process.env.NODE_ENV);
+    
+    // Set CORS headers for all responses
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      console.log('Setting CORS headers for origin:', origin);
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    }
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      console.log('Handling preflight request');
+      res.status(204).end();
+      return;
+    }
+    
+    next();
+  } catch (error) {
+    console.error('\n=== Middleware Error ===');
+    console.error('Error:', error);
+    console.error('Stack:', error.stack);
+    console.error('======================\n');
+    next(error);
   }
-  
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-  
-  console.log('Set CORS Headers:');
-  console.log('- Access-Control-Allow-Origin:', res.getHeader('Access-Control-Allow-Origin'));
-  console.log('- Access-Control-Allow-Methods:', res.getHeader('Access-Control-Allow-Methods'));
-  console.log('- Access-Control-Allow-Headers:', res.getHeader('Access-Control-Allow-Headers'));
-  console.log('- Access-Control-Allow-Credentials:', res.getHeader('Access-Control-Allow-Credentials'));
-  
-  // Handle preflight OPTIONS requests immediately
-  if (req.method === 'OPTIONS') {
-    console.log('CORS Decision: Handling preflight request');
-    console.log('=== End CORS Debug Log ===\n');
-    return res.status(200).end();
-  }
-  
-  console.log('=== End CORS Debug Log ===\n');
-  next();
 });
 
 // Body parsing
@@ -114,83 +166,52 @@ app.get(['/api/health', '/health'], (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(`Error: ${err.message}`);
-  console.error(err.stack);
+  console.error('\n=== Error Handler ===');
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  console.error('Request:', {
+    method: req.method,
+    path: req.path,
+    headers: req.headers,
+    body: req.body
+  });
+  console.error('==================\n');
   
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  
-  if (res.headersSent) {
-    console.error('Headers already sent, cannot send error response');
-    return next(err);
-  }
-  
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: err.message || 'Something went wrong!',
-    stack: isDevelopment ? err.stack : undefined,
-    timestamp: new Date().toISOString()
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 
-// Server startup
+// Start server
 const startServer = async () => {
   try {
-    console.log('Starting server initialization...', {
-      port: PORT,
-      environment: process.env.NODE_ENV,
-      allowedOrigins
+    console.log('\n=== Starting Server ===');
+    console.log('Connecting to database...');
+    
+    await sequelize.authenticate();
+    console.log('Database connection established');
+    
+    await initializeDatabase();
+    console.log('Database initialized');
+    
+    app.listen(PORT, () => {
+      console.log(`\nServer is running on port ${PORT}`);
+      console.log('Environment:', process.env.NODE_ENV || 'development');
+      console.log('Allowed Origins:', allowedOrigins);
+      console.log('========================\n');
     });
-
-    // Initialize database
-    console.log('Connecting to database...', {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      database: process.env.DB_NAME,
-      username: process.env.DB_USER
-    });
-
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        await sequelize.authenticate();
-        await initializeDatabase();
-        console.log('Database connected successfully');
-        break;
-      } catch (error) {
-        retries--;
-        if (retries === 0) throw error;
-        console.log(`Database connection failed, retrying... (${retries} attempts left)`, {
-          error: error.message,
-          stack: error.stack
-        });
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
-    }
-
-    // Start server
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-
-    // Handle server errors
-    server.on('error', (error) => {
-      console.error('Server error:', {
-        error: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    return server;
   } catch (error) {
-    console.error('Failed to start server:', {
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    console.error('\n=== Server Startup Error ===');
+    console.error('Error:', error);
+    console.error('Stack:', error.stack);
+    console.error('==========================\n');
     process.exit(1);
   }
 };
+
+startServer();
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
