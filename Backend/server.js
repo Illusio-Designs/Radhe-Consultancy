@@ -74,58 +74,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware setup
-const setupMiddleware = () => {
-  // Enhanced CORS configuration
-  app.use(cors({
-    origin: function(origin, callback) {
-      console.log('CORS check:', {
-        origin,
-        allowedOrigins,
-        isAllowed: !origin || allowedOrigins.includes(origin)
-      });
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        const error = new Error('Not allowed by CORS');
-        console.error('CORS error:', {
-          origin,
-          allowedOrigins,
-          error: error.message
-        });
-        callback(error);
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    credentials: true,
-    maxAge: 86400 // 24 hours
-  }));
+// Static files
+app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-  // Body parsing
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Handle favicon.ico
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
 
-  // Static files
-  app.use(express.static('public'));
-  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// API Routes with /api prefix
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/roles', require('./routes/roleRoutes'));
+app.use('/api/companies', require('./routes/companyRoutes'));
+app.use('/api/consumers', require('./routes/consumerRoutes'));
 
-  // Handle favicon.ico
-  app.get('/favicon.ico', (req, res) => {
-    res.status(204).end();
-  });
-};
-
-// Route setup
-const setupRoutes = () => {
-  app.use('/api/auth', require('./routes/authRoutes'));
-  app.use('/api/users', require('./routes/userRoutes'));
-  app.use('/api/roles', require('./routes/roleRoutes'));
-  app.use('/api/companies', require('./routes/companyRoutes'));
-  app.use('/api/consumers', require('./routes/consumerRoutes'));
-
-// Also set up non-prefixed routes
+// Non-prefixed routes
 app.use('/auth', require('./routes/authRoutes'));
 app.use('/users', require('./routes/userRoutes'));
 app.use('/roles', require('./routes/roleRoutes'));
@@ -134,7 +103,7 @@ app.use('/consumers', require('./routes/consumerRoutes'));
 
 // Health check endpoint
 app.get(['/api/health', '/health'], (req, res) => {
-  console.log('Health check requested1');
+  console.log('Health check requested');
   res.status(200).json({
     status: 'UP',
     timestamp: new Date().toISOString(),
@@ -147,8 +116,6 @@ app.get(['/api/health', '/health'], (req, res) => {
 app.use((err, req, res, next) => {
   console.error(`Error: ${err.message}`);
   console.error(err.stack);
-  
-  // No need to set CORS headers again here as they're already set by the CORS middleware
   
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
@@ -173,17 +140,8 @@ const startServer = async () => {
       environment: process.env.NODE_ENV,
       allowedOrigins
     });
-    
-    // Setup middleware
-    setupMiddleware();
-    
-    // Setup routes
-    setupRoutes();
-    
-    // Setup error handling
-    setupErrorHandling();
 
-    // Initialize database with retry logic
+    // Initialize database
     console.log('Connecting to database...', {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT,
