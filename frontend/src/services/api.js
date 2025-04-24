@@ -1,13 +1,20 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Determine API URL based on environment
+const isDevelopment = import.meta.env.MODE === 'development';
+const API_URL = isDevelopment 
+  ? 'http://localhost:5000/api'  // Local development
+  : 'https://api.radheconsultancy.co.in/api';  // Production
 
-console.log('API Service: Initializing with base URL:', API_URL);
+console.log('API Service: Initializing with configuration:');
+console.log('- Environment:', import.meta.env.MODE);
+console.log('- API URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
   withCredentials: true, // Enable sending cookies in cross-origin requests
 });
@@ -15,6 +22,14 @@ const api = axios.create({
 // Add request interceptor
 api.interceptors.request.use(
   (config) => {
+    console.log('\n=== API Request Debug Log ===');
+    console.log('Request Details:');
+    console.log('- URL:', config.url);
+    console.log('- Method:', config.method);
+    console.log('- Base URL:', config.baseURL);
+    console.log('- Headers:', JSON.stringify(config.headers, null, 2));
+    console.log('- Environment:', import.meta.env.MODE);
+    
     const token = localStorage.getItem('token');
     console.log('API Request:', {
       url: config.url,
@@ -25,19 +40,23 @@ api.interceptors.request.use(
     });
     
     if (token) {
-      console.log('API Service: Adding token to request:', config.url);
+      console.log('Adding Authorization token to request');
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      console.log('API Service: No token found for request:', config.url);
+      console.log('No token found in localStorage');
     }
+    
+    // Add CORS headers for preflight
+    if (config.method === 'options') {
+      config.headers['Access-Control-Request-Method'] = config.method;
+      config.headers['Access-Control-Request-Headers'] = 'Content-Type, Authorization';
+    }
+    
+    console.log('=== End API Request Debug Log ===\n');
     return config;
   },
   (error) => {
-    console.error('API Service: Request error:', {
-      message: error.message,
-      config: error.config,
-      stack: error.stack
-    });
+    console.error('API Service: Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -54,54 +73,36 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.error('\n=== API Response Error Debug Log ===');
+    console.error('Environment:', import.meta.env.MODE);
+    
     if (error.response) {
-      // Handle specific error cases
+      console.error('Response Error Details:');
+      console.error('- URL:', error.config.url);
+      console.error('- Status:', error.response.status);
+      console.error('- Headers:', JSON.stringify(error.response.headers, null, 2));
+      console.error('- Data:', error.response.data);
+      
       if (error.response.status === 401) {
-        console.log('API Service: Unauthorized error (401) for:', {
-          url: error.config.url,
-          status: error.response.status,
-          headers: error.response.headers,
-          data: error.response.data
-        });
+        console.log('API Service: Unauthorized error (401) for:', error.config.url);
         // Clear auth data on unauthorized but don't redirect automatically
         // This prevents redirect loops
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-      } else if (error.response.status === 0) {
-        // CORS error or network error
-        console.error('API Service: CORS/Network Error:', {
-          url: error.config.url,
-          status: error.response.status,
-          message: error.message,
-          config: error.config,
-          stack: error.stack
-        });
+        // Don't redirect automatically - let the component handle it
+        // window.location.href = '/auth/login';
       } else {
-        console.error('API Service: Error response:', {
-          url: error.config.url,
-          status: error.response.status,
-          headers: error.response.headers,
-          data: error.response.data,
-          config: error.config
-        });
+        console.error('API Service: Error response:', error.response.status, error.config.url);
       }
-      return Promise.reject(error.response.data);
     } else if (error.request) {
-      console.error('API Service: Network Error:', {
-        request: error.request,
-        message: error.message,
-        config: error.config,
-        stack: error.stack
-      });
+      console.error('API Service: Network Error:', error.request);
       return Promise.reject({ error: 'Network error. Please check your connection.' });
     } else {
-      console.error('API Service: Error:', {
-        message: error.message,
-        config: error.config,
-        stack: error.stack
-      });
+      console.error('API Service: Error:', error.message);
       return Promise.reject({ error: error.message });
     }
+    console.log('=== End API Response Error Debug Log ===\n');
+    return Promise.reject(error);
   }
 );
 
