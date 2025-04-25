@@ -207,6 +207,10 @@
   margin-bottom: 1rem;
 }
 
+.vendor-management-form-group.phone {
+ width: 100%;
+}
+
 .vendor-management-form-input {
   padding: 0.75rem;
   border: 1px solid #ddd;

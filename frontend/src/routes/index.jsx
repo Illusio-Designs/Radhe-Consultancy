@@ -24,6 +24,14 @@ import ChangePassword from "../pages/dashboard/auth/ChangePassword";
 import Support from "../pages/dashboard/support/Support";
 import Widget from "../pages/dashboard/widget/widget"
 import ECP from "../pages/dashboard/insurance/ECP";
+import Health from "../pages/dashboard/insurance/Health";
+import Marine from "../pages/dashboard/insurance/Marine";
+import Fire from "../pages/dashboard/insurance/Fire";
+import Vehicle from "../pages/dashboard/insurance/Vehicle";
+import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
+import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
+import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
+import DSC from "../pages/dashboard/dsc/DSC";
 
 const router = createBrowserRouter([
   // Public Routes
@@ -150,6 +158,40 @@ const router = createBrowserRouter([
       {
         path: "insurance/ECP",
         element: <ECP />,
+      },
+      {
+        path: "insurance/health",
+        element: <Health />,
+      },
+      {
+        path: "insurance/marine",
+        element: <Marine />,
+      },
+      {
+        path: "insurance/fire",
+        element: <Fire />,
+      },
+      {
+        path: "insurance/vehicle",
+        element: <Vehicle />,
+      },
+      // Compliance Routes
+      {
+        path: "compliance/factory-act",
+        element: <FactoryAct />,
+      },
+      {
+        path: "compliance/labour-inspection",
+        element: <LabourInspection />,
+      },
+      {
+        path: "compliance/labour-license",
+        element: <LabourLicense />,
+      },
+      // DSC Route
+      {
+        path: "dsc",
+        element: <DSC />,
       },
       // Profile Routes
      

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker"; // Import the DatePicker component
 import "react-datepicker/dist/react-datepicker.css"; // Import the DatePicker styles
 import "../../../styles/pages/dashboard/widget/widget.css"; // Import the CSS file
@@ -13,6 +13,39 @@ import ProfileCard from "../../../components/common/profile/ProfileCard";
 import SearchBar from "../../../components/common/SearchBar/SearchBar";
 import Table from "../../../components/common/Table/Table";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
+import PhoneInput from 'react-phone-number-input'; // Import PhoneInput
+import 'react-phone-number-input/style.css'; // Import styles for PhoneInput
+import intlTelInput from 'intl-tel-input';
+import 'intl-tel-input/build/css/intlTelInput.css'; // Import the CSS for intl-tel-input
+
+const PhoneNumberInput = ({ value, onChange }) => {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const iti = intlTelInput(inputRef.current, {
+      initialCountry: 'IN', // Set default country to India
+      utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js', // Load utils.js for formatting
+    });
+
+    // Update the value when the input changes
+    inputRef.current.addEventListener('change', () => {
+      onChange(iti.getNumber());
+    });
+
+    return () => {
+      iti.destroy(); // Cleanup on unmount
+    };
+  }, [onChange]);
+
+  return (
+    <input
+      ref={inputRef}
+      type="tel"
+      placeholder="Enter phone number"
+      required
+    />
+  );
+};
 
 const WidgetPage = () => {
   const [selectedDate, setSelectedDate] = useState(null); // State for the selected date
@@ -27,7 +60,8 @@ const WidgetPage = () => {
     tags: '',
     expiryDate: null,
     isPublic: false,
-    priority: 'medium'
+    priority: 'medium',
+    phoneNumber: ''
   });
 
   const handleDateChange = (start, end) => {
@@ -286,6 +320,15 @@ const WidgetPage = () => {
               helperText="Supported formats: PDF, DOC, DOCX, Images"
               required
             />
+
+            {/* Phone Number Field with Country Flags */}
+            <div className="form-group">
+              <label htmlFor="phoneNumber">Phone Number</label>
+              <PhoneNumberInput
+                value={formData.phoneNumber}
+                onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value }))}
+              />
+            </div>
 
             <div className="modal-actions">
               <Button onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>

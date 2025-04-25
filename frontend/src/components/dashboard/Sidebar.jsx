@@ -13,6 +13,15 @@ import {
   BiStore,
   BiUserCircle,
   BiHealth,
+  BiCertification,
+  BiKey,
+  BiPulse,
+  BiWater,
+  BiHotel,
+  BiCar,
+  BiBuildings,
+  BiDetail,
+  BiBook
 } from "react-icons/bi";
 import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
 import "../../styles/components/dashboard/Sidebar.css";
@@ -21,9 +30,14 @@ const Sidebar = ({ onCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
-  const [vendorsDropdownOpen, setVendorsDropdownOpen] = useState(false);
-  const [insuranceDropdownOpen, setInsuranceDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
+  // Function to handle dropdown toggle
+  const handleDropdownToggle = (dropdownName) => {
+    setActiveDropdown(currentDropdown => 
+      currentDropdown === dropdownName ? null : dropdownName
+    );
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -59,22 +73,22 @@ const Sidebar = ({ onCollapse }) => {
     { path: "/dashboard/widget", icon: <BiBuilding />, label: "Widget" },
     {
       label: "Users",
-      icon: <BiUser />,
+      icon: <BiGroup />,
       isDropdown: true,
-      isOpen: usersDropdownOpen,
-      toggle: () => setUsersDropdownOpen(!usersDropdownOpen),
+      isOpen: activeDropdown === 'users',
+      toggle: () => handleDropdownToggle('users'),
       items: [
         { path: "/dashboard/users/company", icon: <BiBuilding />, label: "Companies" },
         { path: "/dashboard/users/consumer", icon: <BiUserCircle />, label: "Consumer" },
-        { path: "/dashboard/users/other", icon: <BiGroup />, label: "Employee" }
+        { path: "/dashboard/users/other", icon: <BiUser />, label: "Employee" }
       ]
     },
     {
       label: "Vendors",
       icon: <BiStore />,
       isDropdown: true,
-      isOpen: vendorsDropdownOpen,
-      toggle: () => setVendorsDropdownOpen(!vendorsDropdownOpen),
+      isOpen: activeDropdown === 'vendors',
+      toggle: () => handleDropdownToggle('vendors'),
       items: [
         { path: "/dashboard/companies", icon: <BiBuilding />, label: "Companies" },
         { path: "/dashboard/consumers", icon: <BiUserCircle />, label: "Consumers" }
@@ -84,12 +98,29 @@ const Sidebar = ({ onCollapse }) => {
       label: "Insurance",
       icon: <BiHealth />,
       isDropdown: true,
-      isOpen: insuranceDropdownOpen,
-      toggle: () => setInsuranceDropdownOpen(!insuranceDropdownOpen),
+      isOpen: activeDropdown === 'insurance',
+      toggle: () => handleDropdownToggle('insurance'),
       items: [
-        { path: "/dashboard/insurance/ECP", icon: <BiBuilding />, label: "ECP" }
+        { path: "/dashboard/insurance/ECP", icon: <BiHealth />, label: "ECP" },
+        { path: "/dashboard/insurance/health", icon: <BiPulse />, label: "Health" },
+        { path: "/dashboard/insurance/marine", icon: <BiWater />, label: "Marine" },
+        { path: "/dashboard/insurance/fire", icon: <BiHotel />, label: "Fire" },
+        { path: "/dashboard/insurance/vehicle", icon: <BiCar />, label: "Vehicle" }
       ]
-    }
+    },
+    {
+      label: "Compliance & Licensing",
+      icon: <BiCertification />,
+      isDropdown: true,
+      isOpen: activeDropdown === 'compliance',
+      toggle: () => handleDropdownToggle('compliance'),
+      items: [
+        { path: "/dashboard/compliance/factory-act", icon: <BiBuildings />, label: "Factory Act License" },
+        { path: "/dashboard/compliance/labour-inspection", icon: <BiDetail />, label: "Labour Law Inspection" },
+        { path: "/dashboard/compliance/labour-license", icon: <BiBook />, label: "Labour License Management" }
+      ]
+    },
+    { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" }
   ];
 
   const isActive = (path) => location.pathname.startsWith(path);
@@ -113,34 +144,35 @@ const Sidebar = ({ onCollapse }) => {
                 <span className="ml-4 sidebar-nav-label">
                   {item.label}
                 </span>
-                <span className="ml-4 text-sm">
+                <span className={`ml-4 text-sm chevron-icon ${item.isOpen ? 'rotate' : ''}`}>
                   {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
                 </span>
               </>
             )}
           </a>
-          {item.isOpen && (
-            <div className="pl-4">
-              {item.items.map((subItem, subIndex) => (
-                subItem.isDropdown ? (
-                  renderMenuItem(subItem, `${index}-${subIndex}`)
-                ) : (
-                  <Link
-                    key={subItem.path}
-                    to={subItem.path}
-                    className={`sidebar-nav-item ${
-                      isActive(subItem.path) ? "active" : ""
-                    }`}
-                  >
-                    <span className="text-lg">{subItem.icon}</span>
-                    <span className="ml-4 sidebar-nav-label">
-                      {subItem.label}
-                    </span>
-                  </Link>
-                )
-              ))}
-            </div>
-          )}
+          <div className={`pl-4 ${item.isOpen ? 'dropdown-open' : ''}`}>
+            {item.items.map((subItem, subIndex) => (
+              subItem.isDropdown ? (
+                renderMenuItem(subItem, `${index}-${subIndex}`)
+              ) : (
+                <Link
+                  key={subItem.path}
+                  to={subItem.path}
+                  className={`sidebar-nav-item ${
+                    isActive(subItem.path) ? "active" : ""
+                  }`}
+                  style={{
+                    transitionDelay: `${subIndex * 50}ms`
+                  }}
+                >
+                  <span className="text-lg">{subItem.icon}</span>
+                  <span className="ml-4 sidebar-nav-label">
+                    {subItem.label}
+                  </span>
+                </Link>
+              )
+            ))}
+          </div>
         </div>
       );
     }

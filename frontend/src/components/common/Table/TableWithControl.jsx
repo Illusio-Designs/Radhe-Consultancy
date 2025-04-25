@@ -67,8 +67,8 @@ const TableWithControl = ({
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterClick = () => {
-    alert("Filter button clicked! Add your filter logic here.");
+  const handleFilterClick = (option) => {
+    console.log("Selected filter option:", option); // Handle the selected option as needed
   };
 
   return (
@@ -82,7 +82,7 @@ const TableWithControl = ({
             onChange={handleSearch}
             className="search-input"
           />
-          <FilterButton onClick={handleFilterClick} label="Filter" />
+          <FilterButton onClick={handleFilterClick} label="Filter" options={["Option 1", "Option 2"]} />
         </div>
       </div>
 

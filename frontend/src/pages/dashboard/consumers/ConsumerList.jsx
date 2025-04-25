@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiUpload } from "react-icons/bi";
 import { consumerAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -7,6 +7,36 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
+import intlTelInput from 'intl-tel-input';
+import 'intl-tel-input/build/css/intlTelInput.css'; // Import the CSS for intl-tel-input
+
+const PhoneNumberInput = ({ value, onChange }) => {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const iti = intlTelInput(inputRef.current, {
+      initialCountry: 'IN', // Set default country to India
+      utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js', // Load utils.js for formatting
+    });
+
+    inputRef.current.addEventListener('change', () => {
+      onChange(iti.getNumber());
+    });
+
+    return () => {
+      iti.destroy(); // Cleanup on unmount
+    };
+  }, [onChange]);
+
+  return (
+    <input
+      ref={inputRef}
+      type="tel"
+      placeholder="Enter phone number"
+      required
+    />
+  );
+};
 
 const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   const [formData, setFormData] = useState({
@@ -124,15 +154,10 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
             />
           </div>
 
-          <div className="vendor-management-form-group">
-            <input
-              type="tel"
-              name="phone_number"
+          <div className="form-group">
+            <PhoneNumberInput
               value={formData.phone_number}
-              onChange={handleChange}
-              placeholder="Phone Number"
-              required
-              className="vendor-management-form-input"
+              onChange={(value) => setFormData(prev => ({ ...prev, phone_number: value }))}
             />
           </div>
 

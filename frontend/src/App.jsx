@@ -5,6 +5,7 @@ import "./App.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Loader from "./components/common/Loader/Loader";
 import router from "./routes";
+import './styles/icons.css';
 
 // Check if Google Client ID is available
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
