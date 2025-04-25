@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from "react-icons/bi";
+import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiUpload } from "react-icons/bi";
 import { consumerAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -17,6 +17,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
     profile_image: consumer?.profile_image || "",
   });
 
+  const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +30,11 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
         contact_address: consumer.contact_address || "",
         profile_image: consumer.profile_image || "",
       });
+      // Set filename if profile image exists
+      if (consumer.profile_image) {
+        const imageName = consumer.profile_image.split('/').pop();
+        setFileName(imageName);
+      }
     }
   }, [consumer]);
 
@@ -76,6 +82,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
         return;
       }
 
+      setFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData((prev) => ({
@@ -141,16 +148,22 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
             />
           </div>
 
-          <div className="vendor-management-form-group">
-            <label htmlFor="profile_image">Upload Profile Image</label>
-            <input
-              type="file"
-              id="profile_image"
-              name="profile_image"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="vendor-management-form-input"
-            />
+          <div className="vendor-management-form-group file-upload-group">
+            <label className="file-upload-label">
+              <span>Profile Image</span>
+              <div className="file-upload-container">
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="file-upload-input"
+                />
+                <div className="file-upload-button">
+                  <BiUpload /> {fileName || 'Upload Profile Image'}
+                </div>
+              </div>
+              <small className="file-upload-helper">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
+            </label>
           </div>
         </div>
 
@@ -204,7 +217,7 @@ function ConsumerList() {
       }
     } catch (err) {
       setError("Failed to fetch consumers");
-      console.error(err);
+      console.error(err);ad
       setConsumers([]);
     } finally {
       setTimeout(() => {

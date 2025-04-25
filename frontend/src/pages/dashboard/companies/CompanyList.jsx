@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiTrash, BiErrorCircle } from "react-icons/bi";
+import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiUpload } from "react-icons/bi";
 import { companyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -18,6 +18,16 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     gst_number: company?.gst_number || "",
     pan_number: company?.pan_number || "",
     firm_type: company?.firm_type || "",
+  });
+
+  const [files, setFiles] = useState({
+    gst_certificate: null,
+    pan_card: null
+  });
+
+  const [fileNames, setFileNames] = useState({
+    gst_certificate: "",
+    pan_card: ""
   });
 
   const [error, setError] = useState("");
@@ -76,6 +86,20 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     });
   };
 
+  const handleFileChange = (e, fileType) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFiles(prev => ({
+        ...prev,
+        [fileType]: file
+      }));
+      setFileNames(prev => ({
+        ...prev,
+        [fileType]: file.name
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -91,10 +115,22 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     }
 
     try {
+      const submitData = new FormData();
+      
+      Object.keys(formData).forEach(key => {
+        submitData.append(key, formData[key]);
+      });
+
+      Object.keys(files).forEach(key => {
+        if (files[key]) {
+          submitData.append(key, files[key]);
+        }
+      });
+
       if (company) {
-        await companyAPI.updateCompany(company.company_id, formData);
+        await companyAPI.updateCompany(company.company_id, submitData);
       } else {
-        await companyAPI.createCompany(formData);
+        await companyAPI.createCompany(submitData);
       }
       onCompanyUpdated();
     } catch (err) {
@@ -196,6 +232,24 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             />
           </div>
 
+          {/* GST Certificate Upload */}
+          <div className="vendor-management-form-group file-upload-group">
+            <label className="file-upload-label">
+              <span>GST Certificate</span>
+              <div className="file-upload-container">
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, 'gst_certificate')}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="file-upload-input"
+                />
+                <div className="file-upload-button">
+                  <BiUpload /> {fileNames.gst_certificate || 'Upload GST Certificate'}
+                </div>
+              </div>
+            </label>
+          </div>
+
           <div className="vendor-management-form-group">
             <input
               type="text"
@@ -207,6 +261,24 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               className="vendor-management-form-input"
               readOnly
             />
+          </div>
+
+          {/* PAN Card Upload */}
+          <div className="vendor-management-form-group file-upload-group">
+            <label className="file-upload-label">
+              <span>PAN Card</span>
+              <div className="file-upload-container">
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, 'pan_card')}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="file-upload-input"
+                />
+                <div className="file-upload-button">
+                  <BiUpload /> {fileNames.pan_card || 'Upload PAN Card'}
+                </div>
+              </div>
+            </label>
           </div>
 
           <div className="vendor-management-form-group">

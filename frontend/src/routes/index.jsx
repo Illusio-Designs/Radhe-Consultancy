@@ -23,6 +23,7 @@ import Profile from "../pages/dashboard/profile/Profile";
 import ChangePassword from "../pages/dashboard/auth/ChangePassword";
 import Support from "../pages/dashboard/support/Support";
 import Widget from "../pages/dashboard/widget/widget"
+import ECP from "../pages/dashboard/insurance/ECP";
 
 const router = createBrowserRouter([
   // Public Routes
@@ -144,6 +145,11 @@ const router = createBrowserRouter([
             <ConsumerList />
           </ProtectedRoute>
         ),
+      },
+      // Insurance Routes
+      {
+        path: "insurance/ECP",
+        element: <ECP />,
       },
       // Profile Routes
      

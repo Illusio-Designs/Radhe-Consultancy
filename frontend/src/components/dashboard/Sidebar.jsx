@@ -12,6 +12,7 @@ import {
   BiShield,
   BiStore,
   BiUserCircle,
+  BiHealth,
 } from "react-icons/bi";
 import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
 import "../../styles/components/dashboard/Sidebar.css";
@@ -22,6 +23,7 @@ const Sidebar = ({ onCollapse }) => {
   const location = useLocation();
   const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
   const [vendorsDropdownOpen, setVendorsDropdownOpen] = useState(false);
+  const [insuranceDropdownOpen, setInsuranceDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -76,6 +78,16 @@ const Sidebar = ({ onCollapse }) => {
       items: [
         { path: "/dashboard/companies", icon: <BiBuilding />, label: "Companies" },
         { path: "/dashboard/consumers", icon: <BiUserCircle />, label: "Consumers" }
+      ]
+    },
+    {
+      label: "Insurance",
+      icon: <BiHealth />,
+      isDropdown: true,
+      isOpen: insuranceDropdownOpen,
+      toggle: () => setInsuranceDropdownOpen(!insuranceDropdownOpen),
+      items: [
+        { path: "/dashboard/insurance/ECP", icon: <BiBuilding />, label: "ECP" }
       ]
     }
   ];
