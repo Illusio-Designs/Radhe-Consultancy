@@ -5,7 +5,9 @@ import img from "../assets/@RADHE CONSULTANCY LOGO 1.png";
 
 const ComingSoon = () => {
   return (
+    <>
     <div className="wrapper">
+      <div className="wrapper-content">
       <h1>coming soon...</h1>
       <img src={img} alt="img" />
       <div className="icons">
@@ -34,7 +36,9 @@ const ComingSoon = () => {
           <FaPaperPlane />
         </a>
       </div>
+      </div>
     </div>
+    </>
   );
 };
 

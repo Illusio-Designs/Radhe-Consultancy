@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FiUser, FiLock, FiBell, FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Button from "../../../components/common/Button/Button";
@@ -14,6 +14,36 @@ import {
 } from "../../../services/profileService";
 import img from "../../../assets/img (1).png";
 import "../../../styles/pages/dashboard/profile/Profile.css";
+import intlTelInput from 'intl-tel-input';
+import 'intl-tel-input/build/css/intlTelInput.css';
+
+const PhoneNumberInput = ({ value, onChange }) => {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const iti = intlTelInput(inputRef.current, {
+      initialCountry: 'IN',
+      utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+    });
+
+    inputRef.current.addEventListener('change', () => {
+      onChange(iti.getNumber());
+    });
+
+    return () => {
+      iti.destroy();
+    };
+  }, [onChange]);
+
+  return (
+    <input
+      ref={inputRef}
+      type="tel"
+      placeholder="Enter phone number"
+      required
+    />
+  );
+};
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("personal");
@@ -21,7 +51,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // Add this line
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
   const userType = localStorage.getItem("userType");
 
@@ -66,12 +96,10 @@ const Profile = () => {
     }
   };
 
-  // Add this function to handle edit mode
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
 
-  // Modify handleProfileUpdate
   const handleProfileUpdate = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -82,7 +110,7 @@ const Profile = () => {
       await updateUserProfile(userType, profileData);
       await loadProfile();
       setSuccess("Profile updated successfully");
-      setIsEditing(false); // Close edit mode after successful update
+      setIsEditing(false);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -128,7 +156,6 @@ const Profile = () => {
     }
   };
 
-  // Clear success/error messages after 5 seconds
   useEffect(() => {
     if (success || error) {
       const timer = setTimeout(() => {
@@ -219,26 +246,21 @@ const Profile = () => {
                 ) : (
                   <form onSubmit={handleProfileUpdate} className="profile-form">
                     <Input
-                      label="Name"
                       name="name"
                       defaultValue={profile?.name}
                       placeholder="Enter your name"
                       required
                     />
                     <Input
-                      label="Email"
                       type="email"
                       name="email"
                       defaultValue={profile?.email}
                       placeholder="Enter your email address"
                       required
                     />
-                    <Input
-                      label="Phone"
-                      type="tel"
-                      name="phone"
-                      defaultValue={profile?.phone}
-                      placeholder="Enter your phone number"
+                    <PhoneNumberInput
+                      value={profile?.phone}
+                      onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
                     />
                     <div className="form-buttons">
                       <Button type="submit">Save Changes</Button>
@@ -258,21 +280,18 @@ const Profile = () => {
             {activeTab === "security" && (
               <form onSubmit={handlePasswordUpdate} className="profile-form">
                 <Input
-                  label="Current Password"
                   type="password"
                   name="currentPassword"
                   placeholder="Enter your current password"
                   required
                 />
                 <Input
-                  label="New Password"
                   type="password"
                   name="newPassword"
                   placeholder="Enter your new password"
                   required
                 />
                 <Input
-                  label="Confirm New Password"
                   type="password"
                   name="confirmPassword"
                   placeholder="Confirm your new password"

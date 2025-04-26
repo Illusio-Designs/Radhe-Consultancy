@@ -32,6 +32,8 @@ import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
 import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
 import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
 import DSC from "../pages/dashboard/dsc/DSC";
+import NotFound from "../pages/NotFound";
+import Home from "../pages/Home";
 
 const router = createBrowserRouter([
   // Public Routes
@@ -44,8 +46,16 @@ const router = createBrowserRouter([
         element: <ComingSoon />,
       },
       {
+        path: "/home",
+        element: <Home />,
+      },
+      {
         path: "unauthorized",
         element: <Unauthorized />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },

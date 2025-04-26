@@ -1,0 +1,18 @@
+.working-with {
+  background-color: #1F4F9C;
+  padding: 50px 0;
+}
+
+.working-with-items {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+}
+
+.working-with-items img {
+    width: 5%;
+}
+
+
+

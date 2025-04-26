@@ -1,11 +1,25 @@
 body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+.wrapper {
   background: var(--background-gradient);
   color: #fff;
   margin: 0;
   height: 100vh;
-  display: flex;
+  text-align: center;
+}
+
+.wrapper-content {
   align-items: center;
   justify-content: center;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 @keyframes fadeIn {
@@ -30,12 +44,8 @@ body {
   }
 }
 
-.wrapper {
-  text-align: center;
-}
-
 .wrapper img {
-  width: 50%;
+  width: 20%;
 }
 
 .wrapper h1 {

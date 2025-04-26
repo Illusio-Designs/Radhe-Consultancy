@@ -3,6 +3,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import AdminDashboard from "./AdminDashboard";
 import CompanyDashboard from "./CompanyDashboard";
 import ConsumerDashboard from "./ConsumerDashboard";
+import Loader from "../../../components/common/Loader/Loader"; // Import Loader component
 import "../../../styles/pages/dashboard/home/Dashboard.css";
 
 const Dashboard = () => {
@@ -20,10 +21,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading dashboard...</p>
-      </div>
+      <Loader /> // Use Loader component instead of custom loading state
     );
   }
 
