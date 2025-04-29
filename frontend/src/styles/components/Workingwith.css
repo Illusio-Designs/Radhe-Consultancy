@@ -7,12 +7,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 50px;
+  gap: 5%;
 }
 
 .working-with-items img {
-    width: 5%;
+    width: 6%;
 }
 
-
+.working-with h1 {
+  font-weight: 500;
+    font-size: 30px;
+    color: white;
+    text-align: center;
+    padding-bottom: 40px;
+}
 

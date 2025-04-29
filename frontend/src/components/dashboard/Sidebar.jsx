@@ -23,7 +23,7 @@ import {
   BiDetail,
   BiBook
 } from "react-icons/bi";
-import img from "../../assets/@RADHE CONSULTANCY LOGO 1.png";
+import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
 
 const Sidebar = ({ onCollapse }) => {

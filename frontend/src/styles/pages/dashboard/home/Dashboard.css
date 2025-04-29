@@ -174,16 +174,6 @@
   font-weight: 500;
 }
 
-.stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(45deg, #1F4F9C, #2563eb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0.5rem 0 0 0;
-  line-height: 1.2;
-}
-
 .stat-change {
   font-size: 0.875rem;
   font-weight: 600;
@@ -421,7 +411,7 @@
 
 .company-stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 20px;
 }
 
@@ -433,8 +423,8 @@
 
 .company-stat-item.total {
   grid-column: 1 / -1;
-  background: #4f46e5;
-  color: white;
+  background: #1f4f9c;
+  color: white !important;
 }
 
 .company-stat-item.active {
@@ -453,8 +443,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.875rem;
-  color: #64748b;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f4f9c;
   margin-bottom: 8px;
 }
 
@@ -462,15 +453,16 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 4px;
-}
-
 .company-stat-item.total .stat-value {
   color: white;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.stat-value {
+  font-weight: 600;
+  font-size: 20px;
+  color: #1f4f9c;
 }
 
 .stat-percentage {
