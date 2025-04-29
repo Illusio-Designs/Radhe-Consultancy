@@ -302,29 +302,7 @@ function CompanyUserList() {
           {value || "Active"}
         </span>
       ),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (_, user) => (
-        <div className="user-management-actions">
-          <ActionButton
-            onClick={() => handleEdit(user)}
-            variant="secondary"
-            size="small"
-          >
-            <FiEdit2 />
-          </ActionButton>
-          <ActionButton
-            onClick={() => handleDelete(user.user_id)}
-            variant="danger"
-            size="small"
-          >
-            <FiTrash2 />
-          </ActionButton>
-        </div>
-      ),
-    },
+    }
   ];
 
   if (!user || (user.role !== "admin" && user.role !== "vendor_manager")) {
