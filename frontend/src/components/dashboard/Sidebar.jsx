@@ -136,7 +136,7 @@ const Sidebar = ({ onCollapse }) => {
                 ? "active"
                 : ""
             }`}
-            data-tooltip={isCollapsed ? item.label : undefined}
+            title={isCollapsed ? item.label : ""}
           >
             <span className="text-2xl">{item.icon}</span>
             {!isCollapsed && (
@@ -161,9 +161,7 @@ const Sidebar = ({ onCollapse }) => {
                   className={`sidebar-nav-item ${
                     isActive(subItem.path) ? "active" : ""
                   }`}
-                  style={{
-                    transitionDelay: `${subIndex * 50}ms`
-                  }}
+                  title={isCollapsed ? subItem.label : ""}
                 >
                   <span className="text-lg">{subItem.icon}</span>
                   <span className="ml-4 sidebar-nav-label">
@@ -184,7 +182,7 @@ const Sidebar = ({ onCollapse }) => {
         className={`sidebar-nav-item ${
           isActive(item.path) ? "active" : ""
         }`}
-        data-tooltip={isCollapsed ? item.label : undefined}
+        title={isCollapsed ? item.label : ""}
       >
         <span className="text-2xl">{item.icon}</span>
         {!isCollapsed && (
