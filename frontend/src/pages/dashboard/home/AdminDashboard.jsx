@@ -8,7 +8,10 @@ import {
   FiTrendingDown,
   FiCheckCircle,
   FiXCircle,
-  FiClock as FiRecent
+  FiClock as FiRecent,
+  FiUsers,
+  FiShoppingCart,
+  FiDollarSign
 } from "react-icons/fi";
 import { adminDashboardAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
@@ -64,6 +67,72 @@ const CompanyStatsCard = ({ stats }) => (
     </div>
   </div>
 );
+
+const ConsumerStatsCard = () => {
+  // Static data for consumer stats
+  const consumerStats = {
+    total_orders: 150,
+    active_orders: 45,
+    completed_orders: 105,
+    total_spent: 12500,
+    average_order_value: 83.33,
+    favorite_categories: ["Electronics", "Clothing", "Home & Kitchen"]
+  };
+
+  return (
+    <div className="consumer-stats-card">
+      <div className="consumer-stats-header">
+        <div className="consumer-stats-title">
+          <FiUsers className="stats-icon" />
+          <h2>Consumer Statistics</h2>
+        </div>
+      </div>
+      
+      <div className="consumer-stats-grid">
+        <div className="consumer-stat-item total">
+          <div className="stat-label">
+            <FiShoppingCart className="stat-icon" />
+            Total Orders
+          </div>
+          <div className="stat-value">{consumerStats.total_orders}</div>
+        </div>
+
+        <div className="consumer-stat-item active">
+          <div className="stat-label">
+            <FiClock className="stat-icon" />
+            Active Orders
+          </div>
+          <div className="stat-value">{consumerStats.active_orders}</div>
+          <div className="stat-percentage">
+            {Math.round((consumerStats.active_orders / consumerStats.total_orders) * 100)}% of total
+          </div>
+        </div>
+
+        <div className="consumer-stat-item completed">
+          <div className="stat-label">
+            <FiCheckCircle className="stat-icon" />
+            Completed Orders
+          </div>
+          <div className="stat-value">{consumerStats.completed_orders}</div>
+          <div className="stat-percentage">
+            {Math.round((consumerStats.completed_orders / consumerStats.total_orders) * 100)}% of total
+          </div>
+        </div>
+
+        <div className="consumer-stat-item spending">
+          <div className="stat-label">
+            <FiDollarSign className="stat-icon" />
+            Total Spent
+          </div>
+          <div className="stat-value">₹{consumerStats.total_spent.toLocaleString()}</div>
+          <div className="stat-percentage">
+            Avg. ₹{consumerStats.average_order_value.toFixed(2)} per order
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -152,6 +221,7 @@ const AdminDashboard = () => {
 
           <div className="dashboard-content">
             <CompanyStatsCard stats={stats} />
+            <ConsumerStatsCard />
           </div>
         </>
       )}
