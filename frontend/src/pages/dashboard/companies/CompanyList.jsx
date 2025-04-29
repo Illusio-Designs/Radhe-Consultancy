@@ -7,8 +7,8 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
-import intlTelInput from 'intl-tel-input';
-import 'intl-tel-input/build/css/intlTelInput.css'; // Import the CSS for intl-tel-input
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 const PhoneNumberInput = ({ value, onChange }) => {
   const inputRef = useRef(null);
@@ -40,20 +40,20 @@ const PhoneNumberInput = ({ value, onChange }) => {
 
 const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const [formData, setFormData] = useState({
-    company_name: company?.company_name || "",
-    owner_name: company?.owner_name || "",
-    owner_address: company?.owner_address || "",
-    designation: company?.designation || "",
-    company_address: company?.company_address || "",
-    contact_number: company?.contact_number || "",
-    company_email: company?.company_email || "",
-    gst_number: company?.gst_number || "",
-    pan_number: company?.pan_number || "",
-    firm_type: company?.firm_type || "",
-    nature_of_work: company?.nature_of_work || "",
-    factory_license_number: company?.factory_license_number || "",
-    labour_license_number: company?.labour_license_number || "",
-    type_of_company: company?.type_of_company || "",
+    company_name: '',
+    owner_name: '',
+    owner_address: '',
+    designation: '',
+    company_address: '',
+    contact_number: '',
+    company_email: '',
+    gst_number: '',
+    pan_number: '',
+    firm_type: '',
+    nature_of_work: '',
+    factory_license_number: '',
+    labour_license_number: '',
+    type_of_company: ''
   });
 
   const [files, setFiles] = useState({
@@ -62,8 +62,8 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   });
 
   const [fileNames, setFileNames] = useState({
-    gst_document: company?.gst_document_name || "",
-    pan_document: company?.pan_document_name || ""
+    gst_document: '',
+    pan_document: ''
   });
 
   const [error, setError] = useState("");
@@ -72,20 +72,26 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   useEffect(() => {
     if (company) {
       setFormData({
-        company_name: company.company_name || "",
-        owner_name: company.owner_name || "",
-        owner_address: company.owner_address || "",
-        designation: company.designation || "",
-        company_address: company.company_address || "",
-        contact_number: company.contact_number || "",
-        company_email: company.company_email || "",
-        gst_number: company.gst_number || "",
-        pan_number: company.pan_number || "",
-        firm_type: company.firm_type || "",
-        nature_of_work: company.nature_of_work || "",
-        factory_license_number: company.factory_license_number || "",
-        labour_license_number: company.labour_license_number || "",
-        type_of_company: company.type_of_company || "",
+        company_name: company.company_name || '',
+        owner_name: company.owner_name || '',
+        owner_address: company.owner_address || '',
+        designation: company.designation || '',
+        company_address: company.company_address || '',
+        contact_number: company.contact_number || '',
+        company_email: company.company_email || '',
+        gst_number: company.gst_number || '',
+        pan_number: company.pan_number || '',
+        firm_type: company.firm_type || '',
+        nature_of_work: company.nature_of_work || '',
+        factory_license_number: company.factory_license_number || '',
+        labour_license_number: company.labour_license_number || '',
+        type_of_company: company.type_of_company || ''
+      });
+
+      // Set file names from existing company data
+      setFileNames({
+        gst_document: company.gst_document_name || '',
+        pan_document: company.pan_document_name || ''
       });
     }
   }, [company]);
@@ -93,10 +99,58 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const validateGST = (gst) => {
     // Remove any spaces and convert to uppercase
     gst = gst.replace(/\s/g, "").toUpperCase();
+    console.log('Validating GST:', gst);
 
-    // GST format: 22AAAAA0000A1Z5
-    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[Z]{1}[0-9]{1}$/;
-    return gstRegex.test(gst);
+    // GST format: 24ABKPZ9119Q1ZL
+    // First 2 digits: State code
+    // Next 10 characters: PAN number
+    // Next 1 character: Entity number
+    // Next 1 character: Check digit
+    // Last 1 character: Z (default)
+
+    // Check length
+    if (gst.length !== 15) {
+      console.log('GST length invalid:', gst.length);
+      return false;
+    }
+
+    // Check state code (first 2 digits)
+    const stateCode = gst.substring(0, 2);
+    if (!/^\d{2}$/.test(stateCode)) {
+      console.log('Invalid state code:', stateCode);
+      return false;
+    }
+
+    // Check PAN number (next 10 characters)
+    const panNumber = gst.substring(2, 12);
+    if (!/^[A-Z]{5}\d{4}[A-Z]{1}$/.test(panNumber)) {
+      console.log('Invalid PAN number:', panNumber);
+      return false;
+    }
+
+    // Check entity number (13th character)
+    const entityNumber = gst.charAt(12);
+    if (!/^[0-9A-Z]$/.test(entityNumber)) {
+      console.log('Invalid entity number:', entityNumber);
+      return false;
+    }
+
+    // Check check digit (14th character)
+    const checkDigit = gst.charAt(13);
+    if (!/^[0-9A-Z]$/.test(checkDigit)) {
+      console.log('Invalid check digit:', checkDigit);
+      return false;
+    }
+
+    // Check last character (should be Z or L)
+    const lastChar = gst.charAt(14);
+    if (lastChar !== 'Z' && lastChar !== 'L') {
+      console.log('Invalid last character:', lastChar);
+      return false;
+    }
+
+    console.log('GST validation successful');
+    return true;
   };
 
   const handleGSTChange = (e) => {
@@ -128,55 +182,98 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     });
   };
 
-  const handleFileChange = (e, fileType) => {
+  const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (file) {
       setFiles(prev => ({
         ...prev,
-        [fileType]: file
+        [type]: file
       }));
       setFileNames(prev => ({
         ...prev,
-        [fileType]: file.name
+        [type]: file.name
       }));
     }
   };
 
+  const handlePhoneChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      contact_number: value,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
     setLoading(true);
     setError("");
 
+    // Validate required fields
+    const requiredFields = [
+      'company_name',
+      'owner_name',
+      'owner_address',
+      'designation',
+      'company_address',
+      'contact_number',
+      'company_email',
+      'gst_number',
+      'pan_number',
+      'firm_type',
+      'nature_of_work',
+      'type_of_company'
+    ];
+
+    const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+    if (missingFields.length > 0) {
+      setError(`Missing required fields: ${missingFields.join(', ')}`);
+      setLoading(false);
+      return;
+    }
+
     // Validate GST number
     if (formData.gst_number && !validateGST(formData.gst_number)) {
-      setError(
-        "Invalid GST number format. Please enter a valid 15-digit GST number."
-      );
+      console.log('GST validation failed');
+      setError("Invalid GST number format. Please enter a valid 15-digit GST number.");
       setLoading(false);
       return;
     }
 
     try {
+      console.log('Preparing form data:', formData);
       const submitData = new FormData();
       
       // Append all form data
-      Object.keys(formData).forEach(key => {
-        submitData.append(key, formData[key]);
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          submitData.append(key, value);
+          console.log(`Appending ${key}:`, value);
+        }
       });
 
       // Append files if they exist
       if (files.gst_document) {
+        console.log('Appending GST document');
         submitData.append('gst_document', files.gst_document);
       }
       if (files.pan_document) {
+        console.log('Appending PAN document');
         submitData.append('pan_document', files.pan_document);
       }
 
+      // Log the final FormData
+      console.log('Final FormData:', Object.fromEntries(submitData));
+
+      console.log('Submitting form data...');
       if (company) {
+        console.log('Updating existing company:', company.company_id);
         await companyAPI.updateCompany(company.company_id, submitData);
       } else {
+        console.log('Creating new company');
         await companyAPI.createCompany(submitData);
       }
+      console.log('Form submission successful');
       onCompanyUpdated();
     } catch (err) {
       console.error("Error during submission:", err);
@@ -190,6 +287,13 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     const { name, value } = e.target;
     if (name === "gst_number") {
       handleGSTChange(e);
+    } else if (name === "contact_number") {
+      // Ensure contact number is properly formatted
+      const formattedNumber = value.replace(/\D/g, ''); // Remove non-digit characters
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedNumber,
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -264,10 +368,15 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             />
           </div>
 
-          <div className="form-group">
-            <PhoneNumberInput
+          <div className="vendor-management-form-group">
+            <PhoneInput
+              international
+              defaultCountry="IN"
               value={formData.contact_number}
-              onChange={(value) => setFormData(prev => ({ ...prev, contact_number: value }))}
+              onChange={handlePhoneChange}
+              placeholder="Enter phone number"
+              required
+              className="vendor-management-form-input"
             />
           </div>
 
@@ -434,26 +543,32 @@ function CompanyList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log('CompanyList component mounted');
     fetchCompanies();
   }, []);
 
   const fetchCompanies = async () => {
     try {
+      console.log('Fetching companies...');
       setLoading(true);
       const response = await companyAPI.getAllCompanies();
+      console.log('Companies API response:', response);
       
       // Check if response is an array directly
       if (Array.isArray(response)) {
+        console.log('Setting companies from direct array');
         setCompanies(response);
         setError(null);
       } 
       // Check if response has data property and it's an array
       else if (response && response.data && Array.isArray(response.data)) {
+        console.log('Setting companies from response.data');
         setCompanies(response.data);
         setError(null);
       } 
       // Check if response has data property and it's an object with data array
       else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+        console.log('Setting companies from response.data.data');
         setCompanies(response.data.data);
         setError(null);
       } else {
@@ -462,13 +577,13 @@ function CompanyList() {
         setCompanies([]);
       }
     } catch (err) {
+      console.error('Error fetching companies:', err);
       setError("Failed to fetch companies");
-      console.error(err);
       setCompanies([]);
     } finally {
       setTimeout(() => {
         setLoading(false);
-      }, 2000); // Ensure loader is displayed for at least 2000ms
+      }, 2000);
     }
   };
 
@@ -490,11 +605,13 @@ function CompanyList() {
   };
 
   const handleModalClose = () => {
+    console.log('Modal closing');
     setSelectedCompany(null);
     setShowModal(false);
   };
 
   const handleCompanyUpdated = async () => {
+    console.log('Company updated, refreshing list');
     await fetchCompanies();
     handleModalClose();
   };

@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config();
 const sequelize = require('./config/db');
 const { initializeDatabase } = require('./scripts/serverSetup');
+const adminDashboardRoutes = require('./routes/adminDashboardRoutes');
 
 // Initialize Express app
 const app = express();
@@ -145,6 +146,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/roles', require('./routes/roleRoutes'));
 app.use('/api/companies', require('./routes/companyRoutes'));
 app.use('/api/consumers', require('./routes/consumerRoutes'));
+app.use('/api/admin-dashboard', adminDashboardRoutes);
 
 // Non-prefixed routes
 app.use('/auth', require('./routes/authRoutes'));

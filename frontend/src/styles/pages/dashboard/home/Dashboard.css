@@ -3,6 +3,7 @@
   animation: fadeIn 0.3s ease;
   background: #f8fafc;
   min-height: calc(100vh - 7rem);
+  padding: 20px;
 }
 
 .dashboard-page.sidebar-collapsed {
@@ -17,7 +18,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
   padding: 1rem;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 1rem;
@@ -31,40 +32,46 @@
   gap: 0.5rem;
 }
 
+.dashboard-title-area h1 {
+  margin: 0;
+  font-size: 1.875rem;
+  color: #1e293b;
+}
+
 .dashboard-meta {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .last-updated {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
 .meta-icon {
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .refresh-button {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  background-color: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #374151;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .refresh-button:hover {
-  background-color: #e5e7eb;
+  background: #e2e8f0;
 }
 
 .refresh-button.refreshing {
@@ -72,52 +79,28 @@
   cursor: not-allowed;
 }
 
-.refresh-button.refreshing .refresh-icon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.dashboard-header h1 {
-  margin: 0;
-  font-size: 1.875rem;
-  background: linear-gradient(45deg, #1F4F9C, #2563eb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
+.refresh-icon {
+  font-size: 1rem;
 }
 
 .date-filter {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background-color: white;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  gap: 8px;
 }
 
 .filter-icon {
-  color: #6b7280;
+  font-size: 1rem;
+  color: #64748b;
 }
 
 .date-filter select {
-  padding: 0.375rem 0.75rem;
-  border: none;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  color: #1e293b;
   font-size: 0.875rem;
-  background-color: transparent;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  outline: none;
-}
-
-.date-filter select:hover {
-  color: #2563eb;
 }
 
 .stats-grid {
@@ -405,4 +388,103 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.company-stats-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 20px 0;
+}
+
+.company-stats-header {
+  margin-bottom: 24px;
+}
+
+.company-stats-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.company-stats-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.stats-icon {
+  font-size: 1.5rem;
+  color: #4f46e5;
+}
+
+.company-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.company-stat-item {
+  padding: 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.company-stat-item.total {
+  grid-column: 1 / -1;
+  background: #4f46e5;
+  color: white;
+}
+
+.company-stat-item.active {
+  border-left: 4px solid #10b981;
+}
+
+.company-stat-item.inactive {
+  border-left: 4px solid #ef4444;
+}
+
+.company-stat-item.recent {
+  border-left: 4px solid #3b82f6;
+}
+
+.stat-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.company-stat-item.total .stat-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.company-stat-item.total .stat-value {
+  color: white;
+}
+
+.stat-percentage {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.company-stat-item.total .stat-percentage {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
 }

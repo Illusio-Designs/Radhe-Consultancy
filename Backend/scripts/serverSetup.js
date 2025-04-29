@@ -130,6 +130,7 @@ async function initializeDatabase() {
     // Create default admin user if not exists
     const adminEmail = process.env.ADMIN_EMAIL || 'Admin@radheconsultancy.co.in';
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+    const adminContact = process.env.ADMIN_CONTACT || '1234567890';
     
     const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
     if (adminRole) {
@@ -139,6 +140,7 @@ async function initializeDatabase() {
           username: 'admin',
           email: adminEmail,
           password: adminPassword,
+          contact_number: adminContact,
           role_id: adminRole.id,
           created_at: new Date(),
           updated_at: new Date()

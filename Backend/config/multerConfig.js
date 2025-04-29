@@ -1,23 +1,34 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 
 // Configure multer for disk storage
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
+    destination: async function (req, file, cb) {
+        const uploadDir = 'uploads/company_documents';
+        try {
+            // Check if directory exists
+            if (!fsSync.existsSync(uploadDir)) {
+                // Create directory if it doesn't exist
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
-// File filter to accept only images
+// File filter to accept images and PDFs
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
         cb(null, true);
     } else {
-        cb(new Error('Only image files are allowed!'), false);
+        cb(new Error('Only image and PDF files are allowed!'), false);
     }
 };
 
@@ -33,12 +44,13 @@ const upload = multer({
     limits
 });
 
-// Simple file upload middleware
-const uploadFile = (fieldName) => {
-    return upload.single(fieldName);
-};
+// Middleware for handling company document uploads
+const uploadCompanyDocuments = upload.fields([
+    { name: 'gst_document', maxCount: 1 },
+    { name: 'pan_document', maxCount: 1 }
+]);
 
 module.exports = {
     upload,
-    uploadFile
+    uploadCompanyDocuments
 }; 

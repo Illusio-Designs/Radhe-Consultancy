@@ -7,81 +7,118 @@ const companyController = {
   // Create a new company
   async createCompany(req, res) {
     try {
-      const {
-        company_name,
-        owner_name,
-        owner_address,
-        designation,
-        company_address,
-        contact_number,
-        company_email,
-        gst_number,
-        pan_number,
-        firm_type,
-        nature_of_work,
-        factory_license_number,
-        labour_license_number,
-        type_of_company,
-        company_website
-      } = req.body;
+      // Log the incoming request body and files
+      console.log('Request body:', req.body);
+      console.log('Request files:', req.files);
 
-      // Handle file uploads
-      const uploadDir = path.join(__dirname, '../../uploads/company_documents');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      // Extract form data from request body
+      const formData = req.body;
+
+      // Validate required fields
+      const requiredFields = [
+        'company_name',
+        'owner_name',
+        'owner_address',
+        'designation',
+        'company_address',
+        'contact_number',
+        'company_email',
+        'gst_number',
+        'pan_number',
+        'firm_type',
+        'nature_of_work',
+        'type_of_company'
+      ];
+
+      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: `Missing required fields: ${missingFields.join(', ')}`
+        });
       }
 
-      let gst_document_name = null;
-      let pan_document_name = null;
+      // Check if company with same GST number exists
+      if (formData.gst_number) {
+        const existingCompany = await Company.findOne({
+          where: { gst_number: formData.gst_number }
+        });
 
-      if (req.files) {
-        if (req.files.gst_document) {
-          const gstFile = req.files.gst_document;
-          gst_document_name = `${Date.now()}-${gstFile.name}`;
-          await gstFile.mv(path.join(uploadDir, gst_document_name));
-        }
-
-        if (req.files.pan_document) {
-          const panFile = req.files.pan_document;
-          pan_document_name = `${Date.now()}-${panFile.name}`;
-          await panFile.mv(path.join(uploadDir, pan_document_name));
+        if (existingCompany) {
+          return res.status(400).json({
+            success: false,
+            error: 'Company with this GST number already exists'
+          });
         }
       }
 
-      // Create user with company role
-      const user = await User.create({
-        username: company_name,
-        email: company_email,
-        role_id: 5 // company role
+      // Check if user with same email exists
+      let user = await User.findOne({
+        where: {
+          email: formData.company_email
+        }
       });
 
-      // Create company
+      if (!user) {
+        // Create new user with company role
+        const randomPassword = Math.random().toString(36).slice(-8);
+        user = await User.create({
+          username: formData.owner_name,
+          email: formData.company_email,
+          password: randomPassword,
+          role_id: 5 // company role
+        });
+      }
+
+      // Create company with user_id
       const company = await Company.create({
-        company_name,
-        owner_name,
-        owner_address,
-        designation,
-        company_address,
-        contact_number,
-        company_email,
-        gst_number,
-        gst_document_name,
-        pan_number,
-        pan_document_name,
-        firm_type,
-        nature_of_work,
-        factory_license_number,
-        labour_license_number,
-        type_of_company,
-        company_website,
+        company_name: formData.company_name,
+        owner_name: formData.owner_name,
+        owner_address: formData.owner_address,
+        designation: formData.designation,
+        company_address: formData.company_address,
+        contact_number: formData.contact_number,
+        company_email: formData.company_email,
+        gst_number: formData.gst_number,
+        pan_number: formData.pan_number,
+        firm_type: formData.firm_type,
+        nature_of_work: formData.nature_of_work,
+        factory_license_number: formData.factory_license_number,
+        labour_license_number: formData.labour_license_number,
+        type_of_company: formData.type_of_company,
         user_id: user.user_id
       });
 
+      // Handle file uploads if present
+      if (req.files) {
+        if (req.files.gst_document && req.files.gst_document[0]) {
+          const gstDocument = req.files.gst_document[0];
+          await company.update({
+            gst_document: gstDocument.filename
+          });
+        }
+        if (req.files.pan_document && req.files.pan_document[0]) {
+          const panDocument = req.files.pan_document[0];
+          await company.update({
+            pan_document: panDocument.filename
+          });
+        }
+      }
+
       res.status(201).json({
         success: true,
-        data: { company, user }
+        data: {
+          company,
+          user: {
+            user_id: user.user_id,
+            username: user.username,
+            email: user.email,
+            role_id: user.role_id
+          }
+        }
       });
     } catch (error) {
+      console.error('Error creating company:', error);
       res.status(500).json({
         success: false,
         error: error.message

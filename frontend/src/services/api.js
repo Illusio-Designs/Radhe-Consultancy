@@ -480,37 +480,59 @@ export const companyAPI = {
     try {
       console.log('API Service: Creating company');
       
-      // First, create a user account for the company
-      const userData = {
-        username: companyData.company_name,
-        email: companyData.company_email,
-        password: Math.random().toString(36).slice(-8), // Generate a random password
-        role_name: 'company'
+      // Create FormData for company creation
+      const formData = new FormData();
+      
+      // Add all company fields
+      const fields = {
+        company_name: companyData.get('company_name'),
+        owner_name: companyData.get('owner_name'),
+        owner_address: companyData.get('owner_address'),
+        designation: companyData.get('designation'),
+        company_address: companyData.get('company_address'),
+        contact_number: companyData.get('contact_number'),
+        company_email: companyData.get('company_email'),
+        gst_number: companyData.get('gst_number'),
+        pan_number: companyData.get('pan_number'),
+        firm_type: companyData.get('firm_type'),
+        nature_of_work: companyData.get('nature_of_work'),
+        factory_license_number: companyData.get('factory_license_number'),
+        labour_license_number: companyData.get('labour_license_number'),
+        type_of_company: companyData.get('type_of_company')
       };
+
+      // Log the fields being sent
+      console.log('API Service: Fields being sent:', fields);
+
+      // Append all fields to FormData
+      Object.entries(fields).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
       
-      console.log('API Service: Creating user account for company');
-      const userResponse = await api.post('/auth/register', userData);
-      
-      if (!userResponse.data || !userResponse.data.user) {
-        throw new Error('Failed to create user account for company');
+      // Add files if they exist
+      if (companyData.get('gst_document')) {
+        formData.append('gst_document', companyData.get('gst_document'));
+      }
+      if (companyData.get('pan_document')) {
+        formData.append('pan_document', companyData.get('pan_document'));
       }
       
-      // Now create the company with the user_id
-      const companyWithUserId = {
-        ...companyData,
-        user_id: userResponse.data.user.user_id
-      };
+      console.log('API Service: Creating company with data:', fields);
       
-      const response = await api.post('/companies', companyWithUserId);
-      console.log('API Service: Company created successfully');
+      const companyResponse = await api.post('/companies', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
-      // Check if response has data property
-      if (response && response.data && response.data.success) {
-        return response.data.data;
-      } else {
-        console.error('API Service: Invalid response format:', response);
-        throw new Error('Invalid response format from server');
+      if (!companyResponse.data || !companyResponse.data.success) {
+        throw new Error('Failed to create company');
       }
+      
+      console.log('API Service: Company and user created successfully');
+      return companyResponse.data.data;
     } catch (error) {
       console.error('API Service: Error creating company:', error);
       throw error;
@@ -635,6 +657,21 @@ export const adminAPI = {
       return response.data;
     } catch (error) {
       console.error('API Service: Error fetching system health:', error);
+      throw error;
+    }
+  }
+};
+
+// Admin Dashboard API
+export const adminDashboardAPI = {
+  getCompanyStatistics: async () => {
+    try {
+      console.log('API Service: Fetching company statistics');
+      const response = await api.get('/admin-dashboard/statistics');
+      console.log('API Service: Company statistics fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching company statistics:', error);
       throw error;
     }
   }

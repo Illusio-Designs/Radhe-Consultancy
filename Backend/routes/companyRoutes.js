@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const companyController = require('../controllers/companyController');
 const { auth, checkRole } = require('../middleware/auth');
+const { uploadCompanyDocuments } = require('../config/multerConfig');
 
 // Create a new company (admin and vendor manager only)
 router.post('/', 
   auth, 
-  checkRole(['admin', 'vendor_manager']), 
+  checkRole(['admin', 'vendor_manager']),
+  uploadCompanyDocuments,
   companyController.createCompany
 );
 
@@ -27,7 +29,8 @@ router.get('/:id',
 // Update company (admin, vendor manager, and company users)
 router.put('/:id', 
   auth, 
-  checkRole(['admin', 'vendor_manager', 'company']), 
+  checkRole(['admin', 'vendor_manager', 'company']),
+  uploadCompanyDocuments,
   companyController.updateCompany
 );
 

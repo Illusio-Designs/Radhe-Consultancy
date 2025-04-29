@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const User = require('./userModel');
 
 const Company = sequelize.define('Company', {
   company_id: {
@@ -28,28 +29,23 @@ const Company = sequelize.define('Company', {
     allowNull: false
   },
   contact_number: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING,
     allowNull: false
   },
   company_email: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    unique: true
   },
   gst_number: {
-    type: DataTypes.STRING(15),
-    allowNull: false
-  },
-  gst_document_name: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false,
+    unique: true
   },
   pan_number: {
-    type: DataTypes.STRING(10),
-    allowNull: false
-  },
-  pan_document_name: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false,
+    unique: true
   },
   firm_type: {
     type: DataTypes.ENUM('Proprietorship', 'Partnership', 'LLP', 'Private Limited', 'Limited', 'Trust'),
@@ -71,7 +67,24 @@ const Company = sequelize.define('Company', {
     type: DataTypes.ENUM('Industries', 'Contractor', 'School', 'Hospital', 'Service'),
     allowNull: false
   },
-  company_website: {
+  status: {
+    type: DataTypes.ENUM('Active', 'Inactive'),
+    allowNull: false,
+    defaultValue: 'Active'
+  },
+  gst_document: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  pan_document: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  gst_document_name: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  pan_document_name: {
     type: DataTypes.STRING,
     allowNull: true
   },
@@ -79,7 +92,7 @@ const Company = sequelize.define('Company', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: User,
       key: 'user_id'
     }
   }
@@ -89,6 +102,9 @@ const Company = sequelize.define('Company', {
   createdAt: 'created_at',
   updatedAt: 'updated_at'
 });
+
+// Define associations
+Company.belongsTo(User, { foreignKey: 'user_id' });
 
 // Add indexes after model definition
 Company.afterSync(async () => {
