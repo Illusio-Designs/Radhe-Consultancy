@@ -13,15 +13,16 @@ const Header = () => {
         <div className="top-bar-left">
           <div className="top-bar-item">
             <HiPhone className="icon" />
-            <span>+91 86963 56236</span>
+            <span>+91 99130 14575</span>
           </div>
           <div className="top-bar-item">
             <HiEnvelope className="icon" />
-            <span>info@radhe.com</span>
+            <span>radheconsultancy17@yahoo.com </span>
           </div>
           <div className="top-bar-item">
             <HiMapPin className="icon" />
-            <span>105, 2, New Sonal Link Industries, Link Rd, Malad (west)</span>
+            <span>1215 - 1216, RK Empire, Nr. Mavdi Circle, 150 feet Ring Road, Rajkot.
+            </span>
           </div>
         </div>
         <div className="top-bar-right">
@@ -42,15 +43,19 @@ const Header = () => {
         {/* Menu */}
         <nav className="nav-links">
           <div className="nav-item">
-            Home <HiOutlineArrowSmallDown className="down-icon" />
+            <a href="/home">Home</a>
           </div>
-          <div className="nav-item">About Us</div>
+          <div className="nav-item"> <a href="/about">About Us</a></div>
           <div className="nav-item">
-            Service <HiOutlineArrowSmallDown className="down-icon" />
+            <a href="#">Service <HiOutlineArrowSmallDown className="down-icon" /></a>
+            <div className="dropdown-content">
+              <a href="/insurance">Insurance</a>
+              <a href="/compliance">Compliance & Licensing</a>
+            </div>
           </div>
-          <div className="nav-item">Career</div>
-          <div className="nav-item">Blog</div>
-          <div className="nav-item">Contact</div>
+          <div className="nav-item"> <a href="/career">Career</a></div>
+          <div className="nav-item"> <a href="/blog">Blog</a></div>
+          <div className="nav-item"> <a href="/contact">Contact</a></div>
         </nav>
 
         {/* Right side buttons */}

@@ -1,0 +1,128 @@
+.page-footer {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .newsletter {
+    background-color: #083a84;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 10%;
+    flex-wrap: wrap;
+  }
+  
+  .newsletter-content h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .newsletter-content h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+  }
+  
+  .newsletter-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .newsletter-form input {
+    padding: 10px 15px;
+    border-radius: 50px;
+    border: none;
+    width: 250px;
+  }
+  
+  .newsletter-form button {
+    background-color: white;
+    color: #083a84;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .footer-main {
+    display: flex;
+    justify-content: space-around;
+    padding: 60px 11%;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #222;
+  }
+  
+  .footer-col {
+    flex: 1 1 220px;
+    margin: 20px;
+  }
+  
+  .footer-col h4 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #fff;
+  }
+  
+  .footer-col ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .footer-col li {
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #ccc;
+  }
+  
+  .footer-col.center-logo {
+    text-align: center;
+  }
+  
+  .footer-logo {
+    width: 50%;
+  }
+  
+  .social-icons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    font-size: 18px;
+    color: #ccc;
+  }
+  
+  .contact-info h4 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    font-size: 16px;
+  }
+  
+  .contact-info p {
+    font-size: 14px;
+    color: #ccc;
+    margin: 5px 0;
+  }
+  
+  .footer-bottom {
+    background-color: #083a84;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  
+  .footer-bottom span {
+    color: #49a6ff;
+  }
+  
+  .footer-bottom p {
+    margin: 5px 0;
+  }
+  

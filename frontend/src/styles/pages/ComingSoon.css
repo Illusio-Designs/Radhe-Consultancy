@@ -57,7 +57,7 @@ body {
   padding-bottom: 20px;
 }
 
-p {
+.wrapper p {
   margin: 18px;
   font-family: "Muli", sans-serif;
   font-weight: normal;

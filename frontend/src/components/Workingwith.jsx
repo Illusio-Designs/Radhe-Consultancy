@@ -11,7 +11,7 @@ const Workingwith = () => {
   return (
     <>
     <div className="working-with">
-      <h2>We Work With</h2>
+      <h1>We Work With</h1>
       <div className="working-with-items">
         <img src={img1} alt="working-with" />
         <img src={img2} alt="working-with" />

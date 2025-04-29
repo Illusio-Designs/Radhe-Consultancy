@@ -1,0 +1,88 @@
+.casestudy-container {
+  padding: 40px;
+  text-align: center;
+}
+
+.casestudy-content p {
+  font-size: 18px;
+  color: #868686;
+  margin-bottom: 30px;
+}
+
+.casestudy-content h1 {
+  font-size: 40px;
+  font-weight: bold;
+  margin-bottom: 40px;
+  font-family: 'Playfair Display';
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(325px, 1fr));
+  gap: 20px;
+}
+
+.image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  cursor: pointer;
+  height: 250px;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 15px;
+  transition: transform 0.5s ease;
+}
+
+.image-container:hover img {
+  transform: scale(1.1);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1F4F9C99;
+  border-radius: 15px;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+}
+
+.image-container:hover .overlay {
+  opacity: 1;
+}
+
+.overlay-text {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 10px;
+  padding-top: 30px;
+  font-family: 'Playfair Display';
+}
+
+.overlay-subtitle {
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+}
+
+.eye-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5em;
+  color: #ffffff;
+  padding-top: 100px;
+}

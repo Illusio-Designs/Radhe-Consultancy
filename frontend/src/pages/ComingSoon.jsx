@@ -1,7 +1,7 @@
 import React from "react";
 import { FaTwitter, FaYoutube, FaPaperPlane } from "react-icons/fa";
 import "../styles/pages/ComingSoon.css";
-import img from "../assets/@RADHE CONSULTANCY LOGO 1.png";
+import img from "../assets/@RADHE CONSULTANCY LOGO.png";
 
 const ComingSoon = () => {
   return (
