@@ -211,8 +211,6 @@ const startServer = async () => {
   }
 };
 
-startServer();
-
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
   console.log('Shutting down server...');

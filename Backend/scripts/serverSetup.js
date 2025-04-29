@@ -4,6 +4,8 @@ const Permission = require('../models/permissionModel');
 const RolePermission = require('../models/rolePermissionModel');
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
 async function initializeDatabase() {
   try {
@@ -12,6 +14,13 @@ async function initializeDatabase() {
     // Test database connection
     await sequelize.authenticate();
     console.log('Database connection established successfully');
+
+    // Create uploads directory if it doesn't exist
+    const uploadDir = path.join(__dirname, '../uploads/company_documents');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      console.log('Created uploads directory for company documents');
+    }
 
     // Sync all models with alter to update the schema
     await sequelize.sync({ alter: true });
@@ -48,6 +57,7 @@ async function initializeDatabase() {
       { permission_name: 'create_company' },
       { permission_name: 'edit_company' },
       { permission_name: 'delete_company' },
+      { permission_name: 'upload_company_documents' },
       
       // Consumer Management
       { permission_name: 'view_consumers' },
@@ -86,11 +96,12 @@ async function initializeDatabase() {
       vendor_manager: [
         'view_companies', 'create_company', 'edit_company', 'delete_company',
         'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
-        'access_dashboard', 'access_reports'
+        'access_dashboard', 'access_reports', 'upload_company_documents'
       ],
       company: [
         'access_dashboard',
-        'view_companies', 'edit_company'
+        'view_companies', 'edit_company',
+        'upload_company_documents'
       ],
       consumer: [
         'access_dashboard',
@@ -123,14 +134,14 @@ async function initializeDatabase() {
     const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
     if (adminRole) {
       await User.findOrCreate({
-        where: { email: adminEmail }, // Ensure this uses the default email
+        where: { email: adminEmail },
         defaults: {
           username: 'admin',
           email: adminEmail,
-          password: adminPassword, // Ensure this uses the default password
+          password: adminPassword,
           role_id: adminRole.id,
-          created_at: new Date(), // Explicitly set created_at
-          updated_at: new Date()  // Explicitly set updated_at
+          created_at: new Date(),
+          updated_at: new Date()
         }
       });
       console.log('Default admin user verified');

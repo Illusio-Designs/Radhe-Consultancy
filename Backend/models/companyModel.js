@@ -15,6 +15,14 @@ const Company = sequelize.define('Company', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  owner_address: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  designation: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
   company_address: {
     type: DataTypes.TEXT,
     allowNull: false
@@ -31,12 +39,36 @@ const Company = sequelize.define('Company', {
     type: DataTypes.STRING(15),
     allowNull: false
   },
+  gst_document_name: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   pan_number: {
     type: DataTypes.STRING(10),
     allowNull: false
   },
+  pan_document_name: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   firm_type: {
-    type: DataTypes.ENUM('Proprietorship', 'Partnership', 'LLP', 'Private Limited'),
+    type: DataTypes.ENUM('Proprietorship', 'Partnership', 'LLP', 'Private Limited', 'Limited', 'Trust'),
+    allowNull: false
+  },
+  nature_of_work: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  factory_license_number: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  labour_license_number: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  type_of_company: {
+    type: DataTypes.ENUM('Industries', 'Contractor', 'School', 'Hospital', 'Service'),
     allowNull: false
   },
   company_website: {

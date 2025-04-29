@@ -42,22 +42,28 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const [formData, setFormData] = useState({
     company_name: company?.company_name || "",
     owner_name: company?.owner_name || "",
+    owner_address: company?.owner_address || "",
+    designation: company?.designation || "",
     company_address: company?.company_address || "",
     contact_number: company?.contact_number || "",
     company_email: company?.company_email || "",
     gst_number: company?.gst_number || "",
     pan_number: company?.pan_number || "",
     firm_type: company?.firm_type || "",
+    nature_of_work: company?.nature_of_work || "",
+    factory_license_number: company?.factory_license_number || "",
+    labour_license_number: company?.labour_license_number || "",
+    type_of_company: company?.type_of_company || "",
   });
 
   const [files, setFiles] = useState({
-    gst_certificate: null,
-    pan_card: null
+    gst_document: null,
+    pan_document: null
   });
 
   const [fileNames, setFileNames] = useState({
-    gst_certificate: "",
-    pan_card: ""
+    gst_document: company?.gst_document_name || "",
+    pan_document: company?.pan_document_name || ""
   });
 
   const [error, setError] = useState("");
@@ -68,12 +74,18 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       setFormData({
         company_name: company.company_name || "",
         owner_name: company.owner_name || "",
+        owner_address: company.owner_address || "",
+        designation: company.designation || "",
         company_address: company.company_address || "",
         contact_number: company.contact_number || "",
         company_email: company.company_email || "",
         gst_number: company.gst_number || "",
         pan_number: company.pan_number || "",
         firm_type: company.firm_type || "",
+        nature_of_work: company.nature_of_work || "",
+        factory_license_number: company.factory_license_number || "",
+        labour_license_number: company.labour_license_number || "",
+        type_of_company: company.type_of_company || "",
       });
     }
   }, [company]);
@@ -147,15 +159,18 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     try {
       const submitData = new FormData();
       
+      // Append all form data
       Object.keys(formData).forEach(key => {
         submitData.append(key, formData[key]);
       });
 
-      Object.keys(files).forEach(key => {
-        if (files[key]) {
-          submitData.append(key, files[key]);
-        }
-      });
+      // Append files if they exist
+      if (files.gst_document) {
+        submitData.append('gst_document', files.gst_document);
+      }
+      if (files.pan_document) {
+        submitData.append('pan_document', files.pan_document);
+      }
 
       if (company) {
         await companyAPI.updateCompany(company.company_id, submitData);
@@ -215,10 +230,34 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
 
           <div className="vendor-management-form-group">
             <textarea
+              name="owner_address"
+              value={formData.owner_address}
+              onChange={handleChange}
+              placeholder="Owner Address"
+              required
+              className="vendor-management-form-input"
+              rows="3"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="designation"
+              value={formData.designation}
+              onChange={handleChange}
+              placeholder="Designation"
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <textarea
               name="company_address"
               value={formData.company_address}
               onChange={handleChange}
-              placeholder="Address"
+              placeholder="Company Address"
               required
               className="vendor-management-form-input"
               rows="3"
@@ -257,19 +296,18 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             />
           </div>
 
-          {/* GST Certificate Upload */}
           <div className="vendor-management-form-group file-upload-group">
             <label className="file-upload-label">
               <span>GST Certificate</span>
               <div className="file-upload-container">
                 <input
                   type="file"
-                  onChange={(e) => handleFileChange(e, 'gst_certificate')}
+                  onChange={(e) => handleFileChange(e, 'gst_document')}
                   accept=".pdf,.jpg,.jpeg,.png"
                   className="file-upload-input"
                 />
                 <div className="file-upload-button">
-                  <BiUpload /> {fileNames.gst_certificate || 'Upload GST Certificate'}
+                  <BiUpload /> {fileNames.gst_document || 'Upload GST Certificate'}
                 </div>
               </div>
             </label>
@@ -288,19 +326,18 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             />
           </div>
 
-          {/* PAN Card Upload */}
           <div className="vendor-management-form-group file-upload-group">
             <label className="file-upload-label">
               <span>PAN Card</span>
               <div className="file-upload-container">
                 <input
                   type="file"
-                  onChange={(e) => handleFileChange(e, 'pan_card')}
+                  onChange={(e) => handleFileChange(e, 'pan_document')}
                   accept=".pdf,.jpg,.jpeg,.png"
                   className="file-upload-input"
                 />
                 <div className="file-upload-button">
-                  <BiUpload /> {fileNames.pan_card || 'Upload PAN Card'}
+                  <BiUpload /> {fileNames.pan_document || 'Upload PAN Card'}
                 </div>
               </div>
             </label>
@@ -319,6 +356,59 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               <option value="Partnership">Partnership</option>
               <option value="LLP">LLP</option>
               <option value="Private Limited">Private Limited</option>
+              <option value="Limited">Limited</option>
+              <option value="Trust">Trust</option>
+            </select>
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="nature_of_work"
+              value={formData.nature_of_work}
+              onChange={handleChange}
+              placeholder="Nature of Work"
+              required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="factory_license_number"
+              value={formData.factory_license_number}
+              onChange={handleChange}
+              placeholder="Factory License Number"
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="labour_license_number"
+              value={formData.labour_license_number}
+              onChange={handleChange}
+              placeholder="Labour License Number"
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <select
+              name="type_of_company"
+              value={formData.type_of_company}
+              onChange={handleChange}
+              required
+              className="vendor-management-form-input"
+            >
+              <option value="">Select Type of Company</option>
+              <option value="Industries">Industries</option>
+              <option value="Contractor">Contractor</option>
+              <option value="School">School</option>
+              <option value="Hospital">Hospital</option>
+              <option value="Service">Service</option>
             </select>
           </div>
         </div>

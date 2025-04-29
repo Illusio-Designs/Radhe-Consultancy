@@ -1,5 +1,7 @@
 const { Company, User, Role, Vendor } = require('../models');
 const { Op } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
 
 const companyController = {
   // Create a new company
@@ -8,14 +10,43 @@ const companyController = {
       const {
         company_name,
         owner_name,
+        owner_address,
+        designation,
         company_address,
         contact_number,
         company_email,
         gst_number,
         pan_number,
         firm_type,
+        nature_of_work,
+        factory_license_number,
+        labour_license_number,
+        type_of_company,
         company_website
       } = req.body;
+
+      // Handle file uploads
+      const uploadDir = path.join(__dirname, '../../uploads/company_documents');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      let gst_document_name = null;
+      let pan_document_name = null;
+
+      if (req.files) {
+        if (req.files.gst_document) {
+          const gstFile = req.files.gst_document;
+          gst_document_name = `${Date.now()}-${gstFile.name}`;
+          await gstFile.mv(path.join(uploadDir, gst_document_name));
+        }
+
+        if (req.files.pan_document) {
+          const panFile = req.files.pan_document;
+          pan_document_name = `${Date.now()}-${panFile.name}`;
+          await panFile.mv(path.join(uploadDir, pan_document_name));
+        }
+      }
 
       // Create user with company role
       const user = await User.create({
@@ -28,12 +59,20 @@ const companyController = {
       const company = await Company.create({
         company_name,
         owner_name,
+        owner_address,
+        designation,
         company_address,
         contact_number,
         company_email,
         gst_number,
+        gst_document_name,
         pan_number,
+        pan_document_name,
         firm_type,
+        nature_of_work,
+        factory_license_number,
+        labour_license_number,
+        type_of_company,
         company_website,
         user_id: user.user_id
       });
@@ -148,14 +187,59 @@ const companyController = {
       const {
         company_name,
         owner_name,
+        owner_address,
+        designation,
         company_address,
         contact_number,
         company_email,
         gst_number,
         pan_number,
         firm_type,
+        nature_of_work,
+        factory_license_number,
+        labour_license_number,
+        type_of_company,
         company_website
       } = req.body;
+
+      // Handle file uploads
+      const uploadDir = path.join(__dirname, '../../uploads/company_documents');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      let gst_document_name = company.gst_document_name;
+      let pan_document_name = company.pan_document_name;
+
+      if (req.files) {
+        if (req.files.gst_document) {
+          // Delete old file if exists
+          if (gst_document_name) {
+            const oldFilePath = path.join(uploadDir, gst_document_name);
+            if (fs.existsSync(oldFilePath)) {
+              fs.unlinkSync(oldFilePath);
+            }
+          }
+
+          const gstFile = req.files.gst_document;
+          gst_document_name = `${Date.now()}-${gstFile.name}`;
+          await gstFile.mv(path.join(uploadDir, gst_document_name));
+        }
+
+        if (req.files.pan_document) {
+          // Delete old file if exists
+          if (pan_document_name) {
+            const oldFilePath = path.join(uploadDir, pan_document_name);
+            if (fs.existsSync(oldFilePath)) {
+              fs.unlinkSync(oldFilePath);
+            }
+          }
+
+          const panFile = req.files.pan_document;
+          pan_document_name = `${Date.now()}-${panFile.name}`;
+          await panFile.mv(path.join(uploadDir, pan_document_name));
+        }
+      }
 
       // Start a transaction to ensure both updates succeed or fail together
       const transaction = await Company.sequelize.transaction();
@@ -165,12 +249,20 @@ const companyController = {
         await company.update({
           company_name,
           owner_name,
+          owner_address,
+          designation,
           company_address,
           contact_number,
           company_email,
           gst_number,
+          gst_document_name,
           pan_number,
+          pan_document_name,
           firm_type,
+          nature_of_work,
+          factory_license_number,
+          labour_license_number,
+          type_of_company,
           company_website
         }, { transaction });
 
