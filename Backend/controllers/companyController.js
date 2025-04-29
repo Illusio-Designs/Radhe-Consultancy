@@ -70,7 +70,7 @@ const companyController = {
         });
       }
 
-      // Create company with user_id
+      // Create new company
       const company = await Company.create({
         company_name: formData.company_name,
         owner_name: formData.owner_name,

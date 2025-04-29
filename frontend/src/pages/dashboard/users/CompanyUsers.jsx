@@ -97,7 +97,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
               setFormData({ ...formData, username: e.target.value })
             }
             className="user-management-form-input"
-            placeholder="Enter Company Name"
+            placeholder="Enter Principal Owner Name"
             required
           />
         </div>
@@ -279,7 +279,7 @@ function CompanyUserList() {
         return (currentPage - 1) * pageSize + index + 1;
       },
     },
-    { key: "username", label: "Company Name", sortable: true },
+    { key: "username", label: "Owner Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     {
       key: "role_id",
@@ -363,7 +363,7 @@ function CompanyUserList() {
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
-        title={selectedUser ? "Edit Company" : "Add New Company"}
+        title={selectedUser ? "Edit Company User" : "Add New Company User"}
       >
         <UserForm
           user={selectedUser}

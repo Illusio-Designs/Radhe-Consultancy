@@ -34,8 +34,7 @@ const Company = sequelize.define('Company', {
   },
   company_email: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   gst_number: {
     type: DataTypes.STRING,

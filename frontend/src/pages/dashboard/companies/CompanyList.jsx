@@ -8,34 +8,39 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
 import PhoneInput from 'react-phone-number-input';
+import flags from 'react-phone-number-input/flags';
 import 'react-phone-number-input/style.css';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const PhoneNumberInput = ({ value, onChange }) => {
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    const iti = intlTelInput(inputRef.current, {
-      initialCountry: 'IN', // Set default country to India
-      utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js', // Load utils.js for formatting
-    });
-
-    inputRef.current.addEventListener('change', () => {
-      onChange(iti.getNumber());
-    });
-
-    return () => {
-      iti.destroy(); // Cleanup on unmount
-    };
-  }, [onChange]);
-
-  return (
-    <input
-      ref={inputRef}
-      type="tel"
-      placeholder="Enter phone number"
-      required
-    />
-  );
+// Add custom styles for phone input
+const phoneInputCustomStyles = {
+  '.PhoneInput': {
+    display: 'flex',
+    alignItems: 'center',
+    border: '1px solid #e2e8f0',
+    borderRadius: '0.375rem',
+    padding: '0.5rem',
+    backgroundColor: '#fff',
+  },
+  '.PhoneInputCountry': {
+    marginRight: '0.5rem',
+  },
+  '.PhoneInputInput': {
+    flex: '1',
+    border: 'none',
+    outline: 'none',
+    padding: '0.25rem',
+    fontSize: '1rem',
+    backgroundColor: 'transparent',
+  },
+  '.PhoneInputCountrySelect': {
+    width: '90px',
+  },
+  '.PhoneInputCountryIcon': {
+    width: '25px',
+    height: '20px',
+  }
 };
 
 const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
@@ -101,13 +106,6 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     gst = gst.replace(/\s/g, "").toUpperCase();
     console.log('Validating GST:', gst);
 
-    // GST format: 24ABKPZ9119Q1ZL
-    // First 2 digits: State code
-    // Next 10 characters: PAN number
-    // Next 1 character: Entity number
-    // Next 1 character: Check digit
-    // Last 1 character: Z (default)
-
     // Check length
     if (gst.length !== 15) {
       console.log('GST length invalid:', gst.length);
@@ -142,9 +140,9 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       return false;
     }
 
-    // Check last character (should be Z or L)
+    // Check last character (must be alphanumeric)
     const lastChar = gst.charAt(14);
-    if (lastChar !== 'Z' && lastChar !== 'L') {
+    if (!/^[0-9A-Z]$/.test(lastChar)) {
       console.log('Invalid last character:', lastChar);
       return false;
     }
@@ -227,15 +225,35 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
 
     const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
     if (missingFields.length > 0) {
-      setError(`Missing required fields: ${missingFields.join(', ')}`);
+      const errorMessage = `Missing required fields: ${missingFields.join(', ')}`;
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       setLoading(false);
       return;
     }
 
     // Validate GST number
     if (formData.gst_number && !validateGST(formData.gst_number)) {
+      const errorMessage = "Invalid GST number format. Please enter a valid 15-digit GST number.";
       console.log('GST validation failed');
-      setError("Invalid GST number format. Please enter a valid 15-digit GST number.");
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       setLoading(false);
       return;
     }
@@ -269,15 +287,43 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       if (company) {
         console.log('Updating existing company:', company.company_id);
         await companyAPI.updateCompany(company.company_id, submitData);
+        toast.success('Company updated successfully!', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
         console.log('Creating new company');
         await companyAPI.createCompany(submitData);
+        toast.success('Company created successfully!', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       }
       console.log('Form submission successful');
       onCompanyUpdated();
     } catch (err) {
       console.error("Error during submission:", err);
-      setError(err.response?.data?.error || "Failed to save company");
+      const errorMessage = err.response?.data?.error || "Failed to save company";
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } finally {
       setLoading(false);
     }
@@ -376,7 +422,11 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handlePhoneChange}
               placeholder="Enter phone number"
               required
-              className="vendor-management-form-input"
+              className="vendor-management-form-input phone-input-custom"
+              flags={flags}
+              countrySelectProps={{
+                className: "phone-input-country-select"
+              }}
             />
           </div>
 
@@ -591,9 +641,28 @@ function CompanyList() {
     if (window.confirm("Are you sure you want to delete this company?")) {
       try {
         await companyAPI.deleteCompany(companyId);
+        toast.success('Company deleted successfully!', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         await fetchCompanies();
       } catch (err) {
-        setError("Failed to delete company");
+        const errorMessage = "Failed to delete company";
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         console.error(err);
       }
     }

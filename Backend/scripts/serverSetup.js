@@ -26,6 +26,82 @@ async function initializeDatabase() {
     await sequelize.sync({ alter: true });
     console.log('Database models synchronized');
 
+    // Remove unique constraint from company_email
+    try {
+      // First try to find any constraints on company_email
+      const result = await sequelize.query(`
+        SELECT DISTINCT tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+          ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+          AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND tc.TABLE_NAME = kcu.TABLE_NAME
+        WHERE tc.TABLE_SCHEMA = ? 
+        AND tc.TABLE_NAME = 'companies' 
+        AND kcu.COLUMN_NAME = 'company_email'
+      `, { 
+        replacements: [sequelize.config.database],
+        type: sequelize.QueryTypes.SELECT 
+      });
+
+      if (result && result.length > 0) {
+        console.log('Found constraints on company_email:', result);
+        for (const row of result) {
+          if (row.CONSTRAINT_TYPE === 'UNIQUE') {
+            await sequelize.query(`ALTER TABLE companies DROP INDEX ${row.CONSTRAINT_NAME}`);
+            console.log(`Dropped unique constraint ${row.CONSTRAINT_NAME} from company_email`);
+          }
+        }
+      } else {
+        console.log('No constraints found on company_email');
+      }
+
+      // Also try to find any indexes on company_email
+      const indexResult = await sequelize.query(`
+        SELECT INDEX_NAME
+        FROM information_schema.statistics
+        WHERE table_schema = ?
+        AND table_name = 'companies'
+        AND column_name = 'company_email'
+      `, {
+        replacements: [sequelize.config.database],
+        type: sequelize.QueryTypes.SELECT
+      });
+
+      if (indexResult && indexResult.length > 0) {
+        console.log('Found indexes on company_email:', indexResult);
+        for (const row of indexResult) {
+          await sequelize.query(`ALTER TABLE companies DROP INDEX ${row.INDEX_NAME}`);
+          console.log(`Dropped index ${row.INDEX_NAME} from company_email`);
+        }
+      }
+    } catch (error) {
+      console.log('Error removing company_email constraints:', error.message);
+    }
+
+    // Ensure GST number has unique constraint
+    try {
+      const result = await sequelize.query(`
+        SELECT COUNT(*) as count 
+        FROM information_schema.table_constraints 
+        WHERE table_schema = ? 
+        AND table_name = 'companies' 
+        AND constraint_name = 'companies_gst_number_key'
+      `, { 
+        replacements: [sequelize.config.database],
+        type: sequelize.QueryTypes.SELECT 
+      });
+
+      if (result && result[0] && result[0].count === 0) {
+        await sequelize.query('ALTER TABLE companies ADD UNIQUE INDEX companies_gst_number_key (gst_number)');
+        console.log('Added unique constraint to gst_number');
+      } else {
+        console.log('GST number constraint already exists');
+      }
+    } catch (error) {
+      console.log('Error ensuring GST number constraint:', error.message);
+    }
+
     // Create default roles if they don't exist
     const defaultRoles = [
       { role_name: 'admin', description: 'Full system access' },
