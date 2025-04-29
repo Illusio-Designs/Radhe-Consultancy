@@ -81,6 +81,19 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
+// Add CSP headers middleware
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "img-src 'self' data: https: http: http://localhost:4000; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "connect-src 'self' https: http:;"
+  );
+  next();
+});
+
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
@@ -134,6 +147,9 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // Static files
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add dedicated route for profile images
+app.use('/profile-images', express.static(path.join(__dirname, 'uploads/profile_images')));
 
 // Handle favicon.ico
 app.get('/favicon.ico', (req, res) => {

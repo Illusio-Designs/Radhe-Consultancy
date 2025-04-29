@@ -1,120 +1,139 @@
-# CRM Backend
+# Backend Documentation
 
-This is the backend for a Customer Relationship Management (CRM) system that allows managing users, roles, and vendors (both companies and consumers) with Google OAuth integration.
-
-## Features
-
-- User Management with Role-Based Access Control
-- Vendor Management (Company and Consumer)
-- Google OAuth Integration
-- File Upload for Profile Images
-- JWT Authentication
-- MySQL Database with Sequelize ORM
-
-## Prerequisites
-
-- Node.js (v14 or higher)
-- MySQL (v8 or higher)
-- npm or yarn
-
-## Setup
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory with the following variables:
-   ```
-   PORT=3000
-   NODE_ENV=development
-   DB_HOST=localhost
-   DB_USER=your_mysql_username
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=radhe_consultancy_crm
-   JWT_SECRET=your_jwt_secret_key
-   JWT_EXPIRES_IN=24h
-   GOOGLE_CLIENT_ID=your_google_client_id
-   GOOGLE_CLIENT_SECRET=your_google_client_secret
-   UPLOAD_PATH=uploads/profile-images
-   MAX_FILE_SIZE=5242880
-   ```
-
-4. Create the MySQL database:
-   ```sql
-   CREATE DATABASE radhe_consultancy_crm;
-   ```
-
-5. Create the uploads directory:
-   ```bash
-   mkdir -p uploads/profile-images
-   ```
-
-6. Start the server:
-   ```bash
-   npm start
-   ```
-
-For development with auto-reload:
-```bash
-npm run dev
+## Directory Structure
+```
+Backend/
+├── config/           # Configuration files
+│   ├── db.js        # Database configuration
+│   └── jwt.js       # JWT configuration
+├── controllers/      # Route controllers
+│   ├── authController.js
+│   ├── userController.js
+│   ├── companyController.js
+│   └── adminController.js
+├── middleware/       # Custom middleware
+│   ├── auth.js      # Authentication middleware
+│   └── error.js     # Error handling middleware
+├── models/          # Database models
+│   ├── User.js
+│   ├── Company.js
+│   └── Role.js
+├── routes/          # API routes
+│   ├── auth.js
+│   ├── user.js
+│   ├── company.js
+│   └── admin.js
+├── services/        # Business logic
+│   ├── authService.js
+│   └── userService.js
+├── utils/           # Utility functions
+│   ├── validators.js
+│   └── helpers.js
+├── uploads/         # File uploads directory
+├── scripts/         # Database and setup scripts
+├── server.js        # Main application file
+└── package.json     # Dependencies and scripts
 ```
 
 ## API Endpoints
 
 ### Authentication
-- POST `/api/auth/login` - Regular login
-- POST `/api/auth/google-login` - Google OAuth login
-- POST `/api/auth/register` - Register new user
+- POST /api/auth/login
+- POST /api/auth/register
+- POST /api/auth/logout
+- GET /api/auth/me
 
 ### Users
-- GET `/api/users` - Get all users
-- GET `/api/users/:userId` - Get user by ID
-- POST `/api/users` - Create new user
-- PUT `/api/users/:userId` - Update user
-- DELETE `/api/users/:userId` - Delete user
-- POST `/api/users/:userId/profile-image` - Update profile image
-- GET `/api/users/:userId/permissions` - Get user permissions
+- GET /api/users
+- GET /api/users/:id
+- POST /api/users
+- PUT /api/users/:id
+- DELETE /api/users/:id
 
-### Vendors
-- POST `/api/vendors` - Create new vendor
-- GET `/api/vendors` - Get all vendors
-- GET `/api/vendors/:vendorId` - Get vendor by ID
-- PUT `/api/vendors/:vendorId` - Update vendor
-- DELETE `/api/vendors/:vendorId` - Delete vendor
-- POST `/api/vendors/google-login` - Google login for vendors
+### Companies
+- GET /api/companies
+- GET /api/companies/:id
+- POST /api/companies
+- PUT /api/companies/:id
+- DELETE /api/companies/:id
 
-## Database Schema
+### Admin
+- GET /api/admin/stats
+- GET /api/admin/users
+- GET /api/admin/companies
 
-The application uses the following main tables:
-- Users
-- Roles
-- RolePermissions
-- Vendors
-- CompanyVendors
-- ConsumerVendors
+## Environment Variables
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=radhe_consultancy
+DB_PORT=3306
+
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=24h
+
+PORT=5000
+NODE_ENV=development
+```
+
+## Setup Instructions
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Create .env file:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Update environment variables in .env
+
+4. Start the server:
+   ```bash
+   npm start
+   ```
+
+## Development
+- Run in development mode:
+  ```bash
+  npm run dev
+  ```
+
+- Run tests:
+  ```bash
+  npm test
+  ```
+
+## Database
+- MySQL database is used
+- Sequelize ORM for database operations
+- Models are defined in the models directory
+- Migrations are handled through scripts
 
 ## Security
-
-- JWT-based authentication
+- JWT authentication
 - Password hashing with bcrypt
-- Role-based access control
 - Input validation
-- File upload restrictions
+- Error handling middleware
+- CORS configuration
+- Rate limiting
 
 ## Error Handling
+- Custom error middleware
+- Standardized error responses
+- Logging of errors
+- Request logging
 
-The application includes comprehensive error handling for:
-- Authentication errors
-- Database errors
-- File upload errors
-- Validation errors
+## File Uploads
+- Multer middleware for file handling
+- Uploads stored in /uploads directory
+- File type validation
+- Size limits enforced
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request 
+## Logging
+- Console logging in development
+- File logging in production
+- Error logging
+- Request logging 

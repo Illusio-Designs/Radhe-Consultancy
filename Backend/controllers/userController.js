@@ -1,5 +1,5 @@
 const userService = require('../services/userService');
-const { User, Role, Company, Consumer } = require('../models');
+const { User, Role, Company, Consumer, Permission } = require('../models');
 const { uploadAndCompress } = require('../config/multerConfig');
 const { Op } = require('sequelize');
 
@@ -73,17 +73,42 @@ const getOtherUsers = async (req, res) => {
 // Get user by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id, {
+    const userId = req.params.userId;
+    
+    // Try to find user by user_id first
+    let user = await User.findOne({
+      where: { user_id: userId },
       include: [{
         model: Role,
         attributes: ['role_name']
       }]
     });
+
+    // If not found by user_id, try by numeric ID
+    if (!user) {
+      user = await User.findByPk(userId, {
+        include: [{
+          model: Role,
+          attributes: ['role_name']
+        }]
+      });
+    }
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(user);
+
+    // Format the response
+    res.json({
+      id: user.user_id,
+      email: user.email,
+      username: user.username,
+      phone: user.phone,
+      imageUrl: user.imageUrl,
+      role: user.Role.role_name
+    });
   } catch (error) {
+    console.error('Error getting user:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -107,14 +132,61 @@ const createUser = async (req, res) => {
 // Update user
 const updateUser = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    const userId = req.params.userId;
+    const updateData = { ...req.body };
+
+    // Remove sensitive fields that shouldn't be updated here
+    delete updateData.password;
+    delete updateData.role_id;
+
+    // Handle profile image upload
+    if (req.file) {
+      updateData.profile_image = `/uploads/profile_images/${req.file.filename}`;
     }
-    await user.update(req.body);
-    res.json(user);
+
+    // Try to find user by user_id first
+    let user = await User.findOne({
+      where: { user_id: userId }
+    });
+
+    // If not found by user_id, try by numeric ID
+    if (!user) {
+      user = await User.findByPk(userId);
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await user.update(updateData);
+
+    // Get updated user with role information and permissions
+    const updatedUser = await User.findOne({
+      where: { user_id: user.user_id },
+      attributes: ['user_id', 'email', 'username', 'role_id', 'contact_number', 'profile_image'],
+      include: [{
+        model: Role,
+        attributes: ['role_name'],
+        include: [{
+          model: Permission,
+          through: { attributes: [] },
+          attributes: ['permission_name']
+        }]
+      }]
+    });
+
+    res.json({
+      id: updatedUser.user_id,
+      email: updatedUser.email,
+      username: updatedUser.username,
+      contact_number: updatedUser.contact_number,
+      imageUrl: updatedUser.profile_image,
+      role: updatedUser.Role.role_name,
+      permissions: updatedUser.Role.Permissions?.map(p => p.permission_name) || []
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Error updating user information' });
   }
 };
 
@@ -135,16 +207,28 @@ const deleteUser = async (req, res) => {
 // Update profile image
 const updateProfileImage = async (req, res) => {
   try {
-    uploadAndCompress('image')(req, res, async () => {
-      const userId = req.params.userId;
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
-      const user = await userService.updateProfileImage(userId, req.file);
-      res.json(user);
+    const userId = req.params.id;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update the imageUrl field
+    await user.update({ imageUrl: `/uploads/${file.filename}` });
+
+    res.json({
+      message: 'Profile image updated successfully',
+      imageUrl: `/uploads/${file.filename}`
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error updating profile image:', error);
+    res.status(500).json({ message: 'Error updating profile image' });
   }
 };
 
@@ -191,10 +275,27 @@ const resetPassword = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const result = await userService.changePassword(req.user.userId, currentPassword, newPassword);
-    res.json(result);
+    const userId = req.user.userId;
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isValidPassword = await user.validatePassword(currentPassword);
+    if (!isValidPassword) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error changing password:', error);
+    res.status(500).json({ message: 'Error changing password' });
   }
 };
 
@@ -226,12 +327,18 @@ const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user.userId;
     
-    // Get user from database
-    const user = await User.findByPk(userId, {
-      attributes: ['user_id', 'email', 'username', 'role_id'],
+    // Get user from database with role and permissions
+    const user = await User.findOne({
+      where: { user_id: userId },
+      attributes: ['user_id', 'email', 'username', 'role_id', 'contact_number', 'profile_image'],
       include: [{
         model: Role,
-        attributes: ['role_name']
+        attributes: ['role_name'],
+        include: [{
+          model: Permission,
+          through: { attributes: [] },
+          attributes: ['permission_name']
+        }]
       }]
     });
     
@@ -239,21 +346,30 @@ const getCurrentUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // If user is a vendor, get vendor information
-    let vendorInfo = null;
-    if (user.role_id === 3) { // Assuming 3 is the vendor role ID
-      vendorInfo = await Vendor.findOne({ where: { user_id: userId } });
+    // Get role-specific data
+    let additionalData = {};
+    if (user.Role.role_name === 'company') {
+      const companyData = await Company.findOne({
+        where: { user_id: userId }
+      });
+      additionalData = { company: companyData };
+    } else if (user.Role.role_name === 'consumer') {
+      const consumerData = await Consumer.findOne({
+        where: { user_id: userId }
+      });
+      additionalData = { consumer: consumerData };
     }
 
+    // Format the response
     res.json({
-      user: {
-        user_id: user.user_id,
-        email: user.email,
-        username: user.username,
-        role_id: user.role_id,
-        role_name: user.Role.role_name,
-        vendorInfo
-      }
+      id: user.user_id,
+      email: user.email,
+      username: user.username,
+      phone: user.contact_number,
+      imageUrl: user.profile_image,
+      role: user.Role.role_name,
+      permissions: user.Role.Permissions?.map(p => p.permission_name) || [],
+      ...additionalData
     });
   } catch (error) {
     console.error('Error getting current user:', error);
@@ -267,6 +383,7 @@ module.exports = {
   getConsumerUsers,
   getOtherUsers,
   getUserById,
+  getCurrentUser,
   createUser,
   updateUser,
   deleteUser,
@@ -275,6 +392,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
-  getResetPasswordForm,
-  getCurrentUser
+  getResetPasswordForm
 };

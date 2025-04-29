@@ -12,13 +12,27 @@ console.log('- Environment:', import.meta.env.MODE);
 console.log('- API URL:', API_URL);
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: 'http://localhost:4000/api',
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    'Accept': 'application/json'
   },
-  withCredentials: true, // Enable sending cookies in cross-origin requests
+  withCredentials: true
 });
+
+// Add request interceptor for auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add request interceptor
 api.interceptors.request.use(
@@ -221,11 +235,23 @@ export const userAPI = {
   getUserById: async (id) => {
     try {
       console.log('API Service: Fetching user by ID:', id);
-      const response = await api.get(`/users/${id}`);
+      
+      // First try to get the current user's ID from localStorage
+      const currentUser = JSON.parse(localStorage.getItem('user'));
+      const userId = id || currentUser?.id;
+      
+      if (!userId) {
+        throw new Error('No user ID provided and no current user found');
+      }
+
+      const response = await api.get(`/users/${userId}`);
       console.log('API Service: User fetched successfully');
       return response.data;
     } catch (error) {
       console.error('API Service: Error fetching user:', error);
+      if (error.response?.status === 404) {
+        throw new Error('User not found');
+      }
       throw error;
     }
   },
@@ -242,14 +268,42 @@ export const userAPI = {
     }
   },
 
-  updateUser: async (id, userData) => {
+  getCurrentUser: async () => {
     try {
-      console.log('API Service: Updating user:', id);
-      const response = await api.put(`/users/${id}`, userData);
+      console.log('API Service: Fetching current user');
+      const response = await api.get('/auth/me');
+      console.log('API Service: Current user fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching current user:', error);
+      throw error;
+    }
+  },
+
+  updateUser: async (userId, data) => {
+    try {
+      console.log('API Service: Updating user:', userId);
+      
+      // Check if data is FormData (file upload)
+      const isFormData = data instanceof FormData;
+      console.log('Is FormData:', isFormData);
+      
+      // Configure headers based on data type
+      const config = {
+        headers: {
+          'Content-Type': isFormData ? undefined : 'application/json'
+        }
+      };
+
+      console.log('Sending update request with config:', config);
+      const response = await api.put(`/users/${userId}`, data, config);
       console.log('API Service: User updated successfully');
       return response.data;
     } catch (error) {
       console.error('API Service: Error updating user:', error);
+      if (error.response) {
+        console.error('Server response:', error.response.data);
+      }
       throw error;
     }
   },
@@ -303,11 +357,18 @@ export const userAPI = {
   },
 
   changePassword: async (currentPassword, newPassword) => {
-    const response = await api.post('/users/change-password', {
-      currentPassword,
-      newPassword
-    });
-    return response.data;
+    try {
+      console.log('API Service: Changing password');
+      const response = await api.post('/users/change-password', {
+        currentPassword,
+        newPassword
+      });
+      console.log('API Service: Password changed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error changing password:', error);
+      throw error;
+    }
   },
 
   forgotPassword: async (email) => {
@@ -321,14 +382,21 @@ export const userAPI = {
   },
 
   updateProfileImage: async (userId, file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const response = await api.post(`/users/${userId}/profile-image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    try {
+      console.log('API Service: Updating profile image for user:', userId);
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await api.post(`/users/${userId}/profile-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('API Service: Profile image updated successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error updating profile image:', error);
+      throw error;
+    }
   },
 
   getUserPermissions: async (userId) => {

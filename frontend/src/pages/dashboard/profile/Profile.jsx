@@ -1,48 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiUser, FiLock, FiBell, FiLogOut } from "react-icons/fi";
+import { FiUser, FiLock, FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Button from "../../../components/common/Button/Button";
 import Input from "../../../components/common/Input/Input";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
-import {
-  fetchUserProfile,
-  updateUserProfile,
-  updateProfileImage,
-  updatePassword,
-  updateNotificationSettings,
-} from "../../../services/profileService";
+import { authAPI, userAPI } from "../../../services/api";
 import img from "../../../assets/img (1).png";
 import "../../../styles/pages/dashboard/profile/Profile.css";
-import intlTelInput from 'intl-tel-input';
-import 'intl-tel-input/build/css/intlTelInput.css';
+import PhoneInput from 'react-phone-number-input';
+import flags from 'react-phone-number-input/flags';
+import 'react-phone-number-input/style.css';
 
-const PhoneNumberInput = ({ value, onChange }) => {
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    const iti = intlTelInput(inputRef.current, {
-      initialCountry: 'IN',
-      utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-    });
-
-    inputRef.current.addEventListener('change', () => {
-      onChange(iti.getNumber());
-    });
-
-    return () => {
-      iti.destroy();
-    };
-  }, [onChange]);
-
-  return (
-    <input
-      ref={inputRef}
-      type="tel"
-      placeholder="Enter phone number"
-      required
-    />
-  );
+// Add custom styles for phone input
+const phoneInputCustomStyles = {
+  '.PhoneInput': {
+    display: 'flex',
+    alignItems: 'center',
+    border: '1px solid #e2e8f0',
+    borderRadius: '0.375rem',
+    padding: '0.5rem',
+    backgroundColor: '#fff',
+  },
+  '.PhoneInputCountry': {
+    marginRight: '0.5rem',
+  },
+  '.PhoneInputInput': {
+    flex: '1',
+    border: 'none',
+    outline: 'none',
+    padding: '0.25rem',
+    fontSize: '1rem',
+    backgroundColor: 'transparent',
+  },
+  '.PhoneInputCountrySelect': {
+    width: '90px',
+  },
+  '.PhoneInputCountryIcon': {
+    width: '25px',
+    height: '20px',
+  }
 };
 
 const Profile = () => {
@@ -54,6 +51,25 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
   const userType = localStorage.getItem("userType");
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+  const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4000';
+
+  // Function to convert image URL to data URL
+  const getImageAsDataUrl = async (imageUrl) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to data URL:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     loadProfile();
@@ -67,11 +83,27 @@ const Profile = () => {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const data = await fetchUserProfile(userType);
-      setProfile(data);
+      const data = await authAPI.getCurrentUser();
+      
+      // Convert image URL to data URL if it exists
+      let imageDataUrl = null;
+      if (data.user.imageUrl) {
+        const imageUrl = `${BASE_URL}/profile-images/${data.user.imageUrl.split('/').pop()}`;
+        imageDataUrl = await getImageAsDataUrl(imageUrl);
+      }
+
+      // Set both name and username from the response
+      const userData = {
+        ...data.user,
+        name: data.user.username,
+        imageUrl: imageDataUrl
+      };
+      
+      setProfile(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -79,18 +111,72 @@ const Profile = () => {
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append("image", file);
+    console.log('Selected file:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      console.error('Invalid file type:', file.type);
+      setError('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      console.error('File too large:', file.size);
+      setError('File size should be less than 5MB');
+      return;
+    }
 
     try {
       setLoading(true);
-      await updateProfileImage(userType, formData);
-      await loadProfile();
+      // Create FormData for the file upload
+      const formData = new FormData();
+      formData.append('profile_image', file);
+
+      console.log('Uploading profile image...', {
+        userId: profile.id,
+        formData: formData.get('profile_image')
+      });
+
+      // Update user with the new profile image
+      const updatedUser = await userAPI.updateUser(profile.id, formData);
+      console.log('Profile image update response:', updatedUser);
+
+      if (!updatedUser || !updatedUser.imageUrl) {
+        throw new Error('No image URL received from server');
+      }
+
+      // Convert new image to data URL
+      const imageUrl = `${BASE_URL}/profile-images/${updatedUser.imageUrl.split('/').pop()}`;
+      const imageDataUrl = await getImageAsDataUrl(imageUrl);
+
+      // Update local state with the new image data URL
+      const updatedProfile = {
+        ...profile,
+        imageUrl: imageDataUrl
+      };
+      
+      console.log('Updating profile state:', updatedProfile);
+      localStorage.setItem('user', JSON.stringify(updatedProfile));
+      setProfile(updatedProfile);
       setSuccess("Profile image updated successfully");
     } catch (err) {
-      setError(err.message);
+      console.error('Error updating profile image:', err);
+      if (err.response) {
+        console.error('Server response:', err.response.data);
+        setError(err.response.data.message || "Failed to update profile image");
+      } else {
+        setError(err.message || "Failed to update profile image");
+      }
     } finally {
       setLoading(false);
     }
@@ -102,55 +188,90 @@ const Profile = () => {
 
   const handleProfileUpdate = async (event) => {
     event.preventDefault();
+    console.log('Profile update started');
+    
+    // Get the current values from the profile state
+    const currentPhoneNumber = profile?.contact_number;
+    const currentName = profile?.name;
+    console.log('Current values from state:', {
+      name: currentName,
+      contact_number: currentPhoneNumber
+    });
+
     const formData = new FormData(event.target);
-    const profileData = Object.fromEntries(formData.entries());
+    console.log('Form data before update:', {
+      name: formData.get('name'),
+      contact_number: formData.get('contact_number'),
+      email: formData.get('email')
+    });
+
+    // Create profile data with the current values from state
+    const profileData = {
+      username: currentName, // Use username instead of name
+      contact_number: currentPhoneNumber,
+      email: formData.get('email')
+    };
+
+    console.log('Profile data to be sent:', profileData);
 
     try {
       setLoading(true);
-      await updateUserProfile(userType, profileData);
-      await loadProfile();
+      console.log('Sending update request to API...');
+      const updatedUser = await userAPI.updateUser(profile.id, profileData);
+      console.log('API response:', updatedUser);
+      
+      // Update profile state with both username and name
+      const updatedProfile = {
+        ...updatedUser,
+        name: updatedUser.username // Set name from username
+      };
+      
+      localStorage.setItem('user', JSON.stringify(updatedProfile));
+      setProfile(updatedProfile);
       setSuccess("Profile updated successfully");
       setIsEditing(false);
     } catch (err) {
-      setError(err.message);
+      console.error('Error updating profile:', err);
+      setError(err.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    console.log('Name changed:', value);
+    setProfile(prev => ({
+      ...prev,
+      name: value
+    }));
+  };
+
+  const handlePhoneChange = (value) => {
+    console.log('Phone number changed:', value);
+    setProfile(prev => ({
+      ...prev,
+      contact_number: value
+    }));
+  };
+
   const handlePasswordUpdate = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    const passwordData = Object.fromEntries(formData.entries());
+    const { currentPassword, newPassword, confirmPassword } = Object.fromEntries(formData.entries());
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
       return;
     }
 
     try {
       setLoading(true);
-      await updatePassword(userType, passwordData);
+      await userAPI.changePassword(currentPassword, newPassword);
       setSuccess("Password updated successfully");
       event.target.reset();
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleNotificationUpdate = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const settings = Object.fromEntries(formData.entries());
-
-    try {
-      setLoading(true);
-      await updateNotificationSettings(userType, settings);
-      setSuccess("Notification settings updated successfully");
-    } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to update password");
     } finally {
       setLoading(false);
     }
@@ -172,8 +293,7 @@ const Profile = () => {
 
   const tabs = [
     { id: "personal", label: "Personal Info", icon: <FiUser /> },
-    { id: "security", label: "Security", icon: <FiLock /> },
-    { id: "notifications", label: "Notifications", icon: <FiBell /> },
+    { id: "security", label: "Security", icon: <FiLock /> }
   ];
 
   return (
@@ -183,34 +303,24 @@ const Profile = () => {
 
       <div className="profile-container">
         <div className="profile-header">
-          <div className="avatar-uploader">
+          <div className="profile-image-container">
             <img
               src={profile?.imageUrl || img}
               alt="Profile"
-              className="profile-avatar"
+              className="profile-image"
             />
-            <label className="upload-button">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                hidden
-              />
-              Edit
+            <input
+              type="file"
+              id="profile-image-upload"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="profile-image-upload" className="upload-button">
+              {loading ? "Uploading..." : "Change Photo"}
             </label>
           </div>
-          <h2>
-            {profile?.role === "admin"
-              ? profile?.username
-              : profile?.role === "owner"
-              ? profile?.owner_name
-              : profile?.role === "consumer"
-              ? profile?.name
-              : "User"}
-          </h2>
-          <p className="text-muted">
-            {userType?.charAt(0).toUpperCase() + userType?.slice(1)}
-          </p>
+          <h2>{profile?.username || "User"}</h2>
         </div>
 
         <div className="profile-tabs">
@@ -233,35 +343,57 @@ const Profile = () => {
                 {!isEditing ? (
                   <div className="profile-details">
                     <div className="detail-item">
+                      <label>Name</label>
                       <p>{profile?.name || "Not specified"}</p>
                     </div>
                     <div className="detail-item">
+                      <label>Email</label>
                       <p>{profile?.email || "Not specified"}</p>
                     </div>
                     <div className="detail-item">
-                      <p>{profile?.phone || "Not specified"}</p>
+                      <label>Phone</label>
+                      <p>{profile?.contact_number || "Not specified"}</p>
                     </div>
                     <Button onClick={handleEditToggle}>Edit Profile</Button>
                   </div>
                 ) : (
                   <form onSubmit={handleProfileUpdate} className="profile-form">
-                    <Input
-                      name="name"
-                      defaultValue={profile?.name}
-                      placeholder="Enter your name"
-                      required
-                    />
-                    <Input
-                      type="email"
-                      name="email"
-                      defaultValue={profile?.email}
-                      placeholder="Enter your email address"
-                      required
-                    />
-                    <PhoneNumberInput
-                      value={profile?.phone}
-                      onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
-                    />
+                    <div className="form-group">
+                      <label>Name</label>
+                      <Input
+                        name="name"
+                        value={profile?.name}
+                        onChange={handleNameChange}
+                        placeholder="Enter your name"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Email</label>
+                      <Input
+                        type="email"
+                        name="email"
+                        defaultValue={profile?.email}
+                        placeholder="Enter your email address"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Phone</label>
+                      <PhoneInput
+                        international
+                        defaultCountry="IN"
+                        value={profile?.contact_number}
+                        onChange={handlePhoneChange}
+                        placeholder="Enter phone number"
+                        required
+                        className="phone-input-custom"
+                        flags={flags}
+                        countrySelectProps={{
+                          className: "phone-input-country-select"
+                        }}
+                      />
+                    </div>
                     <div className="form-buttons">
                       <Button type="submit">Save Changes</Button>
                       <Button
@@ -298,33 +430,6 @@ const Profile = () => {
                   required
                 />
                 <Button type="submit">Update Password</Button>
-              </form>
-            )}
-
-            {activeTab === "notifications" && (
-              <form
-                onSubmit={handleNotificationUpdate}
-                className="profile-form"
-              >
-                <div className="checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="emailNotifications"
-                      defaultChecked={profile?.notifications?.email}
-                    />
-                    <span>Email Notifications</span>
-                  </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="pushNotifications"
-                      defaultChecked={profile?.notifications?.push}
-                    />
-                    <span>Push Notifications</span>
-                  </label>
-                </div>
-                <Button type="submit">Update Notifications</Button>
               </form>
             )}
           </div>

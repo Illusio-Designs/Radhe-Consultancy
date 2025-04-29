@@ -228,14 +228,16 @@ class AuthController {
       // Fetch the user with their role and permissions
       const user = await User.findOne({
         where: { user_id: userId },
+        attributes: ['user_id', 'email', 'username', 'role_id', 'contact_number', 'profile_image'],
         include: [{
           model: Role,
+          attributes: ['role_name'],
           include: [{
             model: Permission,
-            through: 'RolePermissions'
+            through: { attributes: [] },
+            attributes: ['permission_name']
           }]
-        }],
-        attributes: { exclude: ['password'] }
+        }]
       });
 
       if (!user) {
@@ -246,7 +248,8 @@ class AuthController {
       console.log('getCurrentUser: User found:', { 
         id: user.user_id, 
         email: user.email, 
-        role: userRole 
+        role: userRole,
+        profile_image: user.profile_image
       });
 
       // Get role-specific data
@@ -263,21 +266,21 @@ class AuthController {
         additionalData = { consumer: consumerData };
       }
 
-      // Format the response
       res.json({
-        success: true,
         user: {
           id: user.user_id,
-          username: user.username,
           email: user.email,
-          role: userRole,
-          permissions: user.Role?.Permissions?.map(p => p.permission_name) || [],
+          username: user.username,
+          role: user.Role.role_name,
+          contact_number: user.contact_number,
+          imageUrl: user.profile_image,
+          permissions: user.Role.Permissions?.map(p => p.permission_name) || [],
           ...additionalData
         }
       });
     } catch (error) {
-      console.error('Error in getCurrentUser:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      console.error('getCurrentUser error:', error);
+      res.status(500).json({ message: 'Error getting user information' });
     }
   }
 }

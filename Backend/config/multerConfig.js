@@ -23,6 +23,24 @@ const storage = multer.diskStorage({
     }
 });
 
+// Configure storage for profile images
+const profileStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = 'uploads/profile_images';
+        try {
+            if (!fsSync.existsSync(uploadDir)) {
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
 // File filter to accept images and PDFs
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
@@ -37,9 +55,15 @@ const limits = {
     fileSize: 5 * 1024 * 1024, // 5MB limit
 };
 
-// Create multer upload instance
+// Create multer upload instances
 const upload = multer({
     storage,
+    fileFilter,
+    limits
+});
+
+const uploadProfileImage = multer({
+    storage: profileStorage,
     fileFilter,
     limits
 });
@@ -52,5 +76,6 @@ const uploadCompanyDocuments = upload.fields([
 
 module.exports = {
     upload,
-    uploadCompanyDocuments
+    uploadCompanyDocuments,
+    uploadProfileImage
 }; 

@@ -3,6 +3,9 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { auth } = require('../middleware/auth');
 const { User, Role, Company, Consumer } = require('../models');
+const { uploadProfileImage } = require('../config/multerConfig');
+const path = require('path');
+const fs = require('fs');
 
 
 // Password management routes (public)
@@ -20,7 +23,7 @@ router.get('/me', auth, async (req, res) => {
     
     // Get user from database with role information
     const user = await User.findByPk(userId, {
-      attributes: ['user_id', 'email', 'username', 'role_id'],
+      attributes: ['user_id', 'email', 'username', 'role_id', 'contact_number', 'profile_image'],
       include: [{
         model: Role,
         attributes: ['role_name']
@@ -54,6 +57,8 @@ router.get('/me', auth, async (req, res) => {
         username: user.username,
         role_id: user.role_id,
         role_name: user.Role.role_name,
+        contact_number: user.contact_number,
+        imageUrl: user.profile_image,
         profile: companyInfo || consumerInfo
       }
     });
@@ -66,12 +71,40 @@ router.get('/me', auth, async (req, res) => {
 // Other user routes
 router.get('/:userId', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
-router.put('/:userId', auth, userController.updateUser);
+router.put('/:userId', auth, uploadProfileImage.single('profile_image'), userController.updateUser);
 router.delete('/:userId', auth, userController.deleteUser);
-router.post('/:userId/profile-image', auth, userController.updateProfileImage);
 router.get('/:userId/permissions', auth, userController.getUserPermissions);
 
 // Change password (requires authentication)
 router.post('/change-password', auth, userController.changePassword);
+
+// Role-specific user routes
+router.get('/company', auth, userController.getCompanyUsers);
+router.get('/consumer', auth, userController.getConsumerUsers);
+router.get('/other', auth, userController.getOtherUsers);
+
+// Add new route to serve profile images
+router.get('/profile-image/:filename', (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const imagePath = path.join(__dirname, '../uploads/profile_images', filename);
+    
+    // Check if file exists
+    if (!fs.existsSync(imagePath)) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Set proper headers for image serving
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Send the image file
+    res.sendFile(imagePath);
+  } catch (error) {
+    console.error('Error serving profile image:', error);
+    res.status(500).json({ error: 'Error serving image' });
+  }
+});
 
 module.exports = router;
