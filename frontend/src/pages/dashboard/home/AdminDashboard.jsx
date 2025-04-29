@@ -11,28 +11,32 @@ import {
   FiClock as FiRecent,
   FiUsers,
   FiShoppingCart,
-  FiDollarSign
+  FiDollarSign,
+  FiBriefcase
 } from "react-icons/fi";
 import { adminDashboardAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/home/Dashboard.css";
 
 const CompanyStatsCard = ({ stats }) => (
-  <div className="company-stats-card">
-    <div className="company-stats-header">
-      <div className="company-stats-title">
+  <div className="consumer-stats-card">
+    <div className="consumer-stats-header">
+      <div className="consumer-stats-title">
         <FiPackage className="stats-icon" />
         <h2>Company Statistics</h2>
       </div>
     </div>
     
-    <div className="company-stats-grid">
-      <div className="company-stat-item total">
-        <div className="stat-label">Total Companies</div>
+    <div className="consumer-stats-grid">
+      <div className="consumer-stat-item total">
+        <div className="stat-label">
+          <FiBriefcase className="stat-icon" />
+          Total Companies
+        </div>
         <div className="stat-value">{stats.total_companies}</div>
       </div>
 
-      <div className="company-stat-item active">
+      <div className="consumer-stat-item active">
         <div className="stat-label">
           <FiCheckCircle className="stat-icon" />
           Active Companies
@@ -43,7 +47,7 @@ const CompanyStatsCard = ({ stats }) => (
         </div>
       </div>
 
-      <div className="company-stat-item inactive">
+      <div className="consumer-stat-item completed">
         <div className="stat-label">
           <FiXCircle className="stat-icon" />
           Inactive Companies
@@ -54,7 +58,7 @@ const CompanyStatsCard = ({ stats }) => (
         </div>
       </div>
 
-      <div className="company-stat-item recent">
+      <div className="consumer-stat-item spending">
         <div className="stat-label">
           <FiRecent className="stat-icon" />
           Recent Companies (30 days)
