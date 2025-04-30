@@ -96,7 +96,7 @@
   font-size: 12px;
 }
 
-.dropdown-content {
+.navbar .dropdown-content {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
@@ -107,19 +107,19 @@
   border-radius: 15px;
 }
 
-.dropdown-content a {
+.navbar .dropdown-content a {
   color: black;
   padding: 12px 16px;
   text-decoration: none;
   display: block;
 }
 
-.dropdown-content a:hover {
+.navbar .dropdown-content a:hover {
   background-color: #f1f1f1;
 }
 
 /* Show dropdown on hover */
-.nav-item:hover .dropdown-content {
+.navbar.nav-item:hover .dropdown-content {
   display: block;
 }
 

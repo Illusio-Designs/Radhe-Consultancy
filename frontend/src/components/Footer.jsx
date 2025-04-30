@@ -37,10 +37,18 @@ const Footer = () => {
           <img src={img} alt="logo" className="footer-logo" />
           <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
           <div className="social-icons">
-            <FaFacebookF />
-            <FaTwitter />
-            <FaInstagram />
-            <FaLinkedinIn />
+            <div className="social-icon">
+              <FaFacebookF />
+            </div>
+            <div className="social-icon">
+              <FaTwitter />
+            </div>
+            <div className="social-icon">
+              <FaInstagram />
+            </div>
+            <div className="social-icon">
+              <FaLinkedinIn />
+          </div>
           </div>
         </div>
         <div className="footer-col contact-info">

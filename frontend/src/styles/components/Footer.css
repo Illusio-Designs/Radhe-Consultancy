@@ -5,11 +5,10 @@
   }
   
   .newsletter {
-    background-color: #083a84;
+    background-color: #1F4F9C;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 10%;
     flex-wrap: wrap;
   }
   
@@ -39,7 +38,7 @@
   
   .newsletter-form button {
     background-color: white;
-    color: #083a84;
+    color: #1F4F9C;
     border: none;
     border-radius: 50px;
     padding: 10px 20px;
@@ -50,20 +49,25 @@
   .footer-main {
     display: flex;
     justify-content: space-around;
-    padding: 60px 11%;
+    padding: 60px 9%;
     flex-wrap: wrap;
-    border-bottom: 1px solid #222;
   }
   
   .footer-col {
     flex: 1 1 220px;
-    margin: 20px;
+    border-left: 1px solid #FFFFFF14;
+    padding-left: 40px;
+  }
+
+  .footer-col:first-child {
+    border-left: none;
   }
   
   .footer-col h4 {
-    font-size: 18px;
+    font-size: 26px;
     margin-bottom: 15px;
     color: #fff;
+    font-family: Playfair Display;
   }
   
   .footer-col ul {
@@ -73,25 +77,40 @@
   
   .footer-col li {
     margin-bottom: 10px;
-    font-size: 14px;
-    color: #ccc;
+    font-size: 20px;
+    color: #99A4A3;
   }
   
   .footer-col.center-logo {
     text-align: center;
+    margin-right: 60px;
   }
   
   .footer-logo {
-    width: 50%;
+    width: 70%;
+    padding-bottom: 40px;
   }
   
-  .social-icons {
-    margin-top: 10px;
+  .footer-col .social-icons {
+    padding-top: 40px;
     display: flex;
     justify-content: center;
     gap: 15px;
     font-size: 18px;
-    color: #ccc;
+    color: #1F4F9C;
+  }
+
+  .footer-col .social-icon {
+    background-color: #ffffff;
+    height: 20px;
+    border-radius: 50%;
+    padding: 10px;
+  }
+
+  .footer-col .contact-info h4 svg{
+    background-color: #FFFFFF14;
+    border-radius: 50%;
+    padding: 10px;
   }
   
   .contact-info h4 {
@@ -99,7 +118,8 @@
     align-items: center;
     gap: 10px;
     margin-top: 15px;
-    font-size: 16px;
+    font-size: 22px;
+    font-family: Playfair Display;
   }
   
   .contact-info p {
@@ -109,17 +129,18 @@
   }
   
   .footer-bottom {
-    background-color: #083a84;
+    background-color: #1F4F9C;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 15px 40px;
-    font-size: 14px;
+    font-size: 16px;
     flex-wrap: wrap;
   }
   
   .footer-bottom span {
-    color: #49a6ff;
+    color: #ffffff;
+    font-weight: 700;
   }
   
   .footer-bottom p {

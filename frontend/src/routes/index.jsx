@@ -28,6 +28,7 @@ import Health from "../pages/dashboard/insurance/Health";
 import Marine from "../pages/dashboard/insurance/Marine";
 import Fire from "../pages/dashboard/insurance/Fire";
 import Vehicle from "../pages/dashboard/insurance/Vehicle";
+import Companies from "../pages/dashboard/insurance/Companies";
 import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
 import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
 import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
@@ -184,6 +185,10 @@ const router = createBrowserRouter([
       {
         path: "insurance/vehicle",
         element: <Vehicle />,
+      },
+      {
+        path: "insurance/companies",
+        element: <Companies />,
       },
       // Compliance Routes
       {
