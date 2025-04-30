@@ -129,7 +129,7 @@
 }
 
 .sidebar-nav {
-  scrollbar-width: thin;
+  scrollbar-width: none;
   overflow-y: auto;
   flex-grow: 1;
   padding-right: 4px;

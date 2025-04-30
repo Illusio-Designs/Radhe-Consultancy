@@ -138,17 +138,10 @@ const Profile = () => {
 
     try {
       setLoading(true);
-      // Create FormData for the file upload
-      const formData = new FormData();
-      formData.append('profile_image', file);
-
-      console.log('Uploading profile image...', {
-        userId: profile.id,
-        formData: formData.get('profile_image')
-      });
-
-      // Update user with the new profile image
-      const updatedUser = await userAPI.updateUser(profile.id, formData);
+      // Upload new profile image
+      console.log('Uploading profile image...', { userId: profile.id });
+      // Use the dedicated API endpoint for profile image upload
+      const updatedUser = await userAPI.updateProfileImage(profile.id, file);
       console.log('Profile image update response:', updatedUser);
 
       if (!updatedUser || !updatedUser.imageUrl) {
@@ -309,16 +302,6 @@ const Profile = () => {
               alt="Profile"
               className="profile-image"
             />
-            <input
-              type="file"
-              id="profile-image-upload"
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: 'none' }}
-            />
-            <label htmlFor="profile-image-upload" className="upload-button">
-              {loading ? "Uploading..." : "Change Photo"}
-            </label>
           </div>
           <h2>{profile?.username || "User"}</h2>
         </div>
@@ -343,21 +326,41 @@ const Profile = () => {
                 {!isEditing ? (
                   <div className="profile-details">
                     <div className="detail-item">
-                      <label>Name</label>
                       <p>{profile?.name || "Not specified"}</p>
                     </div>
                     <div className="detail-item">
-                      <label>Email</label>
                       <p>{profile?.email || "Not specified"}</p>
                     </div>
                     <div className="detail-item">
-                      <label>Phone</label>
                       <p>{profile?.contact_number || "Not specified"}</p>
                     </div>
                     <Button onClick={handleEditToggle}>Edit Profile</Button>
                   </div>
                 ) : (
                   <form onSubmit={handleProfileUpdate} className="profile-form">
+                    <div className="form-group">
+                      <label>Profile Photo</label>
+                      <div className="profile-image-container">
+                        <img
+                          src={profile?.imageUrl || img}
+                          alt="Profile"
+                          className="profile-image"
+                        />
+                        <input
+                          type="file"
+                          id="profile-image-upload-edit"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          style={{ display: 'none' }}
+                        />
+                        <label
+                          htmlFor="profile-image-upload-edit"
+                          className="upload-button"
+                        >
+                          {loading ? "Uploading..." : "Change Photo"}
+                        </label>
+                      </div>
+                    </div>
                     <div className="form-group">
                       <label>Name</label>
                       <Input
