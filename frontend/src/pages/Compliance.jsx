@@ -82,7 +82,7 @@ const Compliance = () => {
       <div className="compliance">
       <div className="hero-section">
         <div className="hero-content">
-          <h1>Compliance</h1>
+          <h1>Compliance & Licensing</h1>
         </div>
       </div>
       <div className="page-container">

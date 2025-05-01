@@ -12,15 +12,8 @@
     color: white;
   }
 
-  .hero-content{
+ .compliance .hero-content{
     background-color: #1F4F9CCF;
-    padding: 21.4% 43%;
+    padding: 18.5% 35%;
     overflow: hidden;
-  }
-  
-  .compliance .hero-content h1 {
-    font-size: 3.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    font-family: 'Playfair Display', serif;
   }
