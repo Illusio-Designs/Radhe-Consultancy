@@ -35,6 +35,12 @@ import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
 import DSC from "../pages/dashboard/dsc/DSC";
 import NotFound from "../pages/NotFound";
 import Home from "../pages/Home";
+import About from "../pages/About";
+import Insurance from "../pages/Insurance";
+import Compliance from "../pages/Compliance";
+import Contact from "../pages/Contact";
+import Blog from "../pages/Blog";
+import Career from "../pages/Career";
 
 const router = createBrowserRouter([
   // Public Routes
@@ -49,6 +55,30 @@ const router = createBrowserRouter([
       {
         path: "/home",
         element: <Home />,
+      },
+      { 
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/insurance",
+        element: <Insurance />,
+      },
+      {
+        path: "/compliance",
+        element: <Compliance />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
+      },
+      {
+        path: "/blog",
+        element: <Blog />,
+      },
+      {
+        path: "/career",
+        element: <Career />,
       },
       {
         path: "unauthorized",

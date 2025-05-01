@@ -5,20 +5,35 @@
   }
   
   .newsletter {
-    background-color: #1F4F9C;
+    background-image: url("../../assets/footerbg.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
   }
+
+  .newsletter-content {
+    position: relative;
+    background-color: #1F4F9C;
+    padding: 60px 9%;
+    font-family: Playfair Display;
+}
+
+  .newsletter-top {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    width: 30%;
+    height: 60%;
+}
   
   .newsletter-content h4 {
-    font-size: 16px;
+    font-size: 20px;
     margin-bottom: 8px;
   }
   
   .newsletter-content h2 {
-    font-size: 32px;
+    font-size: 40px;
     font-weight: 700;
     color: white;
   }
@@ -26,8 +41,10 @@
   .newsletter-form {
     display: flex;
     gap: 10px;
-    margin-top: 10px;
-  }
+    padding: 81px 21% 81px 6%;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+}
   
   .newsletter-form input {
     padding: 10px 15px;
@@ -145,5 +162,10 @@
   
   .footer-bottom p {
     margin: 5px 0;
+  }
+
+  .footer-bottom a {
+    color: #ffffff;
+    text-decoration: none;
   }
   

@@ -1,0 +1,26 @@
+.compliance .hero-section {
+    background-image: url('../../assets/compliance.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 130px;
+    color: white;
+  }
+
+  .hero-content{
+    background-color: #1F4F9CCF;
+    padding: 21.4% 43%;
+    overflow: hidden;
+  }
+  
+  .compliance .hero-content h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    font-family: 'Playfair Display', serif;
+  }

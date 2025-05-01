@@ -1,0 +1,86 @@
+.career-content {
+  margin-top: 2rem;
+}
+
+.career-intro {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.career-intro h2 {
+  color: #1F4F9C;
+  margin-bottom: 1rem;
+}
+
+.career-intro p {
+  color: #666;
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.job-openings {
+  margin-bottom: 3rem;
+}
+
+.job-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.job-card h3 {
+  color: #1F4F9C;
+  margin-bottom: 1rem;
+}
+
+.job-card p {
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.apply-btn {
+  background: #1F4F9C;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.apply-btn:hover {
+  background: #153b7a;
+}
+
+.benefits {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 10px;
+}
+
+.benefits h2 {
+  color: #1F4F9C;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.benefits ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.benefits li {
+  color: #666;
+  padding: 1rem;
+  background: white;
+  border-radius: 5px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+} 

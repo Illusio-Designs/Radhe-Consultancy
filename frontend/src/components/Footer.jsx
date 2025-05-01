@@ -2,12 +2,14 @@ import React from 'react';
 import '../styles/components/Footer.css';
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 import img from '../assets/@RADHE CONSULTANCY LOGO.png';
+import top from "../assets/footer-1-top.png.png"
 
 const Footer = () => {
   return (
     <div className="page-footer">
       <div className="newsletter">
         <div className="newsletter-content">
+          <img src={top} alt="top" className="newsletter-top" />
           <h4>Newsletter</h4>
           <h2>Sign Up To Get Latest Update</h2>
         </div>
@@ -65,7 +67,7 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <p>Copyright <span>Radhe Consultancy</span> All Rights Reserved</p>
-        <p>Design & Develop with ❤️ by - Pixelvline Design Studio & Illusio Designs</p>
+        <p>Design & Develop with ❤️ by - Pixelvline Design Studio & <a href="https://illusiodesigns.agency/" target="_blank" rel="noopener noreferrer">Illusio Designs</a></p>
       </div>
     </div>
   );
