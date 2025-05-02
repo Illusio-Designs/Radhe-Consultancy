@@ -8,9 +8,11 @@ const Role = sequelize.define('Role', {
     autoIncrement: true,
   },
   role_name: {
-    type: DataTypes.ENUM('user', 'admin', 'vendor_manager', 'user_manager', 'company', 'consumer'),
+    type: DataTypes.STRING,
     allowNull: false,
-    unique: true
+    validate: {
+      isIn: [['user', 'admin', 'vendor_manager', 'user_manager', 'company', 'consumer', 'insurance_manager']]
+    }
   },
   description: {
     type: DataTypes.STRING,

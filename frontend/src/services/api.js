@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 // Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === 'development' 
+    ? 'http://localhost:5000/api' 
+    : 'https://api.radheconsultancy.co.in/api');
 
 if (!API_URL) {
   console.error('VITE_API_URL environment variable is not set');
@@ -12,12 +15,14 @@ console.log('- Environment:', import.meta.env.MODE);
 console.log('- API URL:', API_URL);
 
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
   },
-  withCredentials: true
+  withCredentials: true,
+  crossDomain: true
 });
 
 // Add request interceptor for auth token
@@ -34,7 +39,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add request interceptor
+// Add request interceptor for CORS and debugging
 api.interceptors.request.use(
   (config) => {
     console.log('\n=== API Request Debug Log ===');
@@ -64,7 +69,7 @@ api.interceptors.request.use(
     // Add CORS headers for preflight
     if (config.method === 'options') {
       config.headers['Access-Control-Request-Method'] = config.method;
-      config.headers['Access-Control-Request-Headers'] = 'Content-Type, Authorization';
+      config.headers['Access-Control-Request-Headers'] = 'Content-Type, Authorization, X-Requested-With';
     }
     
     console.log('=== End API Request Debug Log ===\n');
