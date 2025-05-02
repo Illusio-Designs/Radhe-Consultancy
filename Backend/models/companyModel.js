@@ -38,13 +38,11 @@ const Company = sequelize.define('Company', {
   },
   gst_number: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   pan_number: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   firm_type: {
     type: DataTypes.ENUM('Proprietorship', 'Partnership', 'LLP', 'Private Limited', 'Limited', 'Trust'),
@@ -100,37 +98,6 @@ const Company = sequelize.define('Company', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'
-});
-
-// Define associations
-Company.belongsTo(User, { foreignKey: 'user_id' });
-
-// Add indexes after model definition
-Company.afterSync(async () => {
-  try {
-    // Check if indexes exist before creating them
-    const [results] = await sequelize.query(
-      "SELECT COUNT(*) as count FROM information_schema.statistics WHERE table_schema = ? AND table_name = 'companies' AND index_name = 'idx_gst_number'",
-      { replacements: [sequelize.config.database], type: sequelize.QueryTypes.SELECT }
-    );
-    
-    if (results.count === 0) {
-      await sequelize.query('CREATE INDEX idx_gst_number ON companies (gst_number)');
-      console.log('Created index idx_gst_number on companies table');
-    }
-    
-    const [panResults] = await sequelize.query(
-      "SELECT COUNT(*) as count FROM information_schema.statistics WHERE table_schema = ? AND table_name = 'companies' AND index_name = 'idx_pan_number'",
-      { replacements: [sequelize.config.database], type: sequelize.QueryTypes.SELECT }
-    );
-    
-    if (panResults.count === 0) {
-      await sequelize.query('CREATE INDEX idx_pan_number ON companies (pan_number)');
-      console.log('Created index idx_pan_number on companies table');
-    }
-  } catch (error) {
-    console.error('Error creating indexes:', error);
-  }
 });
 
 module.exports = Company;
