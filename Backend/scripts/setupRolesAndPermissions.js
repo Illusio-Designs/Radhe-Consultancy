@@ -9,24 +9,28 @@ const roles = [
     description: 'Full system access'
   },
   {
+    role_name: 'user',
+    description: 'Basic user access'
+  },
+  {
+    role_name: 'vendor_manager',
+    description: 'Vendor management access'
+  },
+  {
     role_name: 'user_manager',
     description: 'User management access'
   },
   {
-    role_name: 'user',
-    description: 'Default user role'
-  },
-  {
-    role_name: 'vendor_manager',
-    description: 'Company and consumer management access'
-  },
-  {
     role_name: 'company',
-    description: 'Company-specific access'
+    description: 'Company access'
   },
   {
     role_name: 'consumer',
-    description: 'Consumer-specific access'
+    description: 'Consumer access'
+  },
+  {
+    role_name: 'insurance_manager',
+    description: 'Insurance management access'
   }
 ];
 
@@ -56,30 +60,54 @@ const permissions = [
   // System Access
   { permission_name: 'access_dashboard' },
   { permission_name: 'access_reports' },
-  { permission_name: 'access_settings' }
+  { permission_name: 'access_settings' },
+
+  // Insurance Management
+  { permission_name: 'view_insurance_companies' },
+  { permission_name: 'create_insurance_company' },
+  { permission_name: 'edit_insurance_company' },
+  { permission_name: 'delete_insurance_company' },
+  { permission_name: 'view_policies' },
+  { permission_name: 'create_policy' },
+  { permission_name: 'edit_policy' },
+  { permission_name: 'delete_policy' },
+  { permission_name: 'upload_company_documents' }
 ];
 
 const rolePermissions = {
-  admin: permissions.map(p => p.permission_name), // All permissions
-  user_manager: [
+  'admin': permissions.map(p => p.permission_name), // All permissions
+  'user': [
+    'access_dashboard'
+  ],
+  'vendor_manager': [
+    'view_companies', 'create_company', 'edit_company', 'delete_company',
+    'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
+    'access_dashboard', 'access_reports', 'upload_company_documents'
+  ],
+  'user_manager': [
     'view_users', 'create_user', 'edit_user', 'delete_user',
     'view_roles', 'assign_roles', 'access_dashboard'
   ],
-  user: [
-    'access_dashboard'
-  ],
-  vendor_manager: [
-    'view_companies', 'create_company', 'edit_company', 'delete_company',
-    'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
-    'access_dashboard', 'access_reports'
-  ],
-  company: [
+  'company': [
     'access_dashboard',
-    'view_companies', 'edit_company'
+    'view_companies', 'edit_company',
+    'upload_company_documents'
   ],
-  consumer: [
+  'consumer': [
     'access_dashboard',
     'view_consumers', 'edit_consumer'
+  ],
+  'insurance_manager': [
+    'access_dashboard',
+    'view_insurance_companies',
+    'create_insurance_company',
+    'edit_insurance_company',
+    'delete_insurance_company',
+    'view_policies',
+    'create_policy',
+    'edit_policy',
+    'delete_policy',
+    'access_reports'
   ]
 };
 
