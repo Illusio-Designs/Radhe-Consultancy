@@ -25,10 +25,6 @@ const Casestudy = () => {
   return (
     <>
       <div className="casestudy-container">
-        <div className="casestudy-content">
-            <p>Case Study</p>
-            <h1>Attoenwy Legal Excellence in Action</h1>
-        </div>
         <div className="image-grid">
           {images.map((image, index) => (
             <div className="image-container" key={index}>

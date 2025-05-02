@@ -4,92 +4,82 @@ import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
 import Pagination from '../components/common/Pagination';
 import { HiOutlineArrowRight } from 'react-icons/hi2';
+import img from "../assets/Mask group (1).png";
+import img1 from "../assets/Mask group (2).png";
 import '../styles/pages/Blog.css';
 
 const blogPosts = [
   {
     id: 1,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-statue.jpg',
-    date: 'March 15, 2024',
-    excerpt: 'Latest updates and developments in the legal industry...'
+    title: '23 cases have been successfully',
+    image: img,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 2,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-consultation.jpg',
-    date: 'March 14, 2024',
-    excerpt: 'Professional legal consultation services for your needs...'
+    title: '23 cases have been successfully',
+    image: img1,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 3,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-gavel.jpg',
-    date: 'March 13, 2024',
-    excerpt: 'Understanding the latest legal precedents and rulings...'
+    title: '23 cases have been successfully',
+    image: img,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 4,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-books.jpg',
-    date: 'March 12, 2024',
-    excerpt: 'Resources and knowledge for legal professionals...'
+    title: '23 cases have been successfully',
+    image: img1,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 5,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-team.jpg',
-    date: 'March 11, 2024',
-    excerpt: 'Meet our experienced team of legal experts...'
+    title: '23 cases have been successfully',
+    image: img,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 6,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-document.jpg',
-    date: 'March 10, 2024',
-    excerpt: 'Important documentation and compliance updates...'
+    title: '23 cases have been successfully',
+    image: img1,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 7,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-office.jpg',
-    date: 'March 9, 2024',
-    excerpt: 'Modern legal services for modern businesses...'
+    title: '23 cases have been successfully',
+    image: img,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 8,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-handshake.jpg',
-    date: 'March 8, 2024',
-    excerpt: 'Building strong partnerships with our clients...'
+    title: '23 cases have been successfully',
+    image: img1,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 9,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-tech.jpg',
-    date: 'March 7, 2024',
-    excerpt: 'Leveraging technology in legal services...'
+    title: '23 cases have been successfully',
+    image: img,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 10,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-meeting.jpg',
-    date: 'March 6, 2024',
-    excerpt: 'Strategic legal planning and consultation...'
+    title: '23 cases have been successfully',
+    image: img1,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 11,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-research.jpg',
-    date: 'March 5, 2024',
-    excerpt: 'In-depth legal research and analysis...'
+    title: '23 cases have been successfully',
+    image: img,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   },
   {
     id: 12,
-    title: 'Latest News From Northman',
-    image: '/images/blog/legal-contract.jpg',
-    date: 'March 4, 2024',
-    excerpt: 'Contract law and business agreements...'
+    title: '23 cases have been successfully',
+    image: img1,
+    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
   }
 ];
 
@@ -127,7 +117,7 @@ const Blog = () => {
                   <h2>{post.title}</h2>
                   <p className="blog-date">{post.date}</p>
                   <p className="blog-excerpt">{post.excerpt}</p>
-                  <button className="read-more">Read More  <HiOutlineArrowRight className="right-arrow" /></button>
+                  <button className="read-more">Read More →</button>
                 </div>
               </article>
             ))}
