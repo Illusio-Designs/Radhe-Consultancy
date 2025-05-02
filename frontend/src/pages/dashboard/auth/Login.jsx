@@ -104,6 +104,7 @@ function Login() {
   };
 
   return (
+    <div className="auth">
     <div className="auth-container">
       <div className="auth-card">
         <h2>Welcome Back</h2>
@@ -174,6 +175,7 @@ function Login() {
           Don't have an account? <Link to="/register">Sign up</Link>
         </p>
       </div>
+    </div>
     </div>
   );
 }

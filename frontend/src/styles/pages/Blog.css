@@ -1,0 +1,117 @@
+.page-container p{
+  font-size: 25px;
+  font-weight: 500;
+  color: #868686;
+  text-align: center;
+  padding-bottom: 20px;
+}
+.page-container h1{
+  font-size: 50px;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+  padding-bottom: 50px;
+}
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 50px;
+  margin-bottom: 40px;
+}
+
+.blog-card {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.blog-image {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.blog-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.blog-content {
+  padding: 24px;
+}
+
+.blog-content h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.blog-content p{
+  text-align: left !important;
+}
+
+.blog-date {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.blog-excerpt {
+  color: #666;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.read-more {
+  display: inline-block;
+  padding: 10px 24px;
+  background-color: #000000;
+  color: white;
+  text-decoration: none;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.read-more:hover {
+  background-color: #1557b0;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.blog .hero-section {
+  background-image: url('../../assets/blog.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 130px;
+  color: white;
+}
+
+.blog .hero-content{
+  background-color: #1F4F9CCF;
+  padding: 20.8% 46%;
+  overflow: hidden;
+}

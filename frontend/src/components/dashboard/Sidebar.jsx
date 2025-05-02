@@ -105,7 +105,8 @@ const Sidebar = ({ onCollapse }) => {
         { path: "/dashboard/insurance/health", icon: <BiPulse />, label: "Health" },
         { path: "/dashboard/insurance/marine", icon: <BiWater />, label: "Marine" },
         { path: "/dashboard/insurance/fire", icon: <BiHotel />, label: "Fire" },
-        { path: "/dashboard/insurance/vehicle", icon: <BiCar />, label: "Vehicle" }
+        { path: "/dashboard/insurance/vehicle", icon: <BiCar />, label: "Vehicle" },
+        { path: "/dashboard/insurance/companies", icon: <BiBuilding />, label: "Companies" }
       ]
     },
     {

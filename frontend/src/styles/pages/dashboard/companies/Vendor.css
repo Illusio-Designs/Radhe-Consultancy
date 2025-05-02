@@ -320,7 +320,6 @@
 
 /* Phone Input Custom Styles */
 .phone-input-custom {
-  width: 100% !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 0.375rem !important;
   padding: 0.5rem !important;
@@ -387,23 +386,23 @@
   outline: none;
 }
 
-/* Hover effects */
+
 .phone-input-custom:hover {
   border-color: #cbd5e1 !important;
 }
 
-/* Error state */
+
 .phone-input-custom.error {
   border-color: #ef4444 !important;
 }
 
-/* Disabled state */
+
 .phone-input-custom.disabled {
   background-color: #f1f5f9 !important;
   cursor: not-allowed !important;
 }
 
-/* Flag icon specific fixes */
+
 .PhoneInputCountryIcon--border {
   box-shadow: none !important;
   background: none !important;

@@ -93,6 +93,7 @@ function Register() {
   };
 
   return (
+    <div className="auth">
     <div className="auth-container">
       <div className="auth-card">
         <h2>Create Account</h2>
@@ -180,6 +181,7 @@ function Register() {
           Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>
+    </div>
     </div>
   );
 }

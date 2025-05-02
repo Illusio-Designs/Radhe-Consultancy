@@ -1,0 +1,19 @@
+.compliance .hero-section {
+    background-image: url('../../assets/compliance.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 130px;
+    color: white;
+  }
+
+ .compliance .hero-content{
+    background-color: #1F4F9CCF;
+    padding: 18.5% 35%;
+    overflow: hidden;
+  }
