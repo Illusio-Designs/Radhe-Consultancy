@@ -16,8 +16,8 @@
 
 .working-with h1 {
   font-weight: 500;
-    font-size: 30px;
-    color: white;
+    font-size: 30px !important;
+    color: white !important;
     text-align: center;
     padding-bottom: 40px;
 }

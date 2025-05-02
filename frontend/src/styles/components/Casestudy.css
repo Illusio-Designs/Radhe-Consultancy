@@ -3,10 +3,15 @@
   text-align: center;
 }
 
+.casestudy{
+  padding: 100px 0 0;
+}
+
 .casestudy-content p {
-  font-size: 18px;
+  font-size: 22px;
   color: #868686;
   margin-bottom: 30px;
+  text-align: center;
 }
 
 .casestudy-content h1 {
@@ -14,6 +19,7 @@
   font-weight: bold;
   margin-bottom: 40px;
   font-family: 'Playfair Display';
+  text-align: center;
 }
 
 .image-grid {
