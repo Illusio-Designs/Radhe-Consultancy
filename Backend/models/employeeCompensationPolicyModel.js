@@ -97,15 +97,4 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   updatedAt: 'updated_at'
 });
 
-// Define associations
-EmployeeCompensationPolicy.belongsTo(InsuranceCompany, {
-  foreignKey: 'insurance_company_id',
-  as: 'insuranceCompany'
-});
-
-EmployeeCompensationPolicy.belongsTo(Company, {
-  foreignKey: 'company_id',
-  as: 'company'
-});
-
 module.exports = EmployeeCompensationPolicy; 

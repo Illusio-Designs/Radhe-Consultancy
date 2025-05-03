@@ -36,23 +36,23 @@ Consumer.belongsTo(User, { foreignKey: 'user_id' });
 
 // Insurance Company and Policy associations
 InsuranceCompany.hasMany(EmployeeCompensationPolicy, {
-  foreignKey: 'insuranceCompanyId',
+  foreignKey: 'insurance_company_id',
   as: 'employeeCompensationPolicies'
 });
 
 EmployeeCompensationPolicy.belongsTo(InsuranceCompany, {
-  foreignKey: 'insuranceCompanyId',
+  foreignKey: 'insurance_company_id',
   as: 'provider'
 });
 
 // Company and Policy associations
 Company.hasMany(EmployeeCompensationPolicy, {
-  foreignKey: 'companyId',
+  foreignKey: 'company_id',
   as: 'employeePolicies'
 });
 
 EmployeeCompensationPolicy.belongsTo(Company, {
-  foreignKey: 'companyId',
+  foreignKey: 'company_id',
   as: 'policyHolder'
 });
 
