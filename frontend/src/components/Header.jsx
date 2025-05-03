@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HiPhone, HiEnvelope, HiMapPin, HiMagnifyingGlass, HiBars3 } from 'react-icons/hi2';
 import { HiOutlineArrowSmallDown, HiOutlineArrowRight, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
 import { FaFacebook, FaTwitter, FaYoutube, FaLinkedin } from 'react-icons/fa'; // Updated to use react-icons/fa
+import { useLocation } from 'react-router-dom';
 import img from '../assets/@RADHE CONSULTANCY LOGO blue.png';
 import '../styles/components/Header.css'; 
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const location = useLocation();
+  const [activePage, setActivePage] = useState('');
+
+  useEffect(() => {
+    setActivePage(location.pathname);
+  }, [location]);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -48,20 +55,25 @@ const Header = () => {
 
         {/* Menu */}
         <nav className="nav-links">
-          <div className="nav-item">
+          <div className={`nav-item ${activePage === '/home' ? 'active' : ''}`}>
             <a href="/home">Home</a>
           </div>
-          <div className="nav-item"> <a href="/about">About Us</a></div>
-          <div className="nav-item" onClick={toggleDropdown}>
+          <div className={`nav-item ${activePage === '/about' ? 'active' : ''}`}>
+            <a href="/about">About Us</a>
+          </div>
+          <div className={`nav-item ${activePage === '/insurance' || activePage === '/compliance' ? 'active' : ''}`} onClick={toggleDropdown}>
             <a href="#">Service <HiOutlineArrowSmallDown className="down-icon" /></a>
             <div className={`dropdown-content ${isDropdownOpen ? 'show' : ''}`}>
               <a href="/insurance">Insurance</a>
               <a href="/compliance">Compliance & Licensing</a>
             </div>
           </div>
-          <div className="nav-item"> <a href="/career">Career</a></div>
-          <div className="nav-item"> <a href="/blog">Blog</a></div>
-          <div className="nav-item"> <a href="/contact">Contact</a></div>
+          <div className={`nav-item ${activePage === '/blog' ? 'active' : ''}`}>
+            <a href="/blog">Blog</a>
+          </div>
+          <div className={`nav-item ${activePage === '/contact' ? 'active' : ''}`}>
+            <a href="/contact">Contact</a>
+          </div>
         </nav>
 
         {/* Right side buttons */}

@@ -76,7 +76,7 @@
   align-items: center;
   font-size: 16px;
   font-weight: 500;
-  margin-left: -25%;
+  margin-left: -20%;
 }
 
 .nav-item {
@@ -85,17 +85,18 @@
   gap: 4px;
   cursor: pointer;
   position: relative;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 500;
-  font-family: 'Poppins';
+  font-family: 'Poppins', sans-serif;
 }
 
-.nav-item a{
+.nav-item a {
   text-decoration: none;
   color: #000000;
 }
 
-.nav-item a:hover{
+.nav-item a:hover,
+.nav-item.active a {
   color: #1F4F9C;
   text-decoration: underline;
   text-underline-offset: 4px;
