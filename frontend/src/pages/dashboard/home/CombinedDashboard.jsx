@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
   FiPackage,
   FiRefreshCw,
@@ -18,10 +20,10 @@ import {
   FiZap,
   FiAnchor,
   FiHeart
-} from "react-icons/fi";
-import { adminDashboardAPI } from "../../../services/api";
-import Loader from "../../../components/common/Loader/Loader";
-import "../../../styles/pages/dashboard/home/AdminDashboard.css";
+} from 'react-icons/fi';
+import { adminDashboardAPI } from '../../../services/api';
+import Loader from '../../../components/common/Loader/Loader';
+import '../../../styles/pages/dashboard/home/CombinedDashboard.css';
 
 const InsuranceTypeCard = ({ icon, label, stats, color }) => (
   <div className="insurance-type-card" style={{ borderTop: `4px solid ${color}` }}>
@@ -36,8 +38,10 @@ const InsuranceTypeCard = ({ icon, label, stats, color }) => (
       </div>
       <div className="insurance-type-recent">
         <span className="stat-label">Recent (30d)</span>
+        <div className="stat-value-container">
         <span className="stat-value">{stats.recent}</span>
         <span className="stat-percentage">{stats.percent}%</span>
+        </div>
       </div>
     </div>
   </div>
@@ -52,13 +56,22 @@ const AllInsuranceCard = ({ stats }) => (
     <div className="all-insurance-stats">
       <div className="all-insurance-total">
         <span className="stat-label">Total</span>
-        <span className="stat-value">{stats.total}</span>
+        <span className="stat-value">1000</span>
       </div>
       <div className="all-insurance-recent">
         <span className="stat-label">Recent (30d)</span>
-        <span className="stat-value">{stats.recent}</span>
-        <span className="stat-percentage">{stats.percent}%</span>
+        <div className="stat-value-container">
+        <span className="stat-value">500</span>
+        <span className="stat-percentage">50%</span>
+        </div>
       </div>
+    </div>
+    <div className="insurance-type-grid">
+      <InsuranceTypeCard icon={<FiShield />} label="ECP" stats={stats.ecp} color="#007bff" />
+      <InsuranceTypeCard icon={<FiTruck />} label="Vehicle" stats={stats.vehicle} color="#28a745" />
+      <InsuranceTypeCard icon={<FiZap />} label="Fire" stats={stats.fire} color="#e67e22" />
+      <InsuranceTypeCard icon={<FiAnchor />} label="Marine" stats={stats.marine} color="#17a2b8" />
+      <InsuranceTypeCard icon={<FiHeart />} label="Health" stats={stats.health} color="#dc3545" />
     </div>
   </div>
 );
@@ -138,6 +151,7 @@ const ConsumerStatsCard = () => {
       </div>
       
       <div className="consumer-stats-grid">
+        
         <div className="consumer-stat-item total">
           <div className="stat-label">
             <FiShoppingCart className="stat-icon" />
@@ -277,16 +291,11 @@ const AdminDashboard = () => {
           </div>
 
           <div className="dashboard-content">
-            <AllInsuranceCard stats={stats.insurance_stats.all} />
-            <div className="insurance-type-grid">
-              <InsuranceTypeCard icon={<FiShield />} label="ECP" stats={stats.insurance_stats.ecp} color="#007bff" />
-              <InsuranceTypeCard icon={<FiTruck />} label="Vehicle" stats={stats.insurance_stats.vehicle} color="#28a745" />
-              <InsuranceTypeCard icon={<FiZap />} label="Fire" stats={stats.insurance_stats.fire} color="#e67e22" />
-              <InsuranceTypeCard icon={<FiAnchor />} label="Marine" stats={stats.insurance_stats.marine} color="#17a2b8" />
-              <InsuranceTypeCard icon={<FiHeart />} label="Health" stats={stats.insurance_stats.health} color="#dc3545" />
+            <div className="dashboard-grid">
+              <CompanyStatsCard stats={stats} />
+              <ConsumerStatsCard />
             </div>
-            <CompanyStatsCard stats={stats} />
-            <ConsumerStatsCard />
+            <AllInsuranceCard stats={stats.insurance_stats} />
           </div>
         </>
       )}
@@ -294,4 +303,37 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+const CombinedDashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+  }, [user, navigate]);
+
+  const renderDashboardContent = () => {
+    const userRole = user?.role_name || user?.role;
+    switch (userRole) {
+      case 'admin':
+        return <AdminDashboard />;
+      case 'company':
+        return renderCompanyDashboard();
+      case 'consumer':
+        return renderConsumerDashboard();
+      default:
+        return (
+          <div className="error-message">
+            <div className="error-icon">⚠️</div>
+            <p>Invalid role or access denied</p>
+          </div>
+        );
+    }
+  };
+
+  return renderDashboardContent();
+};
+
+export default CombinedDashboard; 

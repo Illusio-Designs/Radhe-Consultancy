@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import Footer from '../components/dashboard/Footer';
@@ -7,9 +7,33 @@ import '../styles/layout/DashboardLayout.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Import all dashboard pages
+import CombinedDashboard from '../pages/dashboard/home/CombinedDashboard';
+import Profile from '../pages/dashboard/profile/Profile';
+import ChangePassword from '../pages/dashboard/auth/ChangePassword';
+import Support from '../pages/dashboard/support/Support';
+import RoleManagement from '../pages/dashboard/roles/RoleManagement';
+import Widget from '../pages/dashboard/widget/widget';
+import CompanyUsers from '../pages/dashboard/users/CompanyUsers';
+import ConsumerUsers from '../pages/dashboard/users/ConsumerUsers';
+import OtherUsers from '../pages/dashboard/users/OtherUsers';
+import CompanyList from '../pages/dashboard/companies/CompanyList';
+import ConsumerList from '../pages/dashboard/consumers/ConsumerList';
+import ECP from '../pages/dashboard/insurance/ECP';
+import Health from '../pages/dashboard/insurance/Health';
+import Marine from '../pages/dashboard/insurance/Marine';
+import Fire from '../pages/dashboard/insurance/Fire';
+import Vehicle from '../pages/dashboard/insurance/Vehicle';
+import Companies from '../pages/dashboard/insurance/Companies';
+import FactoryAct from '../pages/dashboard/compliance/FactoryAct';
+import LabourInspection from '../pages/dashboard/compliance/LabourInspection';
+import LabourLicense from '../pages/dashboard/compliance/LabourLicense';
+import DSC from '../pages/dashboard/dsc/DSC';
+
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const location = useLocation();
 
   // Example notifications data
   const notifications = [
@@ -34,8 +58,63 @@ function DashboardLayout() {
     setIsCollapsed(collapsed);
   };
 
+  // Function to render the appropriate page based on the current route
+  const renderPage = () => {
+    const path = location.pathname;
+    
+    switch (path) {
+      case '/dashboard':
+      case '/dashboard/admin':
+      case '/dashboard/company':
+      case '/dashboard/consumer':
+        return <CombinedDashboard />;
+      case '/dashboard/profile':
+        return <Profile />;
+      case '/dashboard/change-password':
+        return <ChangePassword />;
+      case '/dashboard/support':
+        return <Support />;
+      case '/dashboard/roles':
+        return <RoleManagement />;
+      case '/dashboard/widget':
+        return <Widget />;
+      case '/dashboard/users/company':
+        return <CompanyUsers />;
+      case '/dashboard/users/consumer':
+        return <ConsumerUsers />;
+      case '/dashboard/users/other':
+        return <OtherUsers />;
+      case '/dashboard/companies':
+        return <CompanyList />;
+      case '/dashboard/consumers':
+        return <ConsumerList />;
+      case '/dashboard/insurance/ECP':
+        return <ECP />;
+      case '/dashboard/insurance/health':
+        return <Health />;
+      case '/dashboard/insurance/marine':
+        return <Marine />;
+      case '/dashboard/insurance/fire':
+        return <Fire />;
+      case '/dashboard/insurance/vehicle':
+        return <Vehicle />;
+      case '/dashboard/insurance/companies':
+        return <Companies />;
+      case '/dashboard/compliance/factory-act':
+        return <FactoryAct />;
+      case '/dashboard/compliance/labour-inspection':
+        return <LabourInspection />;
+      case '/dashboard/compliance/labour-license':
+        return <LabourLicense />;
+      case '/dashboard/dsc':
+        return <DSC />;
+      default:
+        return <CombinedDashboard />;
+    }
+  };
+
   return (
-    <div className="dashboard-main">
+    <div className="dashboard-container">
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -47,24 +126,34 @@ function DashboardLayout() {
         draggable
         pauseOnHover
       />
-      <aside className={`dashboard-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-        <Sidebar onCollapse={handleSidebarCollapse} />
-      </aside>
-      <div className={`dashboard-content ${isCollapsed ? 'content-collapsed' : ''}`}>
-        <Header 
-          isCollapsed={isCollapsed}
-          notifications={notifications}
-          showNotifications={showNotifications}
-          setShowNotifications={setShowNotifications}
-          onProfileAction={handleProfileAction}
-          profileMenuItems={profileMenuItems}
-        />
-        <main className="dashboard-outlet">
-          <Outlet />
-        </main>
-        <footer className="dashboard-footer">
-          <Footer isCollapsed={isCollapsed} />
-        </footer>
+      
+      <div className="dashboard-layout">
+        <aside className={`dashboard-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+          <Sidebar onCollapse={handleSidebarCollapse} />
+        </aside>
+
+        <div className="dashboard-main-content">
+          <header className="dashboard-header">
+            <Header 
+              isCollapsed={isCollapsed}
+              notifications={notifications}
+              showNotifications={showNotifications}
+              setShowNotifications={setShowNotifications}
+              onProfileAction={handleProfileAction}
+              profileMenuItems={profileMenuItems}
+            />
+          </header>
+
+          <main className="dashboard-main">
+            <div className="dashboard-content">
+              {renderPage()}
+            </div>
+          </main>
+
+          <footer className="dashboard-footer">
+            <Footer isCollapsed={isCollapsed} />
+          </footer>
+        </div>
       </div>
     </div>
   );

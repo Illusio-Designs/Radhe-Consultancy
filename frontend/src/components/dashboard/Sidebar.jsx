@@ -200,8 +200,6 @@ const Sidebar = ({ onCollapse }) => {
           isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"
         } ${isMobileMenuOpen ? "sidebar-mobile-open" : "sidebar-mobile"}`}
       >
-        
-
         <div className="sidebar-content">
           {/* Logo */}
           <div className="logo-container">
@@ -211,16 +209,15 @@ const Sidebar = ({ onCollapse }) => {
               ) : (
                 <img src={img} alt="img" className="main" />
               )}
-             
             </h1>
-             {/* Move toggle button outside sidebar-content */}
-        <button
-          className="sidebar-toggle"
-          onClick={handleCollapse}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? <BiMenu /> : <BiX />}
-        </button>
+            {/* Move toggle button outside sidebar-content */}
+            <button
+              className="sidebar-toggle"
+              onClick={handleCollapse}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <BiMenu /> : <BiX />}
+            </button>
           </div>
 
           {/* Navigation */}

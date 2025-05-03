@@ -48,7 +48,7 @@ const Contact = () => {
             <button type="submit" className="submit-btn">Send Message <span className="arrow">→</span></button>
           </form>
           <div className="contactpage-map">
-          <iframe src="https://maps.app.goo.gl/d5kE7zgi8KdCT6de7" title="map" style={{ border: 0, width: '100%', height: '350px' }} allowFullScreen="" loading="lazy"></iframe>
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8171.706804179706!2d70.78410887413773!3d22.261811577479676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3959ca5dbe7afda3%3A0x6d8e1af5be0f4126!2sRK%20Empire!5e0!3m2!1sen!2sin!4v1746271103457!5m2!1sen!2sin" title="map" style={{ border: 0, width: '100%', height: '350px' }} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
           </div>
         </div>
         <div className="contactpage-bottom">

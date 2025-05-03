@@ -7,10 +7,7 @@ import Login from "../pages/dashboard/auth/Login";
 import Register from "../pages/dashboard/auth/Register";
 import ForgotPassword from "../pages/dashboard/auth/ForgotPassword";
 import ResetPassword from "../pages/dashboard/auth/ResetPassword";
-import Dashboard from "../pages/dashboard/home/Dashboard";
-import AdminDashboard from "../pages/dashboard/home/AdminDashboard";
-import CompanyDashboard from "../pages/dashboard/home/CompanyDashboard";
-import ConsumerDashboard from "../pages/dashboard/home/ConsumerDashboard";
+import CombinedDashboard from "../pages/dashboard/home/CombinedDashboard";
 import Unauthorized from "../pages/dashboard/auth/Unauthorized";
 import RoleManagement from "../pages/dashboard/roles/RoleManagement";
 import CompanyUsers from "../pages/dashboard/users/CompanyUsers";
@@ -116,126 +113,14 @@ const router = createBrowserRouter([
         <DashboardLayout />
       </ProtectedRoute>
     ),
-    children: [
-      {
-        index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: "profile",
-        element: <Profile />,
-      },  
-      {
-        path: "change-password",
-        element: <ChangePassword />,
-      },
-      {
-        path: "support",
-        element: <Support />,
-      },
-      // Role-based Dashboard Routes
-      {
-        path: "admin",
-        element: <AdminDashboard />,
-      },
-      {
-        path: "company",
-        element: <CompanyDashboard />,
-      },
-      {
-        path: "consumer",
-        element: <ConsumerDashboard />,
-      },
-      // Admin Management Routes
-      {
-        path: "roles",
-        element: (
-          <ProtectedRoute allowedRoles={['admin']}>
-            <RoleManagement />
-          </ProtectedRoute>
-        ),
-      },
-      // Widget Routes  
-      {
-        path: "widget",
-        element: <Widget />,
-      },
-      // User Management Routes
-      {
-        path: "users/company",
-        element: <CompanyUsers />,
-      },
-      {
-        path: "users/consumer",
-        element: <ConsumerUsers />,
-      },
-      {
-        path: "users/other",
-        element: <OtherUsers />,
-      },
-      // Vendor Management Routes
-      {
-        path: "companies",
-        element: (
-          <ProtectedRoute allowedRoles={['admin']}>
-            <CompanyList />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "consumers",
-        element: (
-          <ProtectedRoute allowedRoles={['admin']}>
-            <ConsumerList />
-          </ProtectedRoute>
-        ),
-      },
-      // Insurance Routes
-      {
-        path: "insurance/ECP",
-        element: <ECP />,
-      },
-      {
-        path: "insurance/health",
-        element: <Health />,
-      },
-      {
-        path: "insurance/marine",
-        element: <Marine />,
-      },
-      {
-        path: "insurance/fire",
-        element: <Fire />,
-      },
-      {
-        path: "insurance/vehicle",
-        element: <Vehicle />,
-      },
-      {
-        path: "insurance/companies",
-        element: <Companies />,
-      },
-      // Compliance Routes
-      {
-        path: "compliance/factory-act",
-        element: <FactoryAct />,
-      },
-      {
-        path: "compliance/labour-inspection",
-        element: <LabourInspection />,
-      },
-      {
-        path: "compliance/labour-license",
-        element: <LabourLicense />,
-      },
-      // DSC Route
-      {
-        path: "dsc",
-        element: <DSC />,
-      },
-      // Profile Routes
-     
-    ],
+  },
+  {
+    path: "/dashboard/*",
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
   },
 ]);
 
