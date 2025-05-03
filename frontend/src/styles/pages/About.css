@@ -1,23 +1,70 @@
-.about-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
+.about-container .hero-section {
+  background-image: url('../../assets/insurance.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 130px;
+  color: white;
 }
 
-.about-section {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.about-container .hero-content {
+  background-color: #1F4F9CCF;
+  padding: 20.8% 41.3%;
+  overflow: hidden;
 }
 
-.about-section h2 {
+.case-study-btn {
+  text-align: right;
+  color: #868686;
+  font-weight: 500;
+  font-size: 22px;
+  padding-right: 3%;
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  background-color: #1F4F9C;
+  padding: 5% 15%;
+  color: white;
+  margin: 5% 0 0;
+  text-align: center;
+}
+
+.help h1 {
+  font-family: DM Serif Display;
+  font-size: 65px;
+  font-weight: 500;
+}
+
+.help p {
+  font-size: 18px;
+  padding: 0 10%;
+}
+.help-btn {
+  background-color: white;
   color: #1F4F9C;
-  margin-bottom: 1rem;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-weight: 500;
+  font-size: 20px;
+  cursor: pointer;
 }
 
-.about-section p {
-  color: #666;
-  line-height: 1.6;
-} 
+.help-btn:hover {
+  background-color: #1F4F9C;
+  color: white;
+  border: 1px solid white;
+  transition: 0.3s ease;
+}
+
+
+

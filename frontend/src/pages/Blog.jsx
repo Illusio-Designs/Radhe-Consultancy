@@ -115,7 +115,6 @@ const Blog = () => {
                 </div>
                 <div className="blog-content">
                   <h2>{post.title}</h2>
-                  <p className="blog-date">{post.date}</p>
                   <p className="blog-excerpt">{post.excerpt}</p>
                   <button className="read-more">Read More →</button>
                 </div>

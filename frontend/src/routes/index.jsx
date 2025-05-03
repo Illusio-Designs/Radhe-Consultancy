@@ -40,7 +40,6 @@ import Insurance from "../pages/Insurance";
 import Compliance from "../pages/Compliance";
 import Contact from "../pages/Contact";
 import Blog from "../pages/Blog";
-import Career from "../pages/Career";
 
 const router = createBrowserRouter([
   // Public Routes
@@ -75,10 +74,6 @@ const router = createBrowserRouter([
       {
         path: "/blog",
         element: <Blog />,
-      },
-      {
-        path: "/career",
-        element: <Career />,
       },
       {
         path: "unauthorized",
@@ -244,4 +239,5 @@ const router = createBrowserRouter([
   },
 ]);
 
+export { router };
 export default router;

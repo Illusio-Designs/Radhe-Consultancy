@@ -22,18 +22,18 @@ const Footer = () => {
       <div className="footer-main">
         <div className="footer-col">
           <h4>Pages</h4>
-          <ul>
-            <li>About Us</li>
-            <li>Our Blog</li>
-            <li>Contact Us</li>
-          </ul>
+          <div className="footer-col-links">
+            <a href="/about">About Us</a>
+            <a href="/blog">Our Blog</a>
+            <a href="/contact">Contact Us</a> 
+          </div>
         </div>
         <div className="footer-col">
           <h4>Our Services</h4>
-          <ul>
-            <li>Insurance</li>
-            <li>Compliance & Licensing</li>
-          </ul>
+          <div className="footer-col-links">
+            <a href="/insurance">Insurance</a>
+            <a href="/compliance">Compliance & Licensing</a>
+          </div>
         </div>
         <div className="footer-col center-logo">
           <img src={img} alt="logo" className="footer-logo" />

@@ -11,6 +11,12 @@ import img2 from "../assets/about-1-right.jpg.png";
 import img3 from "../assets/about-1-right-2.jpg.png";
 import img4 from "../assets/Container.png";
 import img5 from "../assets/Container1.png";
+import img6 from "../assets/about1-left-shape.png.png";
+import img7 from "../assets/about1-right-top.png.png";
+import img8 from "../assets/about1-right-bottom.png.png";
+import img9 from "../assets/process-1.jpg.png";
+import img10 from "../assets/process-1-shape.png.png";
+import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler } from "react-icons/fa";
 import "../styles/pages/Home.css"
 
 const Home = () => {
@@ -110,6 +116,10 @@ const Home = () => {
         </div>
        
         <div className="trusted-consultancy">
+          <img src={img6} alt="Law Scale" className="img6" />
+          <img src={img7} alt="Law Scale" className="img7" />
+          <img src={img8} alt="Law Scale" className="img8" />
+          <div className="trusted-container">
        <div className="trusted-left">
     <div className="image-group">
       <div className='img-left'>
@@ -129,9 +139,10 @@ const Home = () => {
     </p>
     <button className="more-about-btn">More About →</button>
   </div>
-</div>
+  </div>
+        </div>
 
-<div className="achievement-bar">
+        <div className="achievement-bar">
   <div className="achievement-card">
     <i className="fas fa-balance-scale"></i>
     <div className="achievement-info">
@@ -160,9 +171,9 @@ const Home = () => {
       <p>Award Winning</p>
     </div>
   </div>
-</div>
+        </div>
 
-<div className="services-section">
+        <div className="services-section">
   <p className="services-subtitle">What We Do</p>
   <h2 className="services-title">Legal Services We Offer</h2>
   <div className="services-cards">
@@ -205,35 +216,108 @@ const Home = () => {
       <button className="get-started-btn">Get Started →</button>
     </div>
   </div>
-</div>
+        </div>
 
-<div className="lawyer-section">
+        <div className="lawyer-section">
 <div className="hero-section">
         <div className="lawyer-content">
          <div className="lawyer-left">
          <p>Our Attorneys</p>
-         <h1>Dedicated Lawyers, Proven Results</h1>
+         <h1>Dedicated <br /> Lawyers, <br />Proven Results</h1>
          <button className="lawyer-btn">More Attorney →</button>
          </div>
          <div className="lawyer-right">
+         <div className="lawyer-image">
          <img src={img4} alt="Lawyer" />
+         <div className="overlay">   
+              <div className="overlay-text">
+                <h1>Sarah Rahman</h1>
+                <p>Attorney</p>
+                <div className="icon">
+                <FaFacebook className="social-icon" />
+                <FaInstagram className="social-icon" />
+                <FaTwitter className="social-icon" />
+                </div>
+              </div>
+            </div>
+         </div>
+         <div className="lawyer-image">
          <img src={img5} alt="Lawyer" />
+         <div className="overlay">   
+         <div className="overlay-text">
+                <h1>Smith Miller</h1>
+                <p>Attorney</p>
+                <div className="icon">
+                <FaFacebook className="social-icon" />
+                <FaInstagram className="social-icon" />
+                <FaTwitter className="social-icon" />
+                </div>
+              </div>
+            </div>
+         </div>
          </div>
         </div>
       </div>
-</div>
+        </div>
 
-      <Workingwith />
-      <div className="casestudy">
+        <div className="why">
+      {/* Left Section: Image with Play Button */}
+      <div className="why-left">
+        <div className="video-thumbnail">
+          <img src={img9} alt="Gavel and Sand Timer" className="video-img" />
+          <div className="play-button">
+            <div className="circle">
+              <div className="triangle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Section: Content */}
+      <div className="why-right">
+      <img src={img10} alt="Law Scale" className="img10" />
+        <p className="why-subtitle">Why Choose Us?</p>
+        <h2 className="why-title">Navigating The Law: Your Assurance Of Peace</h2>
+
+<div className="points">
+        <div className="why-point">
+          <div className="icon-circle"><FaEnvelopeOpenText /></div>
+          <div>
+            <h3>Initial Consultation</h3>
+            <p>Our experienced lawyers thoroughly analyze the facts of each case. Then they apply the relevant laws to provide clear advice.</p>
+          </div>
+        </div>
+
+        <div className="why-point">
+          <div className="icon-circle"><FaBalanceScale /></div>
+          <div>
+            <h3>Case Evaluation</h3>
+            <p>We prioritize understanding your concerns and aligning with your goals. Your satisfaction is our top priority.</p>
+          </div>
+        </div>
+
+        <div className="why-point">
+          <div className="icon-circle"><FaPencilRuler /></div>
+          <div>
+            <h3>Legal Strategy</h3>
+            <p>We develop a customized plan to protect your rights and achieve the best possible outcome.</p>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+        <Workingwith />
+        <div className="casestudy">
       <div className="casestudy-content">
             <p>Case Study</p>
-            <h1>Attoenwy Legal Excellence in Action</h1>
+            <h1>Attorney Legal Excellence in Action</h1>
         </div>
       <Casestudy />
-      </div>
-      <Testimonial />
-      <Contact />
-      <NewsUpdates />
+        </div>
+        <Testimonial />
+        <Contact />
+        <NewsUpdates />
       </div>
       <Footer />
     </>
