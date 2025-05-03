@@ -130,16 +130,17 @@ const CompanyStatsCard = ({ stats }) => (
   </div>
 );
 
-const ConsumerStatsCard = () => {
-  // Static data for consumer stats
-  const consumerStats = {
-    total_orders: 150,
-    active_orders: 45,
-    completed_orders: 105,
-    total_spent: 12500,
-    average_order_value: 83.33,
-    favorite_categories: ["Electronics", "Clothing", "Home & Kitchen"]
-  };
+const ConsumerStatsCard = ({ stats }) => {
+  if (!stats) return null;
+  const {
+    total = 0,
+    active = 0,
+    inactive = 0,
+    recent = 0,
+    percent_active = 0,
+    percent_inactive = 0,
+    percent_recent = 0
+  } = stats;
 
   return (
     <div className="consumer-stats-card">
@@ -149,47 +150,42 @@ const ConsumerStatsCard = () => {
           <h2>Consumer Statistics</h2>
         </div>
       </div>
-      
       <div className="consumer-stats-grid">
-        
         <div className="consumer-stat-item total">
           <div className="stat-label">
-            <FiShoppingCart className="stat-icon" />
-            Total Orders
+            <FiUsers className="stat-icon" />
+            Total Consumers
           </div>
-          <div className="stat-value">{consumerStats.total_orders}</div>
+          <div className="stat-value">{total}</div>
         </div>
-
         <div className="consumer-stat-item active">
           <div className="stat-label">
-            <FiClock className="stat-icon" />
-            Active Orders
+            <FiCheckCircle className="stat-icon" />
+            Active Consumers
           </div>
-          <div className="stat-value">{consumerStats.active_orders}</div>
+          <div className="stat-value">{active}</div>
           <div className="stat-percentage">
-            {Math.round((consumerStats.active_orders / consumerStats.total_orders) * 100)}% of total
+            {percent_active}% of total
           </div>
         </div>
-
         <div className="consumer-stat-item completed">
           <div className="stat-label">
-            <FiCheckCircle className="stat-icon" />
-            Completed Orders
+            <FiXCircle className="stat-icon" />
+            Inactive Consumers
           </div>
-          <div className="stat-value">{consumerStats.completed_orders}</div>
+          <div className="stat-value">{inactive}</div>
           <div className="stat-percentage">
-            {Math.round((consumerStats.completed_orders / consumerStats.total_orders) * 100)}% of total
+            {percent_inactive}% of total
           </div>
         </div>
-
         <div className="consumer-stat-item spending">
           <div className="stat-label">
-            <FiDollarSign className="stat-icon" />
-            Total Spent
+            <FiClock className="stat-icon" />
+            Recent Consumers (30 days)
           </div>
-          <div className="stat-value">₹{consumerStats.total_spent.toLocaleString()}</div>
+          <div className="stat-value">{recent}</div>
           <div className="stat-percentage">
-            Avg. ₹{consumerStats.average_order_value.toFixed(2)} per order
+            {percent_recent}% of total
           </div>
         </div>
       </div>
@@ -206,6 +202,7 @@ const AdminDashboard = () => {
     active_companies: 0,
     inactive_companies: 0,
     recent_companies: 0,
+    consumer_stats: { total: 0, recent: 0, percent: 0 },
     insurance_stats: {
       all: { total: 0, recent: 0, percent: 0 },
       ecp: { total: 0, recent: 0, percent: 0 },
@@ -293,7 +290,7 @@ const AdminDashboard = () => {
           <div className="dashboard-content">
             <div className="dashboard-grid">
               <CompanyStatsCard stats={stats} />
-              <ConsumerStatsCard />
+              <ConsumerStatsCard stats={stats.consumer_stats} />
             </div>
             <AllInsuranceCard stats={stats.insurance_stats} />
           </div>

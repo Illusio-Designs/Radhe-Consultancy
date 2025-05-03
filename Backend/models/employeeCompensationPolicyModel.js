@@ -23,24 +23,15 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   },
   insurance_company_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'InsuranceCompanies',
-      key: 'id'
-    }
+    allowNull: false
   },
   company_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Companies',
-      key: 'company_id'
-    }
+    allowNull: false
   },
   policy_number: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
@@ -98,7 +89,13 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   tableName: 'employee_compensation_policies',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      fields: ['policy_number']
+    }
+  ]
 });
 
 module.exports = EmployeeCompensationPolicy; 

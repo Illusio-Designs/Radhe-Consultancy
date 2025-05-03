@@ -1,158 +1,248 @@
-// Database Initialization Script
-// This script uses ONLY { alter: true } for Sequelize sync to update tables without dropping them.
-// DO NOT use { force: true } (drop) in production or on shared databases!
-// If you need to reset a table, do it manually and with backups.
+// Combined Database Initialization, Seeding, and Admin Setup Script
+// This script syncs tables, seeds roles/permissions, assigns permissions, sets admin password, and checks admin user.
 
-const sequelize = require('../config/db');
-const Role = require('../models/roleModel');
-const Permission = require('../models/permissionModel');
-const RolePermission = require('../models/rolePermissionModel');
-const User = require('../models/userModel');
-const Company = require('../models/companyModel');
-const InsuranceCompany = require('../models/insuranceCompanyModel');
-const EmployeeCompensationPolicy = require('../models/employeeCompensationPolicyModel');
+const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy } = require('../models');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
-async function initializeDatabase() {
-  try {
-    console.log('Starting database initialization...');
-    
-    // Test database connection
-    await sequelize.authenticate();
-    console.log('Database connection established successfully');
+const roles = [
+  { role_name: 'admin', description: 'Full system access' },
+  { role_name: 'user', description: 'Basic user access' },
+  { role_name: 'vendor_manager', description: 'Vendor management access' },
+  { role_name: 'user_manager', description: 'User management access' },
+  { role_name: 'company', description: 'Company access' },
+  { role_name: 'consumer', description: 'Consumer access' },
+  { role_name: 'insurance_manager', description: 'Insurance management access' }
+];
 
-    // Create uploads directory if it doesn't exist
+const permissions = [
+  // User Management
+  { permission_name: 'view_users' },
+  { permission_name: 'create_user' },
+  { permission_name: 'edit_user' },
+  { permission_name: 'delete_user' },
+  // Company Management
+  { permission_name: 'view_companies' },
+  { permission_name: 'create_company' },
+  { permission_name: 'edit_company' },
+  { permission_name: 'delete_company' },
+  { permission_name: 'upload_company_documents' },
+  // Consumer Management
+  { permission_name: 'view_consumers' },
+  { permission_name: 'create_consumer' },
+  { permission_name: 'edit_consumer' },
+  { permission_name: 'delete_consumer' },
+  // Role Management
+  { permission_name: 'view_roles' },
+  { permission_name: 'assign_roles' },
+  // System Access
+  { permission_name: 'access_dashboard' },
+  { permission_name: 'access_reports' },
+  { permission_name: 'access_settings' },
+  // Insurance Management
+  { permission_name: 'view_insurance_companies' },
+  { permission_name: 'create_insurance_company' },
+  { permission_name: 'edit_insurance_company' },
+  { permission_name: 'delete_insurance_company' },
+  { permission_name: 'view_policies' },
+  { permission_name: 'create_policy' },
+  { permission_name: 'edit_policy' },
+  { permission_name: 'delete_policy' }
+];
+
+const rolePermissions = {
+  'admin': permissions.map(p => p.permission_name), // All permissions
+  'user': [ 'access_dashboard' ],
+  'vendor_manager': [
+    'view_companies', 'create_company', 'edit_company', 'delete_company',
+    'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
+    'access_dashboard', 'access_reports', 'upload_company_documents'
+  ],
+  'user_manager': [
+    'view_users', 'create_user', 'edit_user', 'delete_user',
+    'view_roles', 'assign_roles', 'access_dashboard'
+  ],
+  'company': [
+    'access_dashboard',
+    'view_companies', 'edit_company',
+    'upload_company_documents'
+  ],
+  'consumer': [
+    'access_dashboard',
+    'view_consumers', 'edit_consumer'
+  ],
+  'insurance_manager': [
+    'access_dashboard',
+    'view_insurance_companies',
+    'create_insurance_company',
+    'edit_insurance_company',
+    'delete_insurance_company',
+    'view_policies',
+    'create_policy',
+    'edit_policy',
+    'delete_policy',
+    'access_reports'
+  ]
+};
+
+async function setupAll() {
+  try {
+    console.log('Starting database setup...');
+    await sequelize.authenticate();
+    console.log('Database connection established');
+
+    // Create uploads directories if needed
     const uploadDir = path.join(__dirname, '../uploads/company_documents');
     const policyDir = path.join(__dirname, '../uploads/policies');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-      console.log('Created uploads directory for company documents');
-    }
-    if (!fs.existsSync(policyDir)) {
-      fs.mkdirSync(policyDir, { recursive: true });
-      console.log('Created uploads directory for policy documents');
-    }
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    if (!fs.existsSync(policyDir)) fs.mkdirSync(policyDir, { recursive: true });
 
-    // === TABLE SYNC SECTION ===
-    // Only alter: true is used below. Do NOT use force: true!
+    // Sync all models with individual options
     await Role.sync({ alter: true });
-    console.log('Roles table altered');
-
     await Permission.sync({ alter: true });
-    console.log('Permissions table altered');
-
     await RolePermission.sync({ alter: true });
-    console.log('RolePermissions table altered');
-
     await User.sync({ alter: true });
-    console.log('Users table altered');
-
     await Company.sync({ alter: true });
-    console.log('Companies table altered');
+    await Consumer.sync({ alter: true });
     
-    await InsuranceCompany.sync({ alter: true });
-    console.log('InsuranceCompanies table altered');
+    // Special handling for InsuranceCompany
+    try {
+      // First, remove any existing unique constraints
+      await sequelize.query(`
+        ALTER TABLE InsuranceCompanies 
+        DROP INDEX name
+      `).catch(() => {}); // Ignore error if index doesn't exist
+      
+      await InsuranceCompany.sync({ 
+        alter: true,
+        logging: false
+      });
+    } catch (error) {
+      console.error('Error syncing InsuranceCompany:', error.message);
+      throw error;
+    }
+
+    // Special handling for EmployeeCompensationPolicy
+    try {
+      // Drop possible duplicate indexes/foreign keys (adjust names if needed)
+      await sequelize.query(`
+        ALTER TABLE employee_compensation_policies
+        DROP INDEX IF EXISTS policy_number,
+        DROP INDEX IF EXISTS insurance_company_id,
+        DROP INDEX IF EXISTS company_id,
+        DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_1,
+        DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_2,
+        DROP FOREIGN KEY IF EXISTS fk_insurance_company,
+        DROP FOREIGN KEY IF EXISTS fk_company
+      `).catch(() => {}); // Ignore errors if constraints don't exist
+      // Sync the model (will only alter, not drop data)
+      await EmployeeCompensationPolicy.sync({ 
+        alter: true,
+        logging: false
+      });
+      // Add foreign key constraints after table is created (if not already present)
+      await sequelize.query(`
+        ALTER TABLE employee_compensation_policies
+        ADD CONSTRAINT IF NOT EXISTS fk_insurance_company
+        FOREIGN KEY (insurance_company_id)
+        REFERENCES InsuranceCompanies(id)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
+        ADD CONSTRAINT IF NOT EXISTS fk_company
+        FOREIGN KEY (company_id)
+        REFERENCES companies(company_id)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE
+      `).catch(() => {}); // Ignore if already exists
+    } catch (error) {
+      console.error('Error syncing EmployeeCompensationPolicy:', error.message);
+      throw error;
+    }
     
-    await EmployeeCompensationPolicy.sync({ alter: true });
-    console.log('EmployeeCompensationPolicies table altered');
+    console.log('All tables synced');
 
-    // Create default roles if they don't exist
-    const defaultRoles = [
-      { role_name: 'admin', description: 'Full system access' },
-      { role_name: 'user', description: 'Basic user access' },
-      { role_name: 'vendor_manager', description: 'Vendor management access' },
-      { role_name: 'user_manager', description: 'User management access' },
-      { role_name: 'company', description: 'Company access' },
-      { role_name: 'consumer', description: 'Consumer access' },
-      { role_name: 'insurance_manager', description: 'Insurance management access' }
-    ];
-
-    for (const role of defaultRoles) {
-      await Role.findOrCreate({
-        where: { role_name: role.role_name },
-        defaults: role
-      });
+    // Seed roles
+    for (const role of roles) {
+      await Role.findOrCreate({ where: { role_name: role.role_name }, defaults: role });
     }
-    console.log('Default roles checked/created');
+    console.log('Default roles created');
 
-    // Create default permissions if they don't exist
-    const defaultPermissions = [
-      // User Management
-      { permission_name: 'view_users' },
-      { permission_name: 'create_user' },
-      { permission_name: 'edit_user' },
-      { permission_name: 'delete_user' },
-      
-      // Company Management
-      { permission_name: 'view_companies' },
-      { permission_name: 'create_company' },
-      { permission_name: 'edit_company' },
-      { permission_name: 'delete_company' },
-      { permission_name: 'upload_company_documents' },
-      
-      // Consumer Management
-      { permission_name: 'view_consumers' },
-      { permission_name: 'create_consumer' },
-      { permission_name: 'edit_consumer' },
-      { permission_name: 'delete_consumer' },
-      
-      // Role Management
-      { permission_name: 'view_roles' },
-      { permission_name: 'assign_roles' },
-      
-      // System Access
-      { permission_name: 'access_dashboard' },
-      { permission_name: 'access_reports' },
-      { permission_name: 'access_settings' },
-
-      // Insurance Management
-      { permission_name: 'view_insurance_companies' },
-      { permission_name: 'create_insurance_company' },
-      { permission_name: 'edit_insurance_company' },
-      { permission_name: 'delete_insurance_company' },
-      { permission_name: 'view_policies' },
-      { permission_name: 'create_policy' },
-      { permission_name: 'edit_policy' },
-      { permission_name: 'delete_policy' }
-    ];
-
-    for (const permission of defaultPermissions) {
-      await Permission.findOrCreate({
-        where: { permission_name: permission.permission_name },
-        defaults: permission
-      });
+    // Seed permissions
+    for (const permission of permissions) {
+      await Permission.findOrCreate({ where: { permission_name: permission.permission_name }, defaults: permission });
     }
-    console.log('Default permissions checked/created');
+    console.log('Default permissions created');
 
-    // Create default admin user if it doesn't exist
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    // Assign permissions to roles
+    for (const [roleName, permissionNames] of Object.entries(rolePermissions)) {
+      const role = await Role.findOne({ where: { role_name: roleName } });
+      const perms = await Permission.findAll({ where: { permission_name: permissionNames } });
+      for (const perm of perms) {
+        await RolePermission.findOrCreate({ where: { role_id: role.id, permission_id: perm.id } });
+      }
+    }
+    console.log('Role-permission assignments created');
 
-    const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
-    if (adminRole) {
-      await User.findOrCreate({
-        where: { email: adminEmail },
-        defaults: {
-          username: 'admin',
-          email: adminEmail,
-          password: hashedPassword,
-          role_id: adminRole.id
-        }
-      });
-      console.log('Default admin user checked/created');
+    // Create or update default admin user
+    await setupAdminUser();
+
+    // Verify admin user
+    const adminUser = await User.findOne({ 
+      where: { email: 'Admin@radheconsultancy.co.in' }, 
+      include: [{ model: Role, attributes: ['role_name'] }] 
+    });
+    
+    if (adminUser) {
+      const isValid = await adminUser.validatePassword('Admin@123');
+      console.log('Admin user verified:', isValid ? 'Password valid' : 'Password invalid');
     }
 
-    console.log('Database initialization completed successfully');
-    return true;
+    console.log('Database setup completed successfully');
+    await sequelize.close();
+    process.exit(0);
   } catch (error) {
-    console.error('Error during database initialization:', error);
-    return false;
+    console.error('Error during database setup:', error.message);
+    await sequelize.close();
+    process.exit(1);
   }
 }
 
-module.exports = {
-  initializeDatabase
-}; 
+async function setupAdminUser() {
+  try {
+    console.log('Setting up admin user...');
+    const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
+    if (!adminRole) {
+      throw new Error('Admin role not found');
+    }
+
+    const [adminUser, created] = await User.findOrCreate({
+      where: { email: 'Admin@radheconsultancy.co.in' },
+      defaults: {
+        username: 'Admin',
+        password: 'Admin@123',
+        role_id: adminRole.id,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    });
+
+    if (!created) {
+      // Update existing admin user
+      await adminUser.update({
+        password: 'Admin@123',
+        role_id: adminRole.id,
+        updated_at: new Date()
+      });
+    }
+
+    console.log('Admin user setup completed');
+  } catch (error) {
+    console.error('Error setting up admin user:', error.message);
+    throw error;
+  }
+}
+
+if (require.main === module) {
+  setupAll();
+} 

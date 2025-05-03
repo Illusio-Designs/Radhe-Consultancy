@@ -68,15 +68,15 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Change password (requires authentication)
+router.post('/change-password', auth, userController.changePassword);
+
 // Other user routes
 router.get('/:userId', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
 router.put('/:userId', auth, uploadProfileImage.single('profile_image'), userController.updateUser);
 router.delete('/:userId', auth, userController.deleteUser);
 router.get('/:userId/permissions', auth, userController.getUserPermissions);
-
-// Change password (requires authentication)
-router.post('/change-password', auth, userController.changePassword);
 
 // Role-specific user routes
 router.get('/company', auth, userController.getCompanyUsers);
