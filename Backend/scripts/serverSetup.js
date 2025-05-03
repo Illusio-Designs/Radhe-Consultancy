@@ -1,3 +1,8 @@
+// Database Initialization Script
+// This script uses ONLY { alter: true } for Sequelize sync to update tables without dropping them.
+// DO NOT use { force: true } (drop) in production or on shared databases!
+// If you need to reset a table, do it manually and with backups.
+
 const sequelize = require('../config/db');
 const Role = require('../models/roleModel');
 const Permission = require('../models/permissionModel');
@@ -30,7 +35,8 @@ async function initializeDatabase() {
       console.log('Created uploads directory for policy documents');
     }
 
-    // Sync models in the correct order based on dependencies using alter
+    // === TABLE SYNC SECTION ===
+    // Only alter: true is used below. Do NOT use force: true!
     await Role.sync({ alter: true });
     console.log('Roles table altered');
 

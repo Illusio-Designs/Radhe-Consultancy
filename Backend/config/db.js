@@ -6,14 +6,23 @@ const DB_HOST = process.env.DB_HOST;
 const DB_USER = process.env.DB_USER;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_NAME = process.env.DB_NAME;
-const DB_PORT = process.env.DB_PORT;
+const DB_PORT = process.env.DB_PORT || 3306;
+const DB_DIALECT = process.env.DB_DIALECT || 'mysql';
+
+console.log('\n=== Database Configuration ===');
+console.log('Host:', DB_HOST);
+console.log('Database:', DB_NAME);
+console.log('User:', DB_USER);
+console.log('Port:', DB_PORT);
+console.log('Dialect:', DB_DIALECT);
+console.log('============================\n');
 
 // Create Sequelize instance
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
   port: DB_PORT,
-  dialect: 'mysql',
-  logging: false, // Set to console.log to see SQL queries
+  dialect: DB_DIALECT,
+  logging: console.log, // Enable SQL query logging
   pool: {
     max: 5,
     min: 0,
@@ -35,5 +44,19 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   },
   timezone: '+05:30' // Adjust to your timezone
 });
+
+// Test the connection
+const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+    process.exit(1);
+  }
+};
+
+// Test connection on startup
+testConnection();
 
 module.exports = sequelize;

@@ -20,15 +20,15 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // In development, allow all localhost origins
-    if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
-      console.log('Decision: Development environment, allowing localhost request');
+    // Check if origin is in allowed list regardless of environment
+    if (allowedOrigins.includes(origin)) {
+      console.log('Decision: Origin allowed');
       return callback(null, true);
     }
 
-    // In production, check against allowed origins
-    if (allowedOrigins.includes(origin)) {
-      console.log('Decision: Origin allowed in production');
+    // For localhost in development
+    if (process.env.NODE_ENV.toLowerCase() === 'development' && origin.includes('localhost')) {
+      console.log('Decision: Development environment, allowing localhost request');
       return callback(null, true);
     }
 

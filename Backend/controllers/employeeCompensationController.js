@@ -1,11 +1,12 @@
-const EmployeeCompensationPolicy = require('../models/EmployeeCompensationPolicy');
+const EmployeeCompensationPolicy = require('../models/employeeCompensationPolicyModel');
 const Company = require('../models/companyModel');
-const InsuranceCompany = require('../models/InsuranceCompany');
+const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
 
 // Configure multer for policy document uploads
+// This middleware parses multipart/form-data and populates req.body and req.file
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/policies');
@@ -28,6 +29,36 @@ exports.upload = multer({
   }
 }).single('policyDocument');
 
+// Add middleware to log the request body after multer processing
+exports.logFormData = (req, res, next) => {
+  console.log('=== Multer Processed FormData ===');
+  console.log('Request Body:', req.body);
+  console.log('Request File:', req.file);
+  console.log('=== End Multer Processed FormData ===');
+  next();
+};
+
+// Get active companies
+exports.getActiveCompanies = async (req, res) => {
+  try {
+    const companies = await Company.findAll({
+      where: { status: 'Active' },
+      attributes: [
+        'company_id',
+        'company_name',
+        'company_email',
+        'contact_number',
+        'gst_number',
+        'pan_number'
+      ]
+    });
+    res.json(companies);
+  } catch (error) {
+    console.error('Error fetching active companies:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // Get all policies with pagination
 exports.getAllPolicies = async (req, res) => {
   try {
@@ -37,12 +68,16 @@ exports.getAllPolicies = async (req, res) => {
 
     const policies = await EmployeeCompensationPolicy.findAndCountAll({
       include: [
-        { model: Company, as: 'company' },
-        { model: InsuranceCompany, as: 'insuranceCompany' }
+        { 
+          model: Company, 
+          as: 'policyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
+        },
+        { model: InsuranceCompany, as: 'provider' }
       ],
       limit,
       offset,
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     res.json({
@@ -62,8 +97,8 @@ exports.getPolicy = async (req, res) => {
   try {
     const policy = await EmployeeCompensationPolicy.findByPk(req.params.id, {
       include: [
-        { model: Company, as: 'company' },
-        { model: InsuranceCompany, as: 'insuranceCompany' }
+        { model: Company, as: 'policyHolder' },
+        { model: InsuranceCompany, as: 'provider' }
       ]
     });
 
@@ -81,13 +116,14 @@ exports.getPolicy = async (req, res) => {
 // Create policy
 exports.createPolicy = async (req, res) => {
   try {
+    console.log('REQ.BODY:', req.body); // DEBUG: log incoming form fields
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     if (req.file) {
-      req.body.policyDocumentPath = req.file.path;
+      req.body.policy_document_path = req.file.path;
     }
 
     const policy = await EmployeeCompensationPolicy.create(req.body);
@@ -95,8 +131,8 @@ exports.createPolicy = async (req, res) => {
     // Fetch the created policy with associations
     const createdPolicy = await EmployeeCompensationPolicy.findByPk(policy.id, {
       include: [
-        { model: Company, as: 'company' },
-        { model: InsuranceCompany, as: 'insuranceCompany' }
+        { model: Company, as: 'policyHolder' },
+        { model: InsuranceCompany, as: 'provider' }
       ]
     });
 
@@ -113,6 +149,7 @@ exports.createPolicy = async (req, res) => {
 // Update policy
 exports.updatePolicy = async (req, res) => {
   try {
+    console.log('REQ.BODY:', req.body); // DEBUG: log incoming form fields
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -124,7 +161,7 @@ exports.updatePolicy = async (req, res) => {
     }
 
     if (req.file) {
-      req.body.policyDocumentPath = req.file.path;
+      req.body.policy_document_path = req.file.path;
     }
 
     await policy.update(req.body);
@@ -132,8 +169,8 @@ exports.updatePolicy = async (req, res) => {
     // Fetch the updated policy with associations
     const updatedPolicy = await EmployeeCompensationPolicy.findByPk(policy.id, {
       include: [
-        { model: Company, as: 'company' },
-        { model: InsuranceCompany, as: 'insuranceCompany' }
+        { model: Company, as: 'policyHolder' },
+        { model: InsuranceCompany, as: 'provider' }
       ]
     });
 
@@ -191,10 +228,10 @@ exports.searchPolicies = async (req, res) => {
     const policies = await EmployeeCompensationPolicy.findAll({
       where,
       include: [
-        { model: Company, as: 'company' },
-        { model: InsuranceCompany, as: 'insuranceCompany' }
+        { model: Company, as: 'policyHolder' },
+        { model: InsuranceCompany, as: 'provider' }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     res.json(policies);

@@ -1,3 +1,7 @@
+// EmployeeCompensationPolicy Model
+// This model represents employee compensation insurance policies.
+// It includes relations to Company and InsuranceCompany, and stores GST, gross premium, and remarks.
+
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const InsuranceCompany = require('./insuranceCompanyModel');

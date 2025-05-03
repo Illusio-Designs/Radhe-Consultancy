@@ -7,8 +7,8 @@ const Permission = require('./permissionModel');
 const RolePermission = require('./rolePermissionModel');
 const Company = require('./companyModel');
 const Consumer = require('./consumerModel');
-const InsuranceCompany = require('./InsuranceCompany');
-const EmployeeCompensationPolicy = require('./EmployeeCompensationPolicy');
+const InsuranceCompany = require('./insuranceCompanyModel');
+const EmployeeCompensationPolicy = require('./employeeCompensationPolicyModel');
 
 // Define associations
 User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });

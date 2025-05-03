@@ -17,7 +17,6 @@ console.log('- API URL:', API_URL);
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest'
   },
@@ -745,6 +744,162 @@ export const adminDashboardAPI = {
       return response.data;
     } catch (error) {
       console.error('API Service: Error fetching company statistics:', error);
+      throw error;
+    }
+  }
+};
+
+// Employee Compensation API
+export const employeeCompensationAPI = {
+  getAllPolicies: async () => {
+    try {
+      console.log('API Service: Fetching all employee compensation policies');
+      const response = await api.get('/employee-compensation');
+      console.log('API Service: Policies fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching policies:', error);
+      throw error;
+    }
+  },
+
+  getActiveCompanies: async () => {
+    try {
+      console.log('API Service: Fetching active companies');
+      const response = await api.get('/employee-compensation/companies');
+      console.log('API Service: Active companies fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching active companies:', error);
+      throw error;
+    }
+  },
+
+  searchPolicies: async (searchParams) => {
+    try {
+      console.log('API Service: Searching employee compensation policies');
+      const response = await api.get('/employee-compensation/search', { params: searchParams });
+      console.log('API Service: Search completed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error searching policies:', error);
+      throw error;
+    }
+  },
+
+  getPolicy: async (id) => {
+    try {
+      console.log('API Service: Fetching employee compensation policy:', id);
+      const response = await api.get(`/employee-compensation/${id}`);
+      console.log('API Service: Policy fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching policy:', error);
+      throw error;
+    }
+  },
+
+  createPolicy: async (policyData) => {
+    try {
+      console.log('API Service: Creating employee compensation policy');
+      console.log('Policy data:', policyData);
+      
+      const response = await api.post('/employee-compensation', policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log('API Service: Policy created successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error creating policy:', error);
+      throw error;
+    }
+  },
+
+  updatePolicy: async (id, policyData) => {
+    try {
+      console.log('API Service: Updating employee compensation policy:', id);
+      console.log('Policy data:', policyData);
+      
+      const response = await api.put(`/employee-compensation/${id}`, policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log('API Service: Policy updated successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error updating policy:', error);
+      throw error;
+    }
+  },
+
+  deletePolicy: async (id) => {
+    try {
+      console.log('API Service: Deleting employee compensation policy:', id);
+      const response = await api.delete(`/employee-compensation/${id}`);
+      console.log('API Service: Policy deleted successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error deleting policy:', error);
+      throw error;
+    }
+  }
+};
+
+// Insurance Company API
+export const insuranceCompanyAPI = {
+  getAllCompanies: async () => {
+    try {
+      const response = await api.get('/insurance-companies');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createCompany: async (companyData) => {
+    try {
+      const response = await api.post('/insurance-companies', companyData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getCompany: async (id) => {
+    try {
+      console.log('API Service: Fetching insurance company:', id);
+      const response = await api.get(`/insurance-companies/${id}`);
+      console.log('API Service: Insurance company fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching insurance company:', error);
+      throw error;
+    }
+  },
+
+  updateCompany: async (id, companyData) => {
+    try {
+      console.log('API Service: Updating insurance company:', id);
+      const response = await api.put(`/insurance-companies/${id}`, companyData);
+      console.log('API Service: Insurance company updated successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error updating insurance company:', error);
+      throw error;
+    }
+  },
+
+  deleteCompany: async (id) => {
+    try {
+      console.log('API Service: Deleting insurance company:', id);
+      const response = await api.delete(`/insurance-companies/${id}`);
+      console.log('API Service: Insurance company deleted successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error deleting insurance company:', error);
       throw error;
     }
   }

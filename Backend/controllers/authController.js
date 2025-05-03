@@ -93,12 +93,20 @@ class AuthController {
       }
 
       // Validate password
-      const isValidPassword = await userData.validatePassword(password);
-      if (!isValidPassword) {
-        console.log('Login failed: Invalid password for user:', email);
-        return res.status(401).json({
+      try {
+        const isValidPassword = await userData.validatePassword(password);
+        if (!isValidPassword) {
+          console.log('Login failed: Invalid password for user:', email);
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid credentials'
+          });
+        }
+      } catch (error) {
+        console.error('Password validation error:', error);
+        return res.status(500).json({
           success: false,
-          error: 'Invalid credentials'
+          error: 'Error validating password'
         });
       }
 

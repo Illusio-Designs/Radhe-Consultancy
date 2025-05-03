@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const InsuranceCompany = require('../models/InsuranceCompany');
+const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
 
 // Get all insurance companies
