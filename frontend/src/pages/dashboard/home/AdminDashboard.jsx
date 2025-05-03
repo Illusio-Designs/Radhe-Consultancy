@@ -12,11 +12,56 @@ import {
   FiUsers,
   FiShoppingCart,
   FiDollarSign,
-  FiBriefcase
+  FiBriefcase,
+  FiShield,
+  FiTruck,
+  FiZap,
+  FiAnchor,
+  FiHeart
 } from "react-icons/fi";
 import { adminDashboardAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
-import "../../../styles/pages/dashboard/home/Dashboard.css";
+import "../../../styles/pages/dashboard/home/AdminDashboard.css";
+
+const InsuranceTypeCard = ({ icon, label, stats, color }) => (
+  <div className="insurance-type-card" style={{ borderTop: `4px solid ${color}` }}>
+    <div className="insurance-type-header">
+      <span className="insurance-type-icon" style={{ color }}>{icon}</span>
+      <span className="insurance-type-label">{label}</span>
+    </div>
+    <div className="insurance-type-stats">
+      <div className="insurance-type-total">
+        <span className="stat-label">Total</span>
+        <span className="stat-value">{stats.total}</span>
+      </div>
+      <div className="insurance-type-recent">
+        <span className="stat-label">Recent (30d)</span>
+        <span className="stat-value">{stats.recent}</span>
+        <span className="stat-percentage">{stats.percent}%</span>
+      </div>
+    </div>
+  </div>
+);
+
+const AllInsuranceCard = ({ stats }) => (
+  <div className="all-insurance-card">
+    <div className="all-insurance-header">
+      <FiPackage className="all-insurance-icon" />
+      <h2>All Insurance Policies</h2>
+    </div>
+    <div className="all-insurance-stats">
+      <div className="all-insurance-total">
+        <span className="stat-label">Total</span>
+        <span className="stat-value">{stats.total}</span>
+      </div>
+      <div className="all-insurance-recent">
+        <span className="stat-label">Recent (30d)</span>
+        <span className="stat-value">{stats.recent}</span>
+        <span className="stat-percentage">{stats.percent}%</span>
+      </div>
+    </div>
+  </div>
+);
 
 const CompanyStatsCard = ({ stats }) => (
   <div className="consumer-stats-card">
@@ -146,7 +191,15 @@ const AdminDashboard = () => {
     total_companies: 0,
     active_companies: 0,
     inactive_companies: 0,
-    recent_companies: 0
+    recent_companies: 0,
+    insurance_stats: {
+      all: { total: 0, recent: 0, percent: 0 },
+      ecp: { total: 0, recent: 0, percent: 0 },
+      vehicle: { total: 0, recent: 0, percent: 0 },
+      fire: { total: 0, recent: 0, percent: 0 },
+      marine: { total: 0, recent: 0, percent: 0 },
+      health: { total: 0, recent: 0, percent: 0 }
+    }
   });
 
   useEffect(() => {
@@ -224,6 +277,14 @@ const AdminDashboard = () => {
           </div>
 
           <div className="dashboard-content">
+            <AllInsuranceCard stats={stats.insurance_stats.all} />
+            <div className="insurance-type-grid">
+              <InsuranceTypeCard icon={<FiShield />} label="ECP" stats={stats.insurance_stats.ecp} color="#007bff" />
+              <InsuranceTypeCard icon={<FiTruck />} label="Vehicle" stats={stats.insurance_stats.vehicle} color="#28a745" />
+              <InsuranceTypeCard icon={<FiZap />} label="Fire" stats={stats.insurance_stats.fire} color="#e67e22" />
+              <InsuranceTypeCard icon={<FiAnchor />} label="Marine" stats={stats.insurance_stats.marine} color="#17a2b8" />
+              <InsuranceTypeCard icon={<FiHeart />} label="Health" stats={stats.insurance_stats.health} color="#dc3545" />
+            </div>
             <CompanyStatsCard stats={stats} />
             <ConsumerStatsCard />
           </div>
