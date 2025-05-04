@@ -7,12 +7,6 @@ const { uploadProfileImage } = require('../config/multerConfig');
 const path = require('path');
 const fs = require('fs');
 
-
-// Password management routes (public)
-router.post('/forgot-password', userController.forgotPassword);
-router.get('/reset-password/:token', userController.getResetPasswordForm);
-router.post('/reset-password/:token', userController.resetPassword);
-
 // Protected routes with authentication
 router.get('/', auth, userController.getAllUsers);
 

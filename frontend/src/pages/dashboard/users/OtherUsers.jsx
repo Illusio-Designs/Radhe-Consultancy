@@ -110,6 +110,8 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         userData.password = formData.password;
       }
 
+      console.log("Submitting userData:", userData); // Debug log
+
       if (user) {
         const updatedUser = await userAPI.updateUser(user.user_id, userData);
         onUserUpdated(updatedUser);
@@ -258,11 +260,13 @@ function OtherUserList() {
     try {
       setLoading(true);
       const allUsers = await userAPI.getAllUsers();
-      const otherUsers = allUsers.filter(user => user.role_id !== 5 && user.role_id !== 6); // Exclude Company and Consumer users
+      const otherUsers = allUsers.filter(
+        (user) => user.role_id !== 5 && user.role_id !== 6
+      ); // Exclude Company and Consumer users
       setUsers(otherUsers);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch users');
+      setError("Failed to fetch users");
       console.error(err);
     } finally {
       setTimeout(() => {
@@ -317,7 +321,7 @@ function OtherUserList() {
       label: "Role",
       sortable: true,
       render: (value) => {
-        const role = roles.find(r => r.id === value);
+        const role = roles.find((r) => r.id === value);
         return role ? role.role_name : "Unknown Role";
       },
     },

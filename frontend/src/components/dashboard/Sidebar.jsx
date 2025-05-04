@@ -21,20 +21,23 @@ import {
   BiCar,
   BiBuildings,
   BiDetail,
-  BiBook
+  BiBook,
 } from "react-icons/bi";
 import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Sidebar = ({ onCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const { user } = useAuth();
+  const userRole = user?.role_name || user?.role;
 
   // Function to handle dropdown toggle
   const handleDropdownToggle = (dropdownName) => {
-    setActiveDropdown(currentDropdown => 
+    setActiveDropdown((currentDropdown) =>
       currentDropdown === dropdownName ? null : dropdownName
     );
   };
@@ -60,69 +63,154 @@ const Sidebar = ({ onCollapse }) => {
     }
   };
 
-  const menuItems = [
-    { 
-      path: "/dashboard", 
-      icon: <BiTachometer />, 
-      label: "Dashboard",
-      items: [
-        { path: "/dashboard", icon: <BiTachometer />, label: "Home" }
-      ]
-    },
-    { path: "/dashboard/roles", icon: <BiShield />, label: "Roles" },
-    { path: "/dashboard/widget", icon: <BiBuilding />, label: "Widget" },
+  let menuItems = [
     {
-      label: "Users",
-      icon: <BiGroup />,
-      isDropdown: true,
-      isOpen: activeDropdown === 'users',
-      toggle: () => handleDropdownToggle('users'),
-      items: [
-        { path: "/dashboard/users/company", icon: <BiBuilding />, label: "Companies" },
-        { path: "/dashboard/users/consumer", icon: <BiUserCircle />, label: "Consumer" },
-        { path: "/dashboard/users/other", icon: <BiUser />, label: "Employee" }
-      ]
+      path: "/dashboard",
+      icon: <BiTachometer />,
+      label: "Dashboard",
+      items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
     },
     {
       label: "Vendors",
       icon: <BiStore />,
       isDropdown: true,
-      isOpen: activeDropdown === 'vendors',
-      toggle: () => handleDropdownToggle('vendors'),
+      isOpen: activeDropdown === "vendors",
+      toggle: () => handleDropdownToggle("vendors"),
       items: [
-        { path: "/dashboard/companies", icon: <BiBuilding />, label: "Companies" },
-        { path: "/dashboard/consumers", icon: <BiUserCircle />, label: "Consumers" }
-      ]
+        {
+          path: "/dashboard/companies",
+          icon: <BiBuilding />,
+          label: "Companies",
+        },
+        {
+          path: "/dashboard/consumers",
+          icon: <BiUserCircle />,
+          label: "Consumers",
+        },
+      ],
     },
-    {
-      label: "Insurance",
-      icon: <BiHealth />,
-      isDropdown: true,
-      isOpen: activeDropdown === 'insurance',
-      toggle: () => handleDropdownToggle('insurance'),
-      items: [
-        { path: "/dashboard/insurance/ECP", icon: <BiHealth />, label: "ECP" },
-        { path: "/dashboard/insurance/health", icon: <BiPulse />, label: "Health" },
-        { path: "/dashboard/insurance/marine", icon: <BiWater />, label: "Marine" },
-        { path: "/dashboard/insurance/fire", icon: <BiHotel />, label: "Fire" },
-        { path: "/dashboard/insurance/vehicle", icon: <BiCar />, label: "Vehicle" },
-        { path: "/dashboard/insurance/companies", icon: <BiBuilding />, label: "Companies" }
-      ]
-    },
-    {
-      label: "Compliance & Licensing",
-      icon: <BiCertification />,
-      isDropdown: true,
-      isOpen: activeDropdown === 'compliance',
-      toggle: () => handleDropdownToggle('compliance'),
-      items: [
-        { path: "/dashboard/compliance/factory-act", icon: <BiBuildings />, label: "Factory Act License" },
-        { path: "/dashboard/compliance/labour-inspection", icon: <BiDetail />, label: "Labour Law Inspection" },
-        { path: "/dashboard/compliance/labour-license", icon: <BiBook />, label: "Labour License Management" }
-      ]
-    },
-    { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" }
   ];
+
+  // Only show vendor-related menu for vendor_manager
+  if (userRole !== "vendor_manager") {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      },
+      { path: "/dashboard/roles", icon: <BiShield />, label: "Roles" },
+      { path: "/dashboard/widget", icon: <BiBuilding />, label: "Widget" },
+      {
+        label: "Users",
+        icon: <BiGroup />,
+        isDropdown: true,
+        isOpen: activeDropdown === "users",
+        toggle: () => handleDropdownToggle("users"),
+        items: [
+          {
+            path: "/dashboard/users/company",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+          {
+            path: "/dashboard/users/consumer",
+            icon: <BiUserCircle />,
+            label: "Consumer",
+          },
+          {
+            path: "/dashboard/users/other",
+            icon: <BiUser />,
+            label: "Employee",
+          },
+        ],
+      },
+      {
+        label: "Vendors",
+        icon: <BiStore />,
+        isDropdown: true,
+        isOpen: activeDropdown === "vendors",
+        toggle: () => handleDropdownToggle("vendors"),
+        items: [
+          {
+            path: "/dashboard/companies",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+          {
+            path: "/dashboard/consumers",
+            icon: <BiUserCircle />,
+            label: "Consumers",
+          },
+        ],
+      },
+      {
+        label: "Insurance",
+        icon: <BiHealth />,
+        isDropdown: true,
+        isOpen: activeDropdown === "insurance",
+        toggle: () => handleDropdownToggle("insurance"),
+        items: [
+          {
+            path: "/dashboard/insurance/ECP",
+            icon: <BiHealth />,
+            label: "ECP",
+          },
+          {
+            path: "/dashboard/insurance/health",
+            icon: <BiPulse />,
+            label: "Health",
+          },
+          {
+            path: "/dashboard/insurance/marine",
+            icon: <BiWater />,
+            label: "Marine",
+          },
+          {
+            path: "/dashboard/insurance/fire",
+            icon: <BiHotel />,
+            label: "Fire",
+          },
+          {
+            path: "/dashboard/insurance/vehicle",
+            icon: <BiCar />,
+            label: "Vehicle",
+          },
+          {
+            path: "/dashboard/insurance/companies",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+        ],
+      },
+      {
+        label: "Compliance & Licensing",
+        icon: <BiCertification />,
+        isDropdown: true,
+        isOpen: activeDropdown === "compliance",
+        toggle: () => handleDropdownToggle("compliance"),
+        items: [
+          {
+            path: "/dashboard/compliance/factory-act",
+            icon: <BiBuildings />,
+            label: "Factory Act License",
+          },
+          {
+            path: "/dashboard/compliance/labour-inspection",
+            icon: <BiDetail />,
+            label: "Labour Law Inspection",
+          },
+          {
+            path: "/dashboard/compliance/labour-license",
+            icon: <BiBook />,
+            label: "Labour License Management",
+          },
+        ],
+      },
+      { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
+    ];
+  }
 
   const isActive = (path) => location.pathname.startsWith(path);
 
@@ -133,26 +221,26 @@ const Sidebar = ({ onCollapse }) => {
           <a
             onClick={item.toggle}
             className={`sidebar-nav-item ${
-              item.items.some((sub) => isActive(sub.path))
-                ? "active"
-                : ""
+              item.items.some((sub) => isActive(sub.path)) ? "active" : ""
             }`}
             title={isCollapsed ? item.label : ""}
           >
             <span className="text-2xl">{item.icon}</span>
             {!isCollapsed && (
               <>
-                <span className="ml-4 sidebar-nav-label">
-                  {item.label}
-                </span>
-                <span className={`ml-4 text-sm chevron-icon ${item.isOpen ? 'rotate' : ''}`}>
+                <span className="ml-4 sidebar-nav-label">{item.label}</span>
+                <span
+                  className={`ml-4 text-sm chevron-icon ${
+                    item.isOpen ? "rotate" : ""
+                  }`}
+                >
                   {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
                 </span>
               </>
             )}
           </a>
-          <div className={`pl-4 ${item.isOpen ? 'dropdown-open' : ''}`}>
-            {item.items.map((subItem, subIndex) => (
+          <div className={`pl-4 ${item.isOpen ? "dropdown-open" : ""}`}>
+            {item.items.map((subItem, subIndex) =>
               subItem.isDropdown ? (
                 renderMenuItem(subItem, `${index}-${subIndex}`)
               ) : (
@@ -170,7 +258,7 @@ const Sidebar = ({ onCollapse }) => {
                   </span>
                 </Link>
               )
-            ))}
+            )}
           </div>
         </>
       );
@@ -180,9 +268,7 @@ const Sidebar = ({ onCollapse }) => {
       <Link
         key={item.path || index}
         to={item.path}
-        className={`sidebar-nav-item ${
-          isActive(item.path) ? "active" : ""
-        }`}
+        className={`sidebar-nav-item ${isActive(item.path) ? "active" : ""}`}
         title={isCollapsed ? item.label : ""}
       >
         <span className="text-2xl">{item.icon}</span>

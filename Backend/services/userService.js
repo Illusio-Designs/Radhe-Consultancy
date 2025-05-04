@@ -239,20 +239,23 @@ class UserService {
       }
       console.log('User found:', user.username);
 
-      // Generate reset token
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
-      console.log('Generated reset token');
+      // Generate reset token as JWT
+      const resetToken = jwt.sign(
+        { userId: user.user_id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+      console.log('Generated JWT reset token');
 
-      // Save reset token and expiry to user
+      // Optionally, save the token to the user (not required for JWT verification)
       await user.update({
         reset_token: resetToken,
-        reset_token_expiry: resetTokenExpiry
+        reset_token_expiry: new Date(Date.now() + 3600000)
       });
-      console.log('Updated user with reset token');
+      console.log('Updated user with JWT reset token');
 
       // Create reset URL
-      const resetUrl = `http://localhost:${process.env.PORT}/api/users/reset-password/${resetToken}`;
+      const resetUrl = `http://localhost:3001/reset-password/${resetToken}`;
       console.log('Reset URL:', resetUrl);
 
       // Send email
@@ -271,17 +274,15 @@ class UserService {
         to: user.email,
         subject: 'Password Reset Request',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333; text-align: center;">Password Reset Request</h1>
-            <p>Hello ${user.username},</p>
-            <p>You requested a password reset for your Radhe Consultancy account. Click the button below to reset your password:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
+          <div style="background: linear-gradient(135deg, #4299e1 0%, #90cdf4 100%); min-height: 100vh; padding: 40px 0; font-family: 'Segoe UI', Arial, sans-serif;">
+            <div style="max-width: 400px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(66,153,225,0.15); padding: 2.5rem 2rem; text-align: center;">
+              <h2 style="color: #2b6cb0; margin-bottom: 0.5rem;">Reset Your Password</h2>
+              <p style="color: #4a5568; margin-bottom: 1.5rem; font-size: 1.1rem;">Hello <b>${user.username}</b>,<br/>You requested a password reset for your Radhe Consultancy account.</p>
+              <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(90deg, #4299e1 0%, #90cdf4 100%); color: #fff; padding: 0.75rem 2rem; border-radius: 6px; font-size: 1.1rem; font-weight: 600; text-decoration: none; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(66,153,225,0.10);">Reset Password</a>
+              <p style="color: #718096; font-size: 0.95rem; margin-top: 1.5rem;">This link will expire in 1 hour.<br>If you didn't request this, you can safely ignore this email.</p>
+              <hr style="margin: 2rem 0; border: none; border-top: 1px solid #e2e8f0;">
+              <p style="color: #a0aec0; font-size: 0.85rem;">&copy; ${new Date().getFullYear()} Radhe Consultancy. All rights reserved.</p>
             </div>
-            <p>This link will expire in 1 hour.</p>
-            <p>If you didn't request this password reset, please ignore this email or contact support if you have concerns.</p>
-            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-            <p style="color: #666; font-size: 12px; text-align: center;">This is an automated message, please do not reply to this email.</p>
           </div>
         `
       };

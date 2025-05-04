@@ -13,6 +13,12 @@ router.post('/register', authController.register);
 // Universal Google login route
 router.post('/google-login', authController.googleLogin);
 
+// Forgot password route
+router.post('/forgot-password', authController.forgotPassword);
+
+// Reset password route
+router.post('/reset-password/:token', authController.resetPassword);
+
 // Get current user route
 router.get('/me', auth, authController.getCurrentUser);
 
