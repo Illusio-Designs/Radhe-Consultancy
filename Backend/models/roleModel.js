@@ -11,7 +11,7 @@ const Role = sequelize.define('Role', {
     type: DataTypes.STRING,
     allowNull: false,
     validate: {
-      isIn: [['user', 'admin', 'vendor_manager', 'user_manager', 'company', 'consumer', 'insurance_manager']]
+      isIn: [['Admin', 'User', 'Vendor_manager', 'User_manager', 'Company', 'Consumer', 'Insurance_manager', 'Compliance_manager', 'DSC_manager']]
     }
   },
   description: {

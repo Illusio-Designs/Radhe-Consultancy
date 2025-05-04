@@ -9,6 +9,8 @@ import Input from "../../../components/common/Input/Input";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import { userAPI, roleAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/users/User.css";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useData } from "../../../contexts/DataContext";
 
 // UserForm component
 const UserForm = ({ user, onClose, onUserUpdated }) => {
@@ -21,104 +23,53 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     status: user?.status || "Active",
   });
   const [error, setError] = useState(null);
-  const [roles, setRoles] = useState([]);
-  const [loadingRoles, setLoadingRoles] = useState(false);
+  const { roles } = useData();
+  const otherRoles = roles.filter((role) =>
+    [
+      "User",
+      "Vendor_manager",
+      "User_manager",
+      "Insurance_manager",
+      "Compliance_manager",
+      "DSC_manager",
+    ].includes(role.role_name)
+  );
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        setLoadingRoles(true);
-        const rolesData = await roleAPI.getAllRoles();
-        console.log("Fetched roles:", rolesData); // Debug log
-
-        // Filter out Company and Consumer roles
-        const otherRoles = rolesData.filter(
-          (role) => !["Company", "Consumer"].includes(role.role_name)
-        );
-        setRoles(otherRoles);
-
-        if (!user && !formData.role_id && otherRoles.length > 0) {
-          const defaultRole =
-            otherRoles.find((role) => role.id === 2) || otherRoles[0];
-          setFormData((prev) => ({
-            ...prev,
-            role_id: String(defaultRole.id),
-          }));
-        }
-      } catch (err) {
-        console.error("Error fetching roles:", err);
-        setError("Failed to fetch roles");
-      } finally {
-        setLoadingRoles(false);
-      }
-    };
-    fetchRoles();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      console.log("Setting form data for user:", user);
-      setFormData({
-        username: user.username || "",
-        email: user.email || "",
-        password: "",
-        role_id: user.role_id ? String(user.role_id) : "",
-        user_type_id: user.user_type_id || 1,
-        status: user.status || "Active",
-      });
-    } else {
-      setFormData({
-        username: "",
-        email: "",
-        password: "",
-        role_id: "",
-        user_type_id: 1,
-        status: "Active",
-      });
+    if (!user && otherRoles.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        role_id: String(otherRoles[0].id),
+      }));
     }
-  }, [user]);
+  }, [otherRoles, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData.role_id) {
-        setError("Please select a valid role");
-        return;
-      }
-
-      const roleId = Number(formData.role_id);
-      if (isNaN(roleId)) {
-        setError("Selected role ID is not a valid number");
-        return;
-      }
-
-      const roleExists = roles.some((role) => role && role.id === roleId);
-      if (!roleExists) {
-        setError("Selected role is not valid");
+      if (otherRoles.length === 0) {
+        setError("No valid roles found");
         return;
       }
 
       const userData = {
         username: formData.username,
         email: formData.email,
-        role_id: roleId,
+        role_id: Number(formData.role_id),
         user_type_id: formData.user_type_id,
         status: formData.status,
       };
 
-      if (formData.password && !user) {
+      if (formData.password) {
         userData.password = formData.password;
       }
 
-      console.log("Submitting userData:", userData); // Debug log
-
       if (user) {
-        const updatedUser = await userAPI.updateUser(user.user_id, userData);
-        onUserUpdated(updatedUser);
+        await userAPI.updateUser(user.user_id, userData);
       } else {
-        const newUser = await userAPI.createUser(userData);
-        onUserUpdated(newUser);
+        await userAPI.createUser(userData);
       }
+      onUserUpdated();
     } catch (err) {
       console.error("Error saving user:", err);
       setError(err.response?.data?.error || "Failed to save user");
@@ -152,7 +103,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             value={formData.username}
             onChange={handleChange}
             className="user-management-form-input"
-            placeholder="Enter Your Name"
+            placeholder="Enter User Name"
             required
           />
         </div>
@@ -164,7 +115,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             value={formData.email}
             onChange={handleChange}
             className="user-management-form-input"
-            placeholder="Enter Your Email"
+            placeholder="Enter Email"
             required
           />
         </div>
@@ -184,26 +135,20 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         )}
 
         <div className="user-management-form-group">
-          {loadingRoles ? (
-            <Loader size="small" />
-          ) : (
-            <select
-              name="role_id"
-              value={formData.role_id}
-              onChange={handleChange}
-              className="user-management-form-input"
-              required
-            >
-              <option value="">Select Role</option>
-              {roles.map((role) =>
-                role && role.id !== undefined ? (
-                  <option key={role.id} value={String(role.id)}>
-                    {role.role_name || `Role ID: ${role.id}`}
-                  </option>
-                ) : null
-              )}
-            </select>
-          )}
+          <select
+            name="role_id"
+            value={formData.role_id}
+            onChange={handleChange}
+            className="user-management-form-input"
+            required
+          >
+            <option value="">Select Role</option>
+            {otherRoles.map((role) => (
+              <option key={role.id} value={String(role.id)}>
+                {role.role_name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="user-management-form-group">
@@ -233,53 +178,44 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 };
 
 function OtherUserList() {
+  const { user } = useAuth();
+  const { users, roles, loading, error: dataError, refreshData } = useData();
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ role: "", status: "" });
+  const [filters, setFilters] = useState({ status: "" });
 
-  useEffect(() => {
-    fetchRoles();
-    fetchUsers();
-  }, []);
+  const otherUsers = users.filter((user) => {
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return (
+      userRole &&
+      [
+        "User",
+        "Vendor_manager",
+        "User_manager",
+        "Insurance_manager",
+        "Compliance_manager",
+        "DSC_manager",
+      ].includes(userRole.role_name)
+    );
+  });
 
-  const fetchRoles = async () => {
-    try {
-      const rolesData = await roleAPI.getAllRoles();
-      setRoles(rolesData);
-    } catch (err) {
-      console.error("Error fetching roles:", err);
-      setError("Failed to fetch roles");
-    }
+  const getRoleName = (roleId) => {
+    const role = roles.find((r) => r.id === roleId);
+    return role ? role.role_name : "Unknown";
   };
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const allUsers = await userAPI.getAllUsers();
-      const otherUsers = allUsers.filter(
-        (user) => user.role_id !== 5 && user.role_id !== 6
-      ); // Exclude Company and Consumer users
-      setUsers(otherUsers);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch users");
-      console.error(err);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000); // Ensure loader is displayed for at least 2000ms
-    }
-  };
+  const filteredUsers = otherUsers.filter((user) => {
+    const matchesStatus =
+      !filters.status || (user.status || "Active") === filters.status;
+    return matchesStatus;
+  });
 
   const handleDelete = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         await userAPI.deleteUser(userId);
-        await fetchUsers();
+        await refreshData();
       } catch (err) {
         setError("Failed to delete user");
         console.error(err);
@@ -299,7 +235,7 @@ function OtherUserList() {
   };
 
   const handleUserUpdated = async () => {
-    await fetchUsers();
+    await refreshData();
     handleModalClose();
   };
 
@@ -314,16 +250,13 @@ function OtherUserList() {
         return serialNumber;
       },
     },
-    { key: "username", label: "Name", sortable: true },
+    { key: "username", label: "User Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     {
       key: "role_id",
       label: "Role",
       sortable: true,
-      render: (value) => {
-        const role = roles.find((r) => r.id === value);
-        return role ? role.role_name : "Unknown Role";
-      },
+      render: (value) => getRoleName(value),
     },
     {
       key: "status",
@@ -369,7 +302,7 @@ function OtherUserList() {
     <div className="user-management">
       <div className="user-management-content">
         <div className="user-management-header">
-          <h1 className="user-management-title">Employee User Management</h1>
+          <h1 className="user-management-title">Other Users</h1>
           <Button
             variant="contained"
             onClick={() => setShowModal(true)}
@@ -389,7 +322,7 @@ function OtherUserList() {
           <Loader size="large" color="primary" />
         ) : (
           <TableWithControl
-            data={users}
+            data={filteredUsers}
             columns={columns}
             defaultPageSize={10}
           />
@@ -399,7 +332,7 @@ function OtherUserList() {
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
-        title={selectedUser ? "Edit User" : "Add New User"}
+        title={selectedUser ? "Edit User" : "Add User"}
       >
         <UserForm
           user={selectedUser}

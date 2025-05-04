@@ -9,8 +9,11 @@ const checkOwnership = (type) => {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
+      // Normalize role names
+      const normalizedRoleName = user.Role.role_name.charAt(0).toUpperCase() + user.Role.role_name.slice(1).toLowerCase();
+
       // Admin can access all data
-      if (user.Role.role_name === 'Admin') {
+      if (normalizedRoleName === 'Admin') {
         return next();
       }
 
@@ -23,14 +26,14 @@ const checkOwnership = (type) => {
 
       switch (type) {
         case 'company':
-          if (user.Role.role_name === 'Company') {
+          if (normalizedRoleName === 'Company') {
             const company = await Company.findByPk(resourceId);
             hasAccess = company && company.user_id === user.user_id;
           }
           break;
 
         case 'consumer':
-          if (user.Role.role_name === 'Consumer') {
+          if (normalizedRoleName === 'Consumer') {
             const consumer = await Consumer.findByPk(resourceId);
             hasAccess = consumer && consumer.user_id === user.user_id;
           }

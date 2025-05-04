@@ -7,13 +7,15 @@ const fs = require('fs');
 const path = require('path');
 
 const roles = [
-  { role_name: 'admin', description: 'Full system access' },
-  { role_name: 'user', description: 'Basic user access' },
-  { role_name: 'vendor_manager', description: 'Vendor management access' },
-  { role_name: 'user_manager', description: 'User management access' },
-  { role_name: 'company', description: 'Company access' },
-  { role_name: 'consumer', description: 'Consumer access' },
-  { role_name: 'insurance_manager', description: 'Insurance management access' }
+  { role_name: 'Admin', description: 'Full system access' },
+  { role_name: 'User', description: 'Basic user access' },
+  { role_name: 'Vendor_manager', description: 'Vendor management access' },
+  { role_name: 'User_manager', description: 'User management access' },
+  { role_name: 'Company', description: 'Company access' },
+  { role_name: 'Consumer', description: 'Consumer access' },
+  { role_name: 'Insurance_manager', description: 'Insurance management access' },
+  { role_name: 'Compliance_manager', description: 'Compliance management access' },
+  { role_name: 'DSC_manager', description: 'Digital Signature Certificate management access' }
 ];
 
 const permissions = [
@@ -52,27 +54,27 @@ const permissions = [
 ];
 
 const rolePermissions = {
-  'admin': permissions.map(p => p.permission_name), // All permissions
-  'user': [ 'access_dashboard' ],
-  'vendor_manager': [
+  'Admin': permissions.map(p => p.permission_name), // All permissions
+  'User': [ 'access_dashboard' ],
+  'Vendor_manager': [
     'view_companies', 'create_company', 'edit_company', 'delete_company',
     'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
     'access_dashboard', 'access_reports', 'upload_company_documents'
   ],
-  'user_manager': [
+  'User_manager': [
     'view_users', 'create_user', 'edit_user', 'delete_user',
     'view_roles', 'assign_roles', 'access_dashboard'
   ],
-  'company': [
+  'Company': [
     'access_dashboard',
     'view_companies', 'edit_company',
     'upload_company_documents'
   ],
-  'consumer': [
+  'Consumer': [
     'access_dashboard',
     'view_consumers', 'edit_consumer'
   ],
-  'insurance_manager': [
+  'Insurance_manager': [
     'access_dashboard',
     'view_insurance_companies',
     'create_insurance_company',
@@ -82,6 +84,20 @@ const rolePermissions = {
     'create_policy',
     'edit_policy',
     'delete_policy',
+    'access_reports'
+  ],
+  'Compliance_manager': [
+    'access_dashboard',
+    'view_companies',
+    'view_consumers',
+    'view_insurance_companies',
+    'view_policies',
+    'access_reports'
+  ],
+  'DSC_manager': [
+    'access_dashboard',
+    'view_users',
+    'edit_user',
     'access_reports'
   ]
 };
@@ -211,7 +227,7 @@ async function setupAll() {
 async function setupAdminUser() {
   try {
     console.log('Setting up admin user...');
-    const adminRole = await Role.findOne({ where: { role_name: 'admin' } });
+    const adminRole = await Role.findOne({ where: { role_name: 'Admin' } });
     if (!adminRole) {
       throw new Error('Admin role not found');
     }

@@ -381,6 +381,7 @@ const CombinedDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState({
     total_companies: 0,
     active_companies: 0,
@@ -397,7 +398,6 @@ const CombinedDashboard = () => {
     },
     user_role_stats: {},
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(
     new Date().toLocaleTimeString()
   );
@@ -418,9 +418,7 @@ const CombinedDashboard = () => {
     } catch (error) {
       console.error("Error fetching admin stats:", error);
     } finally {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
+      setIsLoading(false);
     }
   };
 
@@ -431,9 +429,7 @@ const CombinedDashboard = () => {
     } catch (error) {
       console.error("Error refreshing admin stats:", error);
     } finally {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
+      setIsLoading(false);
     }
   };
 
@@ -451,7 +447,9 @@ const CombinedDashboard = () => {
 
   const renderDashboardContent = () => {
     const userRole = user?.role_name || user?.role;
-    switch (userRole) {
+    const normalizedRole = userRole?.toLowerCase()?.trim();
+
+    switch (normalizedRole) {
       case "admin":
         return (
           <AdminDashboard
@@ -500,7 +498,6 @@ const CombinedDashboard = () => {
           </div>
         );
       case "vendor_manager":
-        // Vendor manager: Only show company and consumer stats, no insurance
         return (
           <div className="dashboard-page">
             <DashboardHeader
