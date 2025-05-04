@@ -430,7 +430,7 @@ export const userAPI = {
   getUserPermissions: async (userId) => {
     const response = await api.get(`/users/${userId}/permissions`);
     return response.data;
-  }
+  },
 };
 
 // Role API

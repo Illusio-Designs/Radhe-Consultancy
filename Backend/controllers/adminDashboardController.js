@@ -1,4 +1,4 @@
-const { Company, EmployeeCompensationPolicy, Consumer } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
@@ -48,6 +48,14 @@ const getCompanyStatistics = async (req, res) => {
     });
     const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
 
+    // --- User Role Stats ---
+    const roles = await Role.findAll();
+    const userRoleStats = {};
+    for (const role of roles) {
+      const count = await User.count({ where: { role_id: role.id } });
+      userRoleStats[role.role_name] = count;
+    }
+
     // --- Insurance Policy Stats ---
     // Real data for ECP
     const ecpTotal = await EmployeeCompensationPolicy.count();
@@ -89,6 +97,7 @@ const getCompanyStatistics = async (req, res) => {
           percent_inactive: percent(inactiveConsumers, totalConsumers),
           percent_recent: percent(recentConsumers, totalConsumers)
         },
+        user_role_stats: userRoleStats,
         insurance_stats: {
           all: {
             total: allTotal,

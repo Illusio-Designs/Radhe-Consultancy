@@ -77,6 +77,7 @@ router.get('/company', auth, userController.getCompanyUsers);
 router.get('/consumer', auth, userController.getConsumerUsers);
 router.get('/other', auth, userController.getOtherUsers);
 
+
 // Add new route to serve profile images
 router.get('/profile-image/:filename', (req, res) => {
   try {

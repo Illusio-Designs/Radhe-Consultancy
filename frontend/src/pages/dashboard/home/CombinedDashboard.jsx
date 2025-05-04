@@ -20,8 +20,12 @@ import {
   FiZap,
   FiAnchor,
   FiHeart,
+  FiUser,
+  FiUserCheck,
+  FiUserX,
+  FiUserPlus,
 } from "react-icons/fi";
-import { adminDashboardAPI } from "../../../services/api";
+import { adminDashboardAPI, userAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
 
@@ -220,6 +224,54 @@ const ConsumerStatsCard = ({ stats }) => {
   );
 };
 
+// Map roles to icons and colors
+const roleIconMap = {
+  admin: { icon: <FiShield />, color: "#007bff" },
+  user_manager: { icon: <FiUserCheck />, color: "#28a745" },
+  vendor_manager: { icon: <FiBriefcase />, color: "#e67e22" },
+  company: { icon: <FiBriefcase />, color: "#17a2b8" },
+  consumer: { icon: <FiUsers />, color: "#dc3545" },
+  user: { icon: <FiUser />, color: "#6c757d" },
+  // Add more roles as needed
+};
+
+const UserRoleStatsCard = ({ stats }) => (
+  <div
+    className="insurance-type-card user-role-stats-card"
+    style={{ borderTop: `4px solid #007bff` }}
+  >
+    <div className="insurance-type-header">
+      <span className="insurance-type-icon" style={{ color: "#007bff" }}>
+        <FiUsers />
+      </span>
+      <span className="insurance-type-label">User Role Statistics</span>
+    </div>
+    <div className="user-role-stats-grid">
+      {Object.entries(stats).map(([role, count]) => {
+        const { icon, color } = roleIconMap[role] || {
+          icon: <FiUser />,
+          color: "#6c757d",
+        };
+        return (
+          <div
+            key={role}
+            className="user-role-stat-item"
+            style={{ borderLeft: `4px solid ${color}` }}
+          >
+            <span className="user-role-icon" style={{ color }}>
+              {icon}
+            </span>
+            <span className="user-role-label">
+              {role.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+            </span>
+            <span className="user-role-count">{count}</span>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
 const DashboardHeader = ({
   title,
   lastUpdated,
@@ -343,6 +395,7 @@ const CombinedDashboard = () => {
       marine: { total: 0, recent: 0, percent: 0 },
       health: { total: 0, recent: 0, percent: 0 },
     },
+    user_role_stats: {},
   });
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(
@@ -463,6 +516,38 @@ const CombinedDashboard = () => {
                 <CompanyStatsCard stats={stats} />
                 <ConsumerStatsCard stats={stats.consumer_stats} />
               </div>
+            </div>
+          </div>
+        );
+      case "user_manager":
+        return (
+          <div className="dashboard-page">
+            <DashboardHeader
+              title="User Manager Dashboard"
+              lastUpdated={lastUpdated}
+              isLoading={isLoading}
+              onRefresh={handleRefresh}
+              timeFilter={timeFilter}
+              onFilterChange={handleFilterChange}
+            />
+            <div className="dashboard-content">
+              <UserRoleStatsCard stats={stats.user_role_stats || {}} />
+            </div>
+          </div>
+        );
+      case "insurance_manager":
+        return (
+          <div className="dashboard-page">
+            <DashboardHeader
+              title="Insurance Manager Dashboard"
+              lastUpdated={lastUpdated}
+              isLoading={isLoading}
+              onRefresh={handleRefresh}
+              timeFilter={timeFilter}
+              onFilterChange={handleFilterChange}
+            />
+            <div className="dashboard-content">
+              <AllInsuranceCard stats={stats.insurance_stats} />
             </div>
           </div>
         );

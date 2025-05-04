@@ -71,28 +71,145 @@ const Sidebar = ({ onCollapse }) => {
       items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
     },
     {
-      label: "Vendors",
-      icon: <BiStore />,
+      label: "Users",
+      icon: <BiGroup />,
       isDropdown: true,
-      isOpen: activeDropdown === "vendors",
-      toggle: () => handleDropdownToggle("vendors"),
+      isOpen: activeDropdown === "users",
+      toggle: () => handleDropdownToggle("users"),
       items: [
         {
-          path: "/dashboard/companies",
+          path: "/dashboard/users/company",
           icon: <BiBuilding />,
           label: "Companies",
         },
         {
-          path: "/dashboard/consumers",
+          path: "/dashboard/users/consumer",
           icon: <BiUserCircle />,
           label: "Consumers",
+        },
+        {
+          path: "/dashboard/users/other",
+          icon: <BiUser />,
+          label: "Employee",
         },
       ],
     },
   ];
 
-  // Only show vendor-related menu for vendor_manager
-  if (userRole !== "vendor_manager") {
+  // Only show user-related menu for user_manager
+  if (userRole === "user_manager") {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      },
+      {
+        label: "Users",
+        icon: <BiGroup />,
+        isDropdown: true,
+        isOpen: activeDropdown === "users",
+        toggle: () => handleDropdownToggle("users"),
+        items: [
+          {
+            path: "/dashboard/users/company",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+          {
+            path: "/dashboard/users/consumer",
+            icon: <BiUserCircle />,
+            label: "Consumers",
+          },
+          {
+            path: "/dashboard/users/other",
+            icon: <BiUser />,
+            label: "Employee",
+          },
+        ],
+      },
+    ];
+  } else if (userRole === "vendor_manager") {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      },
+      {
+        label: "Vendors",
+        icon: <BiStore />,
+        isDropdown: true,
+        isOpen: activeDropdown === "vendors",
+        toggle: () => handleDropdownToggle("vendors"),
+        items: [
+          {
+            path: "/dashboard/companies",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+          {
+            path: "/dashboard/consumers",
+            icon: <BiUserCircle />,
+            label: "Consumers",
+          },
+        ],
+      },
+    ];
+  } else if (
+    userRole === "insurance_manager" ||
+    userRole === "insurance_manager"
+  ) {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      },
+      {
+        label: "Insurance",
+        icon: <BiHealth />,
+        isDropdown: true,
+        isOpen: activeDropdown === "insurance",
+        toggle: () => handleDropdownToggle("insurance"),
+        items: [
+          {
+            path: "/dashboard/insurance/ECP",
+            icon: <BiHealth />,
+            label: "ECP",
+          },
+          {
+            path: "/dashboard/insurance/health",
+            icon: <BiPulse />,
+            label: "Health",
+          },
+          {
+            path: "/dashboard/insurance/marine",
+            icon: <BiWater />,
+            label: "Marine",
+          },
+          {
+            path: "/dashboard/insurance/fire",
+            icon: <BiHotel />,
+            label: "Fire",
+          },
+          {
+            path: "/dashboard/insurance/vehicle",
+            icon: <BiCar />,
+            label: "Vehicle",
+          },
+          {
+            path: "/dashboard/insurance/companies",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+        ],
+      },
+    ];
+  } else {
     menuItems = [
       {
         path: "/dashboard",
@@ -118,11 +235,6 @@ const Sidebar = ({ onCollapse }) => {
             path: "/dashboard/users/consumer",
             icon: <BiUserCircle />,
             label: "Consumer",
-          },
-          {
-            path: "/dashboard/users/other",
-            icon: <BiUser />,
-            label: "Employee",
           },
         ],
       },
