@@ -61,13 +61,7 @@ const Header = ({ isCollapsed }) => {
             >
               <BiUser className="profile-icon" />
               <span className="profile-username">
-                {user?.role === "admin"
-                  ? user?.username
-                  : user?.role === "owner"
-                  ? user?.owner_name
-                  : user?.role === "consumer"
-                  ? user?.name
-                  : "User"}
+                {user?.username || "User"}
               </span>
             </button>
 
@@ -91,8 +85,10 @@ const Header = ({ isCollapsed }) => {
                     <span>Change Password</span>
                   </Link>
                   <hr className="dropdown-divider" />
-                  <button onClick={handleLogout} className="custom-button
-                   button-medium">
+                  <button
+                    onClick={handleLogout}
+                    className="custom-button button-medium"
+                  >
                     <BiLogOut className="dropdown-icon" />
                     <span>Logout</span>
                   </button>
