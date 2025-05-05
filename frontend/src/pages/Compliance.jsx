@@ -25,7 +25,7 @@ import '../styles/pages/Compliance.css';
 const Compliance = () => {
   const complianceServices = [
     {
-      title: "Factory Act & Testing",
+      title: "Factory Act License",
       description: "Complete factory compliance and testing services for your manufacturing setup",
       Icon: HiBuildingOffice2
     },

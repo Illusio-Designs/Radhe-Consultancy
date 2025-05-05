@@ -11,7 +11,7 @@ const Insurance = () => {
   return (
     <>
       <Header />
-      <div className="insurance">
+      <div className="insurance-page">
       <div className="hero-section">
         <div className="hero-content">
           <h1>Insurance</h1>
@@ -25,7 +25,7 @@ const Insurance = () => {
               <div className="icon-container">
                 <i className="fas fa-car"></i>
               </div>
-              <h3>Motor Vehicle Insurance Claims</h3>
+              <h3>Motor & Vehicle Insurance Claims</h3>
               <p>Expert assistance for motor vehicle insurance claims and settlements.</p>
             </div>
             <div className="overlay">

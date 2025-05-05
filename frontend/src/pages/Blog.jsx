@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
@@ -109,16 +110,18 @@ const Blog = () => {
           <h1>The Latest News <br /> And Blog From Northman</h1>
           <div className="blog-grid">
             {getCurrentPosts().map((post) => (
-              <article key={post.id} className="blog-card">
-                <div className="blog-image">
-                  <img src={post.image} alt={post.title} />
-                </div>
-                <div className="blog-content">
-                  <h2>{post.title}</h2>
-                  <p className="blog-excerpt">{post.excerpt}</p>
-                  <button className="read-more">Read More →</button>
-                </div>
-              </article>
+              <Link to={`/bloginner?title=${encodeURIComponent(post.title)}`} key={post.id} className="blog-card-link">
+                <article className="blog-card">
+                  <div className="blog-image">
+                    <img src={post.image} alt={post.title} />
+                  </div>
+                  <div className="blog-content">
+                    <h2>{post.title}</h2>
+                    <p className="blog-excerpt">{post.excerpt}</p>
+                    <button className="read-more">Read More →</button>
+                  </div>
+                </article>
+              </Link>
             ))}
           </div>
           <div className="pagination-wrapper">

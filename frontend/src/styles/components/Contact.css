@@ -26,14 +26,14 @@
 .form-subheading {
   text-align: center;
   font-size: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .form-heading {
   text-align: center;
-  font-size: 35px;
+  font-size: 30px;
   font-weight: bold;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .input-group {
@@ -43,7 +43,7 @@
 
 .input-group input,
 .input-group textarea {
-  padding: 15px 45px 15px 20px;
+  padding: 10px 9px 10px 20px;
   border-radius: 30px;
   border: none;
   outline: none;
@@ -53,7 +53,7 @@
 
 .input-group.field input,
 .input-group.field textarea {
-  width: 88%;
+  width: 95%;
 }
 
 .input-icon {
@@ -67,7 +67,7 @@
 .call .input-icon {
   rotate: 90deg;
   top: 35%;
-  right: 10%;
+  right: 13%;
 }
 
 .textarea-icon {
@@ -111,28 +111,29 @@
 }
 
 .contact-container .info-icon {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background-color: #1f4f9c;
   color: white;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .contact-container .info-icon.location {
-  width: 75px;
+  width: 70px;
 }
 
 .contact-container .info-content h2 {
   font-weight: bold;
   color: #1f4f9c;
   margin-bottom: 5px;
+  font-size: 20px;
 }
 
 .contact-container .info-content p {
   color: #868686;
-  font-size: 17px;
+  font-size: 15px;
 }

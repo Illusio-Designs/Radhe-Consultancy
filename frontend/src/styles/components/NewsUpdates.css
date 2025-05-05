@@ -13,7 +13,7 @@
   }
   
   .heading {
-    font-size: 32px;
+    font-size: 20px;
     font-weight: 700;
     color: #162c2f;
     margin-bottom: 20px;
@@ -53,6 +53,7 @@
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    z-index: 1;
   }
   
   .news-image {
@@ -64,7 +65,7 @@
   .news-meta {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
+    font-size: 12px;
     color: #868686;
     margin: 10px 0;
     padding: 10px;
@@ -80,6 +81,7 @@
   }
   
   .news-title {
+    font-size: 22px;
     font-weight: 600;
     color: #011C1A;
     padding: 0 10px 10px;
@@ -88,13 +90,13 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 200px; 
+    width: 160px; 
   }
   .right-shape {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 200px;
+    width: 160px;
   }
   
   

@@ -37,6 +37,7 @@ import Insurance from "../pages/Insurance";
 import Compliance from "../pages/Compliance";
 import Contact from "../pages/Contact";
 import Blog from "../pages/Blog";
+import Bloginner from "../pages/Bloginner";
 
 const router = createBrowserRouter([
   // Public Routes
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
       {
         path: "/blog",
         element: <Blog />,
+      },
+      {
+        path: "/bloginner",
+        element: <Bloginner />,
       },
       {
         path: "unauthorized",

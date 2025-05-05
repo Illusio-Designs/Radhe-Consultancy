@@ -59,9 +59,9 @@ const Footer = () => {
             <br />
             <p>Branch office - Office no -16, 1st floor, Madhav Market,near Super market,Sanala Road,morbi,Gujarat</p>
           <h4><FaPhoneAlt /> Phone</h4>
-          <p>+91 99130 14575</p>
+          <a href="tel:+919913014575">+91 99130 14575</a>
           <h4><FaEnvelope /> Email</h4>
-          <p>radheconsultancy17@yahoo.com</p>
+          <a href="mailto:radheconsultancy17@yahoo.com">radheconsultancy17@yahoo.com</a>
         </div>
       </div>
 

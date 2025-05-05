@@ -14,7 +14,7 @@
 
 .about-container .hero-content {
   background-color: #1F4F9CCF;
-  padding: 20.8% 41.3%;
+  padding: 20% 40.3%;
   overflow: hidden;
 }
 
@@ -22,7 +22,7 @@
   text-align: right;
   color: #868686;
   font-weight: 500;
-  font-size: 22px;
+  font-size: 1rem;
   padding-right: 3%;
 }
 
@@ -41,21 +41,21 @@
 
 .help h1 {
   font-family: DM Serif Display;
-  font-size: 65px;
+  font-size: 55px;
   font-weight: 500;
 }
 
 .help p {
-  font-size: 18px;
+  font-size: 14px;
   padding: 0 10%;
 }
 .help-btn {
   background-color: white;
   color: #1F4F9C;
-  padding: 15px 30px;
+  padding: 10px 30px;
   border-radius: 50px;
   font-weight: 500;
-  font-size: 20px;
+  font-size: 16px;
   cursor: pointer;
 }
 

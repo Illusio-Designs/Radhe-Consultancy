@@ -14,7 +14,7 @@
 
 .contactpage-container .hero-content {
   background-color: #1F4F9CCF;
-  padding: 20.8% 39.8%;
+  padding: 20.1% 38.1%;
   overflow: hidden;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .contactpage-title h1 {
-  font-size: 2.5rem;
+  font-size: 35px;
   font-weight: bold;
   margin: 0;
 }
@@ -44,7 +44,7 @@
 
 .form-row {
   display: flex;
-  gap: 3.5rem;
+  gap: 2.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -57,7 +57,7 @@
 
 .contactpage-form .form-group label {
   color: #000000;
-  font-size: 1.5rem;
+  font-size: 18px;
   font-weight: 600;
   margin-bottom: 0.4rem;
 }
@@ -65,7 +65,7 @@
 .contactpage-form .form-group input,
 .contactpage-form .form-group textarea {
   width: 100%;
-  padding: 0.8rem;
+  padding: 10px;
   border: 1px solid #022A3A;
   font-size: 1rem;
   background: #fafbfc;
@@ -128,7 +128,7 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  margin: 3rem 5rem;
+  margin: 3rem;
   padding: 1.5rem 0 0 0;
   flex-wrap: wrap;
   gap: 1.5rem;

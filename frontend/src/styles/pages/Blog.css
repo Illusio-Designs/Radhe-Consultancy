@@ -1,5 +1,5 @@
 .page-container p{
-  font-size: 25px;
+  font-size: 1rem;
   font-weight: 500;
   color: #868686;
   text-align: center;
@@ -7,7 +7,7 @@
 
 }
 .page-container h1{
-  font-size: 50px;
+  font-size: 40px;
   font-weight: 700;
   color: #000000;
   text-align: center;
@@ -24,6 +24,11 @@
   display: flex;
   background: white;
   overflow: hidden;
+}
+
+.blog-card-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 .blog-image {
@@ -43,8 +48,7 @@
 }
 
 .blog-content h2 {
-  font-size: 37px;
-  font-family: Playfair Display;
+  font-size: 30px;
   color: #000000;
   padding-bottom: 25px;
   line-height: 1.4;
@@ -115,6 +119,6 @@
 
 .blog .hero-content{
   background-color: #1F4F9CCF;
-  padding: 20.8% 46%;
+  padding: 20.1% 46%;
   overflow: hidden;
 }

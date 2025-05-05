@@ -59,8 +59,8 @@ const Contact = () => {
           <div className="contactpage-bottom-item">
             <span className="icon"><FiMapPin /></span>
             <div className="address-block">
-              <div>1215 - 1216, RK Empire, Nr. Mavdi Circle, 150 feet Ring Road, Rajkot.</div>
-              <div className="branch-address">Branch office - Office no -16, 1st floor, Madhav Market, near Super market, Sanala Road, Morbi, Gujarat</div>
+              <div>1215 - 1216, RK Empire, <br />Nr. Mavdi Circle, 150 feet Ring Road, Rajkot.</div>
+              <div className="branch-address"><strong>Branch office</strong> - Office no -16, 1st floor, Madhav Market,<br /> near Super market, Sanala Road, Morbi, Gujarat</div>
             </div>
           </div>
           <div className="contactpage-bottom-item">
