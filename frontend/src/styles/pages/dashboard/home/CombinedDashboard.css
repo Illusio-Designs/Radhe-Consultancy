@@ -12,8 +12,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Dashboard Header Styles */
@@ -152,7 +158,8 @@
   padding: 1.75rem;
   border-radius: 1.25rem;
   border: 1px solid rgba(229, 231, 235, 0.5);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -166,7 +173,7 @@
 .dashboard-card h2 {
   margin: 0 0 1.5rem 0;
   font-size: 1.4rem;
-  color: #1F4F9C;
+  color: #1f4f9c;
   font-weight: 600;
 }
 
@@ -315,7 +322,7 @@
 .company-stat-item .stat-value {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #1F4F9C;
+  color: #1f4f9c;
   margin-bottom: 0.25rem;
 }
 
@@ -369,7 +376,7 @@
 
 .consumer-stats-title h2 {
   font-size: 1.5rem;
-  color: #1F4F9C;
+  color: #1f4f9c;
   margin: 0;
 }
 
@@ -409,7 +416,7 @@
 .consumer-stat-item .stat-value {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #1F4F9C;
+  color: #1f4f9c;
   margin-bottom: 0.25rem;
 }
 
@@ -505,8 +512,12 @@
 
 /* Animations */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Styles */
@@ -514,7 +525,7 @@
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
@@ -574,7 +585,7 @@
 .all-insurance-card {
   background: #fff;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   padding: 1.5rem 2rem;
   margin: 2rem 0rem;
   align-items: flex-start;
@@ -597,7 +608,8 @@
   gap: 2.5rem;
 }
 
-.all-insurance-total, .all-insurance-recent {
+.all-insurance-total,
+.all-insurance-recent {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -613,7 +625,7 @@
 .insurance-type-card {
   background: #fff;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -622,7 +634,7 @@
 }
 
 .insurance-type-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .insurance-type-header {
@@ -647,7 +659,8 @@
   gap: 2rem;
 }
 
-.insurance-type-total, .insurance-type-recent {
+.insurance-type-total,
+.insurance-type-recent {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -697,5 +710,88 @@
   }
 }
 
+/* User Role Stats Card Styles */
+.user-role-stats-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: box-shadow 0.2s;
+  margin-top: 2rem;
+}
 
+.user-role-stats-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
 
+.user-role-stats-card .insurance-type-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.user-role-stats-card .insurance-type-icon {
+  font-size: 1.7rem;
+  margin-right: 0.7rem;
+}
+
+.user-role-stats-card .insurance-type-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.user-role-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.2rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.user-role-stat-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: box-shadow 0.2s, transform 0.2s;
+  border-left: 4px solid #007bff;
+}
+
+.user-role-stat-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-role-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-role-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1f4f9c;
+  margin-bottom: 0.25rem;
+  text-transform: capitalize;
+}
+
+.user-role-count {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+@media (max-width: 900px) {
+  .user-role-stats-card {
+    padding: 1rem;
+  }
+  .user-role-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

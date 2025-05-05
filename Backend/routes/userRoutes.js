@@ -7,12 +7,6 @@ const { uploadProfileImage } = require('../config/multerConfig');
 const path = require('path');
 const fs = require('fs');
 
-
-// Password management routes (public)
-router.post('/forgot-password', userController.forgotPassword);
-router.get('/reset-password/:token', userController.getResetPasswordForm);
-router.post('/reset-password/:token', userController.resetPassword);
-
 // Protected routes with authentication
 router.get('/', auth, userController.getAllUsers);
 
@@ -68,6 +62,9 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Change password (requires authentication)
+router.post('/change-password', auth, userController.changePassword);
+
 // Other user routes
 router.get('/:userId', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
@@ -75,13 +72,11 @@ router.put('/:userId', auth, uploadProfileImage.single('profile_image'), userCon
 router.delete('/:userId', auth, userController.deleteUser);
 router.get('/:userId/permissions', auth, userController.getUserPermissions);
 
-// Change password (requires authentication)
-router.post('/change-password', auth, userController.changePassword);
-
 // Role-specific user routes
 router.get('/company', auth, userController.getCompanyUsers);
 router.get('/consumer', auth, userController.getConsumerUsers);
 router.get('/other', auth, userController.getOtherUsers);
+
 
 // Add new route to serve profile images
 router.get('/profile-image/:filename', (req, res) => {

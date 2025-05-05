@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const determineUserRole = require('../utils/roleDetermination');
+const userService = require('../services/userService');
 
 class AuthController {
   constructor() {
@@ -12,6 +13,8 @@ class AuthController {
     this.login = this.login.bind(this);
     this.googleLogin = this.googleLogin.bind(this);
     this.getCurrentUser = this.getCurrentUser.bind(this);
+    this.forgotPassword = this.forgotPassword.bind(this);
+    this.resetPassword = this.resetPassword.bind(this);
   }
 
   async register(req, res) {
@@ -289,6 +292,80 @@ class AuthController {
     } catch (error) {
       console.error('getCurrentUser error:', error);
       res.status(500).json({ message: 'Error getting user information' });
+    }
+  }
+
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email is required'
+        });
+      }
+
+      // Call the userService to send the email
+      await userService.forgotPassword(email);
+
+      res.json({
+        success: true,
+        message: 'If an account exists with this email, you will receive a password reset link.'
+      });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'An error occurred while processing your request'
+      });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const { token } = req.params;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          error: 'New password is required'
+        });
+      }
+
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+
+      // Find user
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      // Update password
+      user.password = password;
+      await user.save();
+
+      res.json({
+        success: true,
+        message: 'Password has been reset successfully'
+      });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired reset token'
+        });
+      }
+      res.status(500).json({
+        success: false,
+        error: 'An error occurred while resetting your password'
+      });
     }
   }
 }

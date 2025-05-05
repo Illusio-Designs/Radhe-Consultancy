@@ -1,4 +1,4 @@
-const { Company, EmployeeCompensationPolicy } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
@@ -35,6 +35,27 @@ const getCompanyStatistics = async (req, res) => {
       }
     });
 
+    // --- Consumer Stats ---
+    const totalConsumers = await Consumer.count();
+    const activeConsumers = totalConsumers; // All are active
+    const inactiveConsumers = 0;
+    const recentConsumers = await Consumer.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+    const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
+
+    // --- User Role Stats ---
+    const roles = await Role.findAll();
+    const userRoleStats = {};
+    for (const role of roles) {
+      const count = await User.count({ where: { role_id: role.id } });
+      userRoleStats[role.role_name] = count;
+    }
+
     // --- Insurance Policy Stats ---
     // Real data for ECP
     const ecpTotal = await EmployeeCompensationPolicy.count();
@@ -58,7 +79,7 @@ const getCompanyStatistics = async (req, res) => {
     const allTotal = ecpTotal + vehicleTotal + fireTotal + marineTotal + healthTotal;
     const allRecent = ecpRecent + vehicleRecent + fireRecent + marineRecent + healthRecent;
     // Helper for percent
-    const percent = (recent, total) => total > 0 ? Math.round((recent / total) * 100) : 0;
+    const percentInsurance = (recent, total) => total > 0 ? Math.round((recent / total) * 100) : 0;
 
     res.status(200).json({
       success: true,
@@ -67,36 +88,46 @@ const getCompanyStatistics = async (req, res) => {
         active_companies: activeCompanies,
         inactive_companies: inactiveCompanies,
         recent_companies: recentCompanies,
+        consumer_stats: {
+          total: totalConsumers,
+          active: activeConsumers,
+          inactive: inactiveConsumers,
+          recent: recentConsumers,
+          percent_active: percent(activeConsumers, totalConsumers),
+          percent_inactive: percent(inactiveConsumers, totalConsumers),
+          percent_recent: percent(recentConsumers, totalConsumers)
+        },
+        user_role_stats: userRoleStats,
         insurance_stats: {
           all: {
             total: allTotal,
             recent: allRecent,
-            percent: percent(allRecent, allTotal)
+            percent: percentInsurance(allRecent, allTotal)
           },
           ecp: {
             total: ecpTotal,
             recent: ecpRecent,
-            percent: percent(ecpRecent, ecpTotal)
+            percent: percentInsurance(ecpRecent, ecpTotal)
           },
           vehicle: {
             total: vehicleTotal,
             recent: vehicleRecent,
-            percent: percent(vehicleRecent, vehicleTotal)
+            percent: percentInsurance(vehicleRecent, vehicleTotal)
           },
           fire: {
             total: fireTotal,
             recent: fireRecent,
-            percent: percent(fireRecent, fireTotal)
+            percent: percentInsurance(fireRecent, fireTotal)
           },
           marine: {
             total: marineTotal,
             recent: marineRecent,
-            percent: percent(marineRecent, marineTotal)
+            percent: percentInsurance(marineRecent, marineTotal)
           },
           health: {
             total: healthTotal,
             recent: healthRecent,
-            percent: percent(healthRecent, healthTotal)
+            percent: percentInsurance(healthRecent, healthTotal)
           }
         }
       }

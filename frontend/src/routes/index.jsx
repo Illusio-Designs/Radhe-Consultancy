@@ -19,7 +19,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import Profile from "../pages/dashboard/profile/Profile";
 import ChangePassword from "../pages/dashboard/auth/ChangePassword";
 import Support from "../pages/dashboard/support/Support";
-import Widget from "../pages/dashboard/widget/widget"
+import Widget from "../pages/dashboard/widget/widget";
 import ECP from "../pages/dashboard/insurance/ECP";
 import Health from "../pages/dashboard/insurance/Health";
 import Marine from "../pages/dashboard/insurance/Marine";
@@ -53,7 +53,7 @@ const router = createBrowserRouter([
         path: "/home",
         element: <Home />,
       },
-      { 
+      {
         path: "/about",
         element: <About />,
       },
@@ -105,9 +105,9 @@ const router = createBrowserRouter([
         element: <ForgotPassword />,
       },
       {
-        path: "reset-password",
+        path: "reset-password/:token",
         element: <ResetPassword />,
-      }
+      },
     ],
   },
   // Dashboard Routes (Protected)

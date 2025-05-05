@@ -6,8 +6,8 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import { userAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/users/User.css";
-import { roleAPI } from "../../../services/api";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useData } from "../../../contexts/DataContext";
 
 // UserForm component remains the same as in User.jsx
 const UserForm = ({ user, onClose, onUserUpdated }) => {
@@ -20,40 +20,21 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     status: user?.status || "Active",
   });
   const [error, setError] = useState(null);
-  const [roles, setRoles] = useState([]);
-  const [loadingRoles, setLoadingRoles] = useState(false);
+  const { roles } = useData();
+  const companyRole = roles.find((role) => role.role_name === "Company");
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        setLoadingRoles(true);
-        const rolesData = await roleAPI.getAllRoles();
-        const companyRole = rolesData.find(
-          (role) => role.role_name === "Company"
-        );
-        if (companyRole) {
-          setRoles([companyRole]);
-          if (!user) {
-            setFormData((prev) => ({
-              ...prev,
-              role_id: String(companyRole.id),
-            }));
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching roles:", err);
-        setError("Failed to fetch roles");
-      } finally {
-        setLoadingRoles(false);
-      }
-    };
-    fetchRoles();
-  }, []);
+    if (companyRole && !user) {
+      setFormData((prev) => ({
+        ...prev,
+        role_id: String(companyRole.id),
+      }));
+    }
+  }, [companyRole, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const companyRole = roles[0];
       if (!companyRole) {
         setError("Company role not found");
         return;
@@ -133,28 +114,20 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         )}
 
         <div className="user-management-form-group">
-          {loadingRoles ? (
-            <Loader size="small" />
-          ) : (
-            <select
-              name="role_id"
-              value={formData.role_id}
-              onChange={(e) =>
-                setFormData({ ...formData, role_id: e.target.value })
-              }
-              className="user-management-form-input"
-              required
-            >
-              <option value="">Select Role</option>
-              {roles.map((role) =>
-                role && role.id !== undefined ? (
-                  <option key={role.id} value={String(role.id)}>
-                    {role.role_name || `Role ID: ${role.id}`}
-                  </option>
-                ) : null
-              )}
-            </select>
-          )}
+          <select
+            name="role_id"
+            value={formData.role_id}
+            onChange={(e) =>
+              setFormData({ ...formData, role_id: e.target.value })
+            }
+            className="user-management-form-input"
+            required
+            disabled
+          >
+            <option value={companyRole?.id}>
+              {companyRole?.role_name || "Company"}
+            </option>
+          </select>
         </div>
 
         <div className="user-management-form-group">
@@ -187,56 +160,19 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 
 function CompanyUserList() {
   const { user } = useAuth();
+  const { users, roles, loading, error: dataError, refreshData } = useData();
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "" });
-  const [roles, setRoles] = useState([]);
 
-  useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, []);
-
-  const fetchRoles = async () => {
-    try {
-      const rolesData = await roleAPI.getAllRoles();
-      const companyRole = rolesData.find(
-        (role) => role.role_name === "Company"
-      );
-      if (companyRole) {
-        setRoles([companyRole]);
-      }
-    } catch (err) {
-      console.error("Error fetching roles:", err);
-      setError("Failed to fetch roles");
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const allUsers = await userAPI.getAllUsers();
-      const companyUsers = allUsers.filter(user => user.role_id === 5); // Example filter for company users
-      setUsers(companyUsers);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch company users');
-      console.error(err);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000); // Ensure loader is displayed for at least 2000ms
-    }
-  };
+  const companyUsers = users.filter((user) => user.role_id === 5); // Filter for company users
 
   const getRoleName = (roleId) => {
     return roleId === 5 ? "Company" : "Unknown";
   };
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = companyUsers.filter((user) => {
     const matchesStatus =
       !filters.status || (user.status || "Active") === filters.status;
     return matchesStatus;
@@ -246,7 +182,7 @@ function CompanyUserList() {
     if (window.confirm("Are you sure you want to delete this company user?")) {
       try {
         await userAPI.deleteUser(userId);
-        await fetchUsers();
+        await refreshData();
       } catch (err) {
         setError("Failed to delete user");
         console.error(err);
@@ -265,7 +201,7 @@ function CompanyUserList() {
   };
 
   const handleUserUpdated = async () => {
-    await fetchUsers();
+    await refreshData();
     handleModalClose();
   };
 
@@ -302,7 +238,29 @@ function CompanyUserList() {
           {value || "Active"}
         </span>
       ),
-    }
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (_, user) => (
+        <div className="user-management-actions">
+          <ActionButton
+            onClick={() => handleEdit(user)}
+            variant="secondary"
+            size="small"
+          >
+            <FiEdit2 />
+          </ActionButton>
+          <ActionButton
+            onClick={() => handleDelete(user.user_id)}
+            variant="danger"
+            size="small"
+          >
+            <FiTrash2 />
+          </ActionButton>
+        </div>
+      ),
+    },
   ];
 
   if (!user || (user.role !== "admin" && user.role !== "vendor_manager")) {
@@ -316,32 +274,37 @@ function CompanyUserList() {
 
   return (
     <div className="user-management">
-      <div className="user-management-content">
-        <div className="user-management-header">
-          <h1 className="user-management-title">Company User Management</h1>
-        </div>
-
-        {error && (
-          <div className="user-management-error">
-            <FiAlertCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredUsers}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
+      <div className="user-management-header">
+        <h1 className="user-management-title">Company Users</h1>
+        <button
+          className="btn btn-contained"
+          onClick={() => setShowModal(true)}
+        >
+          Add Company User
+        </button>
       </div>
+
+      {(error || dataError) && (
+        <div className="user-management-error">
+          <FiAlertCircle className="inline mr-2" />
+          {error || dataError}
+        </div>
+      )}
+
+      {loading ? (
+        <Loader size="large" color="primary" />
+      ) : (
+        <TableWithControl
+          data={filteredUsers}
+          columns={columns}
+          defaultPageSize={10}
+        />
+      )}
 
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
-        title={selectedUser ? "Edit Company User" : "Add New Company User"}
+        title={selectedUser ? "Edit Company User" : "Add Company User"}
       >
         <UserForm
           user={selectedUser}

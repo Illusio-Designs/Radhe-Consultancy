@@ -12,7 +12,8 @@ const checkPermission = (requiredPermission) => {
       }
 
       // If user is admin, grant all permissions
-      if (userRole.role_name === 'admin') {
+      const normalizedRoleName = userRole.role_name.charAt(0).toUpperCase() + userRole.role_name.slice(1).toLowerCase();
+      if (normalizedRoleName === 'Admin') {
         return next();
       }
 

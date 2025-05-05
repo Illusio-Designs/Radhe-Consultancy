@@ -219,6 +219,30 @@ export const authAPI = {
     const token = localStorage.getItem('token');
     console.log('API Service: Checking authentication status:', !!token);
     return !!token;
+  },
+
+  async forgotPassword(email) {
+    try {
+      console.log('API Service: Sending forgot password request for:', email);
+      const response = await api.post('/auth/forgot-password', { email });
+      console.log('API Service: Forgot password request successful');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Forgot password error:', error);
+      throw error;
+    }
+  },
+
+  async resetPassword(token, password) {
+    try {
+      console.log('API Service: Sending reset password request');
+      const response = await api.post(`/auth/reset-password/${token}`, { password });
+      console.log('API Service: Reset password request successful');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Reset password error:', error);
+      throw error;
+    }
   }
 };
 
@@ -406,7 +430,7 @@ export const userAPI = {
   getUserPermissions: async (userId) => {
     const response = await api.get(`/users/${userId}/permissions`);
     return response.data;
-  }
+  },
 };
 
 // Role API

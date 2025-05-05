@@ -50,8 +50,12 @@ const checkRole = (allowedRoles) => {
     }
 
     const userRole = req.user.role_name;
+    const normalizedUserRole = userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase();
+    const normalizedAllowedRoles = allowedRoles.map(role => 
+      role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
+    );
     
-    if (!allowedRoles.includes(userRole)) {
+    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
       return res.status(403).json({
         success: false,
         error: 'Access denied: insufficient permissions'

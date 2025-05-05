@@ -2,6 +2,7 @@ const userService = require('../services/userService');
 const { User, Role, Company, Consumer, Permission } = require('../models');
 const { uploadAndCompress } = require('../config/multerConfig');
 const { Op } = require('sequelize');
+const bcrypt = require('bcryptjs');
 
 // Get all users
 const getAllUsers = async (req, res) => {
@@ -137,7 +138,6 @@ const updateUser = async (req, res) => {
 
     // Remove sensitive fields that shouldn't be updated here
     delete updateData.password;
-    delete updateData.role_id;
 
     // Handle profile image upload
     if (req.file) {
@@ -242,83 +242,25 @@ const getUserPermissions = async (req, res) => {
   }
 };
 
-// Forgot Password
-const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-    const result = await userService.forgotPassword(email);
-    res.json(result);
-  } catch (error) {
-    if (error.message === 'User not found') {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.status(500).json({ error: 'Failed to process password reset request' });
-  }
-};
-
-// Reset Password
-const resetPassword = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const { password } = req.body;
-    const result = await userService.resetPassword(token, password);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
 // Change Password
 const changePassword = async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
     const userId = req.user.userId;
-
+    // Accept both 'oldPassword' and 'currentPassword' for compatibility
+    const oldPassword = req.body.oldPassword || req.body.currentPassword;
+    const { newPassword } = req.body;
     const user = await User.findByPk(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-    // Verify current password
-    const isValidPassword = await user.validatePassword(currentPassword);
-    if (!isValidPassword) {
-      return res.status(400).json({ message: 'Current password is incorrect' });
-    }
+    const isMatch = await user.validatePassword(oldPassword);
+    if (!isMatch) return res.status(400).json({ success: false, error: 'Old password is incorrect' });
 
-    // Update password
     user.password = newPassword;
     await user.save();
 
-    res.json({ message: 'Password updated successfully' });
+    res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
-    console.error('Error changing password:', error);
-    res.status(500).json({ message: 'Error changing password' });
-  }
-};
-
-// Get Reset Password Form
-const getResetPasswordForm = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const user = await User.findOne({
-      where: {
-        reset_token: token,
-        reset_token_expiry: {
-          [Op.gt]: new Date()
-        }
-      }
-    });
-
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired reset token' });
-    }
-
-    res.json({ valid: true });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -389,8 +331,5 @@ module.exports = {
   deleteUser,
   updateProfileImage,
   getUserPermissions,
-  forgotPassword,
-  resetPassword,
-  changePassword,
-  getResetPasswordForm
+  changePassword
 };

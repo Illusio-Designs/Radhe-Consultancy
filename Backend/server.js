@@ -4,9 +4,10 @@ const path = require('path');
 require('dotenv').config();
 const sequelize = require('./config/db');
 const { corsOptions } = require('./config/cors');
-const { initializeDatabase } = require('./scripts/serverSetup');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const { User, Role, Permission, RolePermission } = require('./models');
+const bcrypt = require('bcryptjs');
 
 // Initialize Express app
 const app = express();
@@ -15,15 +16,176 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const isDevelopment = process.env.NODE_ENV.toLowerCase() === 'development';
 
+// Role setup configuration
+const roles = [
+  { role_name: 'Admin', description: 'Full system access' },
+  { role_name: 'User', description: 'Basic user access' },
+  { role_name: 'Vendor_manager', description: 'Vendor management access' },
+  { role_name: 'User_manager', description: 'User management access' },
+  { role_name: 'Company', description: 'Company access' },
+  { role_name: 'Consumer', description: 'Consumer access' },
+  { role_name: 'Insurance_manager', description: 'Insurance management access' },
+  { role_name: 'Compliance_manager', description: 'Compliance management access' },
+  { role_name: 'DSC_manager', description: 'Digital Signature Certificate management access' }
+];
+
+const permissions = [
+  // User Management
+  { permission_name: 'view_users' },
+  { permission_name: 'create_user' },
+  { permission_name: 'edit_user' },
+  { permission_name: 'delete_user' },
+  // Company Management
+  { permission_name: 'view_companies' },
+  { permission_name: 'create_company' },
+  { permission_name: 'edit_company' },
+  { permission_name: 'delete_company' },
+  { permission_name: 'upload_company_documents' },
+  // Consumer Management
+  { permission_name: 'view_consumers' },
+  { permission_name: 'create_consumer' },
+  { permission_name: 'edit_consumer' },
+  { permission_name: 'delete_consumer' },
+  // Role Management
+  { permission_name: 'view_roles' },
+  { permission_name: 'assign_roles' },
+  // System Access
+  { permission_name: 'access_dashboard' },
+  { permission_name: 'access_reports' },
+  { permission_name: 'access_settings' },
+  // Insurance Management
+  { permission_name: 'view_insurance_companies' },
+  { permission_name: 'create_insurance_company' },
+  { permission_name: 'edit_insurance_company' },
+  { permission_name: 'delete_insurance_company' },
+  { permission_name: 'view_policies' },
+  { permission_name: 'create_policy' },
+  { permission_name: 'edit_policy' },
+  { permission_name: 'delete_policy' }
+];
+
+const rolePermissions = {
+  'Admin': permissions.map(p => p.permission_name),
+  'User': [ 'access_dashboard' ],
+  'Vendor_manager': [
+    'view_companies', 'create_company', 'edit_company', 'delete_company',
+    'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
+    'access_dashboard', 'access_reports', 'upload_company_documents'
+  ],
+  'User_manager': [
+    'view_users', 'create_user', 'edit_user', 'delete_user',
+    'view_roles', 'assign_roles', 'access_dashboard'
+  ],
+  'Company': [
+    'access_dashboard',
+    'view_companies', 'edit_company',
+    'upload_company_documents'
+  ],
+  'Consumer': [
+    'access_dashboard',
+    'view_consumers', 'edit_consumer'
+  ],
+  'Insurance_manager': [
+    'access_dashboard',
+    'view_insurance_companies',
+    'create_insurance_company',
+    'edit_insurance_company',
+    'delete_insurance_company',
+    'view_policies',
+    'create_policy',
+    'edit_policy',
+    'delete_policy',
+    'access_reports'
+  ],
+  'Compliance_manager': [
+    'access_dashboard',
+    'view_companies',
+    'view_consumers',
+    'view_insurance_companies',
+    'view_policies',
+    'access_reports'
+  ],
+  'DSC_manager': [
+    'access_dashboard',
+    'view_users',
+    'edit_user',
+    'access_reports'
+  ]
+};
+
+// Role setup function
+async function setupRolesAndPermissions() {
+  try {
+    console.log('Setting up roles and permissions...');
+    
+    // Update existing roles to capitalized format
+    const existingRoles = await Role.findAll();
+    for (const role of existingRoles) {
+      const capitalizedRole = role.role_name.charAt(0).toUpperCase() + role.role_name.slice(1);
+      if (capitalizedRole !== role.role_name) {
+        await role.update({ role_name: capitalizedRole });
+        console.log(`Updated role name from ${role.role_name} to ${capitalizedRole}`);
+      }
+    }
+    
+    // Create roles
+    for (const role of roles) {
+      await Role.findOrCreate({ where: { role_name: role.role_name }, defaults: role });
+    }
+    console.log('Roles setup completed');
+
+    // Create permissions
+    for (const permission of permissions) {
+      await Permission.findOrCreate({ 
+        where: { permission_name: permission.permission_name }, 
+        defaults: permission 
+      });
+    }
+    console.log('Permissions setup completed');
+
+    // Assign permissions to roles
+    for (const [roleName, permissionNames] of Object.entries(rolePermissions)) {
+      const role = await Role.findOne({ where: { role_name: roleName } });
+      const perms = await Permission.findAll({ where: { permission_name: permissionNames } });
+      
+      for (const perm of perms) {
+        await RolePermission.findOrCreate({ 
+          where: { role_id: role.id, permission_id: perm.id } 
+        });
+      }
+    }
+    console.log('Role-permission assignments completed');
+
+    // Setup admin user
+    const adminRole = await Role.findOne({ where: { role_name: 'Admin' } });
+    if (adminRole) {
+      const [adminUser, created] = await User.findOrCreate({
+        where: { email: 'Admin@radheconsultancy.co.in' },
+        defaults: {
+          username: 'Admin',
+          password: 'Admin@123',
+          role_id: adminRole.id,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      });
+
+      if (!created) {
+        await adminUser.update({
+          password: 'Admin@123',
+          role_id: adminRole.id,
+          updated_at: new Date()
+        });
+      }
+      console.log('Admin user setup completed');
+    }
+  } catch (error) {
+    console.error('Error setting up roles and permissions:', error);
+  }
+}
+
 // Trust proxy for LiteSpeed
 app.set('trust proxy', true);
-
-console.log('\n=== Server Configuration ===');
-console.log('Environment:', process.env.NODE_ENV);
-console.log('Port:', PORT);
-console.log('Is Development:', isDevelopment);
-console.log('Trust Proxy:', app.get('trust proxy'));
-console.log('===========================\n');
 
 // Enable CORS with proper error handling
 app.use((req, res, next) => {
@@ -62,32 +224,6 @@ app.use(helmet({
 // Logging middleware
 app.use(morgan('dev'));
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log('\n=== Request Details ===');
-  console.log('Time:', new Date().toISOString());
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Protocol:', req.protocol);
-  console.log('Host:', req.hostname);
-  console.log('Headers:', req.headers);
-  next();
-});
-
-// Response logging middleware
-app.use((req, res, next) => {
-  const originalSend = res.send;
-  res.send = function (body) {
-    console.log('\n=== Response Details ===');
-    console.log('Time:', new Date().toISOString());
-    console.log('Status:', res.statusCode);
-    console.log('Headers:', res.getHeaders());
-    console.log('Body:', body);
-    return originalSend.call(this, body);
-  };
-  next();
-});
-
 // Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -101,20 +237,16 @@ app.use('/profile-images', express.static(path.join(__dirname, 'uploads/profile_
 
 // Handle favicon.ico with proper CORS headers
 app.get('/favicon.ico', (req, res) => {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Return 204 No Content
   res.status(204).end();
 });
 
-// Health check endpoint with comprehensive status
+// Health check endpoint
 app.get(['/api/health', '/health'], async (req, res) => {
   try {
-    // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
@@ -123,7 +255,6 @@ app.get(['/api/health', '/health'], async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    // Check database connection
     let dbStatus = 'UP';
     try {
       await sequelize.authenticate();
@@ -132,7 +263,6 @@ app.get(['/api/health', '/health'], async (req, res) => {
       console.error('Database connection error:', error);
     }
 
-    // Get system information
     const healthInfo = {
       status: 'UP',
       timestamp: new Date().toISOString(),
@@ -142,16 +272,6 @@ app.get(['/api/health', '/health'], async (req, res) => {
       services: {
         database: dbStatus,
         api: 'UP'
-      },
-      system: {
-        nodeVersion: process.version,
-        platform: process.platform,
-        memoryUsage: process.memoryUsage(),
-        cpuUsage: process.cpuUsage()
-      },
-      endpoints: {
-        api: 'https://api.radheconsultancy.co.in',
-        frontend: 'https://radheconsultancy.co.in'
       }
     };
 
@@ -184,25 +304,14 @@ app.get('/', (req, res) => {
     status: 'OK',
     message: 'Server is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    protocol: req.protocol,
-    host: req.hostname
+    environment: process.env.NODE_ENV
   });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('\n=== Error Handler ===');
   console.error('Error:', err);
-  console.error('Stack:', err.stack);
-  console.error('Request:', {
-    method: req.method,
-    path: req.path,
-    headers: req.headers,
-    body: req.body
-  });
   
-  // Set CORS headers even for error responses
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   
@@ -216,63 +325,34 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
-    console.log('\n=== Starting Server ===');
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('Port:', PORT);
-    console.log('Database Config:', {
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      port: process.env.DB_PORT,
-      dialect: process.env.DB_DIALECT
-    });
+    console.log('Starting server...');
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Port: ${PORT}`);
     
-    console.log('Connecting to database...');
     await sequelize.authenticate();
     console.log('Database connection established');
-    
-    await initializeDatabase();
-    console.log('Database initialized');
+
+    // Setup roles and permissions
+    await setupRolesAndPermissions();
     
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`\nServer is running on port ${PORT}`);
-      console.log('Environment:', process.env.NODE_ENV);
-      console.log('Server URL:', `http://localhost:${PORT}`);
-      console.log('Public URL:', 'https://api.radheconsultancy.co.in');
-      console.log('========================\n');
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
     });
   } catch (error) {
-    console.error('\n=== Server Startup Error ===');
-    console.error('Error:', error);
-    console.error('Stack:', error.stack);
-    console.error('Environment Variables:', {
-      NODE_ENV: process.env.NODE_ENV,
-      PORT: process.env.PORT,
-      DB_HOST: process.env.DB_HOST,
-      DB_NAME: process.env.DB_NAME,
-      DB_USER: process.env.DB_USER,
-      DB_PORT: process.env.DB_PORT,
-      DB_DIALECT: process.env.DB_DIALECT
-    });
-    console.error('==========================\n');
+    console.error('Server startup error:', error);
     process.exit(1);
   }
 };
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('\n=== Uncaught Exception ===');
-  console.error('Error:', error);
-  console.error('Stack:', error.stack);
-  console.error('==========================\n');
+  console.error('Uncaught Exception:', error);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('\n=== Unhandled Rejection ===');
-  console.error('Reason:', reason);
-  console.error('Promise:', promise);
-  console.error('==========================\n');
+  console.error('Unhandled Rejection:', reason);
 });
 
 // Start the server if this file is run directly

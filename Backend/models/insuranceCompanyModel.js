@@ -9,14 +9,19 @@ const InsuranceCompany = sequelize.define('InsuranceCompany', {
   },
   name: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   }
 }, {
   tableName: 'InsuranceCompanies',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  indexes: [
+    {
+      unique: true,
+      fields: ['name']
+    }
+  ]
 });
 
 module.exports = InsuranceCompany; 

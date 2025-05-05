@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const bcrypt = require('bcryptjs');
+const Role = require('./roleModel');
 
 const User = sequelize.define('User', {
   user_id: {
@@ -104,7 +105,6 @@ User.beforeUpdate(async (user) => {
 // Add validation hook for role_id
 User.beforeValidate(async (user) => {
   if (user.role_id) {
-    const Role = require('./roleModel');
     const role = await Role.findByPk(user.role_id);
     if (!role) {
       throw new Error('Invalid role');
