@@ -123,3 +123,153 @@
   color: #868686;
   line-height: 1.5;
 }
+
+/* Media Queries for Responsive Design */
+@media screen and (max-width: 1440px) {
+  .testimonial-slider {
+    max-width: 1200px;
+  }
+  
+  .testimonial-card {
+    width: 450px;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .testimonial-slider {
+    max-width: 900px;
+  }
+  
+  .testimonial-card {
+    width: 400px;
+  }
+  
+  .section-heading {
+    font-size: 32px;
+  }
+
+  .testimonial-heading-nav {
+    margin: 10px 2% 30px;
+  }
+  .section-title{
+    margin: 0 2%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .testimonial-container {
+    padding: 40px 15px;
+    margin: 60px 0;
+  }
+
+  .section-title {
+    margin: 0 5%;
+  }
+
+  .testimonial-heading-nav {
+    margin: 10px 5% 20px;
+  }
+
+  .testimonial-slider {
+    max-width: 100%;
+    gap: 20px;
+  }
+
+  .testimonial-card {
+    width: 260px;
+    height: auto;
+    min-height: 250px;
+  }
+
+  .section-heading {
+    font-size: 28px;
+  }
+}
+
+@media screen and (max-width: 426px) {
+  .testimonial-container {
+    padding: 30px 10px;
+    margin: 40px 0;
+  }
+
+  .section-title {
+    margin: 0 15px;
+    font-size: 18px;
+  }
+
+  .testimonial-heading-nav {
+    margin: 10px 15px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .testimonial-slider {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .testimonial-card {
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  .section-heading {
+    font-size: 24px;
+  }
+
+  .author-name {
+    font-size: 18px;
+  }
+
+  .author-role {
+    font-size: 14px;
+  }
+
+  .testimonial-text {
+    font-size: 14px;
+  }
+  .testimonial-heading-nav {
+    margin: 10px 2% 30px;
+  }
+  .section-title{
+    margin: 0 2%;
+  }
+}
+
+@media screen and (max-width: 383px) {
+  .section-heading {
+    font-size: 22px;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .testimonial-container {
+    padding: 20px 5px;
+  }
+
+  .section-title {
+    margin: 0 10px;
+    font-size: 16px;
+  }
+
+  .testimonial-heading-nav {
+    margin: 10px 10px 15px;
+  }
+
+  .section-heading {
+    font-size: 20px;
+  }
+
+  .author-name {
+    font-size: 16px;
+  }
+
+  .author-role {
+    font-size: 12px;
+  }
+
+  .testimonial-text {
+    font-size: 13px;
+  }
+}

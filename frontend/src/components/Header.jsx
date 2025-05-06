@@ -26,11 +26,11 @@ const Header = () => {
         <div className="top-bar-left">
           <div className="top-bar-item">
             <HiPhone className="icon" />
-            <span>+91 99130 14575</span>
+            <a href="tel:+919913014575">+91 99130 14575</a>
           </div>
           <div className="top-bar-item">
             <HiEnvelope className="icon" />
-            <span>radheconsultancy17@yahoo.com </span>
+            <a href="mailto:radheconsultancy17@yahoo.com">radheconsultancy17@yahoo.com </a>
           </div>
           <div className="top-bar-item">
             <HiMapPin className="icon" />
@@ -68,7 +68,7 @@ const Header = () => {
               <a href="/compliance">Compliance & Licensing</a>
             </div>
           </div>
-          <div className={`nav-item ${activePage === '/blog' ? 'active' : ''}`}>
+          <div className={`nav-item ${activePage === '/blog' || activePage === '/bloginner' ? 'active' : ''}`}>
             <a href="/blog">Blog</a>
           </div>
           <div className={`nav-item ${activePage === '/contact' ? 'active' : ''}`}>

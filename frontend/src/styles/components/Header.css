@@ -33,6 +33,11 @@
   padding-left: 0;
 }
 
+.top-bar-item a {
+  color: white;
+  text-decoration: none;
+}
+
 .top-bar-right {
   display: flex;
   gap: 20px;

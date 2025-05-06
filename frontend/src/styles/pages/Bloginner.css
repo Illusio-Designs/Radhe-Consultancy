@@ -89,7 +89,7 @@
 }
 
 .longest-cases-section{
-    max-width: 500px;
+    max-width: 850px;
 }
 
 .longest-cases-section h2{
@@ -98,13 +98,23 @@
   margin-bottom: 30px;
 }
 
+.longest-cases-section p{
+  color: #868686;
+  font-size: 13px;
+}
+
 .longest-cases-cards {
   display: flex;
   gap: 30px;
 }
 
 .longest-cases-cards img{
-    width: 500px;
+    width: 400px;
     height: 400px;
     object-fit: cover;
+}
+.longest-cases-section h2{
+  font-size: 30px;
+  font-weight: 600;
+  margin-bottom: 30px;
 }

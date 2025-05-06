@@ -16,56 +16,75 @@ import img7 from "../assets/about1-right-top.png.png";
 import img8 from "../assets/about1-right-bottom.png.png";
 import img9 from "../assets/process-1.jpg.png";
 import img10 from "../assets/process-1-shape.png.png";
+import img11 from "../assets/hero-1-title-1.png.png";
+import img12 from "../assets/hero_1_2.png.png";
 import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler } from "react-icons/fa";
 import "../styles/pages/Home.css"
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
 
   // Dynamic slider data
   const sliderData = [
     {
       subtitle: "Your Guardian In Law",
       title: "Experienced Attorneys, Trusted Results",
-      clientCount: "10.2k+",
-      reviews: "4.9k+",
+      clientCount: "2k+",
+      reviews: "35k+",
       rating: 5,
-      image: "/images/law-justice.jpg"
+      image: img12
     },
     {
       subtitle: "Expert Legal Solutions",
       title: "Professional Legal Services & Consultation",
-      clientCount: "8.5k+",
-      reviews: "3.8k+",
+      clientCount: "2k+",
+      reviews: "35k+",
       rating: 5,
-      image: "/images/legal-consultation.jpg"
+      image: img12
     },
     {
       subtitle: "Legal Excellence",
       title: "Dedicated Team of Law Professionals",
       clientCount: "12k+",
-      reviews: "5.2k+",
+      reviews: "35k+",
       rating: 5,
-      image: "/images/legal-team.jpg"
+      image: img12
     }
   ];
 
   // Auto slide effect
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % sliderData.length);
-    }, 5000); // Change slide every 5 seconds
+      if (currentSlide === sliderData.length - 1) {
+        // When reaching last slide, disable transition and jump to first
+        setIsTransitioning(false);
+        setCurrentSlide(0);
+        // Re-enable transition after a small delay
+        setTimeout(() => {
+          setIsTransitioning(true);
+        }, 50);
+      } else {
+        setCurrentSlide(prev => prev + 1);
+      }
+    }, 5000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [currentSlide]);
 
   // Navigation functions
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % sliderData.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + sliderData.length) % sliderData.length);
+    if (currentSlide === sliderData.length - 1) {
+      // When reaching last slide, disable transition and jump to first
+      setIsTransitioning(false);
+      setCurrentSlide(0);
+      // Re-enable transition after a small delay
+      setTimeout(() => {
+        setIsTransitioning(true);
+      }, 50);
+    } else {
+      setCurrentSlide(prev => prev + 1);
+    }
   };
 
   return (
@@ -74,7 +93,13 @@ const Home = () => {
       <div className="home-container">
         <div className="hero-section">
           <div className="hero-slider">
-            <div className="hero-content" style={{ transform: `translateY(-${currentSlide * 100}%)` }}>
+            <div 
+              className="hero-content"
+              style={{
+                transform: `translateY(-${currentSlide * 100}%)`,
+                transition: isTransitioning ? 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+              }}
+            >
               {sliderData.map((slide, index) => (
                 <div key={index} className="slide">
                   <div className="slide-content">
@@ -83,9 +108,9 @@ const Home = () => {
                       <h1 className="title">{slide.title}</h1>
                       <div className="client-review">
                         <div className="review-stats">
-                          <span>We have {slide.clientCount} Happy Client</span>
+                          <span><img src={img11} alt="Law Scale" className="img11" /> We have {slide.clientCount} Happy Client</span>
                           <div className="stars">
-                            {"★".repeat(slide.rating)} <span>({slide.reviews} Reviews)</span>
+                            {"★".repeat(slide.rating)} <span><strong>4.5/5</strong>({slide.reviews} Reviews)</span>
                           </div>
                         </div>
                       </div>
@@ -109,7 +134,7 @@ const Home = () => {
                 ))}
               </div>
               <div className="slider-btn-container">
-              <button className="slider-btn next" onClick={nextSlide}>↓</button>
+                <button className="slider-btn next" onClick={nextSlide}>↓</button>
               </div>
             </div>
           </div>
@@ -201,7 +226,7 @@ const Home = () => {
         <li>Health Insurance</li>
         <li>Marine Ins</li>
         <li>Fire Ins</li>
-        <li>Employee’s Compensation Policy</li>
+        <li>Employee's Compensation Policy</li>
       </ul>
       <button className="get-started-btn">Get Started →</button>
     </div>

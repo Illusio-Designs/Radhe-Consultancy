@@ -7,6 +7,10 @@ import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
 import '../styles/pages/About.css';
+import aboutImage from '../assets/business-people-busy-discussing-financial-matter-meeting.png';
+import avatar1 from '../assets/Ellipse 2603.png';
+import avatar2 from '../assets/Ellipse 2606.png';
+import group from '../assets/Group 9.png';
 
 const About = () => {
   return (
@@ -19,8 +23,61 @@ const About = () => {
         </div>
       </div>
 
-      <div className='about-content'></div>  
-      <div className='vision-mission'></div>
+      <div className="about-main-section">
+  <div className="about-image-section">
+    <img src={group} alt="group" className='group-image' />
+    <div className="about-image-wrapper">
+      <img src={aboutImage} alt="Consultancy" className="about-main-image" />
+      <div className="about-members-card">
+        <span>Monthly Members</span>
+        <h2>5000+</h2>
+      </div>
+      <div className="about-reviews-card">
+        <div className="about-reviews-avatars">
+          {/* Example avatars */}
+          <img src={avatar1} alt="avatar" />
+          <img src={avatar2} alt="avatar" />
+          <div className='plus-icon'>+</div>
+        </div>
+        <span>8000+ reviews</span>
+      </div>
+    </div>
+  </div>
+  <div className="about-story-section">
+    <span className="about-story-label">About Us</span>
+    <h1>Discover Our Story</h1>
+    <p className="about-story-desc">
+      Raj Consultancy is Hr & Labor Law Compliance Outsourcing Company. Our Team Consist Of Extremely Proficient And Dedicated Labor Law Experts With Remarkable 09 Years Of Experience In This Field Who Ensures Complete Compliance Under Various Labour Law. We Have Expanded Our 7 Branches In Gujarat, With More Than 1000+ Satisfied Clients.
+    </p>
+    <p className="about-story-highlight">
+      We Provide Best Consultancy services Since 2016 for business.
+    </p>
+    <button className="about-contact-btn">Contact Now →</button>
+  </div>
+</div>
+
+<div className="vision-mission-section">
+  <div className="vision-section">
+    <div className="section-title-with-line">
+    <h2>Our Vision</h2>
+      <div className="section-line" />
+    </div>
+      
+    <p>
+      At raj consultancy, our mission is clear and resolute – to empower organizations and individuals to thrive in today's dynamic and ever-evolving landscape. We believe that success is achieved through strategic excellence, and we are committed to being your partner on this journey.
+    </p>
+  </div>
+  <div className="mission-section">
+    <div className="section-title-with-line">
+    <h2>Our Mission</h2>
+      <div className="section-line" />
+      
+    </div>
+    <p>
+      At raj consultancy, our vision is to be the guiding light that illuminates the path to success for individuals and organizations alike. We aspire to be the catalyst that empowers our clients to embrace change, embrace innovation, and shape a future that surpasses their greatest expectations.
+    </p>
+  </div>
+</div>
 
 <div className="help">
   <h1>We Help You With Quality Legal Lawyer</h1>

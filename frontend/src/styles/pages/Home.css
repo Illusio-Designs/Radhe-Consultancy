@@ -1,27 +1,43 @@
 .home-container .hero-section {
-  background-color: #1a4b94;
-  margin: 130px 0 80px 0;
+  background-image: url('../../assets/insurance.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 130px;
   color: white;
   position: relative;
   overflow: hidden;
-  height: 680px;
 }
+
 .home-container .hero-slider {
   position: relative;
-  overflow: hidden;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 .home-container .hero-content {
   display: flex;
   flex-direction: column;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 300%; /* 100% for each slide */
+  height: 100%;
 }
 
 .home-container .slide {
-  min-height: 33.333%; /* Each slide takes up 1/3 of the container */
+  min-height: 100%;
   position: relative;
+  width: 100%;
+  flex-shrink: 0;
+  background-color: #1F4F9CCF;
+}
+
+.home-container .slide.active {
+  opacity: 1;
+  z-index: 1;
 }
 
 .home-container .slide-content {
@@ -29,12 +45,13 @@
   justify-content: space-between;
   align-items: center;
   gap: 40px;
-  padding: 0 20px;
+  padding: 0 15%;
   height: 100%;
 }
 
 .home-container .hero-text {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
   max-width: 600px;
   opacity: 0;
   transform: translateY(20px);
@@ -49,23 +66,21 @@
 }
 
 .home-container .subtitle {
-  font-size: 1.2rem;
+  font-size: 20px;
   margin-bottom: 1rem;
   opacity: 0.9;
+  font-weight: 500;
 }
 
 .home-container .title {
-  font-size: 3.5rem;
-  font-weight: 700;
+  font-size: 50px;
+  font-weight: 600;
   margin-bottom: 2rem;
   line-height: 1.2;
   color: white;
 }
 
 .home-container .client-review {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px 20px;
-  border-radius: 12px;
   margin-bottom: 2rem;
   display: inline-block;
 }
@@ -79,6 +94,7 @@
 .home-container .stars {
   color: #ffd700;
   font-size: 1.2rem;
+  padding-left: 75px;
 }
 
 .home-container .stars span {
@@ -91,12 +107,13 @@
   background: white;
   color: #1a4b94;
   border: none;
-  padding: 15px 30px;
+  padding: 10px 25px;
   border-radius: 30px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 30%;
 }
 
 .home-container .contact-btn:hover {
@@ -105,18 +122,23 @@
 }
 
 .home-container .hero-image {
-  flex: 1;
-  max-width: 500px;
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.5s forwards 0.2s;
+  border: 1px solid #ffffff;
+  position: relative;
+  border-top-right-radius: 70px;
+  border-bottom-left-radius: 70px;
+  z-index: 1;
 }
 
 .home-container .hero-image img {
-  width: 100%;
-  height: auto;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  height: 400px;
+  border: 1px solid #ffffff;
+  border-top-right-radius: 70px;
+  border-bottom-left-radius: 70px;
+  z-index: 2;
 }
 
 /* Slider Controls */
@@ -133,11 +155,13 @@
 
 .slider-btn-container {
   position: absolute;
-  top: 890%;
-  right: 20%;
+  bottom: -300px;
+  right: 20px;
   background-color: #ffffff;
-  border-radius: 50%;
-  padding: 30px;
+  padding: 5px;
+  border-top-left-radius: 50px;
+  border-top-right-radius: 50px;
+  z-index: 2;
 }
 
 .slider-btn-container .slider-btn {
@@ -153,15 +177,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  right: 27%;
-  top: 19%;
+}
+
+.slider-btn-container .slider-btn:hover {
+  background: #153a75;
 }
 
 .home-container .slider-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  z-index: 2;
 }
 
 .home-container .dot {
@@ -179,32 +209,37 @@
   transform: scale(1.2);
 }
 
+.img11 {
+  width: 70px;
+  height: 35px;
+}
+
 .trusted-consultancy {
   position: relative;
 }
 
-.trusted-container{
+.trusted-container {
   display: flex;
   flex-wrap: wrap;
   gap: 40px;
-  margin: 0 17rem 10rem;
+  margin: 6rem 17rem 10rem;
   position: relative;
 }
 
-.img6{
+.img6 {
   position: absolute;
   top: 12%;
   left: 0;
 }
 
-.img7{
+.img7 {
   position: absolute;
   top: 0;
   right: 2%;
   width: 10%;
 }
 
-.img8{
+.img8 {
   position: absolute;
   right: 0px;
   width: 18%;
@@ -216,7 +251,7 @@
 }
 
 .image-group {
-  display: grid;  
+  display: grid;
   grid-template-columns: 1fr 1fr;
 }
 
@@ -287,7 +322,7 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 3rem 1rem; 
+  padding: 3rem 1rem;
   background: #1f4f9c;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border-radius: 10px;
@@ -373,7 +408,7 @@
   max-width: 380px;
   max-height: 450px !important;
   border-radius: 25px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -386,7 +421,7 @@
 .services-section .service-card h3 {
   font-size: 25px;
   font-weight: 600;
-  color: #1F4F9C;
+  color: #1f4f9c;
   padding: 0;
   margin-bottom: 20px;
   text-align: center;
@@ -410,8 +445,8 @@
 }
 
 .services-section .service-card.light {
-  background-color: #F5F5F5;
-  color: #1F4F9C;
+  background-color: #f5f5f5;
+  color: #1f4f9c;
   display: flex;
   flex-direction: column;
   z-index: 0;
@@ -421,7 +456,7 @@
 
 .services-section .service-card.dark {
   max-width: 350px;
-  background-color: #1F4F9C;
+  background-color: #1f4f9c;
   box-shadow: 0px 0px 12.8px 6px #00000040;
   color: white;
   transform: scale(1.2);
@@ -440,7 +475,7 @@
 }
 
 .services-section .get-started-btn {
-  background-color: #1F4F9C;
+  background-color: #1f4f9c;
   color: #ffffff;
   border: none;
   font-size: 14px;
@@ -462,19 +497,19 @@
 
 .services-section .service-card.dark .get-started-btn {
   background-color: #ffffff;
-  color: #1F4F9C;
+  color: #1f4f9c;
 }
 
 .services-section .service-card.dark .get-started-btn:hover {
-  background-color: #1F4F9C;
+  background-color: #1f4f9c;
   color: #ffffff;
   border: 1px solid #ffffff;
 }
 
 .services-section .service-card.light .get-started-btn:hover {
   background-color: #ffffff;
-  color: #1F4F9C;
-  border: 1px solid #1F4F9C;
+  color: #1f4f9c;
+  border: 1px solid #1f4f9c;
 }
 
 .lawyer-section .hero-section {
@@ -488,42 +523,42 @@
 }
 
 .lawyer-content {
-  background-color: #1F4F9CCF;
+  background-color: #1f4f9ccf;
   padding: 5% 10%;
   display: flex;
   justify-content: space-around;
   align-items: center;
 }
 
-.lawyer-left{
+.lawyer-left {
   width: 50%;
 }
 
-.lawyer-left h1{
+.lawyer-left h1 {
   font-size: 52px;
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 20px;
 }
 
-.lawyer-left p{
+.lawyer-left p {
   font-size: 20px;
   font-weight: 500;
   margin-bottom: 20px;
 }
 
-.lawyer-btn{
+.lawyer-btn {
   background-color: #ffffff;
-  color: #1F4F9C;
+  color: #1f4f9c;
   border: none;
   font-size: 16px;
   border-radius: 20px;
   font-weight: 500;
   padding: 10px 30px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   cursor: pointer;
 }
-.lawyer-right{
+.lawyer-right {
   display: flex;
   gap: 20px;
   width: 50%;
@@ -553,7 +588,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #1F4F9C99;
+  background-color: #1f4f9c99;
   opacity: 0;
   display: flex;
   flex-direction: column;
@@ -676,11 +711,11 @@
   color: #1f2937;
 }
 
-.points{
+.points {
   display: flex;
   flex-direction: column;
   gap: 40px;
-  border-left: 1px dashed #1F4F9C;
+  border-left: 1px dashed #1f4f9c;
   height: 50%;
   margin-left: 4%;
 }
@@ -693,7 +728,7 @@
 .icon-circle {
   width: 30px;
   height: 30px;
-  background-color: #1F4F9C;
+  background-color: #1f4f9c;
   color: #ffffff;
   border-radius: 50%;
   display: flex;
@@ -716,11 +751,3 @@
   color: #6b7280;
   font-size: 14px;
 }
-
-
-
-
-
-
-
-
