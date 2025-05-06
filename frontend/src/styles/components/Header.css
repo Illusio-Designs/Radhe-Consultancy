@@ -184,15 +184,3 @@
   display: none;
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .nav-links {
-    display: none;
-  }
-
-  .menu-btn {
-    display: block;
-  }
-}
-
-
