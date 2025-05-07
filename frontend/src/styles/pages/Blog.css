@@ -122,6 +122,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 1440px) {
+ .blog .hero-section{
+  margin-top: 100px;
+ }
+}
+
 @media (max-width: 1024px) {
   .page-container {
     padding: 50px 5% 0;

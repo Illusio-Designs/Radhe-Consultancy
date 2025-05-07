@@ -118,6 +118,12 @@
   margin-bottom: 30px;
 }
 
+@media (max-width: 1440px) {
+  .bloginner .hero-section{
+   margin-top: 100px;
+  }
+ }
+
 @media (max-width: 1024px) {
   .bloginner .hero-content {
     padding: 20% 0%;
@@ -231,7 +237,7 @@
     font-size: 12px;
   }
   .longest-cases-section h2 {
-    font-size: 12px;
+    font-size: 20px;
   }
   .longest-cases-section p {
     font-size: 10px;
@@ -239,5 +245,15 @@
   .longest-cases-cards img {
     width: 150px;
     height: 150px;
+  }
+  .longest-cases-cards h2 {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .longest-cases-cards img {
+    width: 130px;
+    height: 130px;
   }
 }
