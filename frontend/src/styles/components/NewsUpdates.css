@@ -98,5 +98,31 @@
     right: 0;
     width: 160px;
   }
+  @media (max-width: 1024px) {
+    .news-section {
+      padding: 40px 0;
+    }
+    .news-card {
+      width: 310px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .news-section {
+      padding: 20px 0;
+    }
+    .news-card {
+      width: 330px;
+    }
+  }
+
+  @media (max-width: 426px) {
+    .news-section {
+      padding: 10px 0;
+    }
+  }
+  
+  
+  
   
   

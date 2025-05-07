@@ -16,9 +16,40 @@
 
 .working-with h1 {
   font-weight: 500;
-    font-size: 30px !important;
-    color: white !important;
+    font-size: 30px ;
+    color: white;
     text-align: center;
     padding-bottom: 40px;
 }
+
+@media (max-width: 1024px) {
+  .working-with-items img {
+    width: 8%;
+  }
+}
+
+@media (max-width: 768px) {
+  .working-with-items img {
+    width: 10%;
+  }
+  .working-with h1 {
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 426px) {
+  .working-with{
+    padding: 40px 0;
+  }
+  .working-with-items img {
+    width: 12%;
+  }
+  .working-with h1 {
+    font-size: 20px;
+  }
+}
+
+
+
+
 

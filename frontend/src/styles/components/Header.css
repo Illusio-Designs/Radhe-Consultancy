@@ -1,6 +1,6 @@
 /* Top blue bar */
 .top-bar {
-  background-color: #1F4F9C;
+  background-color: #1f4f9c;
   color: white;
   font-size: 14px;
   display: flex;
@@ -92,7 +92,7 @@
   position: relative;
   font-size: 16px;
   font-weight: 500;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .nav-item a {
@@ -102,7 +102,7 @@
 
 .nav-item a:hover,
 .nav-item.active a {
-  color: #1F4F9C;
+  color: #1f4f9c;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -179,8 +179,81 @@
   background: none;
   border: 1px solid #ccc;
   border-radius: 50%;
-  padding: 8px;
+  padding: 5px 5px 0;
   cursor: pointer;
   display: none;
 }
 
+.menu-btn svg {
+  font-size: 20px;
+  stroke-width: 2;
+}
+
+@media (max-width: 1024px) {
+  .top-bar {
+    padding: 10px 20px 10px 2%;
+    font-size: 12px;
+  }
+  .navbar {
+    top: 40px;
+  }
+  .nav-links {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-bar {
+    font-size: 10px;
+    padding: 10px 10px 10px 5%;
+  }
+  .top-bar .social-icon {
+    display: none;
+  }
+  .menu-btn {
+    display: block;
+  }
+  .navbar {
+    top: 33px;
+  }
+  .nav-links {
+    display: none;
+  }
+  .logo {
+    width: 12%;
+  }
+  .consult-btn {
+    padding: 8px 20px;
+    font-size: 12px;
+  }
+  .search-btn {
+    padding: 5px 5px 0;
+    font-size: 14px;
+  }
+  .right-arrow {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 426px) {
+  .top-bar {
+    display: none;
+  }
+  .navbar {
+    top: 0px;
+  }
+  .logo {
+    width: 20%;
+  }
+  .consult-btn {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .search-btn {
+    padding: 5px 5px 0;
+    font-size: 14px;
+  }
+  .right-arrow {
+    font-size: 14px;
+  }
+}

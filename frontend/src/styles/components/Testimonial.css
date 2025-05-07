@@ -62,7 +62,7 @@
   border-radius: 20px 50px 20px 20px;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
   width: 500px;
-  height: 250px;
+  height: auto;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -177,8 +177,6 @@
 
   .testimonial-card {
     width: 260px;
-    height: auto;
-    min-height: 250px;
   }
 
   .section-heading {
@@ -230,10 +228,13 @@
     font-size: 14px;
   }
   .testimonial-heading-nav {
-    margin: 10px 2% 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   .section-title{
     margin: 0 2%;
+    text-align: center;
   }
 }
 

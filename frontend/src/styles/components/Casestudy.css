@@ -1,10 +1,10 @@
 .casestudy-container {
-  padding: 40px;
+  padding: 0 40px 40px;
   text-align: center;
 }
 
 .casestudy{
-  padding: 100px 0 0;
+  padding: 50px 0 0 0;
 }
 
 .casestudy-content p {
@@ -90,3 +90,36 @@
   color: #ffffff;
   padding-top: 100px;
 }
+
+@media (max-width: 1024px) {
+  .image-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .casestudy-content h1 {
+    font-size: 25px;
+  }
+  .casestudy-content p {
+    font-size: 15px;
+  }
+} 
+
+@media (max-width: 426px) {
+  .image-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .casestudy-container {
+    padding: 0 10px 40px;
+  }
+  .overlay-text {
+    font-size: 15px;
+  }
+  .overlay-subtitle {
+    font-size: 12px;
+  }
+}
+
+
+

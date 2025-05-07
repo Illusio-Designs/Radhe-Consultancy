@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/components/Testimonial.css';
 
 const testimonials = [
@@ -31,19 +31,36 @@ const testimonials = [
 
 const Testimonial = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [visibleCards, setVisibleCards] = useState(2); // Default state for visible cards
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 500) {
+        setVisibleCards(1);
+      } else {
+        setVisibleCards(2);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Call handleResize initially in case the window size is already less than 500
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 2) % testimonials.length);
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 2 + testimonials.length) % testimonials.length);
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
-  // Get two testimonials based on currentIndex
   const getVisibleTestimonials = () => {
     const visible = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < visibleCards; i++) {
       const index = (currentIndex + i) % testimonials.length;
       visible.push(testimonials[index]);
     }

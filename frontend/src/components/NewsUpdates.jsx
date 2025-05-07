@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Added useState import
+import React, { useState, useEffect } from 'react'; // Added useState and useEffect imports
 import '../styles/components/NewsUpdates.css';
 import img from '../assets/blog-s-1-3-425x325.jpg.png';
 import img2 from '../assets/blog-s-1-4-425x325.jpg.png';
@@ -32,18 +32,38 @@ const newsData = [
 
 const NewsUpdates = () => {
   const [currentIndex, setCurrentIndex] = useState(0); // Moved useState inside the component
+  const [visibleCards, setVisibleCards] = useState(3); // Default state for visible cards
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 500) {
+        setVisibleCards(1);
+      } else if (window.innerWidth < 900) {
+        setVisibleCards(2);
+      } else {
+        setVisibleCards(3);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Call handleResize initially in case the window size is already less than 768
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 2) % newsData.length);
+    setCurrentIndex((prev) => (prev + 1) % newsData.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 2 + newsData.length) % newsData.length);
+    setCurrentIndex((prev) => (prev - 1 + newsData.length) % newsData.length);
   };
 
   const getVisibleNews = () => {
     const visible = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < visibleCards; i++) {
       const index = (currentIndex + i) % newsData.length;
       visible.push(newsData[index]);
     }
@@ -66,7 +86,7 @@ const NewsUpdates = () => {
   </div>
 </div>
       <div className="news-cards">
-        {newsData.map((item, index) => (
+        {visibleNews.map((item, index) => (
           <div className="news-card" key={index}>
             <img src={item.img} alt="news" className="news-image" />
             <div className="news-meta">

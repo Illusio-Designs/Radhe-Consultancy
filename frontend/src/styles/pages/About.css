@@ -3,12 +3,12 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  height: 100vh;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  margin-top: 130px;
+  margin-top: 120px;
   color: white;
 }
 
@@ -24,6 +24,7 @@
   font-weight: 500;
   font-size: 1rem;
   padding-right: 3%;
+  padding-bottom: 10px;
 }
 
 .help {
@@ -298,6 +299,248 @@
   width: 25%;
   margin-top: -2%;
 }
+
+@media (max-width: 1440px) {
+  .about-container .hero-content {
+    padding: 20% 39.7%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .about-container .hero-content {
+    padding: 20% 35.5%;
+  }
+  .about-container .about-main-section {
+    padding: 80px 10% 0 10%;
+  }
+  .about-container .about-image-section {
+    width: 40%;
+  }
+  .about-container .about-image-wrapper {
+    width: 350px;
+    height: 350px;
+  }
+  .about-container .about-members-card {
+    top: 40px;
+    right: -90px;
+  }
+  .about-container .about-members-card h2 {
+    font-size: 25px;
+  }
+  .about-container .about-reviews-card {
+    left: 30px;
+  }
+  .about-container .about-reviews-avatars img {
+    width: 80px;
+    height: 80px;
+  }
+  .about-container .about-reviews-card span {
+    font-size: 18px;
+  }
+  .about-container .plus-icon {
+    font-size: 18px;
+    padding: 2px 8px;
+    margin-left: -30px;
+    margin-top: 12px;
+  }
+  .about-container .about-story-section {
+    padding-left: 0;
+  }
+  .about-container .vision-mission-section {
+    gap: 5%;
+    margin: 60px 5% 60px 10%;
+  }
+  .about-container .vision-section h2, .mission-section h2 {
+    font-size: 35px;
+  }
+  .about-container .vision-section p, .mission-section p {
+    font-size: 14px;
+  } 
+  .case-study-btn {
+    padding-right: 5%;
+  }
+  .help h1 {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-container .hero-section {
+    margin-top: 100px;
+  }
+  .about-container .hero-content {
+    padding: 20% 38%;
+  }
+  .about-container .hero-section h1 {
+    font-size: 40px;
+  }
+  .about-container .about-main-section {
+    padding: 80px 5% 0 5%;
+  }
+  .about-container .about-image-section {
+    width: 50%;
+  }
+  .about-container .about-image-wrapper {
+    width: 300px;
+    height: 300px;
+  }
+  .about-container .about-members-card {
+    width: 120px;
+    top: 20px;
+    right: -70px;
+  }
+  .about-container .about-members-card h2 {
+    font-size: 20px;
+  }
+  .about-container .about-reviews-card {
+    left: 20px;
+  }
+  .about-container .about-reviews-avatars img {
+    width: 60px;
+    height: 60px;
+  }
+  .about-container .about-reviews-card span {
+    font-size: 16px;
+  }
+  .about-container .plus-icon {
+    font-size: 16px;
+    padding: 2px 8px;
+    margin-left: -20px;
+    margin-top: 15px;
+  }
+  .about-container .about-story-section h1 {
+    font-size: 25px;
+  }
+  .about-container .about-story-desc {
+    font-size: 12px;
+  }
+  .about-container .about-contact-btn {
+    width: 70%;
+  }
+  .about-container .vision-mission-section {
+    margin: 60px 5% 60px 10%;
+  }
+  .about-container .vision-section h2, .mission-section h2 {
+    font-size: 30px;
+  }
+  .about-container .vision-section p, .mission-section p {
+    font-size: 12px;
+  }
+  .case-study-btn {
+    padding-right: 6%;
+  }
+  .help {
+    padding: 5% 15%;
+    gap: 25px;
+  }
+  .help h1 {
+    font-size: 30px;
+  }
+  .help p {
+    font-size: 12px;
+    padding: 0 5%;
+  }
+  .help-btn {
+    padding: 7px 20px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 426px) {
+  .about-container .hero-section {
+    margin-top: 60px;
+  }
+  .about-container .hero-content {
+    padding: 20% 36.2%;
+  }
+  .about-container .hero-section h1 {
+    font-size: 25px;
+  }
+  .about-container .about-main-section {
+    padding: 80px 5% 0 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+  }
+  .about-container .about-image-section {
+    width: 70%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .about-container .about-image-wrapper {
+    width: 250px;
+    height: 300px;
+  }
+  .about-container .about-members-card {
+    width: 100px;
+  }
+  .about-container .about-story-section {
+    padding-left: 10%;
+  }
+  .about-container .about-story-section h1 {
+    font-size: 30px;
+  }
+  .about-container .vision-mission-section {
+    flex-direction: column;
+    margin: 60px 2% 60px 20%;
+    gap: 20px;
+  }
+  .about-container .vision-section h2, .mission-section h2 {
+    font-size: 30px;
+  }
+  .about-container .vision-section, .mission-section {
+    padding: 0px 20px;
+  }
+  .about-container .section-line {
+    width: 20%;
+  }  
+  .help {
+    padding: 5% 5%;
+    gap: 25px;
+  }
+  .help h1 {
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 390px) {
+  .about-container .hero-section {
+    margin-top: 40px;
+  }
+  .about-container .hero-content {
+    padding: 20% 37.8%;
+  }
+  .about-container .hero-section h1 {
+    font-size: 20px;
+  }
+  .about-container .about-main-section {
+    padding: 80px 5% 0 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+  }
+  .about-container .about-image-section {
+    width: 75%;
+  }
+  .about-container .about-image-wrapper {
+    width: 380px;
+    height: 300px;
+  }
+  .about-container .about-members-card {
+    width: 80px;
+    top: 10px;
+    right: -50px;
+  }
+  .about-container .about-story-section h1 {
+    font-size: 25px;
+  }
+}
+
+
+
+
+
 
 
 
