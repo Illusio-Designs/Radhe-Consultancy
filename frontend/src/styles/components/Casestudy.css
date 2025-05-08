@@ -95,6 +95,23 @@
   .image-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
+  .image-container {
+    height: 135px;
+  }
+  .casestudy-content h1 {
+    font-size: 35px;
+  }
+  .overlay-text {
+    padding-bottom: 5px;
+    padding-top: 0px;
+    font-size: 15px;
+  }
+  .eye-button {
+    padding-top: 30px;
+  }
+  .overlay-subtitle {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -113,13 +130,14 @@
   .casestudy-container {
     padding: 0 10px 40px;
   }
-  .overlay-text {
-    font-size: 15px;
+  .casestudy-content h1 {
+    font-size: 21px;
   }
-  .overlay-subtitle {
-    font-size: 12px;
+  .casestudy-content p {
+    margin-bottom: 10px;
   }
 }
+
 
 
 

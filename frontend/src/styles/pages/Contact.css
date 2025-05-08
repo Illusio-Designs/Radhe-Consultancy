@@ -161,4 +161,131 @@
   .contactpage-container .contactpage-hero-section{
    margin-top: 100px;
   }
+  .contactpage-container .hero-content {
+    padding: 20.1% 37.3%;
+    overflow: hidden;
+  }
  }
+
+@media (max-width: 1024px) {
+  .contactpage-container .hero-content {
+    padding: 20.1% 32.3%;
+    overflow: hidden;
+  }
+  .contactpage-content{
+    gap: 2rem;
+    margin: 5%2%;
+  }
+  .contactpage-bottom{
+    margin: 3rem 0.5rem;
+    justify-content: space-evenly;
+  }
+  .contactpage-bottom-item{
+    font-size: 12px;
+  }
+  .contactpage-bottom-item .icon{
+    font-size: 18px;
+  }
+ }
+
+ @media (max-width: 768px) {
+  .contactpage-container .contactpage-hero-section {
+    margin-top: 100px;
+  }
+  .contactpage-container .hero-content {
+    padding: 20% 35.2%;
+  }
+  .contactpage-container .contactpage-hero-section h1 {
+    font-size: 40px;
+  }
+  .contactpage-content{
+    gap: 2rem;
+    margin: 5% 3%;
+  }
+  .contactpage-title h1{
+    font-size: 28px;
+  }
+  .contactpage-form{
+    padding: 2rem 1rem 1.5rem 1rem;
+  }
+  .contactpage-form .form-group{
+    margin-bottom: 0rem;
+  }
+  .contactpage-form .form-group label{
+    font-size: 14px;
+  }
+  .contactpage-form .form-group input,
+  .contactpage-form .form-group textarea{
+    font-size: 12px;
+  }
+  .contactpage-form .form-group input{
+    padding: 0.5rem;
+  }
+  .contactpage-form .form-group textarea{
+    padding: 0.5rem;
+  }
+  .contactpage-form .submit-btn{
+    font-size: 12px;
+    padding: 0.5rem 1rem;
+    margin-top: 2rem;
+  }
+  .contactpage-form .submit-btn .arrow{
+    font-size: 12px;
+  }
+  .contactpage-bottom{
+    margin: 3rem 4rem;
+    justify-content: space-evenly;
+  }
+}
+
+@media (max-width: 426px) {
+  .contactpage-container .contactpage-hero-section {
+    margin-top: 60px;
+  }
+  .contactpage-container .hero-content {
+    padding: 20% 33.2%;
+  }
+  .contactpage-container .contactpage-hero-section h1 {
+    font-size: 25px;
+  } 
+  .contactpage-content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .contactpage-title h1{
+    font-size: 28px;
+  }   
+  .contactpage-form{
+    padding: 2rem 1rem 1.5rem 0rem;
+  }
+  .contactpage-form .form-group{
+    margin-bottom: 0rem;
+  }     
+  .contactpage-form .form-group label{
+    font-size: 14px;
+  }
+  .contactpage-form .form-group input,
+  .contactpage-form .form-group textarea{
+    font-size: 12px;
+  }
+  .contactpage-form .form-group input{
+    padding: 0.5rem;
+  }
+  .contactpage-form .form-group textarea{
+    padding: 0.5rem;
+  }
+  .contactpage-form .submit-btn{
+    font-size: 12px;
+    padding: 0.5rem 1rem;
+    margin-top: 2rem;
+  }
+  .contactpage-form .submit-btn .arrow{
+    font-size: 12px;
+  }
+  .contactpage-bottom{
+    justify-content: left;
+    margin: 0rem 2rem 2rem;
+  }
+} 

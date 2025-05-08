@@ -1,5 +1,5 @@
 .home-container .hero-section {
-  background-image: url('../../assets/insurance.png');
+  background-image: url("../../assets/insurance.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -32,7 +32,7 @@
   position: relative;
   width: 100%;
   flex-shrink: 0;
-  background-color: #1F4F9CCF;
+  background-color: #1f4f9ccf;
 }
 
 .home-container .slide.active {
@@ -125,7 +125,6 @@
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.5s forwards 0.2s;
-  border: 1px solid #ffffff;
   position: relative;
   border-top-right-radius: 70px;
   border-bottom-left-radius: 70px;
@@ -517,7 +516,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  height: 500px;
+  height: 100%;
   width: 100%;
   margin-top: 100px;
 }
@@ -542,6 +541,7 @@
 }
 
 .lawyer-left p {
+  color: #ffffff;
   font-size: 20px;
   font-weight: 500;
   margin-bottom: 20px;
@@ -751,3 +751,418 @@
   color: #6b7280;
   font-size: 14px;
 }
+
+@media (max-width: 1440px) {
+  .home-container .hero-section {
+    margin-top: 100px;
+    height: 505px;
+  }
+  .slider-btn-container {
+    bottom: -253px;
+  }
+  .home-container .hero-text .subtitle {
+    font-size: 20px;
+  }
+  .home-container .hero-text .title {
+    font-size: 30px;
+  }
+  .home-container .hero-text .client-review {
+    font-size: 20px;
+  }
+  .home-container .contact-btn {
+    width: 40%;
+  }
+  .home-container .hero-image img {
+    width: 300px;
+    height: 350px;
+  }
+  .about-description {
+    margin-bottom: 25px;
+  }
+  .img6 {
+    top: 4%;
+  }
+  .img7 {
+    right: 5%;
+  }
+  .img8 {
+    top: 83.5%;
+  }
+  .lawyer-image .overlay {
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
+    border-bottom-left-radius: 33px;
+    border-bottom-right-radius: 33px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-container .hero-section {
+    margin-top: 100px;
+  }
+  .home-container .slide-content {
+    padding: 0rem 5rem;
+  }
+
+  .home-container .hero-text .subtitle {
+    font-size: 20px;
+  }
+  .home-container .hero-text .title {
+    font-size: 30px;
+  }
+  .home-container .hero-text .client-review {
+    font-size: 20px;
+  }
+  .home-container .contact-btn {
+    width: 40%;
+  }
+  .home-container .hero-image img {
+    width: 280px;
+    height: 350px;
+  }
+  .trusted-container {
+    margin: 6rem 5rem 6rem;
+  }
+  .img6 {
+    top: -16%;
+  }
+  .achievement-bar {
+    padding: 2rem 1rem;
+    margin: 5rem 2rem;
+  }
+  .achievement-card {
+    padding-right: 1rem;
+  }
+  .achievement-card i {
+    font-size: 40px;
+    padding: 0;
+  }
+  .achievement-info h3 {
+    font-size: 20px;
+  }
+  .achievement-info p {
+    font-size: 15px;
+  }
+  .services-section .service-card {
+    min-height: 500px;
+  }
+  .lawyer-image .overlay {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-bottom-left-radius: 23px;
+    border-bottom-right-radius: 23px;
+  }
+  .lawyer-image .overlay-text {
+    font-size: 10px;
+  }
+  .lawyer-left h1 {
+    font-size: 30px;
+  }
+  .lawyer-left p {
+    font-size: 15px;
+  }
+  .why-left {
+    width: 100%;
+  }
+  .why-right {
+    width: 100%;
+  }
+  .why-title {
+    font-size: 25px;
+    margin-bottom: 10px;
+  }
+  .why-subtitle {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .why-point {
+    gap: 10px;
+    margin-left: 0px;
+  }
+  .img10 {
+    right: -8%;
+  }
+  .icon-circle {
+    width: 20px;
+    height: 20px;
+  }
+  .why-point h3 {
+    font-size: 15px;
+  }
+  .why-point p {
+    font-size: 12px;
+  }
+  .points {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container .hero-text .subtitle {
+    font-size: 15px;
+  }
+  .home-container .hero-text .title {
+    font-size: 25px;
+  }
+  .img11 {
+    width: 45px;
+    height: 20px;
+  }
+  .home-container .hero-text .client-review {
+    font-size: 15px;
+  }
+  .home-container .stars {
+    font-size: 15px;
+  }
+  .home-container .contact-btn {
+    width: 60%;
+  }
+  .home-container .hero-image img {
+    width: 250px;
+    height: 300px;
+  }
+  .about-subtitle {
+    margin-bottom: 10px;
+  }
+  .trusted-right h2 {
+    font-size: 20px;
+  }
+  .about-description {
+    font-size: 12px;
+  }
+  .more-about-btn {
+    padding: 8px 21px;
+    font-size: 10px;
+  }
+
+  .achievement-card i {
+    font-size: 30px;
+    padding: 0;
+  }
+  .achievement-info h3 {
+    font-size: 15px;
+  }
+  .achievement-info p {
+    font-size: 10px;
+  }
+  .img6 {
+    width: 15%;
+    top: 46%;
+  }
+  .img8 {
+    width: 15%;
+    top: 100%;
+  }
+  .services-section .service-card {
+    min-height: 410px;
+  }
+  .services-section .services-subtitle {
+    margin-bottom: 10px;
+  }
+  .services-section .services-title {
+    font-size: 30px;
+    margin-bottom: 12%;
+  }
+  .services-section .service-card h3 {
+    font-size: 20px;
+    height: 40px;
+  }
+  .services-section .service-card ul {
+    padding: 0 25px;
+  }
+  .services-section .service-card ul li {
+    font-size: 12px;
+  }
+  .services-section .service-card .get-started-btn {
+    padding: 5px 20px;
+    font-size: 10px;
+    width: 60%;
+  }
+  .lawyer-left h1 {
+    font-size: 25px;
+  }
+  .lawyer-left p {
+    font-size: 15px;
+  }
+  .lawyer-left .lawyer-btn {
+    padding: 7px 20px;
+    font-size: 10px;
+    width: 50%;
+  }
+  .lawyer-image .overlay {
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+  }
+  .lawyer-image .overlay-text {
+    gap: 12px;
+    font-size: 6px;
+  }
+  .lawyer-image .overlay-text p {
+    font-size: 10px;
+  }
+  .lawyer-image .overlay-text .icon svg {
+    font-size: 16px;
+  }
+  .why-left {
+    width: 100%;
+  }
+  .why-right {
+    width: 100%;
+  }
+  .why-title {
+    font-size: 18px;
+  }
+  .why-subtitle {
+    font-size: 12px;
+  }
+  .points {
+    gap: 10px;
+  }
+  .img10 {
+    top: 16%;
+    right: -12%;
+    width: 65%;
+  }
+  .icon-circle {
+    width: 15px;
+    height: 15px;
+  }
+  .why-point h3 {
+    font-size: 10px;
+  }
+  .why-point p {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 426px) {
+  .home-container .hero-section {
+    margin-top: 60px;
+    height: 350px;
+  }
+  .home-container .hero-text {
+    width: 100%;
+  }
+  .home-container .slider-dots {
+    bottom: -10px;
+  }
+  .slider-btn-container {
+    bottom: -175px;
+    right: 10%;
+  }
+  .home-container .slide-content {
+    padding: 0rem 2rem;
+}
+  .home-container .hero-text .subtitle {
+    font-size: 12px;
+  }
+  .home-container .hero-text .title {
+    font-size: 20px;
+  }
+  .home-container .hero-text .client-review {
+    font-size: 12px;
+  }
+  .home-container .stars {
+    padding-left: 48px;
+  }
+  .home-container .contact-btn {
+    width: 50%;
+  }
+  .home-container .hero-image {
+    display: none;
+  }
+  .trusted-container {
+    flex-direction: column;
+    margin: 4rem 3rem 1rem;
+}
+.img-left img {
+  margin-left: 1.5%;
+  margin-top: 1.5%;
+  width: 45%;
+  height: 51%;
+}
+.img7 {
+  top: 55%;
+  width: 20%;
+}
+.img6 {
+  width: 28%;
+  top: 72%;
+}
+.img8 {
+  width: 22%;
+  top: 100%;
+}
+.achievement-bar {
+  padding: 2rem 0rem;
+  margin: 5rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.achievement-card:nth-child(2) {
+  border-right: none;
+}
+.achievement-card {
+  padding-right: 0.5rem;
+}
+.achievement-card i {
+  font-size: 30px;
+  padding: 0;
+}
+.services-section .services-title {
+  font-size: 25px;
+  margin-bottom: 22%;
+}
+.lawyer-content{
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+.lawyer-left{
+  width: 100%;
+}
+.lawyer-left h1 {
+  font-size: 35px;
+}
+.lawyer-right{
+  width: 100%;  
+}
+.lawyer-image{
+  width: 100%;
+}
+.lawyer-image img{
+  width: 100%;
+}
+.why{
+  flex-direction: column;
+}
+.points {
+  height: 111px;
+  margin-left: 3%;
+}
+.img10 {
+  right: -11%;
+  width: 53%;
+}
+}
+
+@media (max-width: 390px) {
+  .img-left img {
+    height: 48%;
+}
+.img6 {
+  top: 74%;
+}
+.img8 {
+  top: 102%;
+}
+.why-point {
+  margin-left: -2px;
+}
+}
+
+

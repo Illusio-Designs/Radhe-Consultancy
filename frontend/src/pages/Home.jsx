@@ -241,10 +241,11 @@ const Home = () => {
       <button className="get-started-btn">Get Started →</button>
     </div>
   </div>
+        </div> 
         </div>
 
         <div className="lawyer-section">
-<div className="hero-section">
+        <div className="hero-section">
         <div className="lawyer-content">
          <div className="lawyer-left">
          <p>Our Attorneys</p>
@@ -284,6 +285,7 @@ const Home = () => {
         </div>
       </div>
         </div>
+        
 
         <div className="why">
       {/* Left Section: Image with Play Button */}
@@ -343,7 +345,7 @@ const Home = () => {
         <Testimonial />
         <Contact />
         <NewsUpdates />
-      </div>
+     
       <Footer />
     </>
   );
