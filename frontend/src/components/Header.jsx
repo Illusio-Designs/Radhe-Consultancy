@@ -53,6 +53,7 @@ const MenuButton = ({ open, onClick }) => {
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
   const [activePage, setActivePage] = useState('');
 
@@ -66,6 +67,10 @@ const Header = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
   };
 
   const handleLinkClick = () => {
@@ -127,9 +132,17 @@ const Header = () => {
         </nav>
 
         <div className="nav-actions">
-          <button className="search-btn">
-            <HiOutlineMagnifyingGlass />
-          </button>
+          <div className="search-container">
+            <button className="search-btn" onClick={toggleSearch}>
+              <HiOutlineMagnifyingGlass />
+            </button>
+            <div className={`search-bar ${isSearchOpen ? 'show' : ''}`}>
+              <input type="text" placeholder="Search..." />
+              <button className="search-submit">
+                <HiOutlineMagnifyingGlass />
+              </button>
+            </div>
+          </div>
           <button className="consult-btn">
             Free Consultation <HiOutlineArrowRight className="right-arrow" />
           </button>
