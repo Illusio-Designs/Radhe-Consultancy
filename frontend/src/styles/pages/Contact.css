@@ -289,3 +289,10 @@
     margin: 0rem 2rem 2rem;
   }
 } 
+
+@media (max-width: 390px) {
+  .contactpage-container .hero-content {
+    padding: 20% 31.2%;
+  }
+}
+

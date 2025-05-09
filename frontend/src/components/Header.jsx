@@ -1,13 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { HiPhone, HiEnvelope, HiMapPin, HiMagnifyingGlass, HiBars3 } from 'react-icons/hi2';
+import { HiPhone, HiEnvelope, HiMapPin, HiMagnifyingGlass } from 'react-icons/hi2';
 import { HiOutlineArrowSmallDown, HiOutlineArrowRight, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
-import { FaFacebook, FaTwitter, FaYoutube, FaLinkedin } from 'react-icons/fa'; // Updated to use react-icons/fa
+import { FaFacebook, FaTwitter, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 import img from '../assets/@RADHE CONSULTANCY LOGO blue.png';
-import '../styles/components/Header.css'; 
+import '../styles/components/Header.css';
+
+const MenuButton = ({ open, onClick }) => {
+  const styles = {
+    container: {
+      height: '32px',
+      width: '32px',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      cursor: 'pointer',
+      padding: '4px',
+      background: 'none',
+      border: 'none',
+    },
+    line: {
+      height: '2px',
+      width: '20px',
+      background: '#333',
+      transition: 'all 0.2s ease',
+    },
+    lineTop: {
+      transform: open ? 'rotate(45deg)' : 'none',
+      transformOrigin: 'top left',
+      marginBottom: '5px',
+    },
+    lineMiddle: {
+      opacity: open ? 0 : 1,
+      transform: open ? 'translateX(-16px)' : 'none',
+    },
+    lineBottom: {
+      transform: open ? 'translateX(-1px) rotate(-45deg)' : 'none',
+      transformOrigin: 'top left',
+      marginTop: '5px',
+    },
+  };
+
+  return (
+    <button className="menu-btn" style={styles.container} onClick={onClick}>
+      <div style={{ ...styles.line, ...styles.lineTop }} />
+      <div style={{ ...styles.line, ...styles.lineMiddle }} />
+      <div style={{ ...styles.line, ...styles.lineBottom }} />
+    </button>
+  );
+};
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const [activePage, setActivePage] = useState('');
 
@@ -17,6 +62,14 @@ const Header = () => {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -34,8 +87,7 @@ const Header = () => {
           </div>
           <div className="top-bar-item">
             <HiMapPin className="icon" />
-            <span>1215 - 1216, RK Empire, Nr. Mavdi Circle, 150 feet Ring Road, Rajkot.
-            </span>
+            <span>1215 - 1216, RK Empire, Nr. Mavdi Circle, 150 feet Ring Road, Rajkot.</span>
           </div>
         </div>
         <div className="top-bar-right">
@@ -48,17 +100,15 @@ const Header = () => {
 
       {/* Main Navbar */}
       <div className="navbar">
-        {/* Logo */}
         <div className="logo" onClick={() => window.location.href = '/home'}>
           <img src={img} alt="Radhe Consultancy" />
         </div>
 
-        {/* Menu */}
-        <nav className="nav-links">
-          <div className={`nav-item ${activePage === '/home' ? 'active' : ''}`}>
+        <nav className={`nav-links ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+          <div className={`nav-item ${activePage === '/home' ? 'active' : ''}`} onClick={handleLinkClick}>
             <a href="/home">Home</a>
           </div>
-          <div className={`nav-item ${activePage === '/about' ? 'active' : ''}`}>
+          <div className={`nav-item ${activePage === '/about' ? 'active' : ''}`} onClick={handleLinkClick}>
             <a href="/about">About Us</a>
           </div>
           <div className={`nav-item ${activePage === '/insurance' || activePage === '/compliance' ? 'active' : ''}`} onClick={toggleDropdown}>
@@ -68,15 +118,14 @@ const Header = () => {
               <a href="/compliance">Compliance & Licensing</a>
             </div>
           </div>
-          <div className={`nav-item ${activePage === '/blog' || activePage === '/bloginner' ? 'active' : ''}`}>
+          <div className={`nav-item ${activePage === '/blog' || activePage === '/bloginner' ? 'active' : ''}`} onClick={handleLinkClick}>
             <a href="/blog">Blog</a>
           </div>
-          <div className={`nav-item ${activePage === '/contact' ? 'active' : ''}`}>
+          <div className={`nav-item ${activePage === '/contact' ? 'active' : ''}`} onClick={handleLinkClick}>
             <a href="/contact">Contact</a>
           </div>
         </nav>
 
-        {/* Right side buttons */}
         <div className="nav-actions">
           <button className="search-btn">
             <HiOutlineMagnifyingGlass />
@@ -84,9 +133,7 @@ const Header = () => {
           <button className="consult-btn">
             Free Consultation <HiOutlineArrowRight className="right-arrow" />
           </button>
-          <button className="menu-btn">
-            <HiBars3 />
-          </button>
+          <MenuButton open={isMobileMenuOpen} onClick={toggleMobileMenu} />
         </div>
       </div>
     </header>

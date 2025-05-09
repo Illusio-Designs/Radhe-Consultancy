@@ -1,3 +1,31 @@
+/* Add these keyframes at the top of the file */
+@keyframes appear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateX(-2%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes shrink {
+  0% {
+    width: 95%;
+  }
+  100% {
+    width: 90%;
+  }
+}
+
 /* Top blue bar */
 .top-bar {
   background-color: #1f4f9c;
@@ -176,17 +204,7 @@
 }
 
 .menu-btn {
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  padding: 5px 5px 0;
-  cursor: pointer;
   display: none;
-}
-
-.menu-btn svg {
-  font-size: 20px;
-  stroke-width: 2;
 }
 
 @media (max-width: 1024px) {
@@ -202,7 +220,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .top-bar {
     font-size: 10px;
     padding: 10px 10px 10px 5%;
@@ -210,15 +228,77 @@
   .top-bar .social-icon {
     display: none;
   }
-  .menu-btn {
-    display: block;
-  }
   .navbar {
     top: 33px;
   }
   .nav-links {
     display: none;
+    position: fixed;
+    top: 110px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    gap: 0px;
+    height: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    margin-left: 0;
   }
+
+  .nav-links.mobile-menu-open {
+    display: flex;
+    height: auto;
+    opacity: 1;
+    visibility: visible;
+    margin: 0 5%;
+    border-radius: 20px;
+    padding: 0px;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    width: 100%;
+    padding: 10px 0;
+    opacity: 0;
+    animation: 1s appear forwards;
+    animation-delay: calc(var(--index) * 0.1s);
+  }
+
+  .nav-links.mobile-menu-open .nav-item {
+    opacity: 1;
+    animation: 0.5s slideIn forwards;
+    animation-delay: calc(var(--index) * 0.1s);
+  }
+
+  .nav-item::after {
+    content: "";
+    display: block;
+    height: 1px;
+    margin: 0 auto;
+    animation: 0.5s shrink forwards;
+    animation-delay: calc(var(--index) * 0.1s);
+  }
+
+  .nav-item .dropdown-content {
+    position: static;
+    box-shadow: none;
+    width: 100%;
+    margin-top: 10px;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item:hover .dropdown-content,
+  .dropdown-content.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
   .logo {
     width: 12%;
   }
@@ -233,6 +313,9 @@
   .right-arrow {
     font-size: 14px;
   }
+  .menu-btn {
+    display: block !important;
+  }
 }
 
 @media (max-width: 426px) {
@@ -241,6 +324,9 @@
   }
   .navbar {
     top: 0px;
+  }
+  .nav-links {
+    top: 70px;
   }
   .logo {
     width: 20%;
@@ -255,5 +341,15 @@
   }
   .right-arrow {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+  .nav-item {
+    font-size: 14px;
+  }
+  .consult-btn {
+    padding: 6px 8px;
+    font-size: 9px;
   }
 }
