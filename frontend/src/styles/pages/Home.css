@@ -380,6 +380,7 @@
 .services-section {
   padding: 0 40px 100px;
   text-align: center;
+  position: relative;
 }
 
 .services-section .services-subtitle {
@@ -400,6 +401,15 @@
   flex-wrap: wrap;
   gap: 30px;
   justify-content: center;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding-bottom: 20px;
+}
+
+.services-section .services-cards::-webkit-scrollbar {
+  display: none;
 }
 
 .services-section .service-card {
@@ -510,6 +520,42 @@
   color: #1f4f9c;
   border: 1px solid #1f4f9c;
 }
+
+.scroll-left-btn,
+.scroll-right-btn {
+  position: absolute;
+  top: 55%;
+  transform: translateY(-50%);
+  background: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f4f9c;
+  transition: all 0.3s ease;
+}
+
+.scroll-left-btn {
+  left: 10px;
+}
+
+.scroll-right-btn {
+  right: 10px;
+}
+
+.scroll-left-btn:hover,
+.scroll-right-btn:hover {
+  background: #1f4f9c;
+  color: white;
+}
+
+
 
 .lawyer-section .hero-section {
   background-image: url("../../assets/289b0237f84d4c71ddb954980d4f9e9fefe36880.jpg");
@@ -1163,6 +1209,67 @@
 .why-point {
   margin-left: -2px;
 }
+}
+
+@media (max-width: 500px) {
+  .services-section {
+    padding: 0 20px;
+  }
+
+  .services-section .services-title {
+    font-size: 24px;
+    margin-bottom: 30px;
+  }
+
+  .services-section .services-cards {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 0 10px;
+    justify-content: flex-start;
+  }
+
+  .services-section .service-card {
+    min-width: 300px;
+    min-height: 400px;
+    padding: 15px;
+  }
+
+  .services-section .service-card h3 {
+    font-size: 20px;
+    height: 50px;
+  }
+
+  .services-section .service-card ul {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+
+  .services-section .service-card ul li {
+    font-size: 14px;
+  }
+
+  .services-section .service-card.dark {
+    transform: none;
+  }
+
+  .services-section .get-started-btn {
+    font-size: 12px;
+    padding: 6px 15px;
+    max-width: 150px;
+    bottom: 20px;
+  }
+
+  .scroll-left-btn,
+  .scroll-right-btn {
+    width: 35px;
+    height: 35px;
+  }
+
+  .scroll-left-btn svg,
+  .scroll-right-btn svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 

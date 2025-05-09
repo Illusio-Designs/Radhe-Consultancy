@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import Workingwith from '../components/Workingwith';
 import Casestudy from '../components/Casestudy';
@@ -18,12 +18,16 @@ import img9 from "../assets/process-1.jpg.png";
 import img10 from "../assets/process-1-shape.png.png";
 import img11 from "../assets/hero-1-title-1.png.png";
 import img12 from "../assets/hero_1_2.png.png";
-import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "../styles/pages/Home.css"
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const scrollContainerRef = useRef(null);
 
   // Dynamic slider data
   const sliderData = [
@@ -72,6 +76,17 @@ const Home = () => {
     return () => clearInterval(timer);
   }, [currentSlide]);
 
+  useEffect(() => {
+    const checkWidth = () => {
+      setIsMobile(window.innerWidth < 500);
+      checkScrollPosition();
+    };
+    
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
   // Navigation functions
   const nextSlide = () => {
     if (currentSlide === sliderData.length - 1) {
@@ -84,6 +99,30 @@ const Home = () => {
       }, 50);
     } else {
       setCurrentSlide(prev => prev + 1);
+    }
+  };
+
+  const checkScrollPosition = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    setShowLeftArrow(container.scrollLeft > 0);
+    setShowRightArrow(
+      container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+    );
+  };
+
+  const scrollLeft = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.scrollBy({ left: -container.offsetWidth, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
     }
   };
 
@@ -199,49 +238,67 @@ const Home = () => {
         </div>
 
         <div className="services-section">
-  <p className="services-subtitle">What We Do</p>
-  <h2 className="services-title">Legal Services We Offer</h2>
-  <div className="services-cards">
-    <div className="service-card light">
-      <h3>Compliance & Licensing</h3>
-      <ul>
-        <li>Factory Act License</li>
-        <li>Digital Signature</li>
-        <li>ESIC Registration</li>
-        <li>Contract Labour Act</li>
-        <li>Provident Fund Act</li>
-        <li>Bombay Shop & Establishment Act</li>
-        <li>Professional Tax</li>
-        <li>Gratuity Act</li>
-        <li>Bonus Act</li>
-        <li>Employee's Compensation Act</li>
-      </ul>
-      <button className="get-started-btn">Get Started →</button>
-    </div>
+          <p className="services-subtitle">What We Do</p>
+          <h2 className="services-title">Legal Services We Offer</h2>
+          <div className="services-cards" ref={scrollContainerRef} onScroll={checkScrollPosition}>
+            <div className="service-card light">
+              <h3>Compliance & Licensing</h3>
+              <ul>
+                <li>Factory Act License</li>
+                <li>Digital Signature</li>
+                <li>ESIC Registration</li>
+                <li>Contract Labour Act</li>
+                <li>Provident Fund Act</li>
+                <li>Bombay Shop & Establishment Act</li>
+                <li>Professional Tax</li>
+                <li>Gratuity Act</li>
+                <li>Bonus Act</li>
+                <li>Employee's Compensation Act</li>
+              </ul>
+              <button className="get-started-btn">Get Started →</button>
+            </div>
 
-    <div className="service-card dark">
-      <h3>Insurance</h3>
-      <ul>
-        <li>Motor & Vehicle</li>
-        <li>Health Insurance</li>
-        <li>Marine Ins</li>
-        <li>Fire Ins</li>
-        <li>Employee's Compensation Policy</li>
-      </ul>
-      <button className="get-started-btn">Get Started →</button>
-    </div>
+            <div className="service-card dark">
+              <h3>Insurance</h3>
+              <ul>
+                <li>Motor & Vehicle</li>
+                <li>Health Insurance</li>
+                <li>Marine Ins</li>
+                <li>Fire Ins</li>
+                <li>Employee's Compensation Policy</li>
+              </ul>
+              <button className="get-started-btn">Get Started →</button>
+            </div>
 
-    <div className="service-card light">
-      <h3>Additional Services</h3>
-      <ul>
-        <li>Motor & Vehicle</li>
-        <li>Health Insurance</li>
-        <li>Marine Ins</li>
-      </ul>
-      <button className="get-started-btn">Get Started →</button>
-    </div>
-  </div>
-        </div> 
+            <div className="service-card light">
+              <h3>Additional Services</h3>
+              <ul>
+                <li>Motor & Vehicle</li>
+                <li>Health Insurance</li>
+                <li>Marine Ins</li>
+              </ul>
+              <button className="get-started-btn">Get Started →</button>
+            </div>
+          </div>
+          {isMobile && showLeftArrow && (
+            <button 
+              onClick={scrollLeft} 
+              className="scroll-left-btn"
+              aria-label="Scroll left"
+            >
+              <FaChevronLeft />
+            </button>
+          )}
+          {isMobile && showRightArrow && (
+            <button 
+              onClick={scrollRight} 
+              className="scroll-right-btn"
+              aria-label="Scroll right"
+            >
+              <FaChevronRight />
+            </button>
+          )}
+        </div>
         </div>
 
         <div className="lawyer-section">
