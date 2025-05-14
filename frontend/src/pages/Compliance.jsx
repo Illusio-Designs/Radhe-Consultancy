@@ -23,6 +23,10 @@ import right from "../assets/blog-1-shape-right.png.png";
 import '../styles/pages/Compliance.css';
 
 const Compliance = () => {
+  const handleContactClick = () => {
+    window.location.href = '/contact';
+  };
+
   const complianceServices = [
     {
       title: "Factory Act License",
@@ -99,7 +103,7 @@ const Compliance = () => {
                 <p>{service.description}</p>
               </div>
               <div className="overlay">
-                <span className="overlay-text">Contact Now <HiOutlineArrowRight className="right-arrow" /></span>
+                <span className="overlay-text" onClick={handleContactClick}>Contact Now →</span>
               </div>
             </div>
           ))}

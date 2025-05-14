@@ -401,7 +401,7 @@
   flex-wrap: wrap;
   gap: 30px;
   justify-content: center;
-  overflow-x: auto;
+  overflow-x: clip;
   scroll-behavior: smooth;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -1222,8 +1222,9 @@
   }
 
   .services-section .services-cards {
+    overflow-x: auto;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 10px;
     padding: 0 10px;
     justify-content: flex-start;
   }

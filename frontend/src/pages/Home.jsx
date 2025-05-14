@@ -29,6 +29,14 @@ const Home = () => {
   const [showRightArrow, setShowRightArrow] = useState(true);
   const scrollContainerRef = useRef(null);
 
+  const handleContactClick = () => {
+    window.location.href = '/contact';
+  };
+
+  const handleAboutClick = () => {
+    window.location.href = '/about';
+  };
+
   // Dynamic slider data
   const sliderData = [
     {
@@ -153,7 +161,7 @@ const Home = () => {
                           </div>
                         </div>
                       </div>
-                      <button className="contact-btn">Contact Us →</button>
+                      <button className="contact-btn" onClick={handleContactClick}>Contact Us →</button>
                     </div>
                     <div className="hero-image">
                       <img src={slide.image} alt="Legal services illustration" />
@@ -201,7 +209,7 @@ const Home = () => {
     <p className="about-description">
     With years of experience, we provide expert legal services across various domains. Our mission is to offer strategic, client-focused legal solutions that protect your rights and interests.
     </p>
-    <button className="more-about-btn">More About →</button>
+    <button className="more-about-btn" onClick={handleAboutClick}>More About →</button>
   </div>
   </div>
         </div>

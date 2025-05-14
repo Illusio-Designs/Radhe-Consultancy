@@ -8,6 +8,10 @@ import { HiOutlineArrowRight } from 'react-icons/hi2';
 import '../styles/pages/Insurance.css';
 
 const Insurance = () => {
+  const handleContactClick = () => {
+    window.location.href = '/contact';
+  };
+
   return (
     <>
       <Header />
@@ -28,9 +32,8 @@ const Insurance = () => {
               <h3>Motor & Vehicle Insurance Claims</h3>
               <p>Expert assistance for motor vehicle insurance claims and settlements.</p>
             </div>
-            <div className="overlay">
-              
-              <span className="overlay-text">Contact Now <HiOutlineArrowRight className="right-arrow" /></span>
+            <div className="overlay" >
+            <span className="overlay-text" onClick={handleContactClick}>Contact Now →</span>
             </div>
           </div>
           
@@ -42,9 +45,8 @@ const Insurance = () => {
               <h3>Health Insurance Legal Assistance</h3>
               <p>We help resolve medical claim disputes and insurance settlement concerns.</p>
             </div>
-            <div className="overlay">
-              
-              <span className="overlay-text">Contact Now <HiOutlineArrowRight className="right-arrow" /></span>
+            <div className="overlay" >
+            <span className="overlay-text" onClick={handleContactClick}>Contact Now →</span>
             </div>
           </div>
 
@@ -56,9 +58,8 @@ const Insurance = () => {
               <h3>Marine Insurance Claims</h3>
               <p>Covering cargo damage, ship-to-shore, and marine liability issues.</p>
             </div>
-            <div className="overlay">
-              
-              <span className="overlay-text">Contact Now <HiOutlineArrowRight className="right-arrow" /></span>
+            <div className="overlay" >
+            <span className="overlay-text" onClick={handleContactClick}>Contact Now →</span>
             </div>
           </div>
 
@@ -71,8 +72,7 @@ const Insurance = () => {
               <p>Assistance in property damage claims and insurance service.</p>
             </div>
             <div className="overlay">
-              
-              <span className="overlay-text">Contact Now <HiOutlineArrowRight className="right-arrow" /></span>
+            <span className="overlay-text" onClick={handleContactClick}>Contact Now →</span>
             </div>
           </div>
 
@@ -84,9 +84,8 @@ const Insurance = () => {
               <h3>Employee Compensation Policy</h3>
               <p>Helping employees deal with injury benefits compensation settlements.</p>
             </div>
-            <div className="overlay">
-              
-              <span className="overlay-text">Contact Now <HiOutlineArrowRight className="right-arrow" /></span>
+            <div className="overlay" >
+            <span className="overlay-text" onClick={handleContactClick}>Contact Now →</span>
             </div>
           </div>
         </div>

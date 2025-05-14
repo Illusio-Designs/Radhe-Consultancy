@@ -13,6 +13,10 @@ import avatar2 from '../assets/Ellipse 2606.png';
 import group from '../assets/Group 9.png';
 
 const About = () => {
+  const handleContactClick = () => {
+    window.location.href = '/contact';
+  };
+
   return (
     <>
       <Header />
@@ -52,7 +56,7 @@ const About = () => {
     <p className="about-story-highlight">
       We Provide Best Consultancy services Since 2016 for business.
     </p>
-    <button className="about-contact-btn">Contact Now →</button>
+    <button className="about-contact-btn" onClick={handleContactClick}>Contact Now →</button>
   </div>
 </div>
 
@@ -82,7 +86,7 @@ const About = () => {
 <div className="help">
   <h1>We Help You With Quality Legal Lawyer</h1>
   <p>Lorem ipsum dolor sit amet consectetur. Commodo pulvinar molestie pellentesque urna libero velit porta. Velit pellentesque hac gravida pellentesque est semper. Duis lectus gravida ultricies eleifend in pharetra faucibus orci sem. </p>
-  <div className="help-btn">Contact Now →</div>
+  <div className="help-btn" onClick={handleContactClick}>Contact Now →</div>
 </div>
 
 
