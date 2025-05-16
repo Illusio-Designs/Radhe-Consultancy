@@ -3,7 +3,6 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 const sequelize = require('./config/db');
-const { corsOptions } = require('./config/cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { User, Role, Permission, RolePermission } = require('./models');
@@ -184,26 +183,24 @@ async function setupRolesAndPermissions() {
   }
 }
 
-// Trust proxy for LiteSpeed
-app.set('trust proxy', true);
+// Enable CORS for your frontend
+app.use(cors({
+  origin: 'http://localhost:3001',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+}));
 
-// Enable CORS with proper error handling
+// Optional: Add manual CORS headers (for custom setups)
 app.use((req, res, next) => {
-  cors(corsOptions)(req, res, (err) => {
-    if (err) {
-      console.error('CORS Error:', err);
-      res.status(403).json({
-        error: 'CORS Error',
-        message: err.message
-      });
-      return;
-    }
-    next();
-  });
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  next();
 });
 
-// Explicit preflight handling for all routes
-app.options('*', cors(corsOptions));
+// Trust proxy for LiteSpeed
+app.set('trust proxy', true);
 
 // Security middleware with CORS-friendly settings
 app.use(helmet({
@@ -329,11 +326,28 @@ const startServer = async () => {
     console.log(`Environment: ${process.env.NODE_ENV}`);
     console.log(`Port: ${PORT}`);
     
+    // Test database connection
     await sequelize.authenticate();
     console.log('Database connection established');
 
+    // Sync database models
+    console.log('Syncing database models...');
+    try {
+      await sequelize.sync({ alter: true });
+      console.log('Database models synced successfully');
+    } catch (syncError) {
+      console.error('Error syncing database models:', syncError);
+      throw syncError;
+    }
+
     // Setup roles and permissions
-    await setupRolesAndPermissions();
+    try {
+      await setupRolesAndPermissions();
+      console.log('Roles and permissions setup completed');
+    } catch (setupError) {
+      console.error('Error setting up roles and permissions:', setupError);
+      throw setupError;
+    }
     
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);

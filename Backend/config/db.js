@@ -1,61 +1,91 @@
+const path = require('path');
+const fs = require('fs');
 const { Sequelize } = require('sequelize');
 
-// Database configuration
-const DB_HOST = 'localhost';
-const DB_USER = 'root';
-const DB_PASSWORD = '';
-const DB_NAME = 'radhe_consultancy_crm';
-const DB_PORT = 3306;
-const DB_DIALECT = 'mysql';
+// Load .env file manually
+const envPath = path.resolve(__dirname, '../.env');
+console.log('Loading .env file from:', envPath);
 
-console.log('\n=== Database Configuration ===');
-console.log('Host:', DB_HOST);
-console.log('Database:', DB_NAME);
-console.log('User:', DB_USER);
-console.log('Port:', DB_PORT);
-console.log('Dialect:', DB_DIALECT);
-console.log('============================\n');
+try {
+  // Read file as UTF-16
+  const envFile = fs.readFileSync(envPath, 'utf16le');
+  console.log('Successfully read .env file');
+  
+  // Parse .env file manually
+  const envConfig = {};
+  envFile.split('\n').forEach(line => {
+    // Skip comments and empty lines
+    if (line.trim() && !line.trim().startsWith('#')) {
+      const [key, value] = line.split('=').map(part => part.trim());
+      if (key && value) {
+        // Remove any BOM or special characters
+        const cleanKey = key.replace(/[\uFEFF\u200B]/g, '');
+        const cleanValue = value.replace(/[\uFEFF\u200B]/g, '');
+        envConfig[cleanKey] = cleanValue;
+        process.env[cleanKey] = cleanValue;
+      }
+    }
+  });
 
-// Create Sequelize instance
-const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
-  host: DB_HOST,
-  port: DB_PORT,
-  dialect: DB_DIALECT,
-  logging: console.log, // Enable SQL query logging
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  dialectOptions: {
-    // This allows zeros in date fields, which can help with the '0000-00-00' issue
-    dateStrings: true,
-    typeCast: true,
-  },
-  define: {
-    // Global model options
-    timestamps: true, // Default to include timestamps
-    underscored: true, // Use snake_case for auto-generated fields
-    freezeTableName: false, // Don't pluralize table names
-    charset: 'utf8mb4',
-    collate: 'utf8mb4_general_ci'
-  },
-  timezone: '+05:30' // Adjust to your timezone
+  console.log('Parsed environment variables:', envConfig);
+} catch (error) {
+  console.error('Error reading .env file:', error);
+  throw new Error('Failed to read .env file');
+}
+
+// Debug: Log specific database variables
+console.log('Database variables:', {
+  DB_HOST: process.env.DB_HOST,
+  DB_USER: process.env.DB_USER,
+  DB_PASSWORD: process.env.DB_PASSWORD,
+  DB_NAME: process.env.DB_NAME,
+  DB_PORT: process.env.DB_PORT,
+  DB_DIALECT: process.env.DB_DIALECT
 });
 
-// Test the connection
+// Create Sequelize instance
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: process.env.DB_DIALECT,
+    logging: console.log,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 60000,
+      idle: 10000,
+    },
+    dialectOptions: {
+      dateStrings: true,
+      typeCast: true,
+      connectTimeout: 60000,
+    },
+    define: {
+      timestamps: true,
+      underscored: true,
+      freezeTableName: false,
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_general_ci',
+    },
+    timezone: '+05:30',
+  }
+);
+
+// Test connection
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
+    console.log('✅ Database connection has been established successfully.');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('❌ Unable to connect to the database:', error);
     process.exit(1);
   }
 };
 
-// Test connection on startup
 testConnection();
 
 module.exports = sequelize;

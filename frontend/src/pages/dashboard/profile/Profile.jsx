@@ -51,8 +51,8 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
   const userType = localStorage.getItem("userType");
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-  const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4000';
+  const API_URL = import.meta.env.VITE_API_URL;
+  const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '');
 
   // Function to convert image URL to data URL
   const getImageAsDataUrl = async (imageUrl) => {

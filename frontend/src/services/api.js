@@ -1,10 +1,7 @@
 import axios from 'axios';
 
 // Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.MODE === 'development' 
-    ? 'http://localhost:5000/api' 
-    : 'https://api.radheconsultancy.co.in/api');
+const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
   console.error('VITE_API_URL environment variable is not set');
