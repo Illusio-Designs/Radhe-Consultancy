@@ -15,6 +15,7 @@ const Permission = sequelize.define('Permission', {
 }, {
   tableName: 'Permissions',
   timestamps: false, // Assuming you don't need createdAt/updatedAt for this table
+  modelName: 'Permission'
 });
 
 module.exports = Permission;

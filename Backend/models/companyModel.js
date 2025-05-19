@@ -94,10 +94,11 @@ const Company = sequelize.define('Company', {
     }
   }
 }, {
-  tableName: 'companies',
+  tableName: 'Companies',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  modelName: 'Company'
 });
 
 module.exports = Company;

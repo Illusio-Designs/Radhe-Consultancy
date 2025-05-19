@@ -40,10 +40,11 @@ const Consumer = sequelize.define('Consumer', {
     allowNull: false
   }
 }, {
-  tableName: 'consumers',
+  tableName: 'Consumers',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  modelName: 'Consumer'
 });
 
 module.exports = Consumer;

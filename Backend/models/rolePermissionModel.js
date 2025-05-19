@@ -23,6 +23,7 @@ const RolePermission = sequelize.define('RolePermission', {
 }, {
   tableName: 'RolePermissions',
   timestamps: false,
+  modelName: 'RolePermission'
 });
 
 // Define associations

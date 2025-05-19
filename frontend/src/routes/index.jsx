@@ -127,6 +127,15 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  // Exclude health check endpoint from frontend routing
+  {
+    path: "/health",
+    element: null,
+  },
+  {
+    path: "/api/health",
+    element: null,
+  }
 ]);
 
 export { router };

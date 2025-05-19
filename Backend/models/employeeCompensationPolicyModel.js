@@ -86,10 +86,11 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     defaultValue: 'active'
   }
 }, {
-  tableName: 'employee_compensation_policies',
+  tableName: 'EmployeeCompensationPolicies',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  modelName: 'EmployeeCompensationPolicy',
   indexes: [
     {
       unique: true,

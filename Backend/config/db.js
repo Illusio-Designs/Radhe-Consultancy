@@ -37,43 +37,56 @@ try {
 console.log('Database variables:', {
   DB_HOST: process.env.DB_HOST,
   DB_USER: process.env.DB_USER,
-  DB_PASSWORD: process.env.DB_PASSWORD,
+  DB_PASSWORD: process.env.DB_PASSWORD ? '****' : '(empty)',
   DB_NAME: process.env.DB_NAME,
   DB_PORT: process.env.DB_PORT,
   DB_DIALECT: process.env.DB_DIALECT
 });
 
-// Create Sequelize instance
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    dialect: process.env.DB_DIALECT,
-    logging: console.log,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 60000,
-      idle: 10000,
-    },
-    dialectOptions: {
-      dateStrings: true,
-      typeCast: true,
-      connectTimeout: 60000,
-    },
-    define: {
-      timestamps: true,
-      underscored: true,
-      freezeTableName: false,
-      charset: 'utf8mb4',
-      collate: 'utf8mb4_general_ci',
-    },
-    timezone: '+05:30',
-  }
-);
+// Validate required database configuration
+const requiredConfig = ['DB_HOST', 'DB_USER', 'DB_NAME', 'DB_PORT', 'DB_DIALECT'];
+const missingConfig = requiredConfig.filter(key => !process.env[key]);
+
+if (missingConfig.length > 0) {
+  throw new Error(`Missing required database configuration: ${missingConfig.join(', ')}`);
+}
+
+// Create Sequelize instance with explicit configuration
+const dbConfig = {
+  database: process.env.DB_NAME,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD || null, // Explicitly set to null if empty
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  dialect: process.env.DB_DIALECT,
+  logging: console.log,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 60000,
+    idle: 10000,
+  },
+  dialectOptions: {
+    dateStrings: true,
+    typeCast: true,
+    connectTimeout: 60000,
+  },
+  define: {
+    timestamps: true,
+    underscored: true,
+    freezeTableName: false,
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci',
+  },
+  timezone: '+05:30',
+};
+
+console.log('Database configuration:', {
+  ...dbConfig,
+  password: dbConfig.password ? '****' : '(empty)'
+});
+
+const sequelize = new Sequelize(dbConfig);
 
 // Test connection
 const testConnection = async () => {
@@ -82,6 +95,22 @@ const testConnection = async () => {
     console.log('✅ Database connection has been established successfully.');
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
+    if (error.original && error.original.code === 'ER_ACCESS_DENIED_ERROR') {
+      console.error('\nPossible solutions:');
+      console.error('1. Check if the database password is correct in your .env file');
+      console.error('2. If using root without password, make sure MySQL is configured to allow it');
+      console.error('3. Create a new MySQL user with proper permissions');
+      
+      // Additional MySQL-specific instructions
+      console.error('\nTo allow root access without password, run these MySQL commands:');
+      console.error('ALTER USER \'root\'@\'localhost\' IDENTIFIED WITH mysql_native_password BY \'\';');
+      console.error('FLUSH PRIVILEGES;');
+      
+      console.error('\nOr create a new user with proper permissions:');
+      console.error('CREATE USER \'radhe_user\'@\'localhost\' IDENTIFIED BY \'your_password\';');
+      console.error('GRANT ALL PRIVILEGES ON radhe_consultancy_crm.* TO \'radhe_user\'@\'localhost\';');
+      console.error('FLUSH PRIVILEGES;');
+    }
     process.exit(1);
   }
 };

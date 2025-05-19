@@ -1,11 +1,12 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
-// This script syncs tables, seeds roles/permissions, assigns permissions, sets admin password, and checks admin user.
+// This script handles database setup, roles/permissions setup, and admin user setup
 
 const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy } = require('../models');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
+// Role definitions
 const roles = [
   { role_name: 'Admin', description: 'Full system access' },
   { role_name: 'User', description: 'Basic user access' },
@@ -18,6 +19,7 @@ const roles = [
   { role_name: 'DSC_manager', description: 'Digital Signature Certificate management access' }
 ];
 
+// Permission definitions
 const permissions = [
   // User Management
   { permission_name: 'view_users' },
@@ -53,6 +55,7 @@ const permissions = [
   { permission_name: 'delete_policy' }
 ];
 
+// Role-Permission mappings
 const rolePermissions = {
   'Admin': permissions.map(p => p.permission_name), // All permissions
   'User': [ 'access_dashboard' ],
@@ -102,7 +105,11 @@ const rolePermissions = {
   ]
 };
 
-async function setupAll() {
+/**
+ * Sets up the database structure and required directories
+ * @returns {Promise<boolean>} Success status
+ */
+async function setupDatabase() {
   try {
     console.log('Starting database setup...');
     await sequelize.authenticate();
@@ -124,7 +131,6 @@ async function setupAll() {
     
     // Special handling for InsuranceCompany
     try {
-      // First, remove any existing unique constraints
       await sequelize.query(`
         ALTER TABLE InsuranceCompanies 
         DROP INDEX name
@@ -141,9 +147,8 @@ async function setupAll() {
 
     // Special handling for EmployeeCompensationPolicy
     try {
-      // Drop possible duplicate indexes/foreign keys (adjust names if needed)
       await sequelize.query(`
-        ALTER TABLE employee_compensation_policies
+        ALTER TABLE EmployeeCompensationPolicies
         DROP INDEX IF EXISTS policy_number,
         DROP INDEX IF EXISTS insurance_company_id,
         DROP INDEX IF EXISTS company_id,
@@ -152,14 +157,14 @@ async function setupAll() {
         DROP FOREIGN KEY IF EXISTS fk_insurance_company,
         DROP FOREIGN KEY IF EXISTS fk_company
       `).catch(() => {}); // Ignore errors if constraints don't exist
-      // Sync the model (will only alter, not drop data)
+      
       await EmployeeCompensationPolicy.sync({ 
         alter: true,
         logging: false
       });
-      // Add foreign key constraints after table is created (if not already present)
+      
       await sequelize.query(`
-        ALTER TABLE employee_compensation_policies
+        ALTER TABLE EmployeeCompensationPolicies
         ADD CONSTRAINT IF NOT EXISTS fk_insurance_company
         FOREIGN KEY (insurance_company_id)
         REFERENCES InsuranceCompanies(id)
@@ -167,7 +172,7 @@ async function setupAll() {
         ON UPDATE CASCADE,
         ADD CONSTRAINT IF NOT EXISTS fk_company
         FOREIGN KEY (company_id)
-        REFERENCES companies(company_id)
+        REFERENCES Companies(company_id)
         ON DELETE NO ACTION
         ON UPDATE CASCADE
       `).catch(() => {}); // Ignore if already exists
@@ -177,53 +182,69 @@ async function setupAll() {
     }
     
     console.log('All tables synced');
+    return true;
+  } catch (error) {
+    console.error('Error during database setup:', error.message);
+    return false;
+  }
+}
 
-    // Seed roles
+/**
+ * Sets up roles and permissions in the database
+ * @returns {Promise<boolean>} Success status
+ */
+async function setupRolesAndPermissions() {
+  try {
+    console.log('Setting up roles and permissions...');
+    
+    // Update existing roles to capitalized format
+    const existingRoles = await Role.findAll();
+    for (const role of existingRoles) {
+      const capitalizedRole = role.role_name.charAt(0).toUpperCase() + role.role_name.slice(1);
+      if (capitalizedRole !== role.role_name) {
+        await role.update({ role_name: capitalizedRole });
+        console.log(`Updated role name from ${role.role_name} to ${capitalizedRole}`);
+      }
+    }
+    
+    // Create roles
     for (const role of roles) {
       await Role.findOrCreate({ where: { role_name: role.role_name }, defaults: role });
     }
-    console.log('Default roles created');
+    console.log('Roles setup completed');
 
-    // Seed permissions
+    // Create permissions
     for (const permission of permissions) {
-      await Permission.findOrCreate({ where: { permission_name: permission.permission_name }, defaults: permission });
+      await Permission.findOrCreate({ 
+        where: { permission_name: permission.permission_name }, 
+        defaults: permission 
+      });
     }
-    console.log('Default permissions created');
+    console.log('Permissions setup completed');
 
     // Assign permissions to roles
     for (const [roleName, permissionNames] of Object.entries(rolePermissions)) {
       const role = await Role.findOne({ where: { role_name: roleName } });
       const perms = await Permission.findAll({ where: { permission_name: permissionNames } });
+      
       for (const perm of perms) {
-        await RolePermission.findOrCreate({ where: { role_id: role.id, permission_id: perm.id } });
+        await RolePermission.findOrCreate({ 
+          where: { role_id: role.id, permission_id: perm.id } 
+        });
       }
     }
-    console.log('Role-permission assignments created');
-
-    // Create or update default admin user
-    await setupAdminUser();
-
-    // Verify admin user
-    const adminUser = await User.findOne({ 
-      where: { email: 'Admin@radheconsultancy.co.in' }, 
-      include: [{ model: Role, attributes: ['role_name'] }] 
-    });
-    
-    if (adminUser) {
-      const isValid = await adminUser.validatePassword('Admin@123');
-      console.log('Admin user verified:', isValid ? 'Password valid' : 'Password invalid');
-    }
-
-    console.log('Database setup completed successfully');
-    await sequelize.close();
-    process.exit(0);
+    console.log('Role-permission assignments completed');
+    return true;
   } catch (error) {
-    console.error('Error during database setup:', error.message);
-    await sequelize.close();
-    process.exit(1);
+    console.error('Error setting up roles and permissions:', error.message);
+    return false;
   }
 }
 
+/**
+ * Sets up the admin user in the database
+ * @returns {Promise<boolean>} Success status
+ */
 async function setupAdminUser() {
   try {
     console.log('Setting up admin user...');
@@ -253,12 +274,56 @@ async function setupAdminUser() {
     }
 
     console.log('Admin user setup completed');
+    return true;
   } catch (error) {
     console.error('Error setting up admin user:', error.message);
-    throw error;
+    return false;
   }
 }
 
+/**
+ * Runs all setup functions in sequence
+ * @returns {Promise<void>}
+ */
+async function setupAll() {
+  try {
+    // First setup database structure
+    const dbSetup = await setupDatabase();
+    if (!dbSetup) {
+      throw new Error('Database setup failed');
+    }
+
+    // Then setup roles and permissions
+    const rolesSetup = await setupRolesAndPermissions();
+    if (!rolesSetup) {
+      throw new Error('Roles and permissions setup failed');
+    }
+
+    // Finally setup admin user
+    const adminSetup = await setupAdminUser();
+    if (!adminSetup) {
+      throw new Error('Admin user setup failed');
+    }
+
+    console.log('All setup completed successfully');
+    await sequelize.close();
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during setup:', error.message);
+    await sequelize.close();
+    process.exit(1);
+  }
+}
+
+// Export individual functions for use in other files
+module.exports = {
+  setupDatabase,
+  setupRolesAndPermissions,
+  setupAdminUser,
+  setupAll
+};
+
+// Run setup if this file is run directly
 if (require.main === module) {
   setupAll();
 } 

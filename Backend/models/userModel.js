@@ -67,7 +67,8 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Users',
-  underscored: true
+  underscored: true,
+  modelName: 'User'
 });
 
 // Hash password before saving
