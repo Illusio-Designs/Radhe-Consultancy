@@ -17,42 +17,62 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Helmet configuration with CSP
+// Disable CSP temporarily
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'", "https://accounts.google.com", "http://localhost:4000", "https://radheconsultancy.co.in"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://cdn.lineicons.com", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://accounts.google.com", "http://localhost:4000", "https://radheconsultancy.co.in", "wss://radheconsultancy.co.in"],
-      frameSrc: ["'self'", "https://accounts.google.com", "https://www.google.com"],
-      imgSrc: ["'self'", "data:", "https://accounts.google.com", "https://*.google.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "https://cdn.lineicons.com", "https://cdn.jsdelivr.net"],
-      workerSrc: ["'self'", "blob:"],
-      mediaSrc: ["'self'", "blob:"],
-      objectSrc: ["'none'"]
-    }
-  },
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-
+    
 // Apply security headers middleware
 app.use(securityHeadersMiddleware);
 
 // CORS configuration
 app.use(cors(corsOptions));
 
+// Add cache control headers
+app.use((req, res, next) => {
+  res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  next();
+});
+
 // Static files setup
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Root path handler
+app.get('/', (req, res) => {
+  res.json({
+    status: 'UP',
+    message: 'Welcome to Radhe Consultancy API',
+    version: '1.0.0',
+    documentation: '/api/docs',
+    health: '/api/health'
+  });
+});
+
+// API root path handler
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'UP',
+    message: 'Radhe Consultancy API is running',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      users: '/api/users',
+      roles: '/api/roles',
+      companies: '/api/companies',
+      consumers: '/api/consumers',
+      adminDashboard: '/api/admin-dashboard',
+      employeeCompensation: '/api/employee-compensation',
+      insuranceCompanies: '/api/insurance-companies'
+    }
+  });
+});
+
 // Health check endpoint
-app.get(['/api/health', '/health'], async (req, res) => {
-  // Set CORS headers explicitly for health check
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+app.get('/api/health', async (req, res) => {
   try {
     const dbStatus = await sequelize.authenticate()
       .then(() => 'UP')
@@ -60,6 +80,7 @@ app.get(['/api/health', '/health'], async (req, res) => {
 
     res.status(200).json({
       status: 'UP',
+      message: 'Server is running',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
       version: '1.0.0',
@@ -75,25 +96,21 @@ app.get(['/api/health', '/health'], async (req, res) => {
   }
 });
 
-// Handle OPTIONS request for health check
-app.options(['/api/health', '/health'], (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  res.sendStatus(204);
+// API request logging middleware
+app.use('/api', (req, res, next) => {
+  console.log(`API Request: ${req.method} ${req.originalUrl}`);
+  next();
 });
 
 // Register routes
 registerRoutes(app);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Route not found',
+    path: req.originalUrl
   });
 });
 
@@ -133,6 +150,6 @@ signals.forEach(signal => {
 });
 
 // Start the server
-startServer();
+  startServer();
 
 module.exports = { app, startServer };

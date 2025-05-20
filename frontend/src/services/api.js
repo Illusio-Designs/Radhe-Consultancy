@@ -1,78 +1,44 @@
 import axios from 'axios';
 
-// Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = 'https://api.radheconsultancy.co.in/api';
 
-if (!API_URL) {
-  console.error('VITE_API_URL environment variable is not set');
-}
-
-console.log('API Service: Initializing with configuration:');
-console.log('- Environment:', import.meta.env.MODE);
-console.log('- API URL:', API_URL);
-
+// Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Accept': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
+    'Content-Type': 'application/json'
   },
-  withCredentials: true,
-  crossDomain: true
+  withCredentials: false,
+  timeout: 30000
 });
+
+// Auth state management
+let isAuthenticating = false;
+let authPromise = null;
 
 // Add request interceptor for auth token
 api.interceptors.request.use(
   (config) => {
+    // Add auth token if exists
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
-// Add request interceptor for CORS and debugging
-api.interceptors.request.use(
-  (config) => {
-    console.log('\n=== API Request Debug Log ===');
-    console.log('Request Details:');
-    console.log('- URL:', config.url);
-    console.log('- Method:', config.method);
-    console.log('- Base URL:', config.baseURL);
-    console.log('- Headers:', JSON.stringify(config.headers, null, 2));
-    console.log('- Environment:', import.meta.env.MODE);
+    // Ensure only allowed headers are sent
+    const allowedHeaders = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': config.headers.Authorization,
+      'X-Requested-With': 'XMLHttpRequest'
+    };
     
-    const token = localStorage.getItem('token');
-    console.log('API Request:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
-      baseURL: config.baseURL,
-      withCredentials: config.withCredentials
-    });
+    config.headers = allowedHeaders;
     
-    if (token) {
-      console.log('Adding Authorization token to request');
-      config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.log('No token found in localStorage');
-    }
-    
-    // Add CORS headers for preflight
-    if (config.method === 'options') {
-      config.headers['Access-Control-Request-Method'] = config.method;
-      config.headers['Access-Control-Request-Headers'] = 'Content-Type, Authorization, X-Requested-With';
-    }
-    
-    console.log('=== End API Request Debug Log ===\n');
     return config;
   },
   (error) => {
-    console.error('API Service: Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -80,44 +46,57 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log('API Service: Successful response from:', {
-      url: response.config.url,
-      status: response.status,
-      headers: response.headers,
-      data: response.data
-    });
     return response;
   },
-  (error) => {
-    console.error('\n=== API Response Error Debug Log ===');
-    console.error('Environment:', import.meta.env.MODE);
-    
-    if (error.response) {
-      console.error('Response Error Details:');
-      console.error('- URL:', error.config.url);
-      console.error('- Status:', error.response.status);
-      console.error('- Headers:', JSON.stringify(error.response.headers, null, 2));
-      console.error('- Data:', error.response.data);
-      
-      if (error.response.status === 401) {
-        console.log('API Service: Unauthorized error (401) for:', error.config.url);
-        // Clear auth data on unauthorized but don't redirect automatically
-        // This prevents redirect loops
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        // Don't redirect automatically - let the component handle it
-        // window.location.href = '/auth/login';
-      } else {
-        console.error('API Service: Error response:', error.response.status, error.config.url);
-      }
-    } else if (error.request) {
-      console.error('API Service: Network Error:', error.request);
-      return Promise.reject({ error: 'Network error. Please check your connection.' });
-    } else {
-      console.error('API Service: Error:', error.message);
-      return Promise.reject({ error: error.message });
+  async (error) => {
+    // Handle network errors
+    if (error.code === 'ERR_NETWORK') {
+      console.error('Network Error:', error);
+      return Promise.reject({
+        message: 'Network connection error. Please check your internet connection.',
+        originalError: error
+      });
     }
-    console.log('=== End API Response Error Debug Log ===\n');
+    
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401 && !isAuthenticating) {
+      isAuthenticating = true;
+      
+      // Create a single auth promise if not exists
+      if (!authPromise) {
+        authPromise = new Promise((resolve) => {
+          // Clear auth data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          
+          // Check if we're not already on the login page
+          if (!window.location.pathname.includes('/auth/login')) {
+            // Use replace to prevent adding to history
+            window.location.replace('/auth/login');
+          }
+          
+          resolve();
+        });
+      }
+      
+      // Wait for auth promise to resolve
+      await authPromise;
+      
+      // Reset auth state
+      isAuthenticating = false;
+      authPromise = null;
+      
+      return Promise.reject(error);
+    }
+    
+    // Log the full error for debugging
+    console.error('API Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      config: error.config
+    });
+    
     return Promise.reject(error);
   }
 );
@@ -126,31 +105,24 @@ api.interceptors.response.use(
 export const authAPI = {
   async login(email, password) {
     try {
-      console.log('API Service: Attempting login for:', email);
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
       
       if (token && user) {
-        console.log('API Service: Login successful, storing token and user data');
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
-      } else {
-        console.error('API Service: Invalid login response - missing token or user');
       }
       
       return { token, user };
     } catch (error) {
-      console.error('API Service: Login error:', error);
       throw error;
     }
   },
 
   async getCurrentUser() {
     try {
-      console.log('API Service: Fetching current user data');
       const response = await api.get('/auth/me');
       const userData = response.data;
-      console.log('API Service: Current user data fetched successfully');
       localStorage.setItem('user', JSON.stringify(userData));
       return userData;
     } catch (error) {

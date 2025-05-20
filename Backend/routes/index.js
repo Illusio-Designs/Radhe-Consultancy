@@ -15,35 +15,35 @@ const insuranceCompanyRoutes = require('./insuranceCompanyRoutes');
 // Route configuration object
 const routes = {
   auth: {
-    path: '/api/auth',
+    path: '/auth',
     router: authRoutes
   },
   users: {
-    path: '/api/users',
+    path: '/users',
     router: userRoutes
   },
   roles: {
-    path: '/api/roles',
+    path: '/roles',
     router: roleRoutes
   },
   companies: {
-    path: '/api/companies',
+    path: '/companies',
     router: companyRoutes
   },
   consumers: {
-    path: '/api/consumers',
+    path: '/consumers',
     router: consumerRoutes
   },
   adminDashboard: {
-    path: '/api/admin-dashboard',
+    path: '/admin-dashboard',
     router: adminDashboardRoutes
   },
   employeeCompensation: {
-    path: '/api/employee-compensation',
+    path: '/employee-compensation',
     router: employeeCompensationRoutes
   },
   insuranceCompanies: {
-    path: '/api/insurance-companies',
+    path: '/insurance-companies',
     router: insuranceCompanyRoutes
   }
 };
@@ -53,9 +53,11 @@ const routes = {
  * @param {Express} app - Express application instance
  */
 const registerRoutes = (app) => {
+  // Register each route under /api
   Object.values(routes).forEach(({ path, router }) => {
-    app.use(path, router);
-    console.log(`Registered routes for: ${path}`);
+    const fullPath = `/api${path}`;
+    app.use(fullPath, router);
+    console.log(`Registered routes for: ${fullPath}`);
   });
 };
 

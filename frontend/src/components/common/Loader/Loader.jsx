@@ -3,7 +3,7 @@ import Lottie from "lottie-react";
 import animationData from "../../../assets/Animation - 1744885009403.json";
 
 const LottieAnimation = ({ width = 150, height = 150, loop = true }) => {
-  const [setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -13,7 +13,9 @@ const LottieAnimation = ({ width = 150, height = 150, loop = true }) => {
     return () => clearTimeout(timer); // Cleanup the timer
   }, []);
 
-
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div
@@ -23,6 +25,11 @@ const LottieAnimation = ({ width = 150, height = 150, loop = true }) => {
         alignItems: "center",
         width: "100%",
         height: "100vh",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        zIndex: 9999
       }}
     >
       <div style={{ width, height }}>

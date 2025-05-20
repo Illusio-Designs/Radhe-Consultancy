@@ -105,77 +105,77 @@ function Login() {
 
   return (
     <div className="auth">
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to your account</p>
+      <div className="auth-container">
+        <div className="auth-card">
+          <h2>Welcome Back</h2>
+          <p className="auth-subtitle">Sign in to your account</p>
 
-        {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-              className={formData.email ? "has-value" : ""}
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                required
+                className={formData.email ? "has-value" : ""}
+              />
+            </div>
 
-          <div className="form-group password-group">
-            <input
-              type={showPassword ? "text" : "password"} // Toggle input type
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-              className={formData.password ? "has-value" : ""}
-            />
+            <div className="form-group password-group">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className={formData.password ? "has-value" : ""}
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
             <button
-              type="button"
-              className="toggle-password"
-              onClick={() => setShowPassword((prev) => !prev)} // Toggle visibility
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              type="submit"
+              className={`auth-button ${loading ? "loading" : ""}`}
+              disabled={loading}
             >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
+          </form>
+
+          <div className="google-login">
+            <GoogleLogin
+              onSuccess={handleGoogleLoginSuccess}
+              onError={handleGoogleLoginFailure}
+              useOneTap
+              flow="implicit"
+              auto_select={false}
+              context="signin"
+            />
           </div>
 
-          <button
-            type="submit"
-            className={`auth-button ${loading ? "loading" : ""}`}
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+          <p className="auth-redirect">
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </p>
 
-        <div className="google-login">
-          <GoogleLogin
-            onSuccess={handleGoogleLoginSuccess}
-            onError={handleGoogleLoginFailure}
-            useOneTap
-            flow="implicit"
-            auto_select={false}
-            context="signin"
-          />
+          <p className="auth-redirect">
+            Don't have an account? <Link to="/register">Sign up</Link>
+          </p>
         </div>
-
-        <p className="auth-redirect">
-          <Link to="/forgot-password">Forgot Password?</Link>
-        </p>
-
-        <p className="auth-redirect">
-          Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
       </div>
-    </div>
     </div>
   );
 }

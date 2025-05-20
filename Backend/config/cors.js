@@ -9,61 +9,66 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:5173', // Vite default port
   'https://radheconsultancy.co.in',
-  'https://www.radheconsultancy.co.in'
+  'https://www.radheconsultancy.co.in',
+  'https://api.radheconsultancy.co.in'
 ];
 
 // Security headers configuration
 const securityHeaders = {
+  'Content-Security-Policy': "default-src 'self' https://api.radheconsultancy.co.in; connect-src 'self' https://api.radheconsultancy.co.in wss://api.radheconsultancy.co.in; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;",
   'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
+  'X-Frame-Options': 'SAMEORIGIN',
   'X-XSS-Protection': '1; mode=block',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Cross-Origin-Embedder-Policy': 'credentialless',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'cross-origin'
 };
 
 // CORS options configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests, or Postman)
-    if (!origin) return callback(null, true);
-    
-    // Allow all origins for health check endpoints
-    if (origin === 'https://radheconsultancy.co.in' || 
-        origin === 'http://localhost:4000' ||
-        origin === 'http://127.0.0.1:4000') {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) {
       return callback(null, true);
     }
     
+    // Allow all origins in development
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked request from origin: ${origin}`);
+      console.log('Blocked by CORS:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: [
+    'Accept',
+    'Accept-Language',
+    'Content-Language',
     'Content-Type',
     'Authorization',
     'X-Requested-With',
-    'Accept',
     'Origin',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods',
-    'Access-Control-Allow-Credentials'
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers',
+    'Cache-Control',
+    'Pragma'
   ],
   exposedHeaders: [
     'Content-Range', 
     'X-Content-Range',
-    'X-Content-Type-Options',
-    'X-Frame-Options',
-    'X-XSS-Protection',
-    'Strict-Transport-Security',
-    'Referrer-Policy',
-    'Permissions-Policy'
+    'Content-Length',
+    'Content-Type',
+    'Authorization'
   ],
   maxAge: 86400, // 24 hours
   preflightContinue: false,
@@ -76,6 +81,35 @@ const securityHeadersMiddleware = (req, res, next) => {
   Object.entries(securityHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
+  
+  // Add CORS headers
+  const origin = req.headers.origin;
+  
+  // Allow all origins in development
+  if (process.env.NODE_ENV === 'development') {
+    res.header('Access-Control-Allow-Origin', '*');
+  } 
+  // In production, check if origin is allowed
+  else if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  // Add cache control headers
+  res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  
+  // Add CORS headers
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control, Pragma');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
   next();
 };
 
