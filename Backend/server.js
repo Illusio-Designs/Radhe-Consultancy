@@ -17,6 +17,26 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Helmet configuration with CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'", "https://accounts.google.com", "http://localhost:4000", "https://radheconsultancy.co.in"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://cdn.lineicons.com", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+      connectSrc: ["'self'", "https://accounts.google.com", "http://localhost:4000", "https://radheconsultancy.co.in", "wss://radheconsultancy.co.in"],
+      frameSrc: ["'self'", "https://accounts.google.com", "https://www.google.com"],
+      imgSrc: ["'self'", "data:", "https://accounts.google.com", "https://*.google.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "https://cdn.lineicons.com", "https://cdn.jsdelivr.net"],
+      workerSrc: ["'self'", "blob:"],
+      mediaSrc: ["'self'", "blob:"],
+      objectSrc: ["'none'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
 // Apply security headers middleware
 app.use(securityHeadersMiddleware);
 
