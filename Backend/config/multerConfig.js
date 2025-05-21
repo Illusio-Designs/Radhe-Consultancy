@@ -41,10 +41,10 @@ const profileStorage = multer.diskStorage({
     }
 });
 
-// Configure storage for vehicle policy documents
-const vehiclePolicyStorage = multer.diskStorage({
+// Configure storage for employee policy documents
+const employeePolicyStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
-        const uploadDir = 'uploads/vehicle_policies';
+        const uploadDir = 'uploads/employee_policies';
         try {
             if (!fsSync.existsSync(uploadDir)) {
                 await fs.mkdir(uploadDir, { recursive: true });
@@ -55,16 +55,46 @@ const vehiclePolicyStorage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `employee-policy-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+});
+
+// Configure storage for vehicle policy documents
+const vehiclePolicyStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '../uploads/vehicle_policies');
+        try {
+            if (!fsSync.existsSync(uploadDir)) {
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        // Generate a unique filename with timestamp and random number
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `vehicle-policy-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename:', filename);
+        cb(null, filename);
     }
 });
 
 // File filter to accept images and PDFs
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+    const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Only image and PDF files are allowed!'), false);
+        cb(new Error('Only PDF and Word documents are allowed!'), false);
     }
 };
 
@@ -86,6 +116,12 @@ const uploadProfileImage = multer({
     limits
 });
 
+const uploadEmployeePolicyDocument = multer({
+    storage: employeePolicyStorage,
+    fileFilter,
+    limits
+});
+
 const uploadVehiclePolicyDocument = multer({
     storage: vehiclePolicyStorage,
     fileFilter,
@@ -102,5 +138,6 @@ module.exports = {
     upload,
     uploadCompanyDocuments,
     uploadProfileImage,
+    uploadEmployeePolicyDocument,
     uploadVehiclePolicyDocument
 }; 

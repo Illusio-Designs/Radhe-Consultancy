@@ -2,32 +2,10 @@ const EmployeeCompensationPolicy = require('../models/employeeCompensationPolicy
 const Company = require('../models/companyModel');
 const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
-const multer = require('multer');
-const path = require('path');
+const { uploadEmployeePolicyDocument } = require('../config/multerConfig');
 
-// Configure multer for policy document uploads
-// This middleware parses multipart/form-data and populates req.body and req.file
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/policies');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `policy-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
-
-exports.upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /pdf|doc|docx/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    if (extname) {
-      return cb(null, true);
-    }
-    cb(new Error('Only PDF and Word documents are allowed'));
-  }
-}).single('policyDocument');
+// Use the configured multer instance for employee policy documents
+exports.upload = uploadEmployeePolicyDocument.single('policyDocument');
 
 // Add middleware to log the request body after multer processing
 exports.logFormData = (req, res, next) => {

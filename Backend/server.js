@@ -128,6 +128,27 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
+    // Setup database and roles before starting server
+    const { setupDatabase, setupRolesAndPermissions, setupAdminUser } = require('./scripts/serverSetup');
+    
+    console.log('Setting up database and initial data...');
+    const dbSetup = await setupDatabase();
+    if (!dbSetup) {
+      throw new Error('Database setup failed');
+    }
+
+    const rolesSetup = await setupRolesAndPermissions();
+    if (!rolesSetup) {
+      throw new Error('Roles and permissions setup failed');
+    }
+
+    const adminSetup = await setupAdminUser();
+    if (!adminSetup) {
+      throw new Error('Admin user setup failed');
+    }
+
+    console.log('Database setup completed successfully');
+
     const port = config.server.port;
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
@@ -150,6 +171,6 @@ signals.forEach(signal => {
 });
 
 // Start the server
-  startServer();
+startServer();
 
 module.exports = { app, startServer };

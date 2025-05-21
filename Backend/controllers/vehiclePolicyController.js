@@ -3,31 +3,13 @@ const Company = require('../models/companyModel');
 const Consumer = require('../models/consumerModel');
 const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
-const multer = require('multer');
+const { uploadVehiclePolicyDocument } = require('../config/multerConfig');
 const path = require('path');
+const fs = require('fs').promises;
+const fsSync = require('fs');
 
-// Configure multer for vehicle policy document uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/vehicle_policies');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `vehicle-policy-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
-
-exports.upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /pdf|doc|docx/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    if (extname) {
-      return cb(null, true);
-    }
-    cb(new Error('Only PDF and Word documents are allowed'));
-  }
-}).single('policyDocument');
+// Use the configured multer instance for vehicle policy documents
+exports.upload = uploadVehiclePolicyDocument.single('policyDocument');
 
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
@@ -53,6 +35,25 @@ exports.getActiveCompanies = async (req, res) => {
     res.json(companies);
   } catch (error) {
     console.error('Error fetching active companies:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.getActiveConsumers = async (req, res) => {
+  try {
+    const consumers = await Consumer.findAll({
+      where: { status: 'Active' },
+      attributes: [
+        'consumer_id',
+        'name',
+        'email',
+        'phone_number',
+        'contact_address'
+      ]
+    });
+    res.json(consumers);
+  } catch (error) {
+    console.error('Error fetching active consumers:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -109,16 +110,37 @@ exports.getPolicy = async (req, res) => {
 
 exports.createPolicy = async (req, res) => {
   try {
+    console.log('[Vehicle] Creating new policy with data:', {
+      body: req.body,
+      file: req.file
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    if (req.file) {
-      req.body.policy_document_path = req.file.path;
+    // Validate file upload
+    if (!req.file) {
+      console.error('[Vehicle] No file uploaded');
+      return res.status(400).json({ message: 'Policy document is required' });
     }
 
-    const policy = await VehiclePolicy.create(req.body);
+    // Store filename in database
+    const filename = req.file.filename;
+    console.log('[Vehicle] Storing filename:', filename);
+
+    // Create policy with document filename
+    const policyData = {
+      ...req.body,
+      policy_document_path: filename
+    };
+
+    console.log('[Vehicle] Creating policy with data:', policyData);
+
+    const policy = await VehiclePolicy.create(policyData);
+    
+    // Fetch the created policy with associations
     const createdPolicy = await VehiclePolicy.findByPk(policy.id, {
       include: [
         { model: Company, as: 'companyPolicyHolder' },
@@ -126,9 +148,15 @@ exports.createPolicy = async (req, res) => {
         { model: InsuranceCompany, as: 'provider' }
       ]
     });
+
+    console.log('[Vehicle] Policy created successfully:', {
+      id: createdPolicy.id,
+      documentPath: createdPolicy.policy_document_path
+    });
+
     res.status(201).json(createdPolicy);
   } catch (error) {
-    console.error('Error creating vehicle policy:', error);
+    console.error('[Vehicle] Error creating policy:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Policy number must be unique' });
     }
@@ -138,6 +166,12 @@ exports.createPolicy = async (req, res) => {
 
 exports.updatePolicy = async (req, res) => {
   try {
+    console.log('[Vehicle] Updating policy:', {
+      id: req.params.id,
+      body: req.body,
+      file: req.file
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -148,11 +182,35 @@ exports.updatePolicy = async (req, res) => {
       return res.status(404).json({ message: 'Policy not found' });
     }
 
+    // Handle file upload
     if (req.file) {
-      req.body.policy_document_path = req.file.path;
+      console.log('[Vehicle] New file uploaded:', {
+        filename: req.file.filename,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+
+      // Delete old file if exists
+      if (policy.policy_document_path) {
+        try {
+          const oldFilePath = path.join(__dirname, '../uploads/vehicle_policies', policy.policy_document_path);
+          await fs.access(oldFilePath);
+          await fs.unlink(oldFilePath);
+          console.log('[Vehicle] Old file deleted:', oldFilePath);
+        } catch (error) {
+          console.warn('[Vehicle] Could not delete old file:', error);
+        }
+      }
+
+      // Store new filename in database
+      req.body.policy_document_path = req.file.filename;
+      console.log('[Vehicle] Storing new filename:', req.file.filename);
     }
 
+    // Update policy
     await policy.update(req.body);
+    
+    // Fetch the updated policy with associations
     const updatedPolicy = await VehiclePolicy.findByPk(policy.id, {
       include: [
         { model: Company, as: 'companyPolicyHolder' },
@@ -160,9 +218,15 @@ exports.updatePolicy = async (req, res) => {
         { model: InsuranceCompany, as: 'provider' }
       ]
     });
+
+    console.log('[Vehicle] Policy updated successfully:', {
+      id: updatedPolicy.id,
+      documentPath: updatedPolicy.policy_document_path
+    });
+
     res.json(updatedPolicy);
   } catch (error) {
-    console.error('Error updating vehicle policy:', error);
+    console.error('[Vehicle] Error updating policy:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Policy number must be unique' });
     }

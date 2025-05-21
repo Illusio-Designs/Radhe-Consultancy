@@ -37,6 +37,11 @@ const Consumer = sequelize.define('Consumer', {
   },
   contact_address: {
     type: DataTypes.TEXT,
+    allowNull: true
+  },
+  status: {
+    type: DataTypes.ENUM('Active', 'Inactive'),
+    defaultValue: 'Active',
     allowNull: false
   }
 }, {

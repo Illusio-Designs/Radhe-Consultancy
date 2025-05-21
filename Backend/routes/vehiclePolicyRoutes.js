@@ -14,15 +14,53 @@ const validatePolicy = [
   }
 ];
 
+// Middleware to check if file was uploaded
+const checkFileUpload = (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'Policy document is required' });
+  }
+  next();
+};
+
+// Middleware to validate file type
+const validateFileType = (req, res, next) => {
+  if (req.file) {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ message: 'Only PDF and Word documents are allowed' });
+    }
+  }
+  next();
+};
+
+// Middleware to log request details
+const logRequest = (req, res, next) => {
+  console.log('[Vehicle] Request:', {
+    method: req.method,
+    path: req.path,
+    body: req.body,
+    file: req.file
+  });
+  next();
+};
+
 router.get('/companies', auth, vehiclePolicyController.getActiveCompanies);
+router.get('/consumers', auth, vehiclePolicyController.getActiveConsumers);
 router.get('/', auth, vehiclePolicyController.getAllPolicies);
 router.get('/search', auth, vehiclePolicyController.searchPolicies);
 router.get('/:id', auth, vehiclePolicyController.getPolicy);
 
 router.post('/',
   auth,
+  logRequest,
   vehiclePolicyController.upload,
   vehiclePolicyController.logFormData,
+  checkFileUpload,
+  validateFileType,
   [
     check('business_type').isIn(['Fresh/New', 'Renewal/Rollover', 'Endorsement']).withMessage('Invalid business type'),
     check('customer_type').isIn(['Organisation', 'Individual']).withMessage('Invalid customer type'),
@@ -48,8 +86,10 @@ router.post('/',
 
 router.put('/:id',
   auth,
+  logRequest,
   vehiclePolicyController.upload,
   vehiclePolicyController.logFormData,
+  validateFileType,
   [
     check('business_type').isIn(['Fresh/New', 'Renewal/Rollover', 'Endorsement']).withMessage('Invalid business type'),
     check('customer_type').isIn(['Organisation', 'Individual']).withMessage('Invalid customer type'),

@@ -185,24 +185,14 @@ function OtherUserList() {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "" });
 
+  // Filter users to show Admin and other roles except Company and Consumer
   const otherUsers = users.filter((user) => {
-    const userRole = roles.find((role) => role.id === user.role_id);
-    return (
-      userRole &&
-      [
-        "User",
-        "Vendor_manager",
-        "User_manager",
-        "Insurance_manager",
-        "Compliance_manager",
-        "DSC_manager",
-      ].includes(userRole.role_name)
-    );
+    const roleName = user.Role?.role_name;
+    return roleName && roleName !== "Company" && roleName !== "Consumer";
   });
 
-  const getRoleName = (roleId) => {
-    const role = roles.find((r) => r.id === roleId);
-    return role ? role.role_name : "Unknown";
+  const getRoleName = (user) => {
+    return user.Role?.role_name || "Unknown";
   };
 
   const filteredUsers = otherUsers.filter((user) => {
@@ -256,7 +246,7 @@ function OtherUserList() {
       key: "role_id",
       label: "Role",
       sortable: true,
-      render: (value) => getRoleName(value),
+      render: (_, user) => getRoleName(user),
     },
     {
       key: "status",

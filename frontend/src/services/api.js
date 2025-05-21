@@ -920,6 +920,14 @@ export const vehiclePolicyAPI = {
       throw error;
     }
   },
+  getActiveConsumers: async () => {
+    try {
+      const response = await api.get('/vehicle-policies/consumers');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
   searchPolicies: async (searchParams) => {
     try {
       const response = await api.get('/vehicle-policies/search', { params: searchParams });

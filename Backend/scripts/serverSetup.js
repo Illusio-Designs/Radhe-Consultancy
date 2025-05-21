@@ -133,8 +133,24 @@ async function setupDatabase() {
       console.log('Users table synced');
       await Company.sync({ alter: true });
       console.log('Companies table synced');
-      await Consumer.sync({ alter: true });
-      console.log('Consumers table synced');
+
+      // Special handling for Consumer
+      try {
+        await sequelize.query(`
+          ALTER TABLE Consumers 
+          MODIFY COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active' NOT NULL
+        `).catch(() => {}); // Ignore error if column doesn't exist
+        
+        await Consumer.sync({ 
+          alter: true,
+          logging: false
+        });
+        console.log('Consumers table synced with status field');
+      } catch (error) {
+        console.error('Error syncing Consumer:', error.message);
+        throw error;
+      }
+
       await InsuranceCompany.sync({ alter: true });
       console.log('InsuranceCompanies table synced');
       await EmployeeCompensationPolicy.sync({ alter: true });
