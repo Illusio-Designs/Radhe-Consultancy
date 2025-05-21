@@ -1,7 +1,7 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
 // This script handles database setup, roles/permissions setup, and admin user setup
 
-const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy } = require('../models');
+const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy } = require('../models');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -121,14 +121,33 @@ async function setupDatabase() {
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     if (!fs.existsSync(policyDir)) fs.mkdirSync(policyDir, { recursive: true });
 
-    // Sync all models with individual options
-    await Role.sync({ alter: true });
-    await Permission.sync({ alter: true });
-    await RolePermission.sync({ alter: true });
-    await User.sync({ alter: true });
-    await Company.sync({ alter: true });
-    await Consumer.sync({ alter: true });
-    
+    // Sync tables in correct order
+    try {
+      await Role.sync({ alter: true });
+      console.log('Roles table synced');
+      await Permission.sync({ alter: true });
+      console.log('Permissions table synced');
+      await RolePermission.sync({ alter: true });
+      console.log('RolePermissions table synced');
+      await User.sync({ alter: true });
+      console.log('Users table synced');
+      await Company.sync({ alter: true });
+      console.log('Companies table synced');
+      await Consumer.sync({ alter: true });
+      console.log('Consumers table synced');
+      await InsuranceCompany.sync({ alter: true });
+      console.log('InsuranceCompanies table synced');
+      await EmployeeCompensationPolicy.sync({ alter: true });
+      console.log('EmployeeCompensationPolicies table synced');
+      await VehiclePolicy.sync({ alter: true });
+      console.log('VehiclePolicies table synced');
+    } finally {
+      // Re-enable foreign key checks
+      await sequelize.query(`
+        SET FOREIGN_KEY_CHECKS = 1;
+      `);
+    }
+
     // Special handling for InsuranceCompany
     try {
       await sequelize.query(`

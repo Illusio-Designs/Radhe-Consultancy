@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'https://api.radheconsultancy.co.in/api';
-
+const API_URL = 'http://localhost:5000/api';
+// https://api.radheconsultancy.co.in/api
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
@@ -69,10 +69,14 @@ api.interceptors.response.use(
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           
-          // Check if we're not already on the login page
-          if (!window.location.pathname.includes('/auth/login')) {
-            // Use replace to prevent adding to history
-            window.location.replace('/auth/login');
+          // Only redirect to login if we're on a protected route
+          const currentPath = window.location.pathname;
+          const isProtectedRoute = currentPath.startsWith('/dashboard') || 
+                                 currentPath.startsWith('/profile') ||
+                                 currentPath.startsWith('/admin');
+          
+          if (isProtectedRoute && !currentPath.includes('/auth/login')) {
+            window.location.replace('/login');
           }
           
           resolve();
@@ -893,6 +897,74 @@ export const insuranceCompanyAPI = {
       return response.data;
     } catch (error) {
       console.error('API Service: Error deleting insurance company:', error);
+      throw error;
+    }
+  }
+};
+
+// Vehicle Policy API
+export const vehiclePolicyAPI = {
+  getAllPolicies: async () => {
+    try {
+      const response = await api.get('/vehicle-policies');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getActiveCompanies: async () => {
+    try {
+      const response = await api.get('/vehicle-policies/companies');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  searchPolicies: async (searchParams) => {
+    try {
+      const response = await api.get('/vehicle-policies/search', { params: searchParams });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getPolicy: async (id) => {
+    try {
+      const response = await api.get(`/vehicle-policies/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  createPolicy: async (policyData) => {
+    try {
+      const response = await api.post('/vehicle-policies', policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  updatePolicy: async (id, policyData) => {
+    try {
+      const response = await api.put(`/vehicle-policies/${id}`, policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  deletePolicy: async (id) => {
+    try {
+      const response = await api.delete(`/vehicle-policies/${id}`);
+      return response.data;
+    } catch (error) {
       throw error;
     }
   }

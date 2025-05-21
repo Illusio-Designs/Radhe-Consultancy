@@ -41,6 +41,24 @@ const profileStorage = multer.diskStorage({
     }
 });
 
+// Configure storage for vehicle policy documents
+const vehiclePolicyStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = 'uploads/vehicle_policies';
+        try {
+            if (!fsSync.existsSync(uploadDir)) {
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
 // File filter to accept images and PDFs
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
@@ -68,6 +86,12 @@ const uploadProfileImage = multer({
     limits
 });
 
+const uploadVehiclePolicyDocument = multer({
+    storage: vehiclePolicyStorage,
+    fileFilter,
+    limits
+});
+
 // Middleware for handling company document uploads
 const uploadCompanyDocuments = upload.fields([
     { name: 'gst_document', maxCount: 1 },
@@ -77,5 +101,6 @@ const uploadCompanyDocuments = upload.fields([
 module.exports = {
     upload,
     uploadCompanyDocuments,
-    uploadProfileImage
+    uploadProfileImage,
+    uploadVehiclePolicyDocument
 }; 

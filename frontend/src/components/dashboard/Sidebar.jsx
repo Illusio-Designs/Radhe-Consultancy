@@ -28,24 +28,38 @@ import "../../styles/components/dashboard/Sidebar.css";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Sidebar = ({ onCollapse }) => {
+  console.log('Sidebar: Component rendering');
+  
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const [activeDropdown, setActiveDropdown] = useState(null);
   const { user } = useAuth();
+  
+  // Debug logging for user data
+  console.log('Sidebar: Raw user data:', user);
+  console.log('Sidebar: User role_name:', user?.role_name);
+  console.log('Sidebar: User role:', user?.role);
+  
+  // Get role from user object, handling both role_name and role properties
   const userRole = user?.role_name || user?.role;
+  console.log('Sidebar: Combined user role:', userRole);
+  
+  // Helper for case-insensitive role comparison
+  const isRole = (role) => userRole && userRole.toLowerCase() === role.toLowerCase();
 
-  // Normalize role name for consistent comparison
-  const normalizedRole = userRole?.toLowerCase()?.trim();
+  // Set 'Users' dropdown open by default for admin
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
   // Function to handle dropdown toggle
   const handleDropdownToggle = (dropdownName) => {
+    console.log('Sidebar: Toggling dropdown:', dropdownName);
     setActiveDropdown((currentDropdown) =>
       currentDropdown === dropdownName ? null : dropdownName
     );
   };
 
   useEffect(() => {
+    console.log('Sidebar: useEffect running');
     const handleResize = () => {
       if (window.innerWidth <= 1023) {
         setIsCollapsed(true);
@@ -60,6 +74,7 @@ const Sidebar = ({ onCollapse }) => {
   }, []);
 
   const handleCollapse = () => {
+    console.log('Sidebar: Toggling collapse state');
     setIsCollapsed(!isCollapsed);
     if (onCollapse) {
       onCollapse(!isCollapsed);
@@ -76,7 +91,129 @@ const Sidebar = ({ onCollapse }) => {
   ];
 
   // Admin role has access to all features
-  if (normalizedRole === "admin") {
+  if (isRole("Admin")) {
+    console.log('Sidebar: Setting admin menu items');
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      },
+      {
+        path: "/dashboard/users",
+        label: "Users",
+        icon: <BiGroup />,
+        isDropdown: true,
+        isOpen: activeDropdown === "users",
+        toggle: () => handleDropdownToggle("users"),
+        items: [
+          {
+            path: "/dashboard/users/company",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+          {
+            path: "/dashboard/users/consumer",
+            icon: <BiUserCircle />,
+            label: "Consumers",
+          },
+          {
+            path: "/dashboard/users/other",
+            icon: <BiUser />,
+            label: "Employee",
+          },
+        ],
+      },
+      {
+        path: "/dashboard/vendors",
+        label: "Vendors",
+        icon: <BiStore />,
+        isDropdown: true,
+        isOpen: activeDropdown === "vendors",
+        toggle: () => handleDropdownToggle("vendors"),
+        items: [
+          {
+            path: "/dashboard/companies",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+          {
+            path: "/dashboard/consumers",
+            icon: <BiUserCircle />,
+            label: "Consumers",
+          },
+        ],
+      },
+      {
+        path: "/dashboard/insurance",
+        label: "Insurance",
+        icon: <BiHealth />,
+        isDropdown: true,
+        isOpen: activeDropdown === "insurance",
+        toggle: () => handleDropdownToggle("insurance"),
+        items: [
+          {
+            path: "/dashboard/insurance/ECP",
+            icon: <BiHealth />,
+            label: "ECP",
+          },
+          {
+            path: "/dashboard/insurance/health",
+            icon: <BiPulse />,
+            label: "Health",
+          },
+          {
+            path: "/dashboard/insurance/marine",
+            icon: <BiWater />,
+            label: "Marine",
+          },
+          {
+            path: "/dashboard/insurance/fire",
+            icon: <BiHotel />,
+            label: "Fire",
+          },
+          {
+            path: "/dashboard/insurance/vehicle",
+            icon: <BiCar />,
+            label: "Vehicle",
+          },
+          {
+            path: "/dashboard/insurance/companies",
+            icon: <BiBuilding />,
+            label: "Companies",
+          },
+        ],
+      },
+      {
+        path: "/dashboard/compliance",
+        label: "Compliance & Licensing",
+        icon: <BiCertification />,
+        isDropdown: true,
+        isOpen: activeDropdown === "compliance",
+        toggle: () => handleDropdownToggle("compliance"),
+        items: [
+          {
+            path: "/dashboard/compliance/factory-act",
+            icon: <BiBuildings />,
+            label: "Factory Act License",
+          },
+          {
+            path: "/dashboard/compliance/labour-inspection",
+            icon: <BiDetail />,
+            label: "Labour Law Inspection",
+          },
+          {
+            path: "/dashboard/compliance/labour-license",
+            icon: <BiBook />,
+            label: "Labour License Management",
+          },
+        ],
+      },
+      { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
+    ];
+    console.log('Sidebar: Admin menu items set:', menuItems);
+  } else if (isRole("User_manager") || isRole("User")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -108,6 +245,15 @@ const Sidebar = ({ onCollapse }) => {
           },
         ],
       },
+    ];
+  } else if (isRole("Vendor_manager")) {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      },
       {
         label: "Vendors",
         icon: <BiStore />,
@@ -126,6 +272,15 @@ const Sidebar = ({ onCollapse }) => {
             label: "Consumers",
           },
         ],
+      },
+    ];
+  } else if (isRole("Insurance_manager")) {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <BiTachometer />,
+        label: "Dashboard",
+        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
       },
       {
         label: "Insurance",
@@ -166,142 +321,8 @@ const Sidebar = ({ onCollapse }) => {
           },
         ],
       },
-      {
-        label: "Compliance & Licensing",
-        icon: <BiCertification />,
-        isDropdown: true,
-        isOpen: activeDropdown === "compliance",
-        toggle: () => handleDropdownToggle("compliance"),
-        items: [
-          {
-            path: "/dashboard/compliance/factory-act",
-            icon: <BiBuildings />,
-            label: "Factory Act License",
-          },
-          {
-            path: "/dashboard/compliance/labour-inspection",
-            icon: <BiDetail />,
-            label: "Labour Law Inspection",
-          },
-          {
-            path: "/dashboard/compliance/labour-license",
-            icon: <BiBook />,
-            label: "Labour License Management",
-          },
-        ],
-      },
-      { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
     ];
-  } else if (normalizedRole === "user_manager" || normalizedRole === "user") {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <BiTachometer />,
-        label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
-      },
-      {
-        label: "Users",
-        icon: <BiGroup />,
-        isDropdown: true,
-        isOpen: activeDropdown === "users",
-        toggle: () => handleDropdownToggle("users"),
-        items: [
-          {
-            path: "/dashboard/users/company",
-            icon: <BiBuilding />,
-            label: "Companies",
-          },
-          {
-            path: "/dashboard/users/consumer",
-            icon: <BiUserCircle />,
-            label: "Consumers",
-          },
-          {
-            path: "/dashboard/users/other",
-            icon: <BiUser />,
-            label: "Employee",
-          },
-        ],
-      },
-    ];
-  } else if (normalizedRole === "vendor_manager") {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <BiTachometer />,
-        label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
-      },
-      {
-        label: "Vendors",
-        icon: <BiStore />,
-        isDropdown: true,
-        isOpen: activeDropdown === "vendors",
-        toggle: () => handleDropdownToggle("vendors"),
-        items: [
-          {
-            path: "/dashboard/companies",
-            icon: <BiBuilding />,
-            label: "Companies",
-          },
-          {
-            path: "/dashboard/consumers",
-            icon: <BiUserCircle />,
-            label: "Consumers",
-          },
-        ],
-      },
-    ];
-  } else if (normalizedRole === "insurance_manager") {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <BiTachometer />,
-        label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
-      },
-      {
-        label: "Insurance",
-        icon: <BiHealth />,
-        isDropdown: true,
-        isOpen: activeDropdown === "insurance",
-        toggle: () => handleDropdownToggle("insurance"),
-        items: [
-          {
-            path: "/dashboard/insurance/ECP",
-            icon: <BiHealth />,
-            label: "ECP",
-          },
-          {
-            path: "/dashboard/insurance/health",
-            icon: <BiPulse />,
-            label: "Health",
-          },
-          {
-            path: "/dashboard/insurance/marine",
-            icon: <BiWater />,
-            label: "Marine",
-          },
-          {
-            path: "/dashboard/insurance/fire",
-            icon: <BiHotel />,
-            label: "Fire",
-          },
-          {
-            path: "/dashboard/insurance/vehicle",
-            icon: <BiCar />,
-            label: "Vehicle",
-          },
-          {
-            path: "/dashboard/insurance/companies",
-            icon: <BiBuilding />,
-            label: "Companies",
-          },
-        ],
-      },
-    ];
-  } else if (normalizedRole === "compliance_manager") {
+  } else if (isRole("Compliance_manager")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -334,7 +355,7 @@ const Sidebar = ({ onCollapse }) => {
         ],
       },
     ];
-  } else if (normalizedRole === "dsc_manager") {
+  } else if (isRole("DSC_manager")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -344,18 +365,25 @@ const Sidebar = ({ onCollapse }) => {
       },
       { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
     ];
+  } else {
+    console.log('Sidebar: Not a recognized role, using default menu items');
   }
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path) => {
+    const active = location.pathname.startsWith(path);
+    console.log('Sidebar: Checking if path is active:', { path, active });
+    return active;
+  };
 
   const renderMenuItem = (item, index) => {
+    console.log('Sidebar: Rendering menu item:', { item, index });
     if (item.isDropdown) {
       return (
-        <div key={`dropdown-${index}`}>
+        <div key={`dropdown-${item.label}-${item.path || ''}-${index}`}>
           <a
             onClick={item.toggle}
             className={`sidebar-nav-item ${
-              item.items.some((sub) => isActive(sub.path)) ? "active" : ""
+              item.items && item.items.some((sub) => isActive(sub.path)) ? "active" : ""
             }`}
             title={isCollapsed ? item.label : ""}
           >
@@ -373,27 +401,29 @@ const Sidebar = ({ onCollapse }) => {
               </>
             )}
           </a>
-          <div className={`pl-4 ${item.isOpen ? "dropdown-open" : ""}`}>
-            {item.items.map((subItem, subIndex) =>
-              subItem.isDropdown ? (
-                renderMenuItem(subItem, `${index}-${subIndex}`)
-              ) : (
-                <Link
-                  key={`${subItem.path}-${subIndex}`}
-                  to={subItem.path}
-                  className={`sidebar-nav-item ${
-                    isActive(subItem.path) ? "active" : ""
-                  }`}
-                  title={isCollapsed ? subItem.label : ""}
-                >
-                  <span className="text-lg">{subItem.icon}</span>
-                  <span className="ml-4 sidebar-nav-label">
-                    {subItem.label}
-                  </span>
-                </Link>
-              )
-            )}
-          </div>
+          {item.items && item.items.length > 0 && (
+            <div className={`pl-4 ${item.isOpen ? "dropdown-open" : "dropdown-close"}`}>
+              {item.items.map((subItem, subIndex) =>
+                subItem.isDropdown ? (
+                  renderMenuItem(subItem, `${index}-${subIndex}`)
+                ) : (
+                  <Link
+                    key={`${subItem.path}-${subIndex}`}
+                    to={subItem.path}
+                    className={`sidebar-nav-item ${
+                      isActive(subItem.path) ? "active" : ""
+                    }`}
+                    title={isCollapsed ? subItem.label : ""}
+                  >
+                    <span className="text-lg">{subItem.icon}</span>
+                    <span className="ml-4 sidebar-nav-label">
+                      {subItem.label}
+                    </span>
+                  </Link>
+                )
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -413,6 +443,8 @@ const Sidebar = ({ onCollapse }) => {
     );
   };
 
+  console.log('Sidebar: Final menu items:', menuItems);
+  
   return (
     <>
       <div

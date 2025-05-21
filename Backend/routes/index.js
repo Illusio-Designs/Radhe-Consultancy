@@ -11,6 +11,7 @@ const consumerRoutes = require('./consumerRoutes');
 const adminDashboardRoutes = require('./adminDashboardRoutes');
 const employeeCompensationRoutes = require('./employeeCompensationRoutes');
 const insuranceCompanyRoutes = require('./insuranceCompanyRoutes');
+const vehiclePolicyRoutes = require('./vehiclePolicyRoutes');
 
 // Route configuration object
 const routes = {
@@ -45,6 +46,10 @@ const routes = {
   insuranceCompanies: {
     path: '/insurance-companies',
     router: insuranceCompanyRoutes
+  },
+  vehiclePolicies: {
+    path: '/vehicle-policies',
+    router: vehiclePolicyRoutes
   }
 };
 

@@ -263,7 +263,7 @@ function ConsumerUserList() {
     },
   ];
 
-  if (!user || (user.role !== "admin" && user.role !== "vendor_manager")) {
+  if (!user || !['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(user.role_name || user.role)) {
     return (
       <div className="user-management-error">
         <FiAlertCircle className="inline mr-2" /> You don't have permission to
