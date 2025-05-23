@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { auth } = require('../middleware/auth');
+const { auth, checkRole } = require('../middleware/auth');
 const { User, Role, Company, Consumer } = require('../models');
-const { uploadProfile } = require('../config/multerConfig');
+const { uploadProfileImage } = require('../config/multerConfig');
 const path = require('path');
 const fs = require('fs');
 
@@ -68,7 +68,7 @@ router.post('/change-password', auth, userController.changePassword);
 // Other user routes
 router.get('/:userId', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
-router.put('/:userId', auth, uploadProfile.single('profile_image'), userController.updateUser);
+router.put('/:userId', auth, uploadProfileImage, userController.updateUser);
 router.delete('/:userId', auth, userController.deleteUser);
 router.get('/:userId/permissions', auth, userController.getUserPermissions);
 
@@ -76,7 +76,6 @@ router.get('/:userId/permissions', auth, userController.getUserPermissions);
 router.get('/company', auth, userController.getCompanyUsers);
 router.get('/consumer', auth, userController.getConsumerUsers);
 router.get('/other', auth, userController.getOtherUsers);
-
 
 // Add new route to serve profile images
 router.get('/profile-image/:filename', (req, res) => {

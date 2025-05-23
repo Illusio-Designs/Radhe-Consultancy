@@ -50,11 +50,19 @@ const profileStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
         const uploadDir = getUploadDir('profile_images');
         try {
+            console.log('[Multer] Setting destination for profile image:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype
+            });
             if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating directory:', uploadDir);
                 await fs.mkdir(uploadDir, { recursive: true });
             }
+            console.log('[Multer] Using directory:', uploadDir);
             cb(null, uploadDir);
         } catch (error) {
+            console.error('[Multer] Error in destination function:', error);
             cb(error);
         }
     },
@@ -62,6 +70,12 @@ const profileStorage = multer.diskStorage({
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         const filename = `profile-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename for profile image:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
         cb(null, filename);
     }
 });
@@ -187,11 +201,45 @@ const uploadCompanyDocumentsWithLogging = (req, res, next) => {
     });
 };
 
-const uploadProfile = multer({
+// Create multer upload instance for profile images
+const uploadProfileImage = multer({
     storage: profileStorage,
     fileFilter,
     limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit for profile images
-});
+}).single('profile_image');
+
+// Add logging for profile image upload
+const uploadProfileImageWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting profile image upload process');
+    console.log('[Multer] Request body:', req.body);
+    console.log('[Multer] Request file:', req.file);
+
+    uploadProfileImage(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error uploading profile image:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log uploaded file
+        if (req.file) {
+            console.log('[Multer] Profile image uploaded successfully:', {
+                fieldname: req.file.fieldname,
+                originalname: req.file.originalname,
+                filename: req.file.filename,
+                mimetype: req.file.mimetype,
+                size: req.file.size,
+                path: req.file.path
+            });
+        } else {
+            console.log('[Multer] No profile image uploaded');
+        }
+
+        next();
+    });
+};
 
 const uploadEmployeePolicyDocument = multer({
     storage: employeePolicyStorage,
@@ -208,7 +256,7 @@ const uploadVehiclePolicyDocument = multer({
 // Export the multer instances
 module.exports = {
     uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
-    uploadProfile,
+    uploadProfileImage: uploadProfileImageWithLogging,
     uploadEmployeePolicyDocument,
     uploadVehiclePolicyDocument
 }; 

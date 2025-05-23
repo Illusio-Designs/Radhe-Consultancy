@@ -399,14 +399,14 @@ const companyController = {
 
         // Get updated company with user details
         const updatedCompany = await Company.findByPk(id, {
-            include: [{
-                model: User,
+        include: [{
+          model: User,
                 include: [{
                     model: Role,
                     attributes: ['role_name']
                 }]
-            }]
-        });
+        }]
+      });
 
         console.log('[CompanyController] Final company data:', {
             id: updatedCompany.company_id,

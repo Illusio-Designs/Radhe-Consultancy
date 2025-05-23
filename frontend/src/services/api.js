@@ -644,27 +644,77 @@ export const consumerAPI = {
     }
   },
 
-  createConsumer: async (consumerData) => {
+  updateConsumer: async (id, formData) => {
     try {
-      console.log('API Service: Creating consumer');
-      const response = await api.post('/consumers', consumerData);
-      console.log('API Service: Consumer created successfully');
+      console.log('[API] Updating consumer:', { id });
+
+      // Log FormData contents for debugging
+      if (formData instanceof FormData) {
+        console.log('[API] FormData contents:');
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}:`, {
+              name: value.name,
+              type: value.type,
+              size: value.size
+            });
+          } else {
+            console.log(`${key}:`, value);
+          }
+        }
+      }
+
+      const response = await api.put(`/consumers/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024 // 10MB
+      });
+
+      console.log('[API] Consumer update response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('API Service: Error creating consumer:', error);
+      console.error('[API] Error updating consumer:', error.response?.data || error.message);
       throw error;
     }
   },
 
-  updateConsumer: async (id, consumerData) => {
+  createConsumer: async (formData) => {
     try {
-      console.log('API Service: Updating consumer:', id);
-      const response = await api.put(`/consumers/${id}`, consumerData);
-      console.log('API Service: Consumer updated successfully');
+      console.log('[API] Creating consumer');
+
+      // Log FormData contents for debugging
+      if (formData instanceof FormData) {
+        console.log('[API] FormData contents:');
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}:`, {
+              name: value.name,
+              type: value.type,
+              size: value.size
+            });
+          } else {
+            console.log(`${key}:`, value);
+          }
+        }
+      }
+
+      const response = await api.post('/consumers', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024 // 10MB
+      });
+
+      console.log('[API] Consumer creation response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('API Service: Error updating consumer:', error);
-      throw error;
+      console.error('[API] Error creating consumer:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   }
 };

@@ -1,15 +1,17 @@
 const { Consumer, User, Role } = require('../models');
 const { Op } = require('sequelize');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
+const fsSync = require('fs');
 
 const consumerController = {
   // Create a new consumer
   async createConsumer(req, res) {
     try {
-      // Log the incoming request body and files
-      console.log('Request body:', req.body);
-      console.log('Request files:', req.files);
+      console.log('[ConsumerController] Creating consumer:', {
+        body: req.body,
+        file: req.file
+      });
 
       const formData = req.body;
 
@@ -41,15 +43,11 @@ const consumerController = {
         });
       }
 
-      // Handle profile image upload if present
+      // Handle profile image upload
       let profile_image = null;
-      if (req.files && req.files.profile_image && req.files.profile_image[0]) {
-        const imageFile = req.files.profile_image[0];
-        const uploadDir = path.join(__dirname, '../../uploads/profile_images');
-        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        const filePath = path.join(uploadDir, imageFile.originalname);
-        fs.writeFileSync(filePath, imageFile.buffer);
-        profile_image = imageFile.originalname;
+      if (req.file) {
+        profile_image = req.file.filename;
+        console.log('[ConsumerController] Profile image saved:', profile_image);
       }
 
       // Create consumer
@@ -75,7 +73,7 @@ const consumerController = {
         }
       });
     } catch (error) {
-      console.error('Error creating consumer:', error);
+      console.error('[ConsumerController] Error creating consumer:', error);
       res.status(500).json({
         success: false,
         error: error.message
@@ -140,30 +138,46 @@ const consumerController = {
   // Update consumer
   async updateConsumer(req, res) {
     try {
+      console.log('[ConsumerController] Updating consumer:', {
+        id: req.params.id,
+        body: req.body,
+        file: req.file
+      });
+
       const consumer = await Consumer.findByPk(req.params.id, {
         include: [{
           model: User,
           attributes: ['user_id', 'username', 'email']
         }]
       });
+
       if (!consumer) {
         return res.status(404).json({
           success: false,
           error: 'Consumer not found'
         });
       }
+
       const { name, email, phone_number, contact_address } = req.body;
-      // Handle profile image upload if present
+
+      // Handle profile image upload
       let profile_image = consumer.profile_image;
-      if (req.files && req.files.profile_image && req.files.profile_image[0]) {
-        const imageFile = req.files.profile_image[0];
-        const uploadDir = path.join(__dirname, '../../uploads/profile_images');
-        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        const filePath = path.join(uploadDir, imageFile.originalname);
-        fs.writeFileSync(filePath, imageFile.buffer);
-        profile_image = imageFile.originalname;
+      if (req.file) {
+        // Delete old profile image if it exists
+        if (consumer.profile_image) {
+          const oldImagePath = path.join(__dirname, '../../uploads/profile_images', consumer.profile_image);
+          try {
+            await fs.unlink(oldImagePath);
+            console.log('[ConsumerController] Old profile image deleted:', consumer.profile_image);
+          } catch (error) {
+            console.error('[ConsumerController] Error deleting old profile image:', error);
+          }
+        }
+        profile_image = req.file.filename;
+        console.log('[ConsumerController] New profile image saved:', profile_image);
       }
-      // Start a transaction to ensure both updates succeed or fail together
+
+      // Start a transaction
       const transaction = await Consumer.sequelize.transaction();
       try {
         // Update consumer
@@ -174,6 +188,7 @@ const consumerController = {
           contact_address,
           profile_image
         }, { transaction });
+
         // Update associated user if it exists
         if (consumer.User) {
           await consumer.User.update({
@@ -181,15 +196,18 @@ const consumerController = {
             email: email
           }, { transaction });
         }
+
         // Commit the transaction
         await transaction.commit();
-        // Fetch the updated consumer with user details
+
+        // Fetch the updated consumer
         const updatedConsumer = await Consumer.findByPk(req.params.id, {
           include: [{
             model: User,
             attributes: ['user_id', 'username', 'email']
           }]
         });
+
         res.status(200).json({
           success: true,
           data: updatedConsumer
@@ -200,6 +218,7 @@ const consumerController = {
         throw error;
       }
     } catch (error) {
+      console.error('[ConsumerController] Error updating consumer:', error);
       res.status(500).json({
         success: false,
         error: error.message

@@ -23,6 +23,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (consumer) {
@@ -43,27 +44,71 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
     setLoading(true);
-    setError("");
 
     try {
-      if (consumer) {
-        await consumerAPI.updateConsumer(consumer.consumer_id, formData);
-      } else {
-        // Only send consumer data, let backend handle user creation
-        const consumerData = {
-          name: formData.name,
-          email: formData.email,
-          phone_number: formData.phone_number,
-          contact_address: formData.contact_address,
-          profile_image: formData.profile_image
-        };
-        await consumerAPI.createConsumer(consumerData);
+      console.log('[ConsumerList] Starting form submission');
+      console.log('[ConsumerList] Form data:', formData);
+
+      // Validate required fields
+      const requiredFields = ['name', 'email', 'phone_number', 'contact_address'];
+      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+      
+      if (missingFields.length > 0) {
+        setError(`Missing required fields: ${missingFields.join(', ')}`);
+        return;
       }
-      onConsumerUpdated();
-    } catch (err) {
-      console.error("Error during submission:", err);
-      setError(err.response?.data?.error || "Failed to save consumer");
+
+      // Create FormData object
+      const formDataToSend = new FormData();
+      
+      // Append basic fields
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone_number', formData.phone_number);
+      formDataToSend.append('contact_address', formData.contact_address);
+
+      // Append profile image if it exists and is a File
+      if (formData.profile_image instanceof File) {
+        console.log('[ConsumerList] Appending profile image:', {
+          name: formData.profile_image.name,
+          type: formData.profile_image.type,
+          size: formData.profile_image.size
+        });
+        formDataToSend.append('profile_image', formData.profile_image);
+      }
+
+      console.log('[ConsumerList] Sending data to API');
+
+      let response;
+      if (consumer) {
+        response = await consumerAPI.updateConsumer(consumer.consumer_id, formDataToSend);
+        setSuccess('Consumer updated successfully!');
+      } else {
+        response = await consumerAPI.createConsumer(formDataToSend);
+        setSuccess('Consumer created successfully!');
+      }
+
+      console.log('[ConsumerList] API Response:', response);
+      
+      // Refresh the consumer list
+      await onConsumerUpdated();
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone_number: '',
+        contact_address: '',
+        profile_image: null
+      });
+      setFileName('');
+      
+    } catch (error) {
+      console.error('[ConsumerList] Error during submission:', error);
+      setError(error.response?.data?.error || error.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -86,20 +131,17 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       }
 
       setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          profile_image: reader.result,
-        }));
-      };
-      reader.readAsDataURL(file);
+      setFormData((prev) => ({
+        ...prev,
+        profile_image: file,
+      }));
     }
   };
 
   return (
     <>
       {error && <div className="vendor-management-error">{error}</div>}
+      {success && <div className="vendor-management-success">{success}</div>}
 
       <form onSubmit={handleSubmit} className="vendor-management-form">
         <div className="vendor-management-form-grid">
@@ -193,6 +235,7 @@ function ConsumerList() {
   const [consumers, setConsumers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchConsumers();
@@ -308,6 +351,12 @@ function ConsumerList() {
         {error && (
           <div className="vendor-management-error">
             <BiErrorCircle className="inline mr-2" /> {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="vendor-management-success">
+            {success}
           </div>
         )}
 
