@@ -6,7 +6,7 @@ import {
   BiErrorCircle,
   BiUpload,
 } from "react-icons/bi";
-import { healthPolicyAPI } from "../../../services/api";
+import { healthPolicyAPI, insuranceCompanyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
@@ -18,6 +18,73 @@ import flags from "react-phone-number-input/flags";
 import { toast } from "react-toastify";
 import "react-phone-number-input/style.css";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
+
+// --- CreateInsuranceCompanyModal (copied from Vehicle.jsx) ---
+const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
+  const [form, setForm] = useState({ name: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setError("");
+  };
+
+  const handleCreate = async () => {
+    if (!form.name.trim()) {
+      setError("Please enter a company name");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const created = await insuranceCompanyAPI.createCompany({
+        name: form.name,
+      });
+      toast.success("Insurance company created!");
+      onCreated(created);
+      onClose();
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message || "Failed to create insurance company";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Create Insurance Company">
+      <input
+        name="name"
+        value={form.name}
+        onChange={handleChange}
+        placeholder="Enter company name"
+        required
+        className="insurance-form-input"
+      />
+      {error && (
+        <div className="insurance-error" style={{ marginTop: 8 }}>
+          {error}
+        </div>
+      )}
+      <div className="insurance-form-actions">
+        <Button type="button" variant="outlined" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          variant="contained"
+          disabled={loading}
+          onClick={handleCreate}
+        >
+          {loading ? "Creating..." : "Create"}
+        </Button>
+      </div>
+    </Modal>
+  );
+};
 
 const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   const [formData, setFormData] = useState({
@@ -47,6 +114,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   const [insuranceCompanies, setInsuranceCompanies] = useState([]);
   const [gst, setGst] = useState(0);
   const [grossPremium, setGrossPremium] = useState(0);
+  const [showCreateICModal, setShowCreateICModal] = useState(false);
+  const [newICId, setNewICId] = useState(null);
 
   useEffect(() => {
     if (policy) {
@@ -116,14 +185,23 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   useEffect(() => {
     const fetchICs = async () => {
       try {
-        const data = await healthPolicyAPI.getActiveInsuranceCompanies();
-        setInsuranceCompanies(data);
+        const data = await insuranceCompanyAPI.getAllCompanies();
+        const companies = Array.isArray(data)
+          ? data
+          : Array.isArray(data.data)
+          ? data.data
+          : [];
+        setInsuranceCompanies(companies);
+        if (newICId) {
+          setFormData((prev) => ({ ...prev, insuranceCompanyId: newICId }));
+          setNewICId(null);
+        }
       } catch {
         setInsuranceCompanies([]);
       }
     };
     fetchICs();
-  }, []);
+  }, [showCreateICModal]);
 
   useEffect(() => {
     const net = parseFloat(formData.netPremium) || 0;
@@ -417,6 +495,35 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     }
   };
 
+  // --- CustomMenuList for react-select ---
+  const CustomMenuList = (props) => (
+    <>
+      <components.MenuList {...props}>
+        {props.children}
+        <div style={{ padding: 8, borderTop: "1px solid #eee" }}>
+          <button
+            style={{
+              width: "100%",
+              background: "#1F4F9C",
+              color: "#fff",
+              border: "none",
+              padding: 8,
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setShowCreateICModal(true);
+            }}
+          >
+            + Create Insurance Company
+          </button>
+        </div>
+      </components.MenuList>
+    </>
+  );
+
+  // --- insuranceCompanyOptions ---
   const insuranceCompanyOptions = insuranceCompanies.map((ic) => ({
     value: ic.id,
     label: ic.name,
@@ -629,6 +736,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
                   borderColor: "#d1d5db",
                 }),
               }}
+              components={{ MenuList: CustomMenuList }}
             />
           </div>
           <div className="insurance-form-group file-upload-group">
@@ -671,6 +779,14 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
           </Button>
         </div>
       </form>
+      <CreateInsuranceCompanyModal
+        isOpen={showCreateICModal}
+        onClose={() => setShowCreateICModal(false)}
+        onCreated={(company) => {
+          setNewICId(company.id);
+          setShowCreateICModal(false);
+        }}
+      />
     </>
   );
 };
