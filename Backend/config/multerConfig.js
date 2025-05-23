@@ -122,6 +122,27 @@ const vehiclePolicyStorage = multer.diskStorage({
     }
 });
 
+// Configure storage for health policy documents
+const healthPolicyStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = getUploadDir('health_policies');
+        try {
+            if (!fsSync.existsSync(uploadDir)) {
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `health-policy-${uniqueSuffix}${ext}`;
+        cb(null, filename);
+    }
+});
+
 // File filter to accept images and PDFs
 const fileFilter = (req, file, cb) => {
     const allowedTypes = [
@@ -253,10 +274,17 @@ const uploadVehiclePolicyDocument = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
+const uploadHealthPolicyDocument = multer({
+    storage: healthPolicyStorage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
 // Export the multer instances
 module.exports = {
     uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
     uploadProfileImage: uploadProfileImageWithLogging,
     uploadEmployeePolicyDocument,
-    uploadVehiclePolicyDocument
+    uploadVehiclePolicyDocument,
+    uploadHealthPolicyDocument
 }; 

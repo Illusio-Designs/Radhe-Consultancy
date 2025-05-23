@@ -1,34 +1,33 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import Sidebar from '../components/dashboard/Sidebar';
-import Header from '../components/dashboard/Header';
-import Footer from '../components/dashboard/Footer';
-import '../styles/layout/DashboardLayout.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import Sidebar from "../components/dashboard/Sidebar";
+import Header from "../components/dashboard/Header";
+import Footer from "../components/dashboard/Footer";
+import "../styles/layout/DashboardLayout.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Import all dashboard pages
-import CombinedDashboard from '../pages/dashboard/home/CombinedDashboard';
-import Profile from '../pages/dashboard/profile/Profile';
-import ChangePassword from '../pages/dashboard/auth/ChangePassword';
-import Support from '../pages/dashboard/support/Support';
-import RoleManagement from '../pages/dashboard/roles/RoleManagement';
-import Widget from '../pages/dashboard/widget/widget';
-import CompanyUsers from '../pages/dashboard/users/CompanyUsers';
-import ConsumerUsers from '../pages/dashboard/users/ConsumerUsers';
-import OtherUsers from '../pages/dashboard/users/OtherUsers';
-import CompanyList from '../pages/dashboard/companies/CompanyList';
-import ConsumerList from '../pages/dashboard/consumers/ConsumerList';
-import ECP from '../pages/dashboard/insurance/ECP';
-import Health from '../pages/dashboard/insurance/Health';
-import Marine from '../pages/dashboard/insurance/Marine';
-import Fire from '../pages/dashboard/insurance/Fire';
-import Vehicle from '../pages/dashboard/insurance/Vehicle';
-import Companies from '../pages/dashboard/insurance/Companies';
-import FactoryAct from '../pages/dashboard/compliance/FactoryAct';
-import LabourInspection from '../pages/dashboard/compliance/LabourInspection';
-import LabourLicense from '../pages/dashboard/compliance/LabourLicense';
-import DSC from '../pages/dashboard/dsc/DSC';
+import CombinedDashboard from "../pages/dashboard/home/CombinedDashboard";
+import Profile from "../pages/dashboard/profile/Profile";
+import ChangePassword from "../pages/dashboard/auth/ChangePassword";
+import Support from "../pages/dashboard/support/Support";
+import RoleManagement from "../pages/dashboard/roles/RoleManagement";
+import Widget from "../pages/dashboard/widget/widget";
+import CompanyUsers from "../pages/dashboard/users/CompanyUsers";
+import ConsumerUsers from "../pages/dashboard/users/ConsumerUsers";
+import OtherUsers from "../pages/dashboard/users/OtherUsers";
+import CompanyList from "../pages/dashboard/companies/CompanyList";
+import ConsumerList from "../pages/dashboard/consumers/ConsumerList";
+import ECP from "../pages/dashboard/insurance/ECP";
+import Health from "../pages/dashboard/insurance/Health";
+import Fire from "../pages/dashboard/insurance/Fire";
+import Vehicle from "../pages/dashboard/insurance/Vehicle";
+import Companies from "../pages/dashboard/insurance/Companies";
+import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
+import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
+import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
+import DSC from "../pages/dashboard/dsc/DSC";
 
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -39,14 +38,14 @@ function DashboardLayout() {
   const notifications = [
     { id: 1, text: "New user registered", time: "5 min ago" },
     { id: 2, text: "Server update completed", time: "1 hour ago" },
-    { id: 3, text: "New report available", time: "3 hours ago" }
+    { id: 3, text: "New report available", time: "3 hours ago" },
   ];
 
   // Example profile menu items
   const profileMenuItems = [
-    { id: 'profile', label: 'Profile' },
-    { id: 'settings', label: 'Settings' },
-    { id: 'logout', label: 'Logout' }
+    { id: "profile", label: "Profile" },
+    { id: "settings", label: "Settings" },
+    { id: "logout", label: "Logout" },
   ];
 
   const handleProfileAction = (itemId) => {
@@ -61,52 +60,50 @@ function DashboardLayout() {
   // Function to render the appropriate page based on the current route
   const renderPage = () => {
     const path = location.pathname;
-    
+
     switch (path) {
-      case '/dashboard':
-      case '/dashboard/admin':
-      case '/dashboard/company':
-      case '/dashboard/consumer':
+      case "/dashboard":
+      case "/dashboard/admin":
+      case "/dashboard/company":
+      case "/dashboard/consumer":
         return <CombinedDashboard />;
-      case '/dashboard/profile':
+      case "/dashboard/profile":
         return <Profile />;
-      case '/dashboard/change-password':
+      case "/dashboard/change-password":
         return <ChangePassword />;
-      case '/dashboard/support':
+      case "/dashboard/support":
         return <Support />;
-      case '/dashboard/roles':
+      case "/dashboard/roles":
         return <RoleManagement />;
-      case '/dashboard/widget':
+      case "/dashboard/widget":
         return <Widget />;
-      case '/dashboard/users/company':
+      case "/dashboard/users/company":
         return <CompanyUsers />;
-      case '/dashboard/users/consumer':
+      case "/dashboard/users/consumer":
         return <ConsumerUsers />;
-      case '/dashboard/users/other':
+      case "/dashboard/users/other":
         return <OtherUsers />;
-      case '/dashboard/companies':
+      case "/dashboard/companies":
         return <CompanyList />;
-      case '/dashboard/consumers':
+      case "/dashboard/consumers":
         return <ConsumerList />;
-      case '/dashboard/insurance/ECP':
+      case "/dashboard/insurance/ECP":
         return <ECP />;
-      case '/dashboard/insurance/health':
+      case "/dashboard/insurance/health":
         return <Health />;
-      case '/dashboard/insurance/marine':
-        return <Marine />;
-      case '/dashboard/insurance/fire':
+      case "/dashboard/insurance/fire":
         return <Fire />;
-      case '/dashboard/insurance/vehicle':
+      case "/dashboard/insurance/vehicle":
         return <Vehicle />;
-      case '/dashboard/insurance/companies':
+      case "/dashboard/insurance/companies":
         return <Companies />;
-      case '/dashboard/compliance/factory-act':
+      case "/dashboard/compliance/factory-act":
         return <FactoryAct />;
-      case '/dashboard/compliance/labour-inspection':
+      case "/dashboard/compliance/labour-inspection":
         return <LabourInspection />;
-      case '/dashboard/compliance/labour-license':
+      case "/dashboard/compliance/labour-license":
         return <LabourLicense />;
-      case '/dashboard/dsc':
+      case "/dashboard/dsc":
         return <DSC />;
       default:
         return <CombinedDashboard />;
@@ -126,15 +123,17 @@ function DashboardLayout() {
         draggable
         pauseOnHover
       />
-      
+
       <div className="dashboard-layout">
-        <aside className={`dashboard-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+        <aside
+          className={`dashboard-sidebar ${isCollapsed ? "collapsed" : ""}`}
+        >
           <Sidebar onCollapse={handleSidebarCollapse} />
         </aside>
 
         <div className="dashboard-main-content">
           <header className="dashboard-header">
-            <Header 
+            <Header
               isCollapsed={isCollapsed}
               notifications={notifications}
               showNotifications={showNotifications}
@@ -145,9 +144,7 @@ function DashboardLayout() {
           </header>
 
           <main className="dashboard-main">
-            <div className="dashboard-content">
-              {renderPage()}
-            </div>
+            <div className="dashboard-content">{renderPage()}</div>
           </main>
 
           <footer className="dashboard-footer">

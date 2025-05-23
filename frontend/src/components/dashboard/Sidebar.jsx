@@ -28,38 +28,39 @@ import "../../styles/components/dashboard/Sidebar.css";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Sidebar = ({ onCollapse }) => {
-  console.log('Sidebar: Component rendering');
-  
+  console.log("Sidebar: Component rendering");
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
-  
+
   // Debug logging for user data
-  console.log('Sidebar: Raw user data:', user);
-  console.log('Sidebar: User role_name:', user?.role_name);
-  console.log('Sidebar: User role:', user?.role);
-  
+  console.log("Sidebar: Raw user data:", user);
+  console.log("Sidebar: User role_name:", user?.role_name);
+  console.log("Sidebar: User role:", user?.role);
+
   // Get role from user object, handling both role_name and role properties
   const userRole = user?.role_name || user?.role;
-  console.log('Sidebar: Combined user role:', userRole);
-  
+  console.log("Sidebar: Combined user role:", userRole);
+
   // Helper for case-insensitive role comparison
-  const isRole = (role) => userRole && userRole.toLowerCase() === role.toLowerCase();
+  const isRole = (role) =>
+    userRole && userRole.toLowerCase() === role.toLowerCase();
 
   // Set 'Users' dropdown open by default for admin
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   // Function to handle dropdown toggle
   const handleDropdownToggle = (dropdownName) => {
-    console.log('Sidebar: Toggling dropdown:', dropdownName);
+    console.log("Sidebar: Toggling dropdown:", dropdownName);
     setActiveDropdown((currentDropdown) =>
       currentDropdown === dropdownName ? null : dropdownName
     );
   };
 
   useEffect(() => {
-    console.log('Sidebar: useEffect running');
+    console.log("Sidebar: useEffect running");
     const handleResize = () => {
       if (window.innerWidth <= 1023) {
         setIsCollapsed(true);
@@ -74,7 +75,7 @@ const Sidebar = ({ onCollapse }) => {
   }, []);
 
   const handleCollapse = () => {
-    console.log('Sidebar: Toggling collapse state');
+    console.log("Sidebar: Toggling collapse state");
     setIsCollapsed(!isCollapsed);
     if (onCollapse) {
       onCollapse(!isCollapsed);
@@ -92,7 +93,7 @@ const Sidebar = ({ onCollapse }) => {
 
   // Admin role has access to all features
   if (isRole("Admin")) {
-    console.log('Sidebar: Setting admin menu items');
+    console.log("Sidebar: Setting admin menu items");
     menuItems = [
       {
         path: "/dashboard",
@@ -164,11 +165,6 @@ const Sidebar = ({ onCollapse }) => {
             label: "Health",
           },
           {
-            path: "/dashboard/insurance/marine",
-            icon: <BiWater />,
-            label: "Marine",
-          },
-          {
             path: "/dashboard/insurance/fire",
             icon: <BiHotel />,
             label: "Fire",
@@ -212,7 +208,7 @@ const Sidebar = ({ onCollapse }) => {
       },
       { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
     ];
-    console.log('Sidebar: Admin menu items set:', menuItems);
+    console.log("Sidebar: Admin menu items set:", menuItems);
   } else if (isRole("User_manager") || isRole("User")) {
     menuItems = [
       {
@@ -300,11 +296,6 @@ const Sidebar = ({ onCollapse }) => {
             label: "Health",
           },
           {
-            path: "/dashboard/insurance/marine",
-            icon: <BiWater />,
-            label: "Marine",
-          },
-          {
             path: "/dashboard/insurance/fire",
             icon: <BiHotel />,
             label: "Fire",
@@ -366,24 +357,26 @@ const Sidebar = ({ onCollapse }) => {
       { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
     ];
   } else {
-    console.log('Sidebar: Not a recognized role, using default menu items');
+    console.log("Sidebar: Not a recognized role, using default menu items");
   }
 
   const isActive = (path) => {
     const active = location.pathname.startsWith(path);
-    console.log('Sidebar: Checking if path is active:', { path, active });
+    console.log("Sidebar: Checking if path is active:", { path, active });
     return active;
   };
 
   const renderMenuItem = (item, index) => {
-    console.log('Sidebar: Rendering menu item:', { item, index });
+    console.log("Sidebar: Rendering menu item:", { item, index });
     if (item.isDropdown) {
       return (
-        <div key={`dropdown-${item.label}-${item.path || ''}-${index}`}>
+        <div key={`dropdown-${item.label}-${item.path || ""}-${index}`}>
           <a
             onClick={item.toggle}
             className={`sidebar-nav-item ${
-              item.items && item.items.some((sub) => isActive(sub.path)) ? "active" : ""
+              item.items && item.items.some((sub) => isActive(sub.path))
+                ? "active"
+                : ""
             }`}
             title={isCollapsed ? item.label : ""}
           >
@@ -402,7 +395,11 @@ const Sidebar = ({ onCollapse }) => {
             )}
           </a>
           {item.items && item.items.length > 0 && (
-            <div className={`pl-4 ${item.isOpen ? "dropdown-open" : "dropdown-close"}`}>
+            <div
+              className={`pl-4 ${
+                item.isOpen ? "dropdown-open" : "dropdown-close"
+              }`}
+            >
               {item.items.map((subItem, subIndex) =>
                 subItem.isDropdown ? (
                   renderMenuItem(subItem, `${index}-${subIndex}`)
@@ -443,8 +440,8 @@ const Sidebar = ({ onCollapse }) => {
     );
   };
 
-  console.log('Sidebar: Final menu items:', menuItems);
-  
+  console.log("Sidebar: Final menu items:", menuItems);
+
   return (
     <>
       <div

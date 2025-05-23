@@ -276,7 +276,9 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     });
 
     if (missingFields.length > 0) {
-      const errorMessage = `Missing required fields: ${missingFields.join(", ")}`;
+      const errorMessage = `Missing required fields: ${missingFields.join(
+        ", "
+      )}`;
       setError(errorMessage);
       toast.error(errorMessage);
       setLoading(false);
@@ -319,19 +321,21 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
           name: files.policyDocument.name,
           type: files.policyDocument.type,
           size: files.policyDocument.size,
-          lastModified: new Date(files.policyDocument.lastModified).toISOString()
+          lastModified: new Date(
+            files.policyDocument.lastModified
+          ).toISOString(),
         });
-        
+
         // Append file with the exact field name expected by multer
         submitData.append("policyDocument", files.policyDocument);
-        
+
         // Verify file was appended correctly
         const file = submitData.get("policyDocument");
         console.log("File appended to FormData:", {
           name: file.name,
           type: file.type,
           size: file.size,
-          lastModified: new Date(file.lastModified).toISOString()
+          lastModified: new Date(file.lastModified).toISOString(),
         });
       }
 
@@ -343,7 +347,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
             name: pair[1].name,
             type: pair[1].type,
             size: pair[1].size,
-            lastModified: new Date(pair[1].lastModified).toISOString()
+            lastModified: new Date(pair[1].lastModified).toISOString(),
           });
         } else {
           console.log(pair[0], pair[1]);
@@ -353,7 +357,10 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       let response;
       if (policy) {
         console.log("Updating existing policy:", policy.id);
-        response = await employeeCompensationAPI.updatePolicy(policy.id, submitData);
+        response = await employeeCompensationAPI.updatePolicy(
+          policy.id,
+          submitData
+        );
         console.log("Update response:", response);
         toast.success("Policy updated successfully!");
       } else {
@@ -362,13 +369,19 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
         console.log("Create response:", response);
         toast.success("Policy created successfully!");
       }
-      
+
       onPolicyUpdated();
       onClose();
     } catch (error) {
       console.error("Error submitting form:", error);
-      setError(error.response?.data?.message || "An error occurred while submitting the form");
-      toast.error(error.response?.data?.message || "An error occurred while submitting the form");
+      setError(
+        error.response?.data?.message ||
+          "An error occurred while submitting the form"
+      );
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred while submitting the form"
+      );
     } finally {
       setLoading(false);
     }
@@ -423,20 +436,48 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
-            <select
-              name="companyId"
-              value={formData.companyId}
-              onChange={handleCompanyChange}
-              required
+            <Select
+              options={companies.map((company) => ({
+                value: company.company_id,
+                label: company.company_name,
+                data: company,
+              }))}
+              value={
+                companies
+                  .map((company) => ({
+                    value: company.company_id,
+                    label: company.company_name,
+                    data: company,
+                  }))
+                  .find((opt) => opt.value === formData.companyId) || null
+              }
+              onChange={(option) => {
+                const selectedCompany = option ? option.data : null;
+                setFormData((prev) => ({
+                  ...prev,
+                  companyId: option ? option.value : "",
+                  email: selectedCompany ? selectedCompany.company_email : "",
+                  mobileNumber: selectedCompany
+                    ? selectedCompany.contact_number
+                    : "",
+                  gstNumber: selectedCompany ? selectedCompany.gst_number : "",
+                  panNumber: selectedCompany ? selectedCompany.pan_number : "",
+                }));
+              }}
+              placeholder="Select Company"
+              isClearable
+              isSearchable={true}
               className="insurance-form-input"
-            >
-              <option value="">Select Company</option>
-              {companies.map((company) => (
-                <option key={company.company_id} value={company.company_id}>
-                  {company.company_name}
-                </option>
-              ))}
-            </select>
+              styles={{
+                menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: "44px",
+                  borderRadius: "8px",
+                  borderColor: "#d1d5db",
+                }),
+              }}
+            />
           </div>
 
           <div className="insurance-form-group">

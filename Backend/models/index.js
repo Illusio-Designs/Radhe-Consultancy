@@ -10,6 +10,7 @@ const Consumer = require('./consumerModel');
 const InsuranceCompany = require('./insuranceCompanyModel');
 const EmployeeCompensationPolicy = require('./employeeCompensationPolicyModel');
 const VehiclePolicy = require('./vehiclePolicyModel');
+const HealthPolicy = require('./healthPolicyModel');
 
 // Define associations
 User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });
@@ -44,11 +45,19 @@ InsuranceCompany.hasMany(VehiclePolicy, {
   foreignKey: 'insurance_company_id',
   as: 'vehiclePolicies'
 });
+InsuranceCompany.hasMany(HealthPolicy, {
+  foreignKey: 'insurance_company_id',
+  as: 'healthPolicies'
+});
 EmployeeCompensationPolicy.belongsTo(InsuranceCompany, {
   foreignKey: 'insurance_company_id',
   as: 'provider'
 });
 VehiclePolicy.belongsTo(InsuranceCompany, {
+  foreignKey: 'insurance_company_id',
+  as: 'provider'
+});
+HealthPolicy.belongsTo(InsuranceCompany, {
   foreignKey: 'insurance_company_id',
   as: 'provider'
 });
@@ -62,6 +71,10 @@ Company.hasMany(VehiclePolicy, {
   foreignKey: 'company_id',
   as: 'vehiclePoliciesByCompany'
 });
+Company.hasMany(HealthPolicy, {
+  foreignKey: 'company_id',
+  as: 'healthPoliciesByCompany'
+});
 EmployeeCompensationPolicy.belongsTo(Company, {
   foreignKey: 'company_id',
   as: 'policyHolder'
@@ -70,13 +83,25 @@ VehiclePolicy.belongsTo(Company, {
   foreignKey: 'company_id',
   as: 'companyPolicyHolder'
 });
+HealthPolicy.belongsTo(Company, {
+  foreignKey: 'company_id',
+  as: 'companyPolicyHolder'
+});
 
-// Consumer and VehiclePolicy association
+// Consumer and Policy associations
 Consumer.hasMany(VehiclePolicy, {
   foreignKey: 'consumer_id',
   as: 'vehiclePoliciesByConsumer'
 });
+Consumer.hasMany(HealthPolicy, {
+  foreignKey: 'consumer_id',
+  as: 'healthPoliciesByConsumer'
+});
 VehiclePolicy.belongsTo(Consumer, {
+  foreignKey: 'consumer_id',
+  as: 'consumerPolicyHolder'
+});
+HealthPolicy.belongsTo(Consumer, {
   foreignKey: 'consumer_id',
   as: 'consumerPolicyHolder'
 });
@@ -91,5 +116,6 @@ module.exports = {
   Consumer,
   InsuranceCompany,
   EmployeeCompensationPolicy,
-  VehiclePolicy
+  VehiclePolicy,
+  HealthPolicy
 };

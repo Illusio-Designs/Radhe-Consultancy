@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import PublicLayout from "../layouts/PublicLayout";
 import AuthLayout from "../layouts/AuthLayout";
@@ -22,7 +22,6 @@ import Support from "../pages/dashboard/support/Support";
 import Widget from "../pages/dashboard/widget/widget";
 import ECP from "../pages/dashboard/insurance/ECP";
 import Health from "../pages/dashboard/insurance/Health";
-import Marine from "../pages/dashboard/insurance/Marine";
 import Fire from "../pages/dashboard/insurance/Fire";
 import Vehicle from "../pages/dashboard/insurance/Vehicle";
 import Companies from "../pages/dashboard/insurance/Companies";
@@ -39,109 +38,125 @@ import Contact from "../pages/Contact";
 import Blog from "../pages/Blog";
 import Bloginner from "../pages/Bloginner";
 
-const router = createBrowserRouter([
-  // Public Routes
+const router = createBrowserRouter(
+  [
+    // Public Routes
+    {
+      path: "/",
+      element: <PublicLayout />,
+      children: [
+        {
+          index: true,
+          element: <ComingSoon />,
+        },
+        {
+          path: "/home",
+          element: <Home />,
+        },
+        {
+          path: "/about",
+          element: <About />,
+        },
+        {
+          path: "/insurance",
+          element: <Insurance />,
+        },
+        {
+          path: "/compliance",
+          element: <Compliance />,
+        },
+        {
+          path: "/contact",
+          element: <Contact />,
+        },
+        {
+          path: "/blog",
+          element: <Blog />,
+        },
+        {
+          path: "/bloginner",
+          element: <Bloginner />,
+        },
+        {
+          path: "unauthorized",
+          element: <Unauthorized />,
+        },
+        {
+          path: "*",
+          element: <NotFound />,
+        },
+      ],
+    },
+    // Auth Routes
+    {
+      path: "/",
+      element: <AuthLayout />,
+      children: [
+        {
+          path: "login",
+          element: <Login />,
+        },
+        {
+          path: "register",
+          element: <Register />,
+        },
+        {
+          path: "forgot-password",
+          element: <ForgotPassword />,
+        },
+        {
+          path: "reset-password/:token",
+          element: <ResetPassword />,
+        },
+      ],
+    },
+    // Dashboard Routes (Protected)
+    {
+      path: "/dashboard",
+      element: (
+        <ProtectedRoute>
+          <DashboardLayout />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/dashboard/*",
+      element: (
+        <ProtectedRoute>
+          <DashboardLayout />
+        </ProtectedRoute>
+      ),
+    },
+    // Exclude health check endpoint from frontend routing
+    {
+      path: "/health",
+      element: null,
+    },
+    {
+      path: "/api/health",
+      element: null,
+    },
+  ],
   {
-    path: "/",
-    element: <PublicLayout />,
-    children: [
-      {
-        index: true,
-        element: <ComingSoon />,
-      },
-      {
-        path: "/home",
-        element: <Home />,
-      },
-      {
-        path: "/about",
-        element: <About />,
-      },
-      {
-        path: "/insurance",
-        element: <Insurance />,
-      },
-      {
-        path: "/compliance",
-        element: <Compliance />,
-      },
-      {
-        path: "/contact",
-        element: <Contact />,
-      },
-      {
-        path: "/blog",
-        element: <Blog />,
-      },
-      {
-        path: "/bloginner",
-        element: <Bloginner />,
-      },
-      {
-        path: "unauthorized",
-        element: <Unauthorized />,
-      },
-      {
-        path: "*",
-        element: <NotFound />,
-      },
-    ],
-  },
-  // Auth Routes
-  {
-    path: "/",
-    element: <AuthLayout />,
-    children: [
-      {
-        path: "login",
-        element: <Login />,
-      },
-      {
-        path: "register",
-        element: <Register />,
-      },
-      {
-        path: "forgot-password",
-        element: <ForgotPassword />,
-      },
-      {
-        path: "reset-password/:token",
-        element: <ResetPassword />,
-      },
-    ],
-  },
-  // Dashboard Routes (Protected)
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/dashboard/*",
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-  },
-  // Exclude health check endpoint from frontend routing
-  {
-    path: "/health",
-    element: null,
-  },
-  {
-    path: "/api/health",
-    element: null,
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
   }
-], {
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true
-  }
-});
+);
+
+// Create a wrapper component that uses the router with future flags
+export const Router = () => {
+  return (
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    />
+  );
+};
 
 export { router };
 export default router;

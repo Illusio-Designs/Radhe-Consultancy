@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  startTransition,
+} from "react";
 import { userAPI, roleAPI } from "../services/api";
 import { useAuth } from "./AuthContext";
 
@@ -22,20 +28,28 @@ export const DataProvider = ({ children }) => {
   const fetchUsers = async () => {
     try {
       const data = await userAPI.getAllUsers();
-      setUsers(data);
+      startTransition(() => {
+        setUsers(data);
+      });
     } catch (err) {
       console.error("Error fetching users:", err);
-      setError("Failed to fetch users");
+      startTransition(() => {
+        setError("Failed to fetch users");
+      });
     }
   };
 
   const fetchRoles = async () => {
     try {
       const data = await roleAPI.getAllRoles();
-      setRoles(data);
+      startTransition(() => {
+        setRoles(data);
+      });
     } catch (err) {
       console.error("Error fetching roles:", err);
-      setError("Failed to fetch roles");
+      startTransition(() => {
+        setError("Failed to fetch roles");
+      });
     }
   };
 
@@ -45,15 +59,22 @@ export const DataProvider = ({ children }) => {
       return;
     }
 
-    setLoading(true);
+    startTransition(() => {
+      setLoading(true);
+    });
+
     try {
       await Promise.all([fetchUsers(), fetchRoles()]);
-      setError(null);
+      startTransition(() => {
+        setError(null);
+        setLoading(false);
+      });
     } catch (err) {
       console.error("Error refreshing data:", err);
-      setError("Failed to refresh data");
-    } finally {
-      setLoading(false);
+      startTransition(() => {
+        setError("Failed to refresh data");
+        setLoading(false);
+      });
     }
   };
 
@@ -62,9 +83,11 @@ export const DataProvider = ({ children }) => {
     if (!authLoading && isAuthenticated) {
       refreshData();
     } else if (!authLoading && !isAuthenticated) {
-      setLoading(false);
-      setUsers([]);
-      setRoles([]);
+      startTransition(() => {
+        setLoading(false);
+        setUsers([]);
+        setRoles([]);
+      });
     }
   }, [authLoading, isAuthenticated]);
 

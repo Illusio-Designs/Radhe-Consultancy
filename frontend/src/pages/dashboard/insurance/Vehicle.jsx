@@ -313,13 +313,13 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
+
     // Log initial state
     console.log("[Vehicle] Initial form state:", {
       formData,
       files,
       fileNames,
-      policy
+      policy,
     });
 
     // Validate required fields
@@ -367,23 +367,26 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     }
 
     const submitData = new FormData();
-    
+
     try {
       // Log form data before conversion
       console.log("[Vehicle] Form data before conversion:", formData);
-      
+
       // Add all form fields with proper type conversion
       Object.entries(formData).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           // Convert camelCase to snake_case for API
-          const apiKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-          
+          const apiKey = key.replace(
+            /[A-Z]/g,
+            (letter) => `_${letter.toLowerCase()}`
+          );
+
           // Handle numeric fields
-          if (['idv', 'netPremium'].includes(key)) {
+          if (["idv", "netPremium"].includes(key)) {
             submitData.append(apiKey, parseFloat(value).toFixed(2));
           }
           // Handle date fields
-          else if (['policyStartDate', 'policyEndDate'].includes(key)) {
+          else if (["policyStartDate", "policyEndDate"].includes(key)) {
             submitData.append(apiKey, new Date(value).toISOString());
           }
           // Handle all other fields
@@ -399,7 +402,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       submitData.append("gross_premium", grossPremium.toFixed(2));
       console.log("[Vehicle] Appended calculated fields:", {
         gst: gst.toFixed(2),
-        gross_premium: grossPremium.toFixed(2)
+        gross_premium: grossPremium.toFixed(2),
       });
 
       // Handle file upload
@@ -408,12 +411,20 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
           name: files.policyDocument.name,
           type: files.policyDocument.type,
           size: `${(files.policyDocument.size / 1024 / 1024).toFixed(2)}MB`,
-          lastModified: new Date(files.policyDocument.lastModified).toISOString()
+          lastModified: new Date(
+            files.policyDocument.lastModified
+          ).toISOString(),
         });
-        
+
         // Use the field name expected by the backend's multer configuration
-        submitData.append("policyDocument", files.policyDocument, files.policyDocument.name);
-        console.log("[Vehicle] File appended to FormData with field name 'policyDocument'");
+        submitData.append(
+          "policyDocument",
+          files.policyDocument,
+          files.policyDocument.name
+        );
+        console.log(
+          "[Vehicle] File appended to FormData with field name 'policyDocument'"
+        );
       } else {
         console.log("[Vehicle] No file to upload");
       }
@@ -426,7 +437,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
             name: value.name,
             type: value.type,
             size: `${(value.size / 1024 / 1024).toFixed(2)}MB`,
-            lastModified: new Date(value.lastModified).toISOString()
+            lastModified: new Date(value.lastModified).toISOString(),
           });
         } else {
           console.log(`${key}: ${value}`);
@@ -458,13 +469,14 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
         requestData: {
           formData,
           files,
-          submitData: Object.fromEntries(submitData.entries())
-        }
+          submitData: Object.fromEntries(submitData.entries()),
+        },
       });
-      const errorMessage = err.response?.data?.errors?.[0]?.msg || 
-                          err.response?.data?.error || 
-                          err.response?.data?.message || 
-                          "Failed to save policy";
+      const errorMessage =
+        err.response?.data?.errors?.[0]?.msg ||
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Failed to save policy";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -526,6 +538,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               onChange={handleHolderChange}
               placeholder="Select Company or Consumer"
               isClearable
+              isSearchable={true}
               styles={{
                 menu: (provided) => ({ ...provided, zIndex: 9999 }),
                 control: (provided) => ({
@@ -545,11 +558,16 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               }}
             />
           </div>
-          <input
-            type="hidden"
-            name="organisation_or_holder_name"
-            value={formData.organisation_or_holder_name}
-          />
+          <div className="insurance-form-group">
+            <input
+              type="text"
+              name="organisation_or_holder_name"
+              value={formData.organisation_or_holder_name}
+              readOnly
+              className="insurance-form-input"
+              placeholder="Organisation Name / Policy Holder Name"
+            />
+          </div>
           <div className="insurance-form-group">
             <select
               name="businessType"

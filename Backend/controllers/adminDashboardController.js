@@ -1,4 +1,4 @@
-const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
@@ -77,17 +77,23 @@ const getCompanyStatistics = async (req, res) => {
       }
     });
 
+    // Real data for Health Policies
+    const healthTotal = await HealthPolicy.count();
+    const healthRecent = await HealthPolicy.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+
     // Static data for other types
     const fireTotal = 8;
     const fireRecent = 2;
-    const marineTotal = 5;
-    const marineRecent = 0;
-    const healthTotal = 20;
-    const healthRecent = 3;
 
-    // Combined totals
-    const allTotal = ecpTotal + vehicleTotal + fireTotal + marineTotal + healthTotal;
-    const allRecent = ecpRecent + vehicleRecent + fireRecent + marineRecent + healthRecent;
+    // Combined totals (dynamic, no marine)
+    const allTotal = ecpTotal + vehicleTotal + fireTotal + healthTotal;
+    const allRecent = ecpRecent + vehicleRecent + fireRecent + healthRecent;
 
     // Helper for percent
     const percentInsurance = (recent, total) => total > 0 ? Math.round((recent / total) * 100) : 0;
@@ -129,11 +135,6 @@ const getCompanyStatistics = async (req, res) => {
             total: fireTotal,
             recent: fireRecent,
             percent: percentInsurance(fireRecent, fireTotal)
-          },
-          marine: {
-            total: marineTotal,
-            recent: marineRecent,
-            percent: percentInsurance(marineRecent, marineTotal)
           },
           health: {
             total: healthTotal,

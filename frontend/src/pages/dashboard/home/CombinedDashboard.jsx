@@ -95,12 +95,6 @@ const AllInsuranceCard = ({ stats }) => (
         color="#e67e22"
       />
       <InsuranceTypeCard
-        icon={<FiAnchor />}
-        label="Marine"
-        stats={stats.marine}
-        color="#17a2b8"
-      />
-      <InsuranceTypeCard
         icon={<FiHeart />}
         label="Health"
         stats={stats.health}
