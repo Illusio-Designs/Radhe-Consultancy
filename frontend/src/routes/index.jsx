@@ -136,7 +136,12 @@ const router = createBrowserRouter([
     path: "/api/health",
     element: null,
   }
-]);
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+});
 
 export { router };
 export default router;

@@ -65,13 +65,13 @@ const AllInsuranceCard = ({ stats }) => (
     <div className="all-insurance-stats">
       <div className="all-insurance-total">
         <span className="stat-label">Total</span>
-        <span className="stat-value">1000</span>
+        <span className="stat-value">{stats.all.total}</span>
       </div>
       <div className="all-insurance-recent">
         <span className="stat-label">Recent (30d)</span>
         <div className="stat-value-container">
-          <span className="stat-value">500</span>
-          <span className="stat-percentage">50%</span>
+          <span className="stat-value">{stats.all.recent}</span>
+          <span className="stat-percentage">{stats.all.percent}%</span>
         </div>
       </div>
     </div>
