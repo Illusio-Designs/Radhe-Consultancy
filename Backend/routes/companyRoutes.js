@@ -1,37 +1,65 @@
 const express = require('express');
 const router = express.Router();
 const companyController = require('../controllers/companyController');
-const { auth, checkRole } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const { uploadCompanyDocuments } = require('../config/multerConfig');
+const { check } = require('express-validator');
 
-// Create a new company (admin and vendor manager only)
+// Create a new company
 router.post('/', 
-  auth, 
-  checkRole(['admin', 'vendor_manager']),
-  uploadCompanyDocuments,
-  companyController.createCompany
+    auth, 
+    uploadCompanyDocuments,
+    [
+        check('company_name').notEmpty().withMessage('Company name is required'),
+        check('owner_name').notEmpty().withMessage('Owner name is required'),
+        check('company_address').notEmpty().withMessage('Company address is required'),
+        check('contact_number').notEmpty().withMessage('Contact number is required'),
+        check('company_email').isEmail().withMessage('Valid email is required'),
+        check('gst_number').notEmpty().withMessage('GST number is required'),
+        check('pan_number').notEmpty().withMessage('PAN number is required'),
+        check('firm_type').notEmpty().withMessage('Firm type is required'),
+        check('nature_of_work').notEmpty().withMessage('Nature of work is required'),
+        check('type_of_company').notEmpty().withMessage('Type of company is required')
+    ],
+    companyController.createCompany
 );
 
-// Get all companies (admin, vendor manager, and user manager)
-router.get('/', 
-  auth, 
-  checkRole(['admin', 'vendor_manager', 'user_manager']), 
-  companyController.getAllCompanies
-);
+// Get all companies
+router.get('/', auth, companyController.getAllCompanies);
 
-// Get company by ID (admin, vendor manager, user manager, and company users)
-router.get('/:id', 
-  auth, 
-  checkRole(['admin', 'vendor_manager', 'user_manager', 'company']), 
-  companyController.getCompanyById
-);
+// Get all company vendors
+router.get('/vendors', auth, companyController.getAllCompanyVendors);
 
-// Update company (admin, vendor manager, and company users)
+// Get company by ID
+router.get('/:id', auth, companyController.getCompanyById);
+
+// Update company
 router.put('/:id', 
-  auth, 
-  checkRole(['admin', 'vendor_manager', 'company']),
-  uploadCompanyDocuments,
-  companyController.updateCompany
+    auth, 
+    uploadCompanyDocuments,
+    [
+        check('company_name').notEmpty().withMessage('Company name is required'),
+        check('owner_name').notEmpty().withMessage('Owner name is required'),
+        check('company_address').notEmpty().withMessage('Company address is required'),
+        check('contact_number').notEmpty().withMessage('Contact number is required'),
+        check('company_email').isEmail().withMessage('Valid email is required'),
+        check('gst_number').notEmpty().withMessage('GST number is required'),
+        check('pan_number').notEmpty().withMessage('PAN number is required'),
+        check('firm_type').notEmpty().withMessage('Firm type is required'),
+        check('nature_of_work').notEmpty().withMessage('Nature of work is required'),
+        check('type_of_company').notEmpty().withMessage('Type of company is required')
+    ],
+    (req, res, next) => {
+        console.log('[CompanyRoutes] Update request received:', {
+            body: req.body,
+            files: req.files
+        });
+        next();
+    },
+    companyController.updateCompany
 );
+
+// Delete company
+router.delete('/:id', auth, companyController.deleteCompany);
 
 module.exports = router; 

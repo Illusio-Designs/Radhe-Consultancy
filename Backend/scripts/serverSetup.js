@@ -121,8 +121,11 @@ async function setupDatabase() {
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     if (!fs.existsSync(policyDir)) fs.mkdirSync(policyDir, { recursive: true });
 
-    // Sync tables in correct order
+    // Disable foreign key checks temporarily
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0;');
+
     try {
+      // Sync tables in correct order
       await Role.sync({ alter: true });
       console.log('Roles table synced');
       await Permission.sync({ alter: true });
@@ -136,10 +139,21 @@ async function setupDatabase() {
 
       // Special handling for Consumer
       try {
+        // First, drop existing indexes that might cause the key limit issue
+        await sequelize.query(`
+          ALTER TABLE Consumers 
+          DROP INDEX IF EXISTS status,
+          DROP INDEX IF EXISTS email,
+          DROP INDEX IF EXISTS phone,
+          DROP INDEX IF EXISTS created_at,
+          DROP INDEX IF EXISTS updated_at
+        `).catch(err => console.log('Error dropping indexes:', err.message));
+
+        // Then modify the status column
         await sequelize.query(`
           ALTER TABLE Consumers 
           MODIFY COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active' NOT NULL
-        `).catch(() => {}); // Ignore error if column doesn't exist
+        `).catch(err => console.log('Error modifying status column:', err.message));
         
         await Consumer.sync({ 
           alter: true,
@@ -148,7 +162,7 @@ async function setupDatabase() {
         console.log('Consumers table synced with status field');
       } catch (error) {
         console.error('Error syncing Consumer:', error.message);
-        throw error;
+        // Continue with other tables even if Consumer sync fails
       }
 
       await InsuranceCompany.sync({ alter: true });
@@ -159,25 +173,28 @@ async function setupDatabase() {
       console.log('VehiclePolicies table synced');
     } finally {
       // Re-enable foreign key checks
-      await sequelize.query(`
-        SET FOREIGN_KEY_CHECKS = 1;
-      `);
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');
     }
 
     // Special handling for InsuranceCompany
     try {
       await sequelize.query(`
         ALTER TABLE InsuranceCompanies 
-        DROP INDEX name
-      `).catch(() => {}); // Ignore error if index doesn't exist
+        DROP INDEX IF EXISTS name,
+        DROP INDEX IF EXISTS email,
+        DROP INDEX IF EXISTS phone,
+        DROP INDEX IF EXISTS created_at,
+        DROP INDEX IF EXISTS updated_at
+      `).catch(err => console.log('Error dropping InsuranceCompany indexes:', err.message));
       
       await InsuranceCompany.sync({ 
         alter: true,
         logging: false
       });
+      console.log('InsuranceCompany table synced with reduced indexes');
     } catch (error) {
       console.error('Error syncing InsuranceCompany:', error.message);
-      throw error;
+      // Continue with other operations
     }
 
     // Special handling for EmployeeCompensationPolicy
@@ -187,11 +204,13 @@ async function setupDatabase() {
         DROP INDEX IF EXISTS policy_number,
         DROP INDEX IF EXISTS insurance_company_id,
         DROP INDEX IF EXISTS company_id,
+        DROP INDEX IF EXISTS created_at,
+        DROP INDEX IF EXISTS updated_at,
         DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_1,
         DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_2,
         DROP FOREIGN KEY IF EXISTS fk_insurance_company,
         DROP FOREIGN KEY IF EXISTS fk_company
-      `).catch(() => {}); // Ignore errors if constraints don't exist
+      `).catch(err => console.log('Error dropping EmployeeCompensationPolicy constraints:', err.message));
       
       await EmployeeCompensationPolicy.sync({ 
         alter: true,
@@ -210,10 +229,12 @@ async function setupDatabase() {
         REFERENCES Companies(company_id)
         ON DELETE NO ACTION
         ON UPDATE CASCADE
-      `).catch(() => {}); // Ignore if already exists
+      `).catch(err => console.log('Error adding EmployeeCompensationPolicy constraints:', err.message));
+      
+      console.log('EmployeeCompensationPolicy table synced with reduced indexes');
     } catch (error) {
       console.error('Error syncing EmployeeCompensationPolicy:', error.message);
-      throw error;
+      // Continue with other operations
     }
     
     console.log('All tables synced');

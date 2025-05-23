@@ -3,30 +3,52 @@ const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 
-// Configure multer for disk storage
-const storage = multer.diskStorage({
+// Get the absolute path to the uploads directory
+const getUploadDir = (dirName) => {
+    const uploadDir = path.join(__dirname, '..', 'uploads', dirName);
+    console.log('[Multer] Generated upload directory path:', uploadDir);
+    return uploadDir;
+};
+
+// Configure storage for company documents
+const companyStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
-        const uploadDir = 'uploads/company_documents';
+        const uploadDir = getUploadDir('company_documents');
         try {
-            // Check if directory exists
+            console.log('[Multer] Setting destination for file:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype
+            });
             if (!fsSync.existsSync(uploadDir)) {
-                // Create directory if it doesn't exist
+                console.log('[Multer] Creating directory:', uploadDir);
                 await fs.mkdir(uploadDir, { recursive: true });
             }
+            console.log('[Multer] Using directory:', uploadDir);
             cb(null, uploadDir);
         } catch (error) {
+            console.error('[Multer] Error in destination function:', error);
             cb(error);
         }
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
+        cb(null, filename);
     }
 });
 
 // Configure storage for profile images
 const profileStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
-        const uploadDir = 'uploads/profile_images';
+        const uploadDir = getUploadDir('profile_images');
         try {
             if (!fsSync.existsSync(uploadDir)) {
                 await fs.mkdir(uploadDir, { recursive: true });
@@ -37,14 +59,17 @@ const profileStorage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `profile-${uniqueSuffix}${ext}`;
+        cb(null, filename);
     }
 });
 
 // Configure storage for employee policy documents
 const employeePolicyStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
-        const uploadDir = 'uploads/employee_policies';
+        const uploadDir = getUploadDir('employee_policies');
         try {
             if (!fsSync.existsSync(uploadDir)) {
                 await fs.mkdir(uploadDir, { recursive: true });
@@ -56,14 +81,16 @@ const employeePolicyStorage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `employee-policy-${uniqueSuffix}${path.extname(file.originalname)}`);
+        const ext = path.extname(file.originalname);
+        const filename = `employee-policy-${uniqueSuffix}${ext}`;
+        cb(null, filename);
     }
 });
 
 // Configure storage for vehicle policy documents
 const vehiclePolicyStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
-        const uploadDir = path.join(__dirname, '../uploads/vehicle_policies');
+        const uploadDir = getUploadDir('vehicle_policies');
         try {
             if (!fsSync.existsSync(uploadDir)) {
                 await fs.mkdir(uploadDir, { recursive: true });
@@ -74,11 +101,9 @@ const vehiclePolicyStorage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        // Generate a unique filename with timestamp and random number
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         const filename = `vehicle-policy-${uniqueSuffix}${ext}`;
-        console.log('[Multer] Generated filename:', filename);
         cb(null, filename);
     }
 });
@@ -88,56 +113,102 @@ const fileFilter = (req, file, cb) => {
     const allowedTypes = [
         'application/pdf',
         'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/jpeg',
+        'image/png'
     ];
     
+    console.log('[Multer] Checking file type:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        fieldname: file.fieldname,
+        size: file.size
+    });
+    
     if (allowedTypes.includes(file.mimetype)) {
+        console.log('[Multer] File type accepted');
         cb(null, true);
     } else {
-        cb(new Error('Only PDF and Word documents are allowed!'), false);
+        console.log('[Multer] File type rejected');
+        cb(new Error('Only PDF, Word documents, and images are allowed!'), false);
     }
 };
 
-// Configure upload limits
-const limits = {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+// Create multer upload instance
+const uploadCompanyDocuments = multer({
+    storage: companyStorage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+}).fields([
+    { name: 'gst_document', maxCount: 1 },
+    { name: 'pan_document', maxCount: 1 }
+]);
+
+// Add logging for debugging
+const uploadCompanyDocumentsWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting file upload process');
+    console.log('[Multer] Request body:', req.body);
+    console.log('[Multer] Request files:', req.files);
+
+    uploadCompanyDocuments(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error uploading files:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log uploaded files
+        if (req.files) {
+            console.log('[Multer] Files uploaded successfully:', {
+                gst_document: req.files.gst_document ? {
+                    fieldname: req.files.gst_document[0].fieldname,
+                    originalname: req.files.gst_document[0].originalname,
+                    filename: req.files.gst_document[0].filename,
+                    mimetype: req.files.gst_document[0].mimetype,
+                    size: req.files.gst_document[0].size,
+                    path: req.files.gst_document[0].path
+                } : null,
+                pan_document: req.files.pan_document ? {
+                    fieldname: req.files.pan_document[0].fieldname,
+                    originalname: req.files.pan_document[0].originalname,
+                    filename: req.files.pan_document[0].filename,
+                    mimetype: req.files.pan_document[0].mimetype,
+                    size: req.files.pan_document[0].size,
+                    path: req.files.pan_document[0].path
+                } : null
+            });
+        } else {
+            console.log('[Multer] No files uploaded');
+        }
+
+        next();
+    });
 };
 
-// Create multer upload instances
-const upload = multer({
-    storage,
-    fileFilter,
-    limits
-});
-
-const uploadProfileImage = multer({
+const uploadProfile = multer({
     storage: profileStorage,
     fileFilter,
-    limits
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit for profile images
 });
 
 const uploadEmployeePolicyDocument = multer({
     storage: employeePolicyStorage,
     fileFilter,
-    limits
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
 const uploadVehiclePolicyDocument = multer({
     storage: vehiclePolicyStorage,
     fileFilter,
-    limits
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
-// Middleware for handling company document uploads
-const uploadCompanyDocuments = upload.fields([
-    { name: 'gst_document', maxCount: 1 },
-    { name: 'pan_document', maxCount: 1 }
-]);
-
+// Export the multer instances
 module.exports = {
-    upload,
-    uploadCompanyDocuments,
-    uploadProfileImage,
+    uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
+    uploadProfile,
     uploadEmployeePolicyDocument,
     uploadVehiclePolicyDocument
 }; 

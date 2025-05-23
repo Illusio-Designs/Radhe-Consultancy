@@ -3,6 +3,19 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const employeeCompensationController = require('../controllers/employeeCompensationController');
 const { auth } = require('../middleware/auth');
+const { uploadEmployeePolicyDocument } = require('../config/multerConfig');
+
+// Add request logging middleware
+const logRequest = (req, res, next) => {
+  console.log('=== Request Details ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('Files:', req.files);
+  console.log('=== End Request Details ===');
+  next();
+};
 
 // Validation middleware
 const validatePolicy = [
@@ -19,6 +32,37 @@ const validatePolicy = [
   }
 ];
 
+// Middleware to check if file was uploaded
+const checkFileUpload = (req, res, next) => {
+  console.log('=== Checking File Upload ===');
+  console.log('File object:', req.file);
+  if (!req.file) {
+    console.log('No file found in request');
+    return res.status(400).json({ message: 'Policy document is required' });
+  }
+  console.log('File found:', req.file.originalname);
+  next();
+};
+
+// Middleware to validate file type
+const validateFileType = (req, res, next) => {
+  console.log('=== Validating File Type ===');
+  if (req.file) {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    console.log('File type:', req.file.mimetype);
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      console.log('Invalid file type');
+      return res.status(400).json({ message: 'Only PDF and Word documents are allowed' });
+    }
+    console.log('File type validated');
+  }
+  next();
+};
+
 // Routes
 router.get('/companies', auth, employeeCompensationController.getActiveCompanies);
 router.get('/', auth, employeeCompensationController.getAllPolicies);
@@ -28,8 +72,11 @@ router.get('/:id', auth, employeeCompensationController.getPolicy);
 // Create policy with file upload
 router.post('/', 
   auth,
-  employeeCompensationController.upload,
+  logRequest,
+  uploadEmployeePolicyDocument.single('policyDocument'),
   employeeCompensationController.logFormData,
+  checkFileUpload,
+  validateFileType,
   [
     check('business_type').isIn(['Fresh/New', 'Renewal/Rollover', 'Endorsement']).withMessage('Invalid business type'),
     check('customer_type').isIn(['Organisation', 'Individual']).withMessage('Invalid customer type'),
@@ -53,7 +100,8 @@ router.post('/',
 // Update policy with file upload
 router.put('/:id',
   auth,
-  employeeCompensationController.upload,
+  logRequest,
+  uploadEmployeePolicyDocument.single('policyDocument'),
   employeeCompensationController.logFormData,
   [
     check('business_type').isIn(['Fresh/New', 'Renewal/Rollover', 'Endorsement']).withMessage('Invalid business type'),

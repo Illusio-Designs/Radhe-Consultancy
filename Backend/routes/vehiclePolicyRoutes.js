@@ -3,6 +3,7 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const vehiclePolicyController = require('../controllers/vehiclePolicyController');
 const { auth } = require('../middleware/auth');
+const { uploadVehiclePolicyDocument } = require('../config/multerConfig');
 
 const validatePolicy = [
   (req, res, next) => {
@@ -57,7 +58,7 @@ router.get('/:id', auth, vehiclePolicyController.getPolicy);
 router.post('/',
   auth,
   logRequest,
-  vehiclePolicyController.upload,
+  uploadVehiclePolicyDocument.single('policyDocument'),
   vehiclePolicyController.logFormData,
   checkFileUpload,
   validateFileType,
@@ -87,7 +88,7 @@ router.post('/',
 router.put('/:id',
   auth,
   logRequest,
-  vehiclePolicyController.upload,
+  uploadVehiclePolicyDocument.single('policyDocument'),
   vehiclePolicyController.logFormData,
   validateFileType,
   [

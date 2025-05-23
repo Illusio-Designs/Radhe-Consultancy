@@ -493,129 +493,103 @@ export const roleAPI = {
 export const companyAPI = {
   getAllCompanies: async () => {
     try {
-      console.log('API Service: Fetching all companies');
       const response = await api.get('/companies');
-      console.log('API Service: Companies fetched successfully');
-      
-      // Check if response has data property
-      if (response && response.data) {
-        // If response.data is an array, return it directly
-        if (Array.isArray(response.data)) {
-          return response.data;
-        }
-        // If response.data has a data property that's an array, return that
-        else if (response.data.data && Array.isArray(response.data.data)) {
-          return response.data.data;
-        }
-        // If response.data has a success property and a data property that's an array
-        else if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
-          return response.data.data;
-        }
-        // If none of the above, log the invalid format and return empty array
-        else {
-          console.error('API Service: Invalid response format:', response);
-          return [];
-        }
-      } else {
-        console.error('API Service: Invalid response format:', response);
-        return [];
-      }
+      return response.data;
     } catch (error) {
-      console.error('API Service: Error fetching companies:', error);
+      console.error('Error fetching companies:', error);
       throw error;
     }
   },
 
   getCompanyById: async (id) => {
     try {
-      console.log('API Service: Fetching company by ID:', id);
       const response = await api.get(`/companies/${id}`);
-      console.log('API Service: Company fetched successfully');
-      
-      // Check if response has data property
-      if (response && response.data && response.data.success) {
-        return response.data.data;
-      } else {
-        console.error('API Service: Invalid response format:', response);
-        return null;
-      }
-    } catch (error) {
-      console.error('API Service: Error fetching company:', error);
-      throw error;
-    }
-  },
-
-  createCompany: async (companyData) => {
-    try {
-      console.log('API Service: Creating company');
-      
-      // Create FormData for company creation
-      const formData = new FormData();
-      
-      // Add all company fields
-      const fields = {
-        company_name: companyData.get('company_name'),
-        owner_name: companyData.get('owner_name'),
-        owner_address: companyData.get('owner_address'),
-        designation: companyData.get('designation'),
-        company_address: companyData.get('company_address'),
-        contact_number: companyData.get('contact_number'),
-        company_email: companyData.get('company_email'),
-        gst_number: companyData.get('gst_number'),
-        pan_number: companyData.get('pan_number'),
-        firm_type: companyData.get('firm_type'),
-        nature_of_work: companyData.get('nature_of_work'),
-        factory_license_number: companyData.get('factory_license_number'),
-        labour_license_number: companyData.get('labour_license_number'),
-        type_of_company: companyData.get('type_of_company')
-      };
-
-      // Log the fields being sent
-      console.log('API Service: Fields being sent:', fields);
-
-      // Append all fields to FormData
-      Object.entries(fields).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
-        }
-      });
-      
-      // Add files if they exist
-      if (companyData.get('gst_document')) {
-        formData.append('gst_document', companyData.get('gst_document'));
-      }
-      if (companyData.get('pan_document')) {
-        formData.append('pan_document', companyData.get('pan_document'));
-      }
-      
-      console.log('API Service: Creating company with data:', fields);
-      
-      const companyResponse = await api.post('/companies', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
-      if (!companyResponse.data || !companyResponse.data.success) {
-        throw new Error('Failed to create company');
-      }
-      
-      console.log('API Service: Company and user created successfully');
-      return companyResponse.data.data;
-    } catch (error) {
-      console.error('API Service: Error creating company:', error);
-      throw error;
-    }
-  },
-
-  updateCompany: async (id, companyData) => {
-    try {
-      console.log('API Service: Updating company:', id);
-      const response = await api.put(`/companies/${id}`, companyData);
-      console.log('API Service: Company updated successfully');
       return response.data;
     } catch (error) {
-      console.error('API Service: Error updating company:', error);
+      console.error('Error fetching company:', error);
+      throw error;
+    }
+  },
+
+  createCompany: async (formData) => {
+    try {
+      console.log('[API] Creating company:', {
+        formDataEntries: Array.from(formData.entries()).map(([key, value]) => ({
+          key,
+          type: value instanceof File ? 'File' : typeof value,
+          value: value instanceof File ? {
+            name: value.name,
+            type: value.type,
+            size: value.size,
+            lastModified: value.lastModified
+          } : value
+        }))
+      });
+
+      const response = await api.post('/companies', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024 // 10MB
+      });
+
+      console.log('[API] Company creation response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error creating company:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
+  },
+
+  updateCompany: async (id, formData) => {
+    try {
+      console.log('[API] Updating company:', { id, formDataEntries: Array.from(formData.entries()) });
+
+      // Log file details before sending
+      const gstFile = formData.get('gst_document');
+      const panFile = formData.get('pan_document');
+
+      if (gstFile instanceof File) {
+        console.log('[API] GST document details:', {
+          name: gstFile.name,
+          type: gstFile.type,
+          size: gstFile.size
+        });
+      }
+
+      if (panFile instanceof File) {
+        console.log('[API] PAN document details:', {
+          name: panFile.name,
+          type: panFile.type,
+          size: panFile.size
+        });
+      }
+
+      const response = await api.put(`/companies/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024 // 10MB
+      });
+
+      console.log('[API] Company update response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error updating company:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  deleteCompany: async (id) => {
+    try {
+      const response = await api.delete(`/companies/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting company:', error);
       throw error;
     }
   }
@@ -796,38 +770,64 @@ export const employeeCompensationAPI = {
     }
   },
 
-  createPolicy: async (policyData) => {
+  createPolicy: async (formData) => {
     try {
-      console.log('API Service: Creating employee compensation policy');
-      console.log('Policy data:', policyData);
-      
-      const response = await api.post('/employee-compensation', policyData, {
+      console.log('[API] Creating employee compensation policy');
+      console.log('[API] FormData contents:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      const response = await api.post('/employee-compensation', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000, // 30 second timeout for large files
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024, // 10MB
       });
-      console.log('API Service: Policy created successfully');
       return response.data;
     } catch (error) {
-      console.error('API Service: Error creating policy:', error);
+      console.error('[API] Error creating employee compensation policy:', error);
+      if (error.response) {
+        console.error('[API] Error response:', error.response.data);
+      }
       throw error;
     }
   },
 
-  updatePolicy: async (id, policyData) => {
+  updatePolicy: async (id, formData) => {
     try {
-      console.log('API Service: Updating employee compensation policy:', id);
-      console.log('Policy data:', policyData);
-      
-      const response = await api.put(`/employee-compensation/${id}`, policyData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      console.log('[API] Updating employee compensation policy:', id);
+      console.log('[API] FormData contents:');
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString()
+          });
+        } else {
+          console.log(pair[0], pair[1]);
         }
+      }
+
+      const response = await api.put(`/employee-compensation/${id}`, formData, {
+        headers: {
+          'Content-Type': undefined, // Let the browser set the correct Content-Type with boundary
+        },
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024,
+        maxBodyLength: 10 * 1024 * 1024,
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
       });
-      console.log('API Service: Policy updated successfully');
       return response.data;
     } catch (error) {
-      console.error('API Service: Error updating policy:', error);
+      console.error('[API] Error updating employee compensation policy:', error);
+      if (error.response) {
+        console.error('[API] Error response:', error.response.data);
+      }
       throw error;
     }
   },
@@ -946,13 +946,41 @@ export const vehiclePolicyAPI = {
   },
   createPolicy: async (policyData) => {
     try {
+      // Ensure we're sending the file with the correct field name
+      if (policyData instanceof FormData) {
+        // Log the FormData contents for debugging
+        for (let [key, value] of policyData.entries()) {
+          if (value instanceof File) {
+            console.log('[API] File in FormData:', {
+              field: key,
+              name: value.name,
+              type: value.type,
+              size: value.size
+            });
+          }
+        }
+      }
+
       const response = await api.post('/vehicle-policies', policyData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        // Add timeout and maxContentLength for large files
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024, // 10MB
+        // Ensure proper handling of FormData
+        transformRequest: [(data) => data]
       });
       return response.data;
     } catch (error) {
+      console.error('[API] Error creating policy:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+        config: error.response?.config
+      });
       throw error;
     }
   },

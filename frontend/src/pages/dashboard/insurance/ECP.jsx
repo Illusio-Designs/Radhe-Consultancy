@@ -276,9 +276,16 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     });
 
     if (missingFields.length > 0) {
-      const errorMessage = `Missing required fields: ${missingFields.join(
-        ", "
-      )}`;
+      const errorMessage = `Missing required fields: ${missingFields.join(", ")}`;
+      setError(errorMessage);
+      toast.error(errorMessage);
+      setLoading(false);
+      return;
+    }
+
+    // Validate file upload for new policies
+    if (!policy && !files.policyDocument) {
+      const errorMessage = "Policy document is required";
       setError(errorMessage);
       toast.error(errorMessage);
       setLoading(false);
@@ -305,25 +312,63 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       submitData.append("remarks", formData.remarks);
       submitData.append("gst", gst);
       submitData.append("gross_premium", grossPremium);
+
+      // Handle file upload
       if (files.policyDocument) {
+        console.log("File details:", {
+          name: files.policyDocument.name,
+          type: files.policyDocument.type,
+          size: files.policyDocument.size,
+          lastModified: new Date(files.policyDocument.lastModified).toISOString()
+        });
+        
+        // Append file with the exact field name expected by multer
         submitData.append("policyDocument", files.policyDocument);
+        
+        // Verify file was appended correctly
+        const file = submitData.get("policyDocument");
+        console.log("File appended to FormData:", {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: new Date(file.lastModified).toISOString()
+        });
       }
+
+      // Log the complete FormData contents
+      console.log("FormData contents:");
+      for (let pair of submitData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString()
+          });
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+
+      let response;
       if (policy) {
-        await employeeCompensationAPI.updatePolicy(policy.id, submitData);
+        console.log("Updating existing policy:", policy.id);
+        response = await employeeCompensationAPI.updatePolicy(policy.id, submitData);
+        console.log("Update response:", response);
         toast.success("Policy updated successfully!");
       } else {
-        await employeeCompensationAPI.createPolicy(submitData);
+        console.log("Creating new policy");
+        response = await employeeCompensationAPI.createPolicy(submitData);
+        console.log("Create response:", response);
         toast.success("Policy created successfully!");
       }
+      
       onPolicyUpdated();
-    } catch (err) {
-      console.error("Error during submission:", err);
-      const errorMessage =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Failed to save policy";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setError(error.response?.data?.message || "An error occurred while submitting the form");
+      toast.error(error.response?.data?.message || "An error occurred while submitting the form");
     } finally {
       setLoading(false);
     }

@@ -3,7 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { auth } = require('../middleware/auth');
 const { User, Role, Company, Consumer } = require('../models');
-const { uploadProfileImage } = require('../config/multerConfig');
+const { uploadProfile } = require('../config/multerConfig');
 const path = require('path');
 const fs = require('fs');
 
@@ -68,7 +68,7 @@ router.post('/change-password', auth, userController.changePassword);
 // Other user routes
 router.get('/:userId', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
-router.put('/:userId', auth, uploadProfileImage.single('profile_image'), userController.updateUser);
+router.put('/:userId', auth, uploadProfile.single('profile_image'), userController.updateUser);
 router.delete('/:userId', auth, userController.deleteUser);
 router.get('/:userId/permissions', auth, userController.getUserPermissions);
 

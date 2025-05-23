@@ -3,6 +3,8 @@ const Company = require('../models/companyModel');
 const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
 const { uploadEmployeePolicyDocument } = require('../config/multerConfig');
+const path = require('path');
+const fs = require('fs');
 
 // Use the configured multer instance for employee policy documents
 exports.upload = uploadEmployeePolicyDocument.single('policyDocument');
@@ -10,8 +12,17 @@ exports.upload = uploadEmployeePolicyDocument.single('policyDocument');
 // Add middleware to log the request body after multer processing
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
-  console.log('Request Body:', req.body);
-  console.log('Request File:', req.file);
+  console.log('Request Body:', JSON.stringify(req.body, null, 2));
+  console.log('Request File:', req.file ? {
+    fieldname: req.file.fieldname,
+    originalname: req.file.originalname,
+    encoding: req.file.encoding,
+    mimetype: req.file.mimetype,
+    destination: req.file.destination,
+    filename: req.file.filename,
+    path: req.file.path,
+    size: req.file.size
+  } : 'No file uploaded');
   console.log('=== End Multer Processed FormData ===');
   next();
 };
@@ -94,17 +105,35 @@ exports.getPolicy = async (req, res) => {
 // Create policy
 exports.createPolicy = async (req, res) => {
   try {
-    console.log('REQ.BODY:', req.body); // DEBUG: log incoming form fields
+    console.log('[EmployeeCompensation] Creating new policy with data:', {
+      body: req.body,
+      file: req.file
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    if (req.file) {
-      req.body.policy_document_path = req.file.path;
+    // Validate file upload
+    if (!req.file) {
+      console.error('[EmployeeCompensation] No file uploaded');
+      return res.status(400).json({ message: 'Policy document is required' });
     }
 
-    const policy = await EmployeeCompensationPolicy.create(req.body);
+    // Store filename in database
+    const filename = req.file.filename;
+    console.log('[EmployeeCompensation] Storing filename:', filename);
+
+    // Create policy with document filename
+    const policyData = {
+      ...req.body,
+      policy_document_path: filename
+    };
+
+    console.log('[EmployeeCompensation] Creating policy with data:', policyData);
+
+    const policy = await EmployeeCompensationPolicy.create(policyData);
     
     // Fetch the created policy with associations
     const createdPolicy = await EmployeeCompensationPolicy.findByPk(policy.id, {
@@ -114,9 +143,14 @@ exports.createPolicy = async (req, res) => {
       ]
     });
 
+    console.log('[EmployeeCompensation] Policy created successfully:', {
+      id: createdPolicy.id,
+      documentPath: createdPolicy.policy_document_path
+    });
+
     res.status(201).json(createdPolicy);
   } catch (error) {
-    console.error('Error creating policy:', error);
+    console.error('[EmployeeCompensation] Error creating policy:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Policy number must be unique' });
     }
@@ -127,23 +161,79 @@ exports.createPolicy = async (req, res) => {
 // Update policy
 exports.updatePolicy = async (req, res) => {
   try {
-    console.log('REQ.BODY:', req.body); // DEBUG: log incoming form fields
+    console.log('[EmployeeCompensation] Starting policy update process');
+    console.log('[EmployeeCompensation] Request details:', {
+      id: req.params.id,
+      body: JSON.stringify(req.body, null, 2),
+      file: req.file ? {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        encoding: req.file.encoding,
+        mimetype: req.file.mimetype,
+        destination: req.file.destination,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size
+      } : 'No file uploaded'
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('[EmployeeCompensation] Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const policy = await EmployeeCompensationPolicy.findByPk(req.params.id);
     if (!policy) {
+      console.log('[EmployeeCompensation] Policy not found:', req.params.id);
       return res.status(404).json({ message: 'Policy not found' });
     }
 
+    console.log('[EmployeeCompensation] Found existing policy:', {
+      id: policy.id,
+      currentDocumentPath: policy.policy_document_path
+    });
+
+    // Handle file upload
     if (req.file) {
-      req.body.policy_document_path = req.file.path;
+      console.log('[EmployeeCompensation] Processing new file upload:', {
+        filename: req.file.filename,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        path: req.file.path
+      });
+
+      // Delete old file if exists
+      if (policy.policy_document_path) {
+        try {
+          const oldFilePath = path.join(__dirname, '..', 'uploads', 'employee_policies', policy.policy_document_path);
+          console.log('[EmployeeCompensation] Attempting to delete old file:', oldFilePath);
+          
+          // Check if file exists before trying to delete
+          if (fs.existsSync(oldFilePath)) {
+            await fs.promises.unlink(oldFilePath);
+            console.log('[EmployeeCompensation] Old file deleted successfully');
+          } else {
+            console.log('[EmployeeCompensation] Old file does not exist, skipping deletion');
+          }
+        } catch (error) {
+          console.warn('[EmployeeCompensation] Could not delete old file:', error);
+        }
+      }
+
+      // Store new filename in database
+      req.body.policy_document_path = req.file.filename;
+      console.log('[EmployeeCompensation] Storing new filename in database:', req.file.filename);
+    } else {
+      console.log('[EmployeeCompensation] No new file uploaded, keeping existing document');
+      // Remove policy_document_path from req.body to prevent overwriting existing file
+      delete req.body.policy_document_path;
     }
 
+    // Update policy
+    console.log('[EmployeeCompensation] Updating policy with data:', JSON.stringify(req.body, null, 2));
     await policy.update(req.body);
-
+    
     // Fetch the updated policy with associations
     const updatedPolicy = await EmployeeCompensationPolicy.findByPk(policy.id, {
       include: [
@@ -152,9 +242,15 @@ exports.updatePolicy = async (req, res) => {
       ]
     });
 
+    console.log('[EmployeeCompensation] Policy updated successfully:', {
+      id: updatedPolicy.id,
+      documentPath: updatedPolicy.policy_document_path,
+      updatedAt: updatedPolicy.updated_at
+    });
+
     res.json(updatedPolicy);
   } catch (error) {
-    console.error('Error updating policy:', error);
+    console.error('[EmployeeCompensation] Error updating policy:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Policy number must be unique' });
     }

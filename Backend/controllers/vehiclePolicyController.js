@@ -3,13 +3,9 @@ const Company = require('../models/companyModel');
 const Consumer = require('../models/consumerModel');
 const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
-const { uploadVehiclePolicyDocument } = require('../config/multerConfig');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
-
-// Use the configured multer instance for vehicle policy documents
-exports.upload = uploadVehiclePolicyDocument.single('policyDocument');
 
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
@@ -135,6 +131,11 @@ exports.createPolicy = async (req, res) => {
       ...req.body,
       policy_document_path: filename
     };
+
+    // Handle consumer_id based on customer_type
+    if (policyData.customer_type === 'Organisation') {
+      policyData.consumer_id = null; // Set to null for Organisation type
+    }
 
     console.log('[Vehicle] Creating policy with data:', policyData);
 

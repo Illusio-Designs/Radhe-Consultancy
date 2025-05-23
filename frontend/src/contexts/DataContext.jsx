@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { userAPI, roleAPI } from "../services/api";
+import { useAuth } from "./AuthContext";
 
 const DataContext = createContext();
 
@@ -12,6 +13,7 @@ export const useData = () => {
 };
 
 export const DataProvider = ({ children }) => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,11 @@ export const DataProvider = ({ children }) => {
   };
 
   const refreshData = async () => {
+    if (!isAuthenticated) {
+      console.log("Not authenticated, skipping data refresh");
+      return;
+    }
+
     setLoading(true);
     try {
       await Promise.all([fetchUsers(), fetchRoles()]);
@@ -50,9 +57,16 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Only fetch data when authentication is complete and user is authenticated
   useEffect(() => {
-    refreshData();
-  }, []);
+    if (!authLoading && isAuthenticated) {
+      refreshData();
+    } else if (!authLoading && !isAuthenticated) {
+      setLoading(false);
+      setUsers([]);
+      setRoles([]);
+    }
+  }, [authLoading, isAuthenticated]);
 
   const value = {
     users,

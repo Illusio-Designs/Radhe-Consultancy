@@ -183,14 +183,19 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (file) {
-      setFiles(prev => ({
-        ...prev,
-        [type]: file
-      }));
-      setFileNames(prev => ({
-        ...prev,
-        [type]: file.name
-      }));
+        console.log(`[Company] File selected for ${type}:`, {
+            name: file.name,
+            type: file.type,
+            size: file.size
+        });
+        setFiles(prev => ({
+            ...prev,
+            [type]: file
+        }));
+        setFileNames(prev => ({
+            ...prev,
+            [type]: file.name
+        }));
     }
   };
 
@@ -203,16 +208,13 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submission started');
-    setLoading(true);
-    setError("");
+    console.log('[CompanyForm] Starting form submission');
+    console.log('[CompanyForm] Form data:', formData);
 
     // Validate required fields
     const requiredFields = [
       'company_name',
       'owner_name',
-      'owner_address',
-      'designation',
       'company_address',
       'contact_number',
       'company_email',
@@ -223,107 +225,91 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       'type_of_company'
     ];
 
-    const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+    const missingFields = requiredFields.filter(field => !formData[field]);
     if (missingFields.length > 0) {
-      const errorMessage = `Missing required fields: ${missingFields.join(', ')}`;
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-      setLoading(false);
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
 
-    // Validate GST number
-    if (formData.gst_number && !validateGST(formData.gst_number)) {
-      const errorMessage = "Invalid GST number format. Please enter a valid 15-digit GST number.";
-      console.log('GST validation failed');
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-      setLoading(false);
+    // Validate GST number format
+    if (!validateGST(formData.gst_number)) {
+      setError('Invalid GST number format. Please enter a valid 15-character GST number.');
       return;
     }
 
     try {
-      console.log('Preparing form data:', formData);
+      setError('');
+      setLoading(true);
+
+      // Create FormData object
       const submitData = new FormData();
-      
-      // Append all form data
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          submitData.append(key, value);
-          console.log(`Appending ${key}:`, value);
+
+      // Append all form fields
+      Object.keys(formData).forEach(key => {
+        if (key !== 'gst_document' && key !== 'pan_document') {
+          submitData.append(key, formData[key]);
+          console.log(`Appending ${key}:`, formData[key]);
         }
       });
 
-      // Append files if they exist
-      if (files.gst_document) {
-        console.log('Appending GST document');
+      // Handle file uploads
+      if (files.gst_document instanceof File) {
+        console.log('Appending GST document:', {
+          name: files.gst_document.name,
+          type: files.gst_document.type,
+          size: files.gst_document.size
+        });
         submitData.append('gst_document', files.gst_document);
-      }
-      if (files.pan_document) {
-        console.log('Appending PAN document');
-        submitData.append('pan_document', files.pan_document);
+      } else if (company?.gst_document) {
+        // Keep existing file information
+        submitData.append('existing_gst_document', company.gst_document);
+        submitData.append('gst_document_name', company.gst_document_name);
       }
 
-      // Log the final FormData
-      console.log('Final FormData:', Object.fromEntries(submitData));
+      if (files.pan_document instanceof File) {
+        console.log('Appending PAN document:', {
+          name: files.pan_document.name,
+          type: files.pan_document.type,
+          size: files.pan_document.size
+        });
+        submitData.append('pan_document', files.pan_document);
+      } else if (company?.pan_document) {
+        // Keep existing file information
+        submitData.append('existing_pan_document', company.pan_document);
+        submitData.append('pan_document_name', company.pan_document_name);
+      }
+
+      // Log final FormData entries
+      console.log('Final FormData entries:', Array.from(submitData.entries()).map(([key, value]) => ({
+        key,
+        type: value instanceof File ? 'File' : typeof value,
+        value: value instanceof File ? {
+          name: value.name,
+          type: value.type,
+          size: value.size
+        } : value
+      })));
 
       console.log('Submitting form data...');
+      let response;
       if (company) {
         console.log('Updating existing company:', company.company_id);
-        await companyAPI.updateCompany(company.company_id, submitData);
-        toast.success('Company updated successfully!', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        response = await companyAPI.updateCompany(company.company_id, submitData);
       } else {
         console.log('Creating new company');
-        await companyAPI.createCompany(submitData);
-        toast.success('Company created successfully!', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        response = await companyAPI.createCompany(submitData);
       }
-      console.log('Form submission successful');
-      onCompanyUpdated();
-    } catch (err) {
-      console.error("Error during submission:", err);
-      const errorMessage = err.response?.data?.error || "Failed to save company";
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+
+      if (response.success) {
+        console.log('Form submission successful');
+        onCompanyUpdated();
+        onClose();
+      } else {
+        throw new Error(response.message || 'Failed to save company');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setError(error.response?.data?.message || error.message || 'Error saving company');
     } finally {
       setLoading(false);
     }

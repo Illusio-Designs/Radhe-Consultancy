@@ -313,10 +313,13 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    console.log("[Vehicle] Starting form submission with data:", {
+    
+    // Log initial state
+    console.log("[Vehicle] Initial form state:", {
       formData,
       files,
       fileNames,
+      policy
     });
 
     // Validate required fields
@@ -355,68 +358,80 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       return;
     }
 
-    // Validate file upload
-    if (!files.policyDocument) {
-      setError("Policy document is required");
-      console.error("[Vehicle] Policy document is missing");
+    // Validate file upload for new policies
+    if (!policy && !files.policyDocument) {
+      setError("Policy document is required for new policies");
+      console.error("[Vehicle] Policy document is missing for new policy");
       setLoading(false);
       return;
     }
 
+    const submitData = new FormData();
+    
     try {
-      const submitData = new FormData();
-      submitData.append("business_type", formData.businessType);
-      submitData.append("customer_type", formData.customerType);
-      submitData.append("insurance_company_id", formData.insuranceCompanyId);
-      if (formData.companyId)
-        submitData.append("company_id", formData.companyId);
-      if (formData.consumerId)
-        submitData.append("consumer_id", formData.consumerId);
-      submitData.append("policy_number", formData.policyNumber);
-      submitData.append("email", formData.email);
-      submitData.append("mobile_number", formData.mobileNumber);
-      submitData.append("policy_start_date", formData.policyStartDate);
-      submitData.append("policy_end_date", formData.policyEndDate);
-      submitData.append("sub_product", formData.subProduct);
-      submitData.append("vehicle_number", formData.vehicleNumber);
-      submitData.append("segment", formData.segment);
-      submitData.append("manufacturing_company", formData.manufacturingCompany);
-      submitData.append("model", formData.model);
-      submitData.append("manufacturing_year", formData.manufacturingYear);
-      submitData.append("idv", formData.idv);
-      submitData.append("net_premium", formData.netPremium);
-      submitData.append("gst", gst);
-      submitData.append("gross_premium", grossPremium);
-      submitData.append("remarks", formData.remarks);
-      submitData.append(
-        "organisation_or_holder_name",
-        formData.organisation_or_holder_name
-      );
+      // Log form data before conversion
+      console.log("[Vehicle] Form data before conversion:", formData);
+      
+      // Add all form fields with proper type conversion
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          // Convert camelCase to snake_case for API
+          const apiKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+          
+          // Handle numeric fields
+          if (['idv', 'netPremium'].includes(key)) {
+            submitData.append(apiKey, parseFloat(value).toFixed(2));
+          }
+          // Handle date fields
+          else if (['policyStartDate', 'policyEndDate'].includes(key)) {
+            submitData.append(apiKey, new Date(value).toISOString());
+          }
+          // Handle all other fields
+          else {
+            submitData.append(apiKey, value);
+          }
+          console.log(`[Vehicle] Appending form field: ${apiKey} = ${value}`);
+        }
+      });
 
-      // Ensure file is properly appended
+      // Add calculated fields with proper decimal formatting
+      submitData.append("gst", gst.toFixed(2));
+      submitData.append("gross_premium", grossPremium.toFixed(2));
+      console.log("[Vehicle] Appended calculated fields:", {
+        gst: gst.toFixed(2),
+        gross_premium: grossPremium.toFixed(2)
+      });
+
+      // Handle file upload
       if (files.policyDocument) {
-        console.log("[Vehicle] Appending policy document to FormData:", {
+        console.log("[Vehicle] File details before upload:", {
           name: files.policyDocument.name,
           type: files.policyDocument.type,
           size: `${(files.policyDocument.size / 1024 / 1024).toFixed(2)}MB`,
+          lastModified: new Date(files.policyDocument.lastModified).toISOString()
         });
-        submitData.append("policyDocument", files.policyDocument);
+        
+        // Use the field name expected by the backend's multer configuration
+        submitData.append("policyDocument", files.policyDocument, files.policyDocument.name);
+        console.log("[Vehicle] File appended to FormData with field name 'policyDocument'");
+      } else {
+        console.log("[Vehicle] No file to upload");
       }
 
-      console.log(
-        "[Vehicle] Submitting FormData with entries:",
-        Array.from(submitData.entries()).map(([key, value]) => ({
-          key,
-          value:
-            value instanceof File
-              ? {
-                  name: value.name,
-                  type: value.type,
-                  size: `${(value.size / 1024 / 1024).toFixed(2)}MB`,
-                }
-              : value,
-        }))
-      );
+      // Log the complete FormData contents
+      console.log("[Vehicle] Complete FormData contents:");
+      for (let [key, value] of submitData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}:`, {
+            name: value.name,
+            type: value.type,
+            size: `${(value.size / 1024 / 1024).toFixed(2)}MB`,
+            lastModified: new Date(value.lastModified).toISOString()
+          });
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
 
       let resp;
       if (policy) {
@@ -431,30 +446,27 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
         toast.success("Policy created successfully!");
       }
 
-      // Verify the response includes the document path
-      if (resp && !resp.policy_document_path) {
-        console.warn(
-          "[Vehicle] Warning: Response does not include policy_document_path"
-        );
-      }
-
       onPolicyUpdated();
     } catch (err) {
       console.error("[Vehicle] API error:", {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
+        headers: err.response?.headers,
+        config: err.response?.config,
+        validationErrors: err.response?.data?.errors,
+        requestData: {
+          formData,
+          files,
+          submitData: Object.fromEntries(submitData.entries())
+        }
       });
-      setError(
-        err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Failed to save policy"
-      );
-      toast.error(
-        err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Failed to save policy"
-      );
+      const errorMessage = err.response?.data?.errors?.[0]?.msg || 
+                          err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          "Failed to save policy";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

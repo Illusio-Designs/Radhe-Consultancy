@@ -184,15 +184,47 @@ function OtherUserList() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "" });
+  const [localLoading, setLocalLoading] = useState(true);
+
+  // Add effect to handle initial data loading
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setLocalLoading(true);
+        await refreshData();
+      } catch (err) {
+        console.error("Error initializing data:", err);
+        setError("Failed to load users");
+      } finally {
+        setLocalLoading(false);
+      }
+    };
+
+    initializeData();
+  }, []);
 
   // Filter users to show Admin and other roles except Company and Consumer
   const otherUsers = users.filter((user) => {
+    // First try to get role from the user object
     const roleName = user.Role?.role_name;
-    return roleName && roleName !== "Company" && roleName !== "Consumer";
+    if (roleName) {
+      return roleName !== "Company" && roleName !== "Consumer";
+    }
+
+    // If role is not in user object, try to find it in roles array
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return userRole && userRole.role_name !== "Company" && userRole.role_name !== "Consumer";
   });
 
   const getRoleName = (user) => {
-    return user.Role?.role_name || "Unknown";
+    // First try to get role from the user object
+    if (user.Role?.role_name) {
+      return user.Role.role_name;
+    }
+
+    // If role is not in user object, try to find it in roles array
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return userRole ? userRole.role_name : "Unknown";
   };
 
   const filteredUsers = otherUsers.filter((user) => {
@@ -302,13 +334,13 @@ function OtherUserList() {
           </Button>
         </div>
 
-        {error && (
+        {(error || dataError) && (
           <div className="user-management-error">
-            <FiAlertCircle className="inline mr-2" /> {error}
+            <FiAlertCircle className="inline mr-2" /> {error || dataError}
           </div>
         )}
 
-        {loading ? (
+        {(loading || localLoading) ? (
           <Loader size="large" color="primary" />
         ) : (
           <TableWithControl
