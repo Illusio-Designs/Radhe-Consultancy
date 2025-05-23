@@ -1156,4 +1156,105 @@ export const healthPolicyAPI = {
   }
 };
 
+// Fire Policy API
+export const firePolicyAPI = {
+  getAllPolicies: async () => {
+    try {
+      const response = await api.get('/fire-policies');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getActiveCompanies: async () => {
+    try {
+      const response = await api.get('/fire-policies/companies');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getActiveConsumers: async () => {
+    try {
+      const response = await api.get('/fire-policies/consumers');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getActiveInsuranceCompanies: async () => {
+    try {
+      const response = await api.get('/fire-policies/insurance-companies');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  searchPolicies: async (searchParams) => {
+    try {
+      const response = await api.get('/fire-policies/search', { params: searchParams });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getPolicy: async (id) => {
+    try {
+      const response = await api.get(`/fire-policies/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  createPolicy: async (policyData) => {
+    try {
+      if (policyData instanceof FormData) {
+        for (let [key, value] of policyData.entries()) {
+          if (value instanceof File) {
+            console.log('[API] File in FormData:', {
+              field: key,
+              name: value.name,
+              type: value.type,
+              size: value.size
+            });
+          }
+        }
+      }
+      const response = await api.post('/fire-policies', policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024,
+        maxBodyLength: 10 * 1024 * 1024,
+        transformRequest: [(data) => data]
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error creating fire policy:', error);
+      throw error;
+    }
+  },
+  updatePolicy: async (id, policyData) => {
+    try {
+      const response = await api.put(`/fire-policies/${id}`, policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  deletePolicy: async (id) => {
+    try {
+      const response = await api.delete(`/fire-policies/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
 export default api;

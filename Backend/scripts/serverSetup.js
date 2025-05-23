@@ -1,7 +1,7 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
 // This script handles database setup, roles/permissions setup, and admin user setup
 
-const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy } = require('../models');
+const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy } = require('../models');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -173,6 +173,8 @@ async function setupDatabase() {
       console.log('VehiclePolicies table synced');
       await HealthPolicy.sync({ alter: true });
       console.log('HealthPolicies table synced');
+      await FirePolicy.sync({ alter: true });
+      console.log('FirePolicies table synced');
     } finally {
       // Re-enable foreign key checks
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');

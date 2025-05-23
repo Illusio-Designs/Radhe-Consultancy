@@ -1,4 +1,4 @@
-const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
@@ -87,9 +87,15 @@ const getCompanyStatistics = async (req, res) => {
       }
     });
 
-    // Static data for other types
-    const fireTotal = 8;
-    const fireRecent = 2;
+    // Real data for Fire Policies
+    const fireTotal = await FirePolicy.count();
+    const fireRecent = await FirePolicy.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
 
     // Combined totals (dynamic, no marine)
     const allTotal = ecpTotal + vehicleTotal + fireTotal + healthTotal;
