@@ -85,11 +85,19 @@ const employeePolicyStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
         const uploadDir = getUploadDir('employee_policies');
         try {
+            console.log('[Multer] Setting destination for employee policy document:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype
+            });
             if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating directory:', uploadDir);
                 await fs.mkdir(uploadDir, { recursive: true });
             }
+            console.log('[Multer] Using directory:', uploadDir);
             cb(null, uploadDir);
         } catch (error) {
+            console.error('[Multer] Error in destination function:', error);
             cb(error);
         }
     },
@@ -97,6 +105,12 @@ const employeePolicyStorage = multer.diskStorage({
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         const filename = `employee-policy-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename for employee policy:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
         cb(null, filename);
     }
 });
@@ -283,11 +297,48 @@ const uploadProfileImageWithLogging = (req, res, next) => {
     });
 };
 
+// Create multer upload instance for employee policy documents
 const uploadEmployeePolicyDocument = multer({
     storage: employeePolicyStorage,
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-});
+}).single('policyDocument');
+
+// Add logging for employee policy document upload
+const uploadEmployeePolicyDocumentWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting employee policy document upload process');
+    console.log('[Multer] Request body:', req.body);
+    console.log('[Multer] Request file:', req.file);
+    console.log('[Multer] Request files:', req.files);
+
+    uploadEmployeePolicyDocument(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error uploading employee policy document:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log uploaded file
+        if (req.file) {
+            console.log('[Multer] Employee policy document uploaded successfully:', {
+                fieldname: req.file.fieldname,
+                originalname: req.file.originalname,
+                filename: req.file.filename,
+                mimetype: req.file.mimetype,
+                size: req.file.size,
+                path: req.file.path
+            });
+        } else {
+            console.log('[Multer] No employee policy document uploaded');
+            console.log('[Multer] Request body after multer:', req.body);
+            console.log('[Multer] Request files after multer:', req.files);
+        }
+
+        next();
+    });
+};
 
 const uploadVehiclePolicyDocument = multer({
     storage: vehiclePolicyStorage,
@@ -311,7 +362,7 @@ const uploadFirePolicyDocument = multer({
 module.exports = {
     uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
     uploadProfileImage: uploadProfileImageWithLogging,
-    uploadEmployeePolicyDocument,
+    uploadEmployeePolicyDocument: uploadEmployeePolicyDocumentWithLogging,
     uploadVehiclePolicyDocument,
     uploadHealthPolicyDocument,
     uploadFirePolicyDocument

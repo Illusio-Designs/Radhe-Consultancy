@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Use the configured multer instance for employee policy documents
-exports.upload = uploadEmployeePolicyDocument.single('policyDocument');
+exports.upload = uploadEmployeePolicyDocument;
 
 // Add middleware to log the request body after multer processing
 exports.logFormData = (req, res, next) => {
@@ -107,17 +107,31 @@ exports.createPolicy = async (req, res) => {
   try {
     console.log('[EmployeeCompensation] Creating new policy with data:', {
       body: req.body,
-      file: req.file
+      file: req.file ? {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        encoding: req.file.encoding,
+        mimetype: req.file.mimetype,
+        destination: req.file.destination,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size
+      } : 'No file uploaded',
+      files: req.files
     });
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('[EmployeeCompensation] Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     // Validate file upload
     if (!req.file) {
       console.error('[EmployeeCompensation] No file uploaded');
+      console.log('[EmployeeCompensation] Request body:', req.body);
+      console.log('[EmployeeCompensation] Request file:', req.file);
+      console.log('[EmployeeCompensation] Request files:', req.files);
       return res.status(400).json({ message: 'Policy document is required' });
     }
 
@@ -128,7 +142,8 @@ exports.createPolicy = async (req, res) => {
     // Create policy with document filename
     const policyData = {
       ...req.body,
-      policy_document_path: filename
+      policy_document_path: filename,
+      status: 'active' // Set default status
     };
 
     console.log('[EmployeeCompensation] Creating policy with data:', policyData);
@@ -153,6 +168,12 @@ exports.createPolicy = async (req, res) => {
     console.error('[EmployeeCompensation] Error creating policy:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Policy number must be unique' });
+    }
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ 
+        message: 'Validation error',
+        details: error.errors.map(e => e.message)
+      });
     }
     res.status(500).json({ message: 'Internal server error' });
   }

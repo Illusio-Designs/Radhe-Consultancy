@@ -824,16 +824,26 @@ export const employeeCompensationAPI = {
       console.log('[API] Creating employee compensation policy');
       console.log('[API] FormData contents:');
       for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString()
+          });
+        } else {
+          console.log(pair[0], pair[1]);
+        }
       }
 
       const response = await api.post('/employee-compensation', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined, // Let the browser set the correct Content-Type with boundary
         },
         timeout: 30000, // 30 second timeout for large files
         maxContentLength: 10 * 1024 * 1024, // 10MB
         maxBodyLength: 10 * 1024 * 1024, // 10MB
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
       });
       return response.data;
     } catch (error) {

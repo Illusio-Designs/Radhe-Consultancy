@@ -6,6 +6,27 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, '../logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// Log file paths
+const serverLogPath = path.join(logsDir, 'server.log');
+
+// Logging function
+function logToFile(message) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+
+  fs.appendFile(serverLogPath, logMessage, (err) => {
+    if (err) {
+      console.error('Error writing to log file:', err);
+    }
+  });
+}
+
 // Role definitions
 const roles = [
   { role_name: 'Admin', description: 'Full system access' },
@@ -111,8 +132,11 @@ const rolePermissions = {
  */
 async function setupDatabase() {
   try {
+    logToFile('Starting database setup...');
     console.log('Starting database setup...');
+    
     await sequelize.authenticate();
+    logToFile('Database connection established');
     console.log('Database connection established');
 
     // Create uploads directories if needed
@@ -127,124 +151,121 @@ async function setupDatabase() {
     try {
       // Sync tables in correct order
       await Role.sync({ alter: true });
-      console.log('Roles table synced');
+      logToFile('Roles table synced');
       await Permission.sync({ alter: true });
-      console.log('Permissions table synced');
+      logToFile('Permissions table synced');
       await RolePermission.sync({ alter: true });
-      console.log('RolePermissions table synced');
+      logToFile('RolePermissions table synced');
       await User.sync({ alter: true });
-      console.log('Users table synced');
+      logToFile('Users table synced');
       await Company.sync({ alter: true });
-      console.log('Companies table synced');
+      logToFile('Companies table synced');
 
       // Special handling for Consumer
       try {
-        // First, drop existing indexes that might cause the key limit issue
-        await sequelize.query(`
-          ALTER TABLE Consumers 
-          DROP INDEX IF EXISTS status,
-          DROP INDEX IF EXISTS email,
-          DROP INDEX IF EXISTS phone,
-          DROP INDEX IF EXISTS created_at,
-          DROP INDEX IF EXISTS updated_at
-        `).catch(err => console.log('Error dropping indexes:', err.message));
-
-        // Then modify the status column
-        await sequelize.query(`
-          ALTER TABLE Consumers 
-          MODIFY COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active' NOT NULL
-        `).catch(err => console.log('Error modifying status column:', err.message));
-        
         await Consumer.sync({ 
           alter: true,
           logging: false
         });
-        console.log('Consumers table synced with status field');
+        logToFile('Consumers table synced');
+        console.log('Consumers table synced');
       } catch (error) {
+        logToFile('Error syncing Consumer: ' + error.message);
         console.error('Error syncing Consumer:', error.message);
-        // Continue with other tables even if Consumer sync fails
       }
 
       await InsuranceCompany.sync({ alter: true });
+      logToFile('InsuranceCompanies table synced');
       console.log('InsuranceCompanies table synced');
-      await EmployeeCompensationPolicy.sync({ alter: true });
-      console.log('EmployeeCompensationPolicies table synced');
+
+      // Special handling for EmployeeCompensationPolicy
+      try {
+        await sequelize.query(`
+          ALTER TABLE EmployeeCompensationPolicies
+          DROP INDEX IF EXISTS policy_number,
+          DROP INDEX IF EXISTS insurance_company_id,
+          DROP INDEX IF EXISTS company_id,
+          DROP INDEX IF EXISTS created_at,
+          DROP INDEX IF EXISTS updated_at,
+          DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_1,
+          DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_2,
+          DROP FOREIGN KEY IF EXISTS fk_insurance_company,
+          DROP FOREIGN KEY IF EXISTS fk_company
+        `).catch(err => console.log('Error dropping EmployeeCompensationPolicy constraints:', err.message));
+        
+        await EmployeeCompensationPolicy.sync({ 
+          alter: true,
+          logging: false
+        });
+        
+        // Add foreign key constraints with proper conditions
+        await sequelize.query(`
+          ALTER TABLE EmployeeCompensationPolicies
+          ADD CONSTRAINT IF NOT EXISTS fk_insurance_company
+          FOREIGN KEY (insurance_company_id)
+          REFERENCES InsuranceCompanies(id)
+          ON DELETE NO ACTION
+          ON UPDATE CASCADE,
+          ADD CONSTRAINT IF NOT EXISTS fk_company
+          FOREIGN KEY (company_id)
+          REFERENCES Companies(company_id)
+          ON DELETE NO ACTION
+          ON UPDATE CASCADE,
+          MODIFY COLUMN policy_document_path VARCHAR(255) NOT NULL,
+          ADD CONSTRAINT IF NOT EXISTS check_business_type
+          CHECK (business_type IN ('Fresh/New', 'Renewal/Rollover', 'Endorsement')),
+          ADD CONSTRAINT IF NOT EXISTS check_customer_type
+          CHECK (customer_type IN ('Organisation', 'Individual')),
+          ADD CONSTRAINT IF NOT EXISTS check_medical_cover
+          CHECK (medical_cover IN ('25k', '50k', '1 lac', '2 lac', '3 lac', '5 lac', 'actual')),
+          ADD CONSTRAINT IF NOT EXISTS check_status
+          CHECK (status IN ('active', 'expired', 'cancelled')),
+          ADD CONSTRAINT IF NOT EXISTS check_premiums
+          CHECK (net_premium >= 0 AND gst >= 0 AND gross_premium >= 0),
+          ADD CONSTRAINT IF NOT EXISTS check_dates
+          CHECK (policy_end_date > policy_start_date)
+        `).catch(err => console.log('Error adding EmployeeCompensationPolicy constraints:', err.message));
+
+        // Add indexes for better performance
+        await sequelize.query(`
+          ALTER TABLE EmployeeCompensationPolicies
+          ADD INDEX IF NOT EXISTS idx_policy_number (policy_number),
+          ADD INDEX IF NOT EXISTS idx_insurance_company (insurance_company_id),
+          ADD INDEX IF NOT EXISTS idx_company (company_id),
+          ADD INDEX IF NOT EXISTS idx_policy_dates (policy_start_date, policy_end_date),
+          ADD INDEX IF NOT EXISTS idx_status (status)
+        `).catch(err => console.log('Error adding EmployeeCompensationPolicy indexes:', err.message));
+        
+        logToFile('EmployeeCompensationPolicy table synced with constraints and indexes');
+        console.log('EmployeeCompensationPolicy table synced with constraints and indexes');
+      } catch (error) {
+        logToFile('Error syncing EmployeeCompensationPolicy: ' + error.message);
+        console.error('Error syncing EmployeeCompensationPolicy:', error.message);
+      }
+
       await VehiclePolicy.sync({ alter: true });
+      logToFile('VehiclePolicies table synced');
       console.log('VehiclePolicies table synced');
       await HealthPolicy.sync({ alter: true });
+      logToFile('HealthPolicies table synced');
       console.log('HealthPolicies table synced');
       await FirePolicy.sync({ alter: true });
+      logToFile('FirePolicies table synced');
       console.log('FirePolicies table synced');
+
     } finally {
       // Re-enable foreign key checks
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');
     }
-
-    // Special handling for InsuranceCompany
-    try {
-      await sequelize.query(`
-        ALTER TABLE InsuranceCompanies 
-        DROP INDEX IF EXISTS name,
-        DROP INDEX IF EXISTS email,
-        DROP INDEX IF EXISTS phone,
-        DROP INDEX IF EXISTS created_at,
-        DROP INDEX IF EXISTS updated_at
-      `).catch(err => console.log('Error dropping InsuranceCompany indexes:', err.message));
-      
-      await InsuranceCompany.sync({ 
-        alter: true,
-        logging: false
-      });
-      console.log('InsuranceCompany table synced with reduced indexes');
-    } catch (error) {
-      console.error('Error syncing InsuranceCompany:', error.message);
-      // Continue with other operations
-    }
-
-    // Special handling for EmployeeCompensationPolicy
-    try {
-      await sequelize.query(`
-        ALTER TABLE EmployeeCompensationPolicies
-        DROP INDEX IF EXISTS policy_number,
-        DROP INDEX IF EXISTS insurance_company_id,
-        DROP INDEX IF EXISTS company_id,
-        DROP INDEX IF EXISTS created_at,
-        DROP INDEX IF EXISTS updated_at,
-        DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_1,
-        DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_2,
-        DROP FOREIGN KEY IF EXISTS fk_insurance_company,
-        DROP FOREIGN KEY IF EXISTS fk_company
-      `).catch(err => console.log('Error dropping EmployeeCompensationPolicy constraints:', err.message));
-      
-      await EmployeeCompensationPolicy.sync({ 
-        alter: true,
-        logging: false
-      });
-      
-      await sequelize.query(`
-        ALTER TABLE EmployeeCompensationPolicies
-        ADD CONSTRAINT IF NOT EXISTS fk_insurance_company
-        FOREIGN KEY (insurance_company_id)
-        REFERENCES InsuranceCompanies(id)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE,
-        ADD CONSTRAINT IF NOT EXISTS fk_company
-        FOREIGN KEY (company_id)
-        REFERENCES Companies(company_id)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE
-      `).catch(err => console.log('Error adding EmployeeCompensationPolicy constraints:', err.message));
-      
-      console.log('EmployeeCompensationPolicy table synced with reduced indexes');
-    } catch (error) {
-      console.error('Error syncing EmployeeCompensationPolicy:', error.message);
-      // Continue with other operations
-    }
     
+    logToFile('All tables synced successfully');
     console.log('All tables synced');
+
     return true;
   } catch (error) {
-    console.error('Error during database setup:', error.message);
+    const errorMessage = `Error during database setup: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
     return false;
   }
 }
@@ -255,6 +276,7 @@ async function setupDatabase() {
  */
 async function setupRolesAndPermissions() {
   try {
+    logToFile('Setting up roles and permissions...');
     console.log('Setting up roles and permissions...');
     
     // Update existing roles to capitalized format
@@ -263,6 +285,7 @@ async function setupRolesAndPermissions() {
       const capitalizedRole = role.role_name.charAt(0).toUpperCase() + role.role_name.slice(1);
       if (capitalizedRole !== role.role_name) {
         await role.update({ role_name: capitalizedRole });
+        logToFile(`Updated role name from ${role.role_name} to ${capitalizedRole}`);
         console.log(`Updated role name from ${role.role_name} to ${capitalizedRole}`);
       }
     }
@@ -271,6 +294,7 @@ async function setupRolesAndPermissions() {
     for (const role of roles) {
       await Role.findOrCreate({ where: { role_name: role.role_name }, defaults: role });
     }
+    logToFile('Roles setup completed');
     console.log('Roles setup completed');
 
     // Create permissions
@@ -280,6 +304,7 @@ async function setupRolesAndPermissions() {
         defaults: permission 
       });
     }
+    logToFile('Permissions setup completed');
     console.log('Permissions setup completed');
 
     // Assign permissions to roles
@@ -293,10 +318,13 @@ async function setupRolesAndPermissions() {
         });
       }
     }
+    logToFile('Role-permission assignments completed');
     console.log('Role-permission assignments completed');
     return true;
   } catch (error) {
-    console.error('Error setting up roles and permissions:', error.message);
+    const errorMessage = `Error setting up roles and permissions: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
     return false;
   }
 }
@@ -307,6 +335,7 @@ async function setupRolesAndPermissions() {
  */
 async function setupAdminUser() {
   try {
+    logToFile('Setting up admin user...');
     console.log('Setting up admin user...');
     const adminRole = await Role.findOne({ where: { role_name: 'Admin' } });
     if (!adminRole) {
@@ -333,10 +362,13 @@ async function setupAdminUser() {
       });
     }
 
+    logToFile('Admin user setup completed');
     console.log('Admin user setup completed');
     return true;
   } catch (error) {
-    console.error('Error setting up admin user:', error.message);
+    const errorMessage = `Error setting up admin user: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
     return false;
   }
 }
@@ -347,6 +379,9 @@ async function setupAdminUser() {
  */
 async function setupAll() {
   try {
+    logToFile('Starting complete server setup...');
+    console.log('Starting complete server setup...');
+
     // First setup database structure
     const dbSetup = await setupDatabase();
     if (!dbSetup) {
@@ -365,11 +400,16 @@ async function setupAll() {
       throw new Error('Admin user setup failed');
     }
 
-    console.log('All setup completed successfully');
+    const successMessage = 'All setup completed successfully';
+    logToFile(successMessage);
+    console.log(successMessage);
+
     await sequelize.close();
     process.exit(0);
   } catch (error) {
-    console.error('Error during setup:', error.message);
+    const errorMessage = `Error during setup: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
     await sequelize.close();
     process.exit(1);
   }

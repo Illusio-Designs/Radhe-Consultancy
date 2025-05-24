@@ -23,11 +23,19 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   },
   insurance_company_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    references: {
+      model: InsuranceCompany,
+      key: 'id'
+    }
   },
   company_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    references: {
+      model: Company,
+      key: 'company_id'
+    }
   },
   policy_number: {
     type: DataTypes.STRING,
@@ -35,19 +43,36 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      isEmail: true
+    }
   },
   mobile_number: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      is: /^\+?[1-9]\d{1,14}$/ // E.164 format
+    }
   },
   policy_start_date: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      isDate: true
+    }
   },
   policy_end_date: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      isDate: true,
+      isAfterStartDate(value) {
+        if (value <= this.policy_start_date) {
+          throw new Error('Policy end date must be after start date');
+        }
+      }
+    }
   },
   medical_cover: {
     type: DataTypes.ENUM('25k', '50k', '1 lac', '2 lac', '3 lac', '5 lac', 'actual'),
@@ -55,27 +80,45 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   },
   gst_number: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    validate: {
+      is: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/ // GST format
+    }
   },
   pan_number: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    validate: {
+      is: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/ // PAN format
+    }
   },
   net_premium: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   gst: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   gross_premium: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   policy_document_path: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false, // Changed to false to make it required
+    validate: {
+      notEmpty: true
+    }
   },
   remarks: {
     type: DataTypes.TEXT,
@@ -95,8 +138,51 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     {
       unique: true,
       fields: ['policy_number']
+    },
+    {
+      fields: ['company_id']
+    },
+    {
+      fields: ['insurance_company_id']
+    },
+    {
+      fields: ['policy_end_date']
     }
-  ]
+  ],
+  hooks: {
+    beforeValidate: (policy) => {
+      // Convert string dates to Date objects if needed
+      if (typeof policy.policy_start_date === 'string') {
+        policy.policy_start_date = new Date(policy.policy_start_date);
+      }
+      if (typeof policy.policy_end_date === 'string') {
+        policy.policy_end_date = new Date(policy.policy_end_date);
+      }
+
+      // Convert string numbers to decimals if needed
+      if (typeof policy.net_premium === 'string') {
+        policy.net_premium = parseFloat(policy.net_premium);
+      }
+      if (typeof policy.gst === 'string') {
+        policy.gst = parseFloat(policy.gst);
+      }
+      if (typeof policy.gross_premium === 'string') {
+        policy.gross_premium = parseFloat(policy.gross_premium);
+      }
+    },
+    beforeCreate: async (policy) => {
+      // Validate that policy document is provided
+      if (!policy.policy_document_path) {
+        throw new Error('Policy document is required');
+      }
+
+      // Validate that gross premium equals net premium plus GST
+      const calculatedGross = parseFloat(policy.net_premium) + parseFloat(policy.gst);
+      if (Math.abs(calculatedGross - parseFloat(policy.gross_premium)) > 0.01) {
+        throw new Error('Gross premium must equal net premium plus GST');
+      }
+    }
+  }
 });
 
 module.exports = EmployeeCompensationPolicy; 

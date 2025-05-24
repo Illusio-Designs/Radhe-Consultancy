@@ -7,6 +7,7 @@ const fsSync = require('fs');
 const companyController = {
   // Create a new company
   async createCompany(req, res) {
+    let transaction;
     try {
       console.log('[Company] ===== Starting company creation process =====');
       console.log('[Company] Request body:', JSON.stringify(req.body, null, 2));
@@ -70,6 +71,10 @@ const companyController = {
         });
       }
 
+      // Start transaction
+      transaction = await Company.sequelize.transaction();
+      console.log('[Company] Transaction started');
+
       // Check if company with same GST number exists
       if (formData.gst_number) {
         const existingCompany = await Company.findOne({
@@ -78,6 +83,7 @@ const companyController = {
 
         if (existingCompany) {
           console.log('[Company] Company with GST number already exists:', formData.gst_number);
+          await transaction.rollback();
           return res.status(400).json({
             success: false,
             error: 'Company with this GST number already exists'
@@ -101,19 +107,18 @@ const companyController = {
           email: formData.company_email,
           password: randomPassword,
           role_id: 5 // company role
-        });
+        }, { transaction });
         console.log('[Company] New user created:', user.user_id);
       } else {
         console.log('[Company] Existing user found:', user.user_id);
       }
 
-      // Start a transaction
-      const transaction = await Company.sequelize.transaction();
-      console.log('[Company] Transaction started');
+      if (!user || !user.user_id) {
+        throw new Error('Failed to create or find user');
+      }
 
-      try {
       // Create new company
-        console.log('[Company] Creating new company record');
+      console.log('[Company] Creating new company record');
       const company = await Company.create({
         company_name: formData.company_name,
         owner_name: formData.owner_name,
@@ -129,76 +134,78 @@ const companyController = {
         factory_license_number: formData.factory_license_number,
         labour_license_number: formData.labour_license_number,
         type_of_company: formData.type_of_company,
-          company_website: formData.company_website,
+        company_website: formData.company_website,
         user_id: user.user_id
-        }, { transaction });
-        console.log('[Company] Company record created:', company.id);
+      }, { transaction });
+
+      if (!company || !company.id) {
+        throw new Error('Failed to create company');
+      }
+
+      console.log('[Company] Company record created:', company.id);
 
       // Handle file uploads if present
       if (req.files) {
-          console.log('[Company] Processing file uploads');
-          const updateData = {};
-          
+        console.log('[Company] Processing file uploads');
+        const updateData = {};
+        
         if (req.files.gst_document && req.files.gst_document[0]) {
-            updateData.gst_document_name = req.files.gst_document[0].filename; // Store only filename
-            console.log('[Company] GST document filename saved:', updateData.gst_document_name);
-          } else {
-            console.log('[Company] No GST document to save');
-          }
-          
+          updateData.gst_document_name = req.files.gst_document[0].filename;
+          console.log('[Company] GST document filename saved:', updateData.gst_document_name);
+        }
+        
         if (req.files.pan_document && req.files.pan_document[0]) {
-            updateData.pan_document_name = req.files.pan_document[0].filename; // Store only filename
-            console.log('[Company] PAN document filename saved:', updateData.pan_document_name);
-          } else {
-            console.log('[Company] No PAN document to save');
-          }
-
-          if (Object.keys(updateData).length > 0) {
-            console.log('[Company] Updating company with document names:', updateData);
-            await company.update(updateData, { transaction });
-            console.log('[Company] Company updated with document names');
-          } else {
-            console.log('[Company] No document names to update');
-          }
-        } else {
-          console.log('[Company] No files uploaded');
+          updateData.pan_document_name = req.files.pan_document[0].filename;
+          console.log('[Company] PAN document filename saved:', updateData.pan_document_name);
         }
 
-        // Commit the transaction
-        await transaction.commit();
-        console.log('[Company] Transaction committed');
-
-        // Fetch the created company with user details
-        const createdCompany = await Company.findByPk(company.id, {
-          include: [{
-            model: User,
-            attributes: ['user_id', 'username', 'email']
-          }]
-        });
-
-        console.log('[Company] Final company data:', {
-          id: createdCompany.id,
-          gstDocument: createdCompany.gst_document_name,
-          panDocument: createdCompany.pan_document_name,
-          user: createdCompany.User ? {
-            id: createdCompany.User.user_id,
-            username: createdCompany.User.username,
-            email: createdCompany.User.email
-          } : null
-        });
-
-        res.status(201).json({
-          success: true,
-          data: createdCompany
-        });
-      } catch (error) {
-        // Rollback the transaction if there's an error
-        console.error('[Company] Error in transaction:', error);
-        await transaction.rollback();
-        throw error;
+        if (Object.keys(updateData).length > 0) {
+          console.log('[Company] Updating company with document names:', updateData);
+          await company.update(updateData, { transaction });
+          console.log('[Company] Company updated with document names');
+        }
       }
+
+      // Commit the transaction
+      await transaction.commit();
+      console.log('[Company] Transaction committed');
+
+      // Fetch the created company with user details
+      const createdCompany = await Company.findByPk(company.id, {
+        include: [{
+          model: User,
+          attributes: ['user_id', 'username', 'email']
+        }]
+      });
+
+      console.log('[Company] Final company data:', {
+        id: createdCompany.id,
+        gstDocument: createdCompany.gst_document_name,
+        panDocument: createdCompany.pan_document_name,
+        user: createdCompany.User ? {
+          id: createdCompany.User.user_id,
+          username: createdCompany.User.username,
+          email: createdCompany.User.email
+        } : null
+      });
+
+      res.status(201).json({
+        success: true,
+        data: createdCompany
+      });
     } catch (error) {
       console.error('[Company] Error creating company:', error);
+      
+      // Only attempt rollback if transaction exists and hasn't been committed
+      if (transaction && !transaction.finished) {
+        try {
+          await transaction.rollback();
+          console.log('[Company] Transaction rolled back');
+        } catch (rollbackError) {
+          console.error('[Company] Error rolling back transaction:', rollbackError);
+        }
+      }
+
       res.status(500).json({
         success: false,
         error: error.message
