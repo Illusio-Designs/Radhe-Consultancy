@@ -446,7 +446,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       // Add file if selected
       if (files.policyDocument) {
         submitData.append(
-          "policy_document",
+          "policyDocument",
           files.policyDocument,
           files.policyDocument.name
         );
@@ -531,7 +531,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   return (
     <>
-      {error && <div className="insurance-error">{error}</div>}
+      {typeof error === 'string' && error && <div className="insurance-error">{error}</div>}
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
