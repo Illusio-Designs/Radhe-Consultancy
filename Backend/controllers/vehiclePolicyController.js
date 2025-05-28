@@ -132,9 +132,26 @@ exports.createPolicy = async (req, res) => {
       policy_document_path: filename
     };
 
-    // Handle consumer_id based on customer_type
+    // Convert string 'null' or '' or undefined to actual null for company_id and consumer_id
+    if (policyData.company_id === '' || policyData.company_id === 'null' || policyData.company_id === undefined) policyData.company_id = null;
+    if (policyData.consumer_id === '' || policyData.consumer_id === 'null' || policyData.consumer_id === undefined) policyData.consumer_id = null;
+
+    // Handle consumer_id and company_id based on customer_type
     if (policyData.customer_type === 'Organisation') {
-      policyData.consumer_id = null; // Set to null for Organisation type
+      if (!policyData.company_id) {
+        console.error('[Vehicle] Organisation selected but no company_id provided');
+        return res.status(400).json({ message: 'Company ID is required for Organisation type' });
+      }
+      policyData.consumer_id = null;
+    } else if (policyData.customer_type === 'Individual') {
+      if (!policyData.consumer_id) {
+        console.error('[Vehicle] Individual selected but no consumer_id provided');
+        return res.status(400).json({ message: 'Consumer ID is required for Individual type' });
+      }
+      policyData.company_id = null;
+    } else {
+      console.error('[Vehicle] Invalid customer_type:', policyData.customer_type);
+      return res.status(400).json({ message: 'Invalid customer type' });
     }
 
     console.log('[Vehicle] Creating policy with data:', policyData);
@@ -160,6 +177,12 @@ exports.createPolicy = async (req, res) => {
     console.error('[Vehicle] Error creating policy:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Policy number must be unique' });
+    }
+    if (error.name === 'SequelizeForeignKeyConstraintError') {
+      return res.status(400).json({ 
+        message: 'Invalid company or consumer ID',
+        details: error.message
+      });
     }
     res.status(500).json({ message: 'Internal server error' });
   }
