@@ -1,40 +1,27 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  withCredentials: false,
-  timeout: 30000
+  timeout: 10000, // 10 second timeout
 });
 
 // Auth state management
 let isAuthenticating = false;
 let authPromise = null;
 
-// Add request interceptor for auth token
+// Add request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token if exists
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // Ensure only allowed headers are sent
-    const allowedHeaders = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Authorization': config.headers.Authorization,
-      'X-Requested-With': 'XMLHttpRequest'
-    };
-    
-    config.headers = allowedHeaders;
-    
     return config;
   },
   (error) => {
@@ -42,94 +29,98 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
+// Add response interceptor
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async (error) => {
-    // Handle network errors
-    if (error.code === 'ERR_NETWORK') {
-      console.error('Network Error:', error);
+  (response) => response,
+  (error) => {
+    if (!navigator.onLine) {
       return Promise.reject({
         message: 'Network connection error. Please check your internet connection.',
-        originalError: error
+        isNetworkError: true
       });
     }
-    
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401 && !isAuthenticating) {
-      isAuthenticating = true;
-      
-      // Create a single auth promise if not exists
-      if (!authPromise) {
-        authPromise = new Promise((resolve) => {
-          // Clear auth data
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          
-          // Only redirect to login if we're on a protected route
-          const currentPath = window.location.pathname;
-          const isProtectedRoute = currentPath.startsWith('/dashboard') || 
-                                 currentPath.startsWith('/profile') ||
-                                 currentPath.startsWith('/admin');
-          
-          if (isProtectedRoute && !currentPath.includes('/auth/login')) {
-            window.location.replace('/login');
-          }
-          
-          resolve();
-        });
-      }
-      
-      // Wait for auth promise to resolve
-      await authPromise;
-      
-      // Reset auth state
-      isAuthenticating = false;
-      authPromise = null;
-      
-      return Promise.reject(error);
+
+    if (error.code === 'ECONNABORTED') {
+      return Promise.reject({
+        message: 'Request timeout. Please check your internet connection and try again.',
+        isNetworkError: true
+      });
     }
-    
-    // Log the full error for debugging
-    console.error('API Error:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      config: error.config
-    });
-    
-    return Promise.reject(error);
+
+    if (!error.response) {
+      return Promise.reject({
+        message: 'Unable to connect to the server. Please check your internet connection.',
+        isNetworkError: true
+      });
+    }
+
+    // Handle specific error status codes
+    switch (error.response.status) {
+      case 401:
+        // Clear token and redirect to login if unauthorized
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return Promise.reject({
+          message: 'Session expired. Please login again.',
+          status: 401
+        });
+      case 403:
+        return Promise.reject({
+          message: 'You do not have permission to perform this action.',
+          status: 403
+        });
+      case 404:
+        return Promise.reject({
+          message: 'The requested resource was not found.',
+          status: 404
+        });
+      case 500:
+        return Promise.reject({
+          message: 'Server error. Please try again later.',
+          status: 500
+        });
+      default:
+        return Promise.reject({
+          message: error.response.data?.message || 'An unexpected error occurred.',
+          status: error.response.status
+        });
+    }
   }
 );
 
 // Auth API
 export const authAPI = {
-  async login(email, password) {
+  login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
-      
-      if (token && user) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-      }
-      
+      localStorage.setItem('token', token);
       return { token, user };
     } catch (error) {
       throw error;
     }
   },
 
-  async getCurrentUser() {
+  googleLogin: async (credential) => {
+    try {
+      const response = await api.post('/auth/google-login', { token: credential });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      return { token, user };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+  },
+
+  getCurrentUser: async () => {
     try {
       const response = await api.get('/auth/me');
-      const userData = response.data;
-      localStorage.setItem('user', JSON.stringify(userData));
-      return userData;
+      return response.data;
     } catch (error) {
-      console.error('API Service: Error fetching user data:', error);
       throw error;
     }
   },
@@ -158,39 +149,6 @@ export const authAPI = {
       console.error('API Service: Registration error:', error);
       throw error;
     }
-  },
-
-  async googleLogin(token, role_name = 'user') {
-    try {
-      console.log('API Service: Attempting Google login');
-      const response = await api.post('/auth/google-login', { token, role_name });
-      const { token: authToken, user } = response.data;
-      
-      if (authToken && user) {
-        console.log('API Service: Google login successful, storing token and user data');
-        localStorage.setItem('token', authToken);
-        localStorage.setItem('user', JSON.stringify(user));
-      } else {
-        console.error('API Service: Invalid Google login response - missing token or user');
-      }
-      
-      return { token: authToken, user };
-    } catch (error) {
-      console.error('API Service: Google login error:', error);
-      throw error;
-    }
-  },
-
-  logout() {
-    console.log('API Service: Logging out user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
-  isAuthenticated() {
-    const token = localStorage.getItem('token');
-    console.log('API Service: Checking authentication status:', !!token);
-    return !!token;
   },
 
   async forgotPassword(email) {

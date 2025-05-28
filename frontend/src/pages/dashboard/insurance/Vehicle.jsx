@@ -933,6 +933,7 @@ function Vehicle() {
   ];
 
   return (
+    <div className="insurance">
     <div className="insurance-container">
       <div className="insurance-content">
         <div className="insurance-header">
@@ -970,7 +971,8 @@ function Vehicle() {
           onClose={handleModalClose}
           onPolicyUpdated={handlePolicyUpdated}
         />
-      </Modal>
+        </Modal>
+      </div>
     </div>
   );
 }

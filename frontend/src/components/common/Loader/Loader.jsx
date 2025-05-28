@@ -8,9 +8,9 @@ const LottieAnimation = ({ width = 150, height = 150, loop = true }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 2000); // 2000ms = 2 seconds
+    }, 3000); // Consistent 3 seconds timing for all pages
 
-    return () => clearTimeout(timer); // Cleanup the timer
+    return () => clearTimeout(timer);
   }, []);
 
   if (!isVisible) {
@@ -24,15 +24,24 @@ const LottieAnimation = ({ width = 150, height = 150, loop = true }) => {
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
-        height: "100vh",
-        position: "fixed",
+        height: "100%",
+        position: "absolute",
         top: 0,
         left: 0,
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
-        zIndex: 9999
+        backgroundColor: "#ffffff",
+        zIndex: 1,
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
       }}
     >
-      <div style={{ width, height }}>
+      <div 
+        style={{ 
+          width, 
+          height,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
         <Lottie
           animationData={animationData}
           style={{ width: "100%", height: "100%" }}

@@ -42,6 +42,8 @@ function Login() {
       ...prev,
       [name]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -56,20 +58,30 @@ function Login() {
         formData.email
       );
       
-      // First try using the authAPI directly
       const response = await authAPI.login(formData.email, formData.password);
-      console.log("Login component: Login successful, response:", response);
-      
-      // Then use the context login to update the auth state
       await login(formData.email, formData.password);
-      
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      console.error("Login component: Login error:", err);
-      const errorMessage = err.error || err.message || "Failed to login. Please check your credentials.";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      console.error("Login error:", err);
+      
+      // Handle different types of errors
+      if (!navigator.onLine) {
+        setError("No internet connection. Please check your network and try again.");
+        toast.error("Network connection error. Please check your internet connection.");
+      } else if (err.response?.status === 401) {
+        setError("Invalid email or password. Please try again.");
+        toast.error("Invalid credentials");
+      } else if (err.response?.status === 500) {
+        setError("Server error. Please try again later.");
+        toast.error("Server error. Please try again later.");
+      } else if (err.message === "Network Error") {
+        setError("Unable to connect to the server. Please check your internet connection.");
+        toast.error("Network connection error. Please check your internet connection.");
+      } else {
+        setError(err.error || err.message || "An unexpected error occurred. Please try again.");
+        toast.error(err.error || err.message || "An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -87,20 +99,32 @@ function Login() {
       toast.success("Google login successful!");
       navigate("/dashboard");
     } catch (err) {
-      console.error("Login component: Google login error:", err);
-      const errorMessage = err.error || err.message || "Failed to authenticate with Google. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      console.error("Google login error:", err);
+      
+      if (!navigator.onLine) {
+        setError("No internet connection. Please check your network and try again.");
+        toast.error("Network connection error. Please check your internet connection.");
+      } else if (err.message === "Network Error") {
+        setError("Unable to connect to the server. Please check your internet connection.");
+        toast.error("Network connection error. Please check your internet connection.");
+      } else {
+        setError(err.error || err.message || "Failed to authenticate with Google. Please try again.");
+        toast.error(err.error || err.message || "Failed to authenticate with Google");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLoginFailure = (error) => {
-    console.error("Login component: Google login failed:", error);
-    const errorMessage = "Failed to connect with Google. Please try again.";
-    setError(errorMessage);
-    toast.error(errorMessage);
+    console.error("Google login failed:", error);
+    if (!navigator.onLine) {
+      setError("No internet connection. Please check your network and try again.");
+      toast.error("Network connection error. Please check your internet connection.");
+    } else {
+      setError("Failed to connect with Google. Please try again.");
+      toast.error("Failed to connect with Google");
+    }
   };
 
   return (

@@ -795,3 +795,27 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Loader Container Styles */
+.loader-container {
+  position: relative;
+  min-height: 400px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 8px;
+  margin: 1rem 0;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.loader-container > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+}
