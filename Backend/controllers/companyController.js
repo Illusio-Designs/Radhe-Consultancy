@@ -138,11 +138,11 @@ const companyController = {
         user_id: user.user_id
       }, { transaction });
 
-      if (!company || !company.id) {
+      if (!company || !company.company_id) {
         throw new Error('Failed to create company');
       }
 
-      console.log('[Company] Company record created:', company.id);
+      console.log('[Company] Company record created:', company.company_id);
 
       // Handle file uploads if present
       if (req.files) {
@@ -171,7 +171,7 @@ const companyController = {
       console.log('[Company] Transaction committed');
 
       // Fetch the created company with user details
-      const createdCompany = await Company.findByPk(company.id, {
+      const createdCompany = await Company.findByPk(company.company_id, {
         include: [{
           model: User,
           attributes: ['user_id', 'username', 'email']
@@ -179,7 +179,7 @@ const companyController = {
       });
 
       console.log('[Company] Final company data:', {
-        id: createdCompany.id,
+        id: createdCompany.company_id,
         gstDocument: createdCompany.gst_document_name,
         panDocument: createdCompany.pan_document_name,
         user: createdCompany.User ? {
