@@ -822,6 +822,7 @@ function Fire() {
   ];
 
   return (
+    <div className="insurance">
     <div className="insurance-container">
       <div className="insurance-content">
         <div className="insurance-header">
@@ -860,6 +861,7 @@ function Fire() {
           onPolicyUpdated={handlePolicyUpdated}
         />
       </Modal>
+    </div>
     </div>
   );
 }

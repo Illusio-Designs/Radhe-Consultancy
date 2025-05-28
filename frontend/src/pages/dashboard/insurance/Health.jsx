@@ -4,7 +4,7 @@ import {
   BiEdit,
   BiTrash,
   BiErrorCircle,
-  BiUpload,
+  BiUpload, 
 } from "react-icons/bi";
 import { healthPolicyAPI, insuranceCompanyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -894,6 +894,7 @@ function Health() {
   ];
 
   return (
+    <div className="insurance">
     <div className="insurance-container">
       <div className="insurance-content">
         <div className="insurance-header">
@@ -932,6 +933,7 @@ function Health() {
           onPolicyUpdated={handlePolicyUpdated}
         />
       </Modal>
+    </div>
     </div>
   );
 }

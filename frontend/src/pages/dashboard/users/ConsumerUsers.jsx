@@ -165,6 +165,7 @@ function ConsumerUserList() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "" });
+  const [localLoading, setLocalLoading] = useState(true);
 
   const consumerUsers = users.filter((user) => user.role_id === 6); // Filter for consumer users
 
@@ -263,6 +264,23 @@ function ConsumerUserList() {
     },
   ];
 
+  // Add effect to handle initial data loading
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setLocalLoading(true);
+        await refreshData();
+      } catch (err) {
+        console.error("Error initializing data:", err);
+        setError("Failed to load users");
+      } finally {
+        setLocalLoading(false);
+      }
+    };
+
+    initializeData();
+  }, []);
+
   if (!user || !['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(user.role_name || user.role)) {
     return (
       <div className="user-management-error">
@@ -274,6 +292,7 @@ function ConsumerUserList() {
 
   return (
     <div className="user-management">
+      <div className="user-management-content">
       <div className="user-management-header">
         <h1 className="user-management-title">Consumer Users</h1>
         <button
@@ -291,7 +310,7 @@ function ConsumerUserList() {
         </div>
       )}
 
-      {loading ? (
+      {(loading || localLoading) ? (
         <Loader size="large" color="primary" />
       ) : (
         <TableWithControl
@@ -300,6 +319,7 @@ function ConsumerUserList() {
           defaultPageSize={10}
         />
       )}
+      </div>
 
       <Modal
         isOpen={showModal}

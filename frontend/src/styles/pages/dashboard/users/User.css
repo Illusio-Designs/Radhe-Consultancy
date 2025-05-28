@@ -3,6 +3,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding: 2rem;
 }
 
 .user-management-content {
@@ -22,6 +23,7 @@
   align-items: center;
   border-bottom: 2px solid #e5e7eb;
   padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .user-management-header button {
@@ -48,8 +50,9 @@
 
 /* Search */
 .user-management-search {
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
+  width: 100%;
+  max-width: 400px;
 }
 
 /* Error */
@@ -121,11 +124,14 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 .user-management-table th,
 .user-management-table td {
-  padding: 0.75rem 1rem;
+  padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -133,6 +139,11 @@
   background-color: #f3f4f6;
   text-align: left;
   font-weight: 600;
+  color: #374151;
+}
+
+.user-management-table tr:last-child td {
+  border-bottom: none;
 }
 
 /* Status badges */
@@ -199,4 +210,14 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Modal styles */
+.user-management-modal {
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  margin: 2rem auto;
 }
