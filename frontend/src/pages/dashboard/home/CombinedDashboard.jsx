@@ -25,7 +25,9 @@ import {
   ChevronDown,
   ChevronUp,
   Menu,
-  X
+  X,
+  Car,
+  ScanHeart
 } from 'lucide-react';
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
@@ -68,7 +70,7 @@ const AllInsuranceCard = ({ stats }) => {
   return (
     <div className="all-insurance-card">
       <div className="all-insurance-header">
-        <Package2 className="all-insurance-icon" />
+        <Shield className="all-insurance-icon" />
         <h2>All Insurance Policies</h2>
       </div>
       <div className="all-insurance-stats">
@@ -86,13 +88,13 @@ const AllInsuranceCard = ({ stats }) => {
       </div>
       <div className="insurance-type-grid">
         <InsuranceTypeCard
-          icon={<Shield />}
+          icon={<UserCog />}
           label="ECP"
           stats={ecp}
           color="#007bff"
         />
         <InsuranceTypeCard
-          icon={<Truck />}
+          icon={<Car />}
           label="Vehicle"
           stats={vehicle}
           color="#28a745"
@@ -110,7 +112,7 @@ const AllInsuranceCard = ({ stats }) => {
           color="#dc3545"
         />
         <InsuranceTypeCard
-          icon={<HeartHandshake />}
+          icon={<ScanHeart />}
           label="Life"
           stats={life}
           color="#8e44ad"

@@ -21,7 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   Menu,
-  X
+  X,
+  ScanHeart
 } from 'lucide-react';
 import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
@@ -149,14 +150,14 @@ const Sidebar = ({ onCollapse }) => {
       {
         path: "/dashboard/insurance",
         label: "Insurance",
-        icon: <HeartPulse />,
+        icon: <Shield />,
         isDropdown: true,
         isOpen: activeDropdown === "insurance",
         toggle: () => handleDropdownToggle("insurance"),
         items: [
           {
             path: "/dashboard/insurance/ECP",
-            icon: <HeartPulse />,
+            icon: <UserCog />,
             label: "ECP",
           },
           {
@@ -176,7 +177,7 @@ const Sidebar = ({ onCollapse }) => {
           },
           {
             path: "/dashboard/insurance/life",
-            icon: <HeartPulse />,
+            icon: <ScanHeart />,
             label: "Life",
           },
           {
