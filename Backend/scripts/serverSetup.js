@@ -1,7 +1,7 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
 // This script handles database setup, roles/permissions setup, and admin user setup
 
-const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy } = require('../models');
+const { sequelize, User, Role, Permission, RolePermission, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy } = require('../models');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -126,6 +126,59 @@ const rolePermissions = {
   ]
 };
 
+// Handle LifePolicy table setup
+const setupLifePolicyTable = async () => {
+  try {
+    // Drop existing indexes and foreign keys
+    await sequelize.query(`
+      ALTER TABLE LifePolicies
+      DROP INDEX IF EXISTS idx_policy_number,
+      DROP INDEX IF EXISTS idx_insurance_company,
+      DROP INDEX IF EXISTS idx_company,
+      DROP INDEX IF EXISTS idx_consumer,
+      DROP INDEX IF EXISTS idx_policy_dates,
+      DROP FOREIGN KEY IF EXISTS fk_insurance_company,
+      DROP FOREIGN KEY IF EXISTS fk_company,
+      DROP FOREIGN KEY IF EXISTS fk_consumer;
+    `);
+
+    // Drop and recreate the table to ensure proper structure
+    await sequelize.query('DROP TABLE IF EXISTS LifePolicies');
+    
+    // Create the table with proper foreign key constraints
+    await sequelize.query(`
+      CREATE TABLE LifePolicies (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        insurance_company_id INT NOT NULL,
+        company_id INT,
+        consumer_id INT,
+        date_of_birth DATE NOT NULL,
+        plan_name VARCHAR(255) NOT NULL,
+        sub_product VARCHAR(255) NOT NULL,
+        pt DECIMAL(10,2) NOT NULL,
+        ppt INT NOT NULL,
+        policy_start_date DATE NOT NULL,
+        issue_date DATE NOT NULL,
+        current_policy_number VARCHAR(255) NOT NULL,
+        policy_document_path VARCHAR(255),
+        remarks TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (insurance_company_id) REFERENCES InsuranceCompanies(id) ON DELETE NO ACTION ON UPDATE CASCADE,
+        FOREIGN KEY (company_id) REFERENCES Companies(company_id) ON DELETE NO ACTION ON UPDATE CASCADE,
+        FOREIGN KEY (consumer_id) REFERENCES Consumers(consumer_id) ON DELETE NO ACTION ON UPDATE CASCADE,
+        UNIQUE INDEX idx_policy_number (current_policy_number),
+        INDEX idx_policy_dates (policy_start_date, issue_date)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    console.log('LifePolicy table setup completed successfully');
+  } catch (error) {
+    console.error('Error setting up LifePolicy table:', error);
+    throw error;
+  }
+};
+
 /**
  * Sets up the database structure and required directories
  * @returns {Promise<boolean>} Success status
@@ -158,49 +211,77 @@ async function setupDatabase() {
       logToFile('RolePermissions table synced');
       await User.sync({ alter: true });
       logToFile('Users table synced');
-      await Company.sync({ alter: true });
-      logToFile('Companies table synced');
 
-      // Special handling for Consumer
+      // Special handling for Consumer table
       try {
+        await sequelize.query(`
+          ALTER TABLE Consumers
+          DROP INDEX IF EXISTS email,
+          DROP INDEX IF EXISTS user_id,
+          DROP INDEX IF EXISTS created_at,
+          DROP INDEX IF EXISTS updated_at,
+          DROP FOREIGN KEY IF EXISTS consumers_ibfk_1
+        `).catch(err => console.log('Error dropping Consumer constraints:', err.message));
+        
         await Consumer.sync({ 
           alter: true,
           logging: false
         });
-        logToFile('Consumers table synced');
-        console.log('Consumers table synced');
+        
+        // Add essential constraints and indexes
+        await sequelize.query(`
+          ALTER TABLE Consumers
+          ADD CONSTRAINT IF NOT EXISTS fk_consumer_user
+          FOREIGN KEY (user_id)
+          REFERENCES Users(user_id)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE,
+          ADD UNIQUE INDEX IF NOT EXISTS idx_consumer_email (email)
+        `).catch(err => console.log('Error adding Consumer constraints:', err.message));
+        
+        logToFile('Consumer table synced with constraints and indexes');
+        console.log('Consumer table synced with constraints and indexes');
       } catch (error) {
         logToFile('Error syncing Consumer: ' + error.message);
         console.error('Error syncing Consumer:', error.message);
       }
 
+      await Company.sync({ alter: true });
+      logToFile('Companies table synced');
       await InsuranceCompany.sync({ alter: true });
       logToFile('InsuranceCompanies table synced');
-      console.log('InsuranceCompanies table synced');
+      await EmployeeCompensationPolicy.sync({ alter: true });
+      logToFile('EmployeeCompensationPolicies table synced');
+      await VehiclePolicy.sync({ alter: true });
+      logToFile('VehiclePolicies table synced');
+      await HealthPolicy.sync({ alter: true });
+      logToFile('HealthPolicies table synced');
+      await FirePolicy.sync({ alter: true });
+      logToFile('FirePolicies table synced');
 
-      // Special handling for EmployeeCompensationPolicy
+      // Special handling for LifePolicy
       try {
         await sequelize.query(`
-          ALTER TABLE EmployeeCompensationPolicies
-          DROP INDEX IF EXISTS policy_number,
+          ALTER TABLE LifePolicies
+          DROP INDEX IF EXISTS current_policy_number,
           DROP INDEX IF EXISTS insurance_company_id,
           DROP INDEX IF EXISTS company_id,
+          DROP INDEX IF EXISTS consumer_id,
           DROP INDEX IF EXISTS created_at,
           DROP INDEX IF EXISTS updated_at,
-          DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_1,
-          DROP FOREIGN KEY IF EXISTS employee_compensation_policies_ibfk_2,
-          DROP FOREIGN KEY IF EXISTS fk_insurance_company,
-          DROP FOREIGN KEY IF EXISTS fk_company
-        `).catch(err => console.log('Error dropping EmployeeCompensationPolicy constraints:', err.message));
+          DROP FOREIGN KEY IF EXISTS life_policies_ibfk_1,
+          DROP FOREIGN KEY IF EXISTS life_policies_ibfk_2,
+          DROP FOREIGN KEY IF EXISTS life_policies_ibfk_3
+        `).catch(err => console.log('Error dropping LifePolicy constraints:', err.message));
         
-        await EmployeeCompensationPolicy.sync({ 
+        await LifePolicy.sync({ 
           alter: true,
           logging: false
         });
         
         // Add foreign key constraints with proper conditions
         await sequelize.query(`
-          ALTER TABLE EmployeeCompensationPolicies
+          ALTER TABLE LifePolicies
           ADD CONSTRAINT IF NOT EXISTS fk_insurance_company
           FOREIGN KEY (insurance_company_id)
           REFERENCES InsuranceCompanies(id)
@@ -211,47 +292,28 @@ async function setupDatabase() {
           REFERENCES Companies(company_id)
           ON DELETE NO ACTION
           ON UPDATE CASCADE,
-          MODIFY COLUMN policy_document_path VARCHAR(255) NOT NULL,
-          ADD CONSTRAINT IF NOT EXISTS check_business_type
-          CHECK (business_type IN ('Fresh/New', 'Renewal/Rollover', 'Endorsement')),
-          ADD CONSTRAINT IF NOT EXISTS check_customer_type
-          CHECK (customer_type IN ('Organisation', 'Individual')),
-          ADD CONSTRAINT IF NOT EXISTS check_medical_cover
-          CHECK (medical_cover IN ('25k', '50k', '1 lac', '2 lac', '3 lac', '5 lac', 'actual')),
-          ADD CONSTRAINT IF NOT EXISTS check_status
-          CHECK (status IN ('active', 'expired', 'cancelled')),
-          ADD CONSTRAINT IF NOT EXISTS check_premiums
-          CHECK (net_premium >= 0 AND gst >= 0 AND gross_premium >= 0),
+          ADD CONSTRAINT IF NOT EXISTS fk_consumer
+          FOREIGN KEY (consumer_id)
+          REFERENCES Consumers(consumer_id)
+          ON DELETE NO ACTION
+          ON UPDATE CASCADE,
           ADD CONSTRAINT IF NOT EXISTS check_dates
-          CHECK (policy_end_date > policy_start_date)
-        `).catch(err => console.log('Error adding EmployeeCompensationPolicy constraints:', err.message));
+          CHECK (policy_start_date <= issue_date)
+        `).catch(err => console.log('Error adding LifePolicy constraints:', err.message));
 
-        // Add indexes for better performance
+        // Add only essential indexes for better performance
         await sequelize.query(`
-          ALTER TABLE EmployeeCompensationPolicies
-          ADD INDEX IF NOT EXISTS idx_policy_number (policy_number),
-          ADD INDEX IF NOT EXISTS idx_insurance_company (insurance_company_id),
-          ADD INDEX IF NOT EXISTS idx_company (company_id),
-          ADD INDEX IF NOT EXISTS idx_policy_dates (policy_start_date, policy_end_date),
-          ADD INDEX IF NOT EXISTS idx_status (status)
-        `).catch(err => console.log('Error adding EmployeeCompensationPolicy indexes:', err.message));
+          ALTER TABLE LifePolicies
+          ADD UNIQUE INDEX IF NOT EXISTS idx_policy_number (current_policy_number),
+          ADD INDEX IF NOT EXISTS idx_policy_dates (policy_start_date, issue_date)
+        `).catch(err => console.log('Error adding LifePolicy indexes:', err.message));
         
-        logToFile('EmployeeCompensationPolicy table synced with constraints and indexes');
-        console.log('EmployeeCompensationPolicy table synced with constraints and indexes');
+        logToFile('LifePolicy table synced with constraints and indexes');
+        console.log('LifePolicy table synced with constraints and indexes');
       } catch (error) {
-        logToFile('Error syncing EmployeeCompensationPolicy: ' + error.message);
-        console.error('Error syncing EmployeeCompensationPolicy:', error.message);
+        logToFile('Error syncing LifePolicy: ' + error.message);
+        console.error('Error syncing LifePolicy:', error.message);
       }
-
-      await VehiclePolicy.sync({ alter: true });
-      logToFile('VehiclePolicies table synced');
-      console.log('VehiclePolicies table synced');
-      await HealthPolicy.sync({ alter: true });
-      logToFile('HealthPolicies table synced');
-      console.log('HealthPolicies table synced');
-      await FirePolicy.sync({ alter: true });
-      logToFile('FirePolicies table synced');
-      console.log('FirePolicies table synced');
 
     } finally {
       // Re-enable foreign key checks
@@ -260,6 +322,9 @@ async function setupDatabase() {
     
     logToFile('All tables synced successfully');
     console.log('All tables synced');
+
+    // Setup LifePolicy table
+    await setupLifePolicyTable();
 
     return true;
   } catch (error) {

@@ -12,6 +12,7 @@ const EmployeeCompensationPolicy = require('./employeeCompensationPolicyModel');
 const VehiclePolicy = require('./vehiclePolicyModel');
 const HealthPolicy = require('./healthPolicyModel');
 const FirePolicy = require('./firePolicyModel');
+const LifePolicy = require('./lifePolicyModel');
 
 // Define associations
 User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });
@@ -54,6 +55,10 @@ InsuranceCompany.hasMany(FirePolicy, {
   foreignKey: 'insurance_company_id',
   as: 'firePolicies'
 });
+InsuranceCompany.hasMany(LifePolicy, {
+  foreignKey: 'insurance_company_id',
+  as: 'lifePolicies'
+});
 EmployeeCompensationPolicy.belongsTo(InsuranceCompany, {
   foreignKey: 'insurance_company_id',
   as: 'provider'
@@ -84,6 +89,10 @@ Company.hasMany(FirePolicy, {
   foreignKey: 'company_id',
   as: 'firePoliciesByCompany'
 });
+Company.hasMany(LifePolicy, {
+  foreignKey: 'company_id',
+  as: 'lifePoliciesByCompany'
+});
 EmployeeCompensationPolicy.belongsTo(Company, {
   foreignKey: 'company_id',
   as: 'policyHolder'
@@ -110,6 +119,10 @@ Consumer.hasMany(FirePolicy, {
   foreignKey: 'consumer_id',
   as: 'firePoliciesByConsumer'
 });
+Consumer.hasMany(LifePolicy, {
+  foreignKey: 'consumer_id',
+  as: 'lifePoliciesByConsumer'
+});
 VehiclePolicy.belongsTo(Consumer, {
   foreignKey: 'consumer_id',
   as: 'consumerPolicyHolder'
@@ -133,6 +146,22 @@ FirePolicy.belongsTo(Consumer, {
   as: 'consumerPolicyHolder'
 });
 
+// Add the belongsTo associations for LifePolicy
+LifePolicy.belongsTo(Company, {
+  foreignKey: 'company_id',
+  as: 'companyPolicyHolder'
+});
+
+LifePolicy.belongsTo(Consumer, {
+  foreignKey: 'consumer_id',
+  as: 'consumerPolicyHolder'
+});
+
+LifePolicy.belongsTo(InsuranceCompany, {
+  foreignKey: 'insurance_company_id',
+  as: 'provider'
+});
+
 module.exports = {
   sequelize,
   User,
@@ -145,5 +174,6 @@ module.exports = {
   EmployeeCompensationPolicy,
   VehiclePolicy,
   HealthPolicy,
-  FirePolicy
+  FirePolicy,
+  LifePolicy
 };

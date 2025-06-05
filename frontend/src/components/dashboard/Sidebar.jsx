@@ -1,28 +1,28 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  BiGroup,
-  BiBuilding,
-  BiTachometer,
-  BiUser,
-  BiMenu,
-  BiX,
-  BiChevronDown,
-  BiChevronUp,
-  BiShield,
-  BiStore,
-  BiUserCircle,
-  BiHealth,
-  BiCertification,
-  BiKey,
-  BiPulse,
-  BiWater,
-  BiHotel,
-  BiCar,
-  BiBuildings,
-  BiDetail,
-  BiBook,
-} from "react-icons/bi";
+  LayoutDashboard,
+  Users,
+  Building2,
+  UserRound,
+  UserCog,
+  Store,
+  ShieldCheck,
+  Shield,
+  HeartPulse,
+  Flame,
+  Car,
+  HeartHandshake,
+  BadgeCheck,
+  Factory,
+  ClipboardList,
+  BookOpenCheck,
+  KeyRound,
+  ChevronDown,
+  ChevronUp,
+  Menu,
+  X
+} from 'lucide-react';
 import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
 import { useAuth } from "../../contexts/AuthContext";
@@ -85,9 +85,9 @@ const Sidebar = ({ onCollapse }) => {
   let menuItems = [
     {
       path: "/dashboard",
-      icon: <BiTachometer />,
+      icon: <LayoutDashboard />,
       label: "Dashboard",
-      items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+      items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
     },
   ];
 
@@ -97,31 +97,31 @@ const Sidebar = ({ onCollapse }) => {
     menuItems = [
       {
         path: "/dashboard",
-        icon: <BiTachometer />,
+        icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
       },
       {
         path: "/dashboard/users",
         label: "Users",
-        icon: <BiGroup />,
+        icon: <Users />,
         isDropdown: true,
         isOpen: activeDropdown === "users",
         toggle: () => handleDropdownToggle("users"),
         items: [
           {
             path: "/dashboard/users/company",
-            icon: <BiBuilding />,
+            icon: <Building2 />,
             label: "Companies",
           },
           {
             path: "/dashboard/users/consumer",
-            icon: <BiUserCircle />,
+            icon: <UserRound />,
             label: "Consumers",
           },
           {
             path: "/dashboard/users/other",
-            icon: <BiUser />,
+            icon: <UserCog />,
             label: "Employee",
           },
         ],
@@ -129,19 +129,19 @@ const Sidebar = ({ onCollapse }) => {
       {
         path: "/dashboard/vendors",
         label: "Vendors",
-        icon: <BiStore />,
+        icon: <Store />,
         isDropdown: true,
         isOpen: activeDropdown === "vendors",
         toggle: () => handleDropdownToggle("vendors"),
         items: [
           {
             path: "/dashboard/companies",
-            icon: <BiBuilding />,
+            icon: <Building2 />,
             label: "Companies",
           },
           {
             path: "/dashboard/consumers",
-            icon: <BiUserCircle />,
+            icon: <UserRound />,
             label: "Consumers",
           },
         ],
@@ -149,34 +149,39 @@ const Sidebar = ({ onCollapse }) => {
       {
         path: "/dashboard/insurance",
         label: "Insurance",
-        icon: <BiHealth />,
+        icon: <HeartPulse />,
         isDropdown: true,
         isOpen: activeDropdown === "insurance",
         toggle: () => handleDropdownToggle("insurance"),
         items: [
           {
             path: "/dashboard/insurance/ECP",
-            icon: <BiHealth />,
+            icon: <HeartPulse />,
             label: "ECP",
           },
           {
             path: "/dashboard/insurance/health",
-            icon: <BiPulse />,
+            icon: <HeartPulse />,
             label: "Health",
           },
           {
             path: "/dashboard/insurance/fire",
-            icon: <BiHotel />,
+            icon: <Flame />,
             label: "Fire",
           },
           {
             path: "/dashboard/insurance/vehicle",
-            icon: <BiCar />,
+            icon: <Car />,
             label: "Vehicle",
           },
           {
+            path: "/dashboard/insurance/life",
+            icon: <HeartPulse />,
+            label: "Life",
+          },
+          {
             path: "/dashboard/insurance/companies",
-            icon: <BiBuilding />,
+            icon: <Building2 />,
             label: "Companies",
           },
         ],
@@ -184,59 +189,59 @@ const Sidebar = ({ onCollapse }) => {
       {
         path: "/dashboard/compliance",
         label: "Compliance & Licensing",
-        icon: <BiCertification />,
+        icon: <BadgeCheck />,
         isDropdown: true,
         isOpen: activeDropdown === "compliance",
         toggle: () => handleDropdownToggle("compliance"),
         items: [
           {
             path: "/dashboard/compliance/factory-act",
-            icon: <BiBuildings />,
+            icon: <Factory />,
             label: "Factory Act License",
           },
           {
             path: "/dashboard/compliance/labour-inspection",
-            icon: <BiDetail />,
+            icon: <ClipboardList />,
             label: "Labour Law Inspection",
           },
           {
             path: "/dashboard/compliance/labour-license",
-            icon: <BiBook />,
+            icon: <BookOpenCheck />,
             label: "Labour License Management",
           },
         ],
       },
-      { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
+      { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
     ];
     console.log("Sidebar: Admin menu items set:", menuItems);
   } else if (isRole("User_manager") || isRole("User")) {
     menuItems = [
       {
         path: "/dashboard",
-        icon: <BiTachometer />,
+        icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
       },
       {
         label: "Users",
-        icon: <BiGroup />,
+        icon: <Users />,
         isDropdown: true,
         isOpen: activeDropdown === "users",
         toggle: () => handleDropdownToggle("users"),
         items: [
           {
             path: "/dashboard/users/company",
-            icon: <BiBuilding />,
+            icon: <Building2 />,
             label: "Companies",
           },
           {
             path: "/dashboard/users/consumer",
-            icon: <BiUserCircle />,
+            icon: <UserRound />,
             label: "Consumers",
           },
           {
             path: "/dashboard/users/other",
-            icon: <BiUser />,
+            icon: <UserCog />,
             label: "Employee",
           },
         ],
@@ -246,25 +251,25 @@ const Sidebar = ({ onCollapse }) => {
     menuItems = [
       {
         path: "/dashboard",
-        icon: <BiTachometer />,
+        icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
       },
       {
         label: "Vendors",
-        icon: <BiStore />,
+        icon: <Store />,
         isDropdown: true,
         isOpen: activeDropdown === "vendors",
         toggle: () => handleDropdownToggle("vendors"),
         items: [
           {
             path: "/dashboard/companies",
-            icon: <BiBuilding />,
+            icon: <Building2 />,
             label: "Companies",
           },
           {
             path: "/dashboard/consumers",
-            icon: <BiUserCircle />,
+            icon: <UserRound />,
             label: "Consumers",
           },
         ],
@@ -274,40 +279,45 @@ const Sidebar = ({ onCollapse }) => {
     menuItems = [
       {
         path: "/dashboard",
-        icon: <BiTachometer />,
+        icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
       },
       {
         label: "Insurance",
-        icon: <BiHealth />,
+        icon: <HeartPulse />,
         isDropdown: true,
         isOpen: activeDropdown === "insurance",
         toggle: () => handleDropdownToggle("insurance"),
         items: [
           {
             path: "/dashboard/insurance/ECP",
-            icon: <BiHealth />,
+            icon: <HeartPulse />,
             label: "ECP",
           },
           {
             path: "/dashboard/insurance/health",
-            icon: <BiPulse />,
+            icon: <HeartPulse />,
             label: "Health",
           },
           {
             path: "/dashboard/insurance/fire",
-            icon: <BiHotel />,
+            icon: <Flame />,
             label: "Fire",
           },
           {
             path: "/dashboard/insurance/vehicle",
-            icon: <BiCar />,
+            icon: <Car />,
             label: "Vehicle",
           },
           {
+            path: "/dashboard/insurance/life",
+            icon: <HeartPulse />,
+            label: "Life",
+          },
+          {
             path: "/dashboard/insurance/companies",
-            icon: <BiBuilding />,
+            icon: <Building2 />,
             label: "Companies",
           },
         ],
@@ -317,30 +327,30 @@ const Sidebar = ({ onCollapse }) => {
     menuItems = [
       {
         path: "/dashboard",
-        icon: <BiTachometer />,
+        icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
       },
       {
         label: "Compliance & Licensing",
-        icon: <BiCertification />,
+        icon: <BadgeCheck />,
         isDropdown: true,
         isOpen: activeDropdown === "compliance",
         toggle: () => handleDropdownToggle("compliance"),
         items: [
           {
             path: "/dashboard/compliance/factory-act",
-            icon: <BiBuildings />,
+            icon: <Factory />,
             label: "Factory Act License",
           },
           {
             path: "/dashboard/compliance/labour-inspection",
-            icon: <BiDetail />,
+            icon: <ClipboardList />,
             label: "Labour Law Inspection",
           },
           {
             path: "/dashboard/compliance/labour-license",
-            icon: <BiBook />,
+            icon: <BookOpenCheck />,
             label: "Labour License Management",
           },
         ],
@@ -350,11 +360,11 @@ const Sidebar = ({ onCollapse }) => {
     menuItems = [
       {
         path: "/dashboard",
-        icon: <BiTachometer />,
+        icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <BiTachometer />, label: "Home" }],
+        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
       },
-      { path: "/dashboard/dsc", icon: <BiKey />, label: "DSC" },
+      { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
     ];
   } else {
     console.log("Sidebar: Not a recognized role, using default menu items");
@@ -389,7 +399,7 @@ const Sidebar = ({ onCollapse }) => {
                     item.isOpen ? "rotate" : ""
                   }`}
                 >
-                  {item.isOpen ? <BiChevronUp /> : <BiChevronDown />}
+                  {item.isOpen ? <ChevronUp /> : <ChevronDown />}
                 </span>
               </>
             )}
@@ -465,7 +475,7 @@ const Sidebar = ({ onCollapse }) => {
               onClick={handleCollapse}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {isCollapsed ? <BiMenu /> : <BiX />}
+              {isCollapsed ? <Menu /> : <X />}
             </button>
           </div>
 

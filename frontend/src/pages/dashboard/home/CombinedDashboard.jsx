@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { adminDashboardAPI } from "../../../services/api";
 import {
-  FiPackage,
-  FiRefreshCw,
-  FiCalendar,
-  FiClock,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiCheckCircle,
-  FiXCircle,
-  FiClock as FiRecent,
-  FiUsers,
-  FiShoppingCart,
-  FiDollarSign,
-  FiBriefcase,
-  FiShield,
-  FiTruck,
-  FiZap,
-  FiAnchor,
-  FiHeart,
-  FiUser,
-  FiUserCheck,
-  FiUserX,
-  FiUserPlus,
-} from "react-icons/fi";
-import { adminDashboardAPI, userAPI } from "../../../services/api";
+  Package2,
+  RefreshCcw,
+  CalendarDays,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Users,
+  ShoppingCart,
+  DollarSign,
+  Briefcase,
+  Shield,
+  Truck,
+  Flame,
+  HeartPulse,
+  HeartHandshake,
+  User,
+  UserCog,
+  BookOpenCheck,
+  KeyRound,
+  ChevronDown,
+  ChevronUp,
+  Menu,
+  X
+} from 'lucide-react';
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
 
@@ -56,59 +57,74 @@ const InsuranceTypeCard = ({ icon, label, stats, color }) => (
   </div>
 );
 
-const AllInsuranceCard = ({ stats }) => (
-  <div className="all-insurance-card">
-    <div className="all-insurance-header">
-      <FiPackage className="all-insurance-icon" />
-      <h2>All Insurance Policies</h2>
-    </div>
-    <div className="all-insurance-stats">
-      <div className="all-insurance-total">
-        <span className="stat-label">Total</span>
-        <span className="stat-value">{stats.all.total}</span>
+const AllInsuranceCard = ({ stats }) => {
+  // Provide fallback objects to prevent undefined errors
+  const ecp = stats.ecp || { total: 0, recent: 0, percent: 0 };
+  const vehicle = stats.vehicle || { total: 0, recent: 0, percent: 0 };
+  const fire = stats.fire || { total: 0, recent: 0, percent: 0 };
+  const health = stats.health || { total: 0, recent: 0, percent: 0 };
+  const life = stats.life || { total: 0, recent: 0, percent: 0 };
+
+  return (
+    <div className="all-insurance-card">
+      <div className="all-insurance-header">
+        <Package2 className="all-insurance-icon" />
+        <h2>All Insurance Policies</h2>
       </div>
-      <div className="all-insurance-recent">
-        <span className="stat-label">Recent (30d)</span>
-        <div className="stat-value-container">
-          <span className="stat-value">{stats.all.recent}</span>
-          <span className="stat-percentage">{stats.all.percent}%</span>
+      <div className="all-insurance-stats">
+        <div className="all-insurance-total">
+          <span className="stat-label">Total</span>
+          <span className="stat-value">{stats.all.total}</span>
+        </div>
+        <div className="all-insurance-recent">
+          <span className="stat-label">Recent (30d)</span>
+          <div className="stat-value-container">
+            <span className="stat-value">{stats.all.recent}</span>
+            <span className="stat-percentage">{stats.all.percent}%</span>
+          </div>
         </div>
       </div>
+      <div className="insurance-type-grid">
+        <InsuranceTypeCard
+          icon={<Shield />}
+          label="ECP"
+          stats={ecp}
+          color="#007bff"
+        />
+        <InsuranceTypeCard
+          icon={<Truck />}
+          label="Vehicle"
+          stats={vehicle}
+          color="#28a745"
+        />
+        <InsuranceTypeCard
+          icon={<Flame />}
+          label="Fire"
+          stats={fire}
+          color="#e67e22"
+        />
+        <InsuranceTypeCard
+          icon={<HeartPulse />}
+          label="Health"
+          stats={health}
+          color="#dc3545"
+        />
+        <InsuranceTypeCard
+          icon={<HeartHandshake />}
+          label="Life"
+          stats={life}
+          color="#8e44ad"
+        />
+      </div>
     </div>
-    <div className="insurance-type-grid">
-      <InsuranceTypeCard
-        icon={<FiShield />}
-        label="ECP"
-        stats={stats.ecp}
-        color="#007bff"
-      />
-      <InsuranceTypeCard
-        icon={<FiTruck />}
-        label="Vehicle"
-        stats={stats.vehicle}
-        color="#28a745"
-      />
-      <InsuranceTypeCard
-        icon={<FiZap />}
-        label="Fire"
-        stats={stats.fire}
-        color="#e67e22"
-      />
-      <InsuranceTypeCard
-        icon={<FiHeart />}
-        label="Health"
-        stats={stats.health}
-        color="#dc3545"
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 const CompanyStatsCard = ({ stats }) => (
   <div className="consumer-stats-card">
     <div className="consumer-stats-header">
       <div className="consumer-stats-title">
-        <FiPackage className="stats-icon" />
+        <Package2 className="stats-icon" />
         <h2>Company Statistics</h2>
       </div>
     </div>
@@ -116,7 +132,7 @@ const CompanyStatsCard = ({ stats }) => (
     <div className="consumer-stats-grid">
       <div className="consumer-stat-item total">
         <div className="stat-label">
-          <FiBriefcase className="stat-icon" />
+          <Briefcase className="stat-icon" />
           Total Companies
         </div>
         <div className="stat-value">{stats.total_companies}</div>
@@ -124,7 +140,7 @@ const CompanyStatsCard = ({ stats }) => (
 
       <div className="consumer-stat-item active">
         <div className="stat-label">
-          <FiCheckCircle className="stat-icon" />
+          <CheckCircle2 className="stat-icon" />
           Active Companies
         </div>
         <div className="stat-value">{stats.active_companies}</div>
@@ -136,7 +152,7 @@ const CompanyStatsCard = ({ stats }) => (
 
       <div className="consumer-stat-item completed">
         <div className="stat-label">
-          <FiXCircle className="stat-icon" />
+          <XCircle className="stat-icon" />
           Inactive Companies
         </div>
         <div className="stat-value">{stats.inactive_companies}</div>
@@ -148,7 +164,7 @@ const CompanyStatsCard = ({ stats }) => (
 
       <div className="consumer-stat-item spending">
         <div className="stat-label">
-          <FiRecent className="stat-icon" />
+          <Clock className="stat-icon" />
           Recent Companies (30 days)
         </div>
         <div className="stat-value">{stats.recent_companies}</div>
@@ -177,21 +193,21 @@ const ConsumerStatsCard = ({ stats }) => {
     <div className="consumer-stats-card">
       <div className="consumer-stats-header">
         <div className="consumer-stats-title">
-          <FiUsers className="stats-icon" />
+          <Users className="stats-icon" />
           <h2>Consumer Statistics</h2>
         </div>
       </div>
       <div className="consumer-stats-grid">
         <div className="consumer-stat-item total">
           <div className="stat-label">
-            <FiUsers className="stat-icon" />
+            <Users className="stat-icon" />
             Total Consumers
           </div>
           <div className="stat-value">{total}</div>
         </div>
         <div className="consumer-stat-item active">
           <div className="stat-label">
-            <FiCheckCircle className="stat-icon" />
+            <CheckCircle2 className="stat-icon" />
             Active Consumers
           </div>
           <div className="stat-value">{active}</div>
@@ -199,7 +215,7 @@ const ConsumerStatsCard = ({ stats }) => {
         </div>
         <div className="consumer-stat-item completed">
           <div className="stat-label">
-            <FiXCircle className="stat-icon" />
+            <XCircle className="stat-icon" />
             Inactive Consumers
           </div>
           <div className="stat-value">{inactive}</div>
@@ -207,7 +223,7 @@ const ConsumerStatsCard = ({ stats }) => {
         </div>
         <div className="consumer-stat-item spending">
           <div className="stat-label">
-            <FiClock className="stat-icon" />
+            <Clock className="stat-icon" />
             Recent Consumers (30 days)
           </div>
           <div className="stat-value">{recent}</div>
@@ -220,12 +236,12 @@ const ConsumerStatsCard = ({ stats }) => {
 
 // Map roles to icons and colors
 const roleIconMap = {
-  admin: { icon: <FiShield />, color: "#007bff" },
-  user_manager: { icon: <FiUserCheck />, color: "#28a745" },
-  vendor_manager: { icon: <FiBriefcase />, color: "#e67e22" },
-  company: { icon: <FiBriefcase />, color: "#17a2b8" },
-  consumer: { icon: <FiUsers />, color: "#dc3545" },
-  user: { icon: <FiUser />, color: "#6c757d" },
+  admin: { icon: <Shield />, color: "#007bff" },
+  user_manager: { icon: <UserCog />, color: "#28a745" },
+  vendor_manager: { icon: <Briefcase />, color: "#e67e22" },
+  company: { icon: <Briefcase />, color: "#17a2b8" },
+  consumer: { icon: <Users />, color: "#dc3545" },
+  user: { icon: <User />, color: "#6c757d" },
   // Add more roles as needed
 };
 
@@ -236,14 +252,14 @@ const UserRoleStatsCard = ({ stats }) => (
   >
     <div className="insurance-type-header">
       <span className="insurance-type-icon" style={{ color: "#007bff" }}>
-        <FiUsers />
+        <Users />
       </span>
       <span className="insurance-type-label">User Role Statistics</span>
     </div>
     <div className="user-role-stats-grid">
       {Object.entries(stats).map(([role, count]) => {
         const { icon, color } = roleIconMap[role] || {
-          icon: <FiUser />,
+          icon: <User />,
           color: "#6c757d",
         };
         return (
@@ -279,20 +295,20 @@ const DashboardHeader = ({
       <h1>{title}</h1>
       <div className="dashboard-meta">
         <span className="last-updated">
-          <FiClock className="meta-icon" /> Last updated: {lastUpdated}
+          <Clock className="meta-icon" /> Last updated: {lastUpdated}
         </span>
         <button
           className={`refresh-button ${isLoading ? "refreshing" : ""}`}
           onClick={onRefresh}
           disabled={isLoading}
         >
-          <FiRefreshCw className="refresh-icon" />
+          <RefreshCcw className="refresh-icon" />
           {isLoading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
     </div>
     <div className="date-filter">
-      <FiCalendar className="filter-icon" />
+      <CalendarDays className="filter-icon" />
       <select value={timeFilter} onChange={onFilterChange}>
         <option value="7days">Last 7 days</option>
         <option value="30days">Last 30 days</option>
@@ -336,20 +352,20 @@ const AdminDashboard = ({ stats, isLoading, lastUpdated, fetchStats }) => {
               <h1>Admin Dashboard</h1>
               <div className="dashboard-meta">
                 <span className="last-updated">
-                  <FiClock className="meta-icon" /> Last updated: {lastUpdated}
+                  <Clock className="meta-icon" /> Last updated: {lastUpdated}
                 </span>
                 <button
                   className={`refresh-button ${isLoading ? "refreshing" : ""}`}
                   onClick={handleRefresh}
                   disabled={isLoading}
                 >
-                  <FiRefreshCw className="refresh-icon" />
+                  <RefreshCcw className="refresh-icon" />
                   {isLoading ? "Refreshing..." : "Refresh"}
                 </button>
               </div>
             </div>
             <div className="date-filter">
-              <FiCalendar className="filter-icon" />
+              <CalendarDays className="filter-icon" />
               <select value={timeFilter} onChange={handleFilterChange}>
                 <option value="7days">Last 7 days</option>
                 <option value="30days">Last 30 days</option>
@@ -389,6 +405,7 @@ const CombinedDashboard = () => {
       fire: { total: 0, recent: 0, percent: 0 },
       marine: { total: 0, recent: 0, percent: 0 },
       health: { total: 0, recent: 0, percent: 0 },
+      life: { total: 0, recent: 0, percent: 0 },
     },
     user_role_stats: {},
   });
@@ -404,10 +421,15 @@ const CombinedDashboard = () => {
   const fetchStats = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching stats...');
       const response = await adminDashboardAPI.getCompanyStatistics();
+      console.log('API Response:', response);
       if (response.success) {
+        console.log('Setting stats:', response.data);
         setStats(response.data);
         setLastUpdated(new Date().toLocaleTimeString());
+      } else {
+        console.error('API returned success: false');
       }
     } catch (error) {
       console.error("Error fetching admin stats:", error);

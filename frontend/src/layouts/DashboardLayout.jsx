@@ -23,6 +23,7 @@ import ECP from "../pages/dashboard/insurance/ECP";
 import Health from "../pages/dashboard/insurance/Health";
 import Fire from "../pages/dashboard/insurance/Fire";
 import Vehicle from "../pages/dashboard/insurance/Vehicle";
+import Life from "../pages/dashboard/insurance/Life";
 import Companies from "../pages/dashboard/insurance/Companies";
 import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
 import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
@@ -95,6 +96,8 @@ function DashboardLayout() {
         return <Fire />;
       case "/dashboard/insurance/vehicle":
         return <Vehicle />;
+      case "/dashboard/insurance/life":
+        return <Life />;
       case "/dashboard/insurance/companies":
         return <Companies />;
       case "/dashboard/compliance/factory-act":

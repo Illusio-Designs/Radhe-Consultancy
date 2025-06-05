@@ -718,10 +718,15 @@ export const adminDashboardAPI = {
     try {
       console.log('API Service: Fetching company statistics');
       const response = await api.get('/admin-dashboard/statistics');
-      console.log('API Service: Company statistics fetched successfully');
+      console.log('API Service: Raw response:', response);
+      console.log('API Service: Response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('API Service: Error fetching company statistics:', error);
+      if (error.response) {
+        console.error('API Service: Error response:', error.response.data);
+        console.error('API Service: Error status:', error.response.status);
+      }
       throw error;
     }
   }
@@ -1220,6 +1225,157 @@ export const firePolicyAPI = {
       const response = await api.delete(`/fire-policies/${id}`);
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  }
+};
+
+// Life Policy API
+export const lifePolicyAPI = {
+  getAllPolicies: async () => {
+    try {
+      console.log('API Service: Fetching all life policies');
+      const response = await api.get('/life-policies');
+      console.log('API Service: Life policies fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching life policies:', error);
+      throw error;
+    }
+  },
+
+  getActiveCompanies: async () => {
+    try {
+      console.log('API Service: Fetching active companies for life policies');
+      const response = await api.get('/life-policies/companies');
+      console.log('API Service: Active companies fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching active companies:', error);
+      throw error;
+    }
+  },
+
+  getActiveConsumers: async () => {
+    try {
+      console.log('API Service: Fetching active consumers for life policies');
+      const response = await api.get('/life-policies/consumers');
+      console.log('API Service: Active consumers fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching active consumers:', error);
+      throw error;
+    }
+  },
+
+  searchPolicies: async (searchParams) => {
+    try {
+      console.log('API Service: Searching life policies');
+      const response = await api.get('/life-policies/search', { params: searchParams });
+      console.log('API Service: Search completed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error searching life policies:', error);
+      throw error;
+    }
+  },
+
+  getPolicy: async (id) => {
+    try {
+      console.log('API Service: Fetching life policy:', id);
+      const response = await api.get(`/life-policies/${id}`);
+      console.log('API Service: Life policy fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching life policy:', error);
+      throw error;
+    }
+  },
+
+  createPolicy: async (policyData) => {
+    try {
+      console.log('[API] Creating life policy');
+      
+      // Log FormData contents for debugging
+      if (policyData instanceof FormData) {
+        console.log('[API] FormData contents:');
+        for (let [key, value] of policyData.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}:`, {
+              name: value.name,
+              type: value.type,
+              size: value.size
+            });
+          } else {
+            console.log(`${key}:`, value);
+          }
+        }
+      }
+
+      const response = await api.post('/life-policies', policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000, // 30 second timeout for large files
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024, // 10MB
+        transformRequest: [(data) => data] // Prevent axios from transforming FormData
+      });
+
+      console.log('[API] Life policy creation response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error creating life policy:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  updatePolicy: async (id, policyData) => {
+    try {
+      console.log('[API] Updating life policy:', id);
+      
+      // Log FormData contents for debugging
+      if (policyData instanceof FormData) {
+        console.log('[API] FormData contents:');
+        for (let [key, value] of policyData.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}:`, {
+              name: value.name,
+              type: value.type,
+              size: value.size
+            });
+          } else {
+            console.log(`${key}:`, value);
+          }
+        }
+      }
+
+      const response = await api.put(`/life-policies/${id}`, policyData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024,
+        maxBodyLength: 10 * 1024 * 1024,
+        transformRequest: [(data) => data]
+      });
+
+      console.log('[API] Life policy update response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error updating life policy:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  deletePolicy: async (id) => {
+    try {
+      console.log('API Service: Deleting life policy:', id);
+      const response = await api.delete(`/life-policies/${id}`);
+      console.log('API Service: Life policy deleted successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error deleting life policy:', error);
       throw error;
     }
   }

@@ -178,6 +178,27 @@ const firePolicyStorage = multer.diskStorage({
     }
 });
 
+// Configure storage for life policy documents
+const lifePolicyStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = getUploadDir('life_policies');
+        try {
+            if (!fsSync.existsSync(uploadDir)) {
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `life-policy-${uniqueSuffix}${ext}`;
+        cb(null, filename);
+    }
+});
+
 // File filter to accept images and PDFs
 const fileFilter = (req, file, cb) => {
     const allowedTypes = [
@@ -358,6 +379,12 @@ const uploadFirePolicyDocument = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
+const uploadLifePolicyDocument = multer({
+    storage: lifePolicyStorage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
 // Export the multer instances
 module.exports = {
     uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
@@ -365,5 +392,6 @@ module.exports = {
     uploadEmployeePolicyDocument: uploadEmployeePolicyDocumentWithLogging,
     uploadVehiclePolicyDocument,
     uploadHealthPolicyDocument,
-    uploadFirePolicyDocument
+    uploadFirePolicyDocument,
+    uploadLifePolicyDocument
 }; 

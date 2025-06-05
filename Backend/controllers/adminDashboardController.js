@@ -1,10 +1,13 @@
-const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
   try {
+    console.log('Backend: Starting to fetch company statistics');
+    
     // Get total companies count
     const totalCompanies = await Company.count();
+    console.log('Backend: Total companies:', totalCompanies);
 
     // Get active companies count (where status is 'Active' or status field doesn't exist)
     const activeCompanies = await Company.count({
@@ -15,6 +18,7 @@ const getCompanyStatistics = async (req, res) => {
         ]
       }
     });
+    console.log('Backend: Active companies:', activeCompanies);
 
     // Get inactive companies count (where status is 'Inactive')
     const inactiveCompanies = await Company.count({
@@ -22,6 +26,7 @@ const getCompanyStatistics = async (req, res) => {
         status: 'Inactive'
       }
     });
+    console.log('Backend: Inactive companies:', inactiveCompanies);
 
     // Get companies created in the last 30 days
     const thirtyDaysAgo = new Date();
@@ -34,11 +39,15 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
+    console.log('Backend: Recent companies:', recentCompanies);
 
     // --- Consumer Stats ---
     const totalConsumers = await Consumer.count();
+    console.log('Backend: Total consumers:', totalConsumers);
+    
     const activeConsumers = totalConsumers; // All are active
     const inactiveConsumers = 0;
+    
     const recentConsumers = await Consumer.count({
       where: {
         created_at: {
@@ -46,6 +55,7 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
+    console.log('Backend: Recent consumers:', recentConsumers);
     const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
 
     // --- User Role Stats ---
@@ -66,6 +76,7 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
+    console.log('Backend: ECP stats:', { total: ecpTotal, recent: ecpRecent });
 
     // Real data for Vehicle Policies
     const vehicleTotal = await VehiclePolicy.count();
@@ -76,6 +87,7 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
+    console.log('Backend: Vehicle stats:', { total: vehicleTotal, recent: vehicleRecent });
 
     // Real data for Health Policies
     const healthTotal = await HealthPolicy.count();
@@ -86,6 +98,7 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
+    console.log('Backend: Health stats:', { total: healthTotal, recent: healthRecent });
 
     // Real data for Fire Policies
     const fireTotal = await FirePolicy.count();
@@ -96,62 +109,82 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
+    console.log('Backend: Fire stats:', { total: fireTotal, recent: fireRecent });
+
+    // Real data for Life Policies
+    const lifeTotal = await LifePolicy.count();
+    const lifeRecent = await LifePolicy.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+    console.log('Backend: Life stats:', { total: lifeTotal, recent: lifeRecent });
 
     // Combined totals (dynamic, no marine)
-    const allTotal = ecpTotal + vehicleTotal + fireTotal + healthTotal;
-    const allRecent = ecpRecent + vehicleRecent + fireRecent + healthRecent;
+    const allTotal = ecpTotal + vehicleTotal + fireTotal + healthTotal + lifeTotal;
+    const allRecent = ecpRecent + vehicleRecent + fireRecent + healthRecent + lifeRecent;
 
     // Helper for percent
     const percentInsurance = (recent, total) => total > 0 ? Math.round((recent / total) * 100) : 0;
 
-    res.status(200).json({
-      success: true,
-      data: {
-        total_companies: totalCompanies,
-        active_companies: activeCompanies,
-        inactive_companies: inactiveCompanies,
-        recent_companies: recentCompanies,
-        consumer_stats: {
-          total: totalConsumers,
-          active: activeConsumers,
-          inactive: inactiveConsumers,
-          recent: recentConsumers,
-          percent_active: percent(activeConsumers, totalConsumers),
-          percent_inactive: percent(inactiveConsumers, totalConsumers),
-          percent_recent: percent(recentConsumers, totalConsumers)
+    const responseData = {
+      total_companies: totalCompanies,
+      active_companies: activeCompanies,
+      inactive_companies: inactiveCompanies,
+      recent_companies: recentCompanies,
+      consumer_stats: {
+        total: totalConsumers,
+        active: activeConsumers,
+        inactive: inactiveConsumers,
+        recent: recentConsumers,
+        percent_active: percent(activeConsumers, totalConsumers),
+        percent_inactive: percent(inactiveConsumers, totalConsumers),
+        percent_recent: percent(recentConsumers, totalConsumers)
+      },
+      user_role_stats: userRoleStats,
+      insurance_stats: {
+        all: {
+          total: allTotal,
+          recent: allRecent,
+          percent: percentInsurance(allRecent, allTotal)
         },
-        user_role_stats: userRoleStats,
-        insurance_stats: {
-          all: {
-            total: allTotal,
-            recent: allRecent,
-            percent: percentInsurance(allRecent, allTotal)
-          },
-          ecp: {
-            total: ecpTotal,
-            recent: ecpRecent,
-            percent: percentInsurance(ecpRecent, ecpTotal)
-          },
-          vehicle: {
-            total: vehicleTotal,
-            recent: vehicleRecent,
-            percent: percentInsurance(vehicleRecent, vehicleTotal)
-          },
-          fire: {
-            total: fireTotal,
-            recent: fireRecent,
-            percent: percentInsurance(fireRecent, fireTotal)
-          },
-          health: {
-            total: healthTotal,
-            recent: healthRecent,
-            percent: percentInsurance(healthRecent, healthTotal)
-          }
+        ecp: {
+          total: ecpTotal,
+          recent: ecpRecent,
+          percent: percentInsurance(ecpRecent, ecpTotal)
+        },
+        vehicle: {
+          total: vehicleTotal,
+          recent: vehicleRecent,
+          percent: percentInsurance(vehicleRecent, vehicleTotal)
+        },
+        fire: {
+          total: fireTotal,
+          recent: fireRecent,
+          percent: percentInsurance(fireRecent, fireTotal)
+        },
+        health: {
+          total: healthTotal,
+          recent: healthRecent,
+          percent: percentInsurance(healthRecent, healthTotal)
+        },
+        life: {
+          total: lifeTotal,
+          recent: lifeRecent,
+          percent: percentInsurance(lifeRecent, lifeTotal)
         }
       }
+    };
+
+    console.log('Backend: Sending response:', responseData);
+    res.status(200).json({
+      success: true,
+      data: responseData
     });
   } catch (error) {
-    console.error('Error fetching company statistics:', error);
+    console.error('Backend: Error fetching company statistics:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch company statistics'
