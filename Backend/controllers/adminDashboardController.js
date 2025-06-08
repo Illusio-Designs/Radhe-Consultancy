@@ -1,4 +1,4 @@
-const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
@@ -65,6 +65,19 @@ const getCompanyStatistics = async (req, res) => {
       const count = await User.count({ where: { role_id: role.id } });
       userRoleStats[role.role_name] = count;
     }
+
+    // --- DSC Stats ---
+    const dscTotal = await DSC.count();
+    const dscIn = await DSC.count({ where: { status: 'in' } });
+    const dscOut = await DSC.count({ where: { status: 'out' } });
+    const dscRecent = await DSC.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+    console.log('Backend: DSC stats:', { total: dscTotal, in: dscIn, out: dscOut, recent: dscRecent });
 
     // --- Insurance Policy Stats ---
     // Real data for ECP
@@ -144,6 +157,15 @@ const getCompanyStatistics = async (req, res) => {
         percent_recent: percent(recentConsumers, totalConsumers)
       },
       user_role_stats: userRoleStats,
+      dsc_stats: {
+        total: dscTotal,
+        in: dscIn,
+        out: dscOut,
+        recent: dscRecent,
+        percent_in: percent(dscIn, dscTotal),
+        percent_out: percent(dscOut, dscTotal),
+        percent_recent: percent(dscRecent, dscTotal)
+      },
       insurance_stats: {
         all: {
           total: allTotal,

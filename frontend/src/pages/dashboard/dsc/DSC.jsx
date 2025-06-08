@@ -1,12 +1,590 @@
-import React from 'react';
-import '../../../styles/pages/dashboard/dsc/DSC.css';
+import React, { useState, useEffect } from "react";
+import {
+  BiPlus,
+  BiEdit,
+  BiTrash,
+  BiErrorCircle,
+  BiUpload,
+} from "react-icons/bi";
+import { dscAPI } from "../../../services/api";
+import TableWithControl from "../../../components/common/Table/TableWithControl";
+import Button from "../../../components/common/Button/Button";
+import ActionButton from "../../../components/common/ActionButton/ActionButton";
+import Modal from "../../../components/common/Modal/Modal";
+import Loader from "../../../components/common/Loader/Loader";
+import FilterButton from "../../../components/common/FilterButton/FilterButton";
+import "../../../styles/pages/dashboard/dsc/DSC.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Select from "react-select";
+import PhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import "react-phone-number-input/style.css";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
-const DSC = () => {
+const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
+  const [formData, setFormData] = useState({
+    companyId: "",
+    consumerId: "",
+    certificationName: "",
+    expiryDate: "",
+    status: "in",
+    remarks: "",
+    email: "",
+    mobileNumber: "",
+  });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [consumers, setConsumers] = useState([]);
+  const [combinedOptions, setCombinedOptions] = useState([]);
+
+  useEffect(() => {
+    if (dsc) {
+      setFormData({
+        companyId: dsc.company_id || "",
+        consumerId: dsc.consumer_id || "",
+        certificationName: dsc.certification_name || "",
+        expiryDate: dsc.expiry_date ? dsc.expiry_date.slice(0, 10) : "",
+        status: dsc.status || "in",
+        remarks: dsc.remarks || "",
+        email: dsc.company?.company_email || dsc.consumer?.email || "",
+        mobileNumber: dsc.company?.contact_number || dsc.consumer?.phone_number || "",
+      });
+    }
+  }, [dsc]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [companiesResponse, consumersResponse] = await Promise.all([
+          dscAPI.getActiveCompanies(),
+          dscAPI.getActiveConsumers()
+        ]);
+
+        console.log('Companies response:', companiesResponse);
+        console.log('Consumers response:', consumersResponse);
+
+        setCompanies(companiesResponse || []);
+        setConsumers(consumersResponse || []);
+
+        const options = [
+          {
+            label: "Companies",
+            options: (companiesResponse || []).map((company) => ({
+              value: `company_${company.company_id}`,
+              label: company.company_name,
+              type: "company",
+              data: company,
+            })),
+          },
+          {
+            label: "Consumers",
+            options: (consumersResponse || []).map((consumer) => ({
+              value: `consumer_${consumer.consumer_id}`,
+              label: consumer.name,
+              type: "consumer",
+              data: consumer,
+            })),
+          },
+        ];
+
+        console.log('Combined options:', options);
+        setCombinedOptions(options);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        toast.error("Failed to fetch data");
+        setCompanies([]);
+        setConsumers([]);
+        setCombinedOptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleHolderChange = (option) => {
+    console.log("\n=== [DSC] Holder Change ===");
+    console.log("Selected Option:", option);
+
+    if (!option) {
+      console.log("Clearing holder selection");
+      setFormData((prev) => ({
+        ...prev,
+        companyId: null,
+        consumerId: null,
+        email: "",
+        mobileNumber: "",
+      }));
+      return;
+    }
+
+    const { type, data } = option;
+    console.log("Holder Type:", type);
+    console.log("Holder Data:", data);
+
+    if (type === "company") {
+      console.log("Setting company holder");
+      setFormData((prev) => ({
+        ...prev,
+        companyId: Number(data.company_id),
+        consumerId: null,
+        email: data.company_email,
+        mobileNumber: data.contact_number,
+      }));
+    } else if (type === "consumer") {
+      console.log("Setting consumer holder");
+      setFormData((prev) => ({
+        ...prev,
+        companyId: null,
+        consumerId: Number(data.consumer_id),
+        email: data.email,
+        mobileNumber: data.phone_number,
+      }));
+    }
+
+    console.log("=== [DSC] Holder Change Complete ===\n");
+  };
+
+  const handlePhoneChange = (value) => {
+    setFormData((prev) => ({ ...prev, mobileNumber: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("\n=== [DSC] Form Submit Started ===");
+    console.log("Form Values:", formData);
+
+    setLoading(true);
+    setError("");
+
+    // Validate required fields
+    const requiredFields = {
+      certificationName: "Certification Name",
+      expiryDate: "Expiry Date",
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([key]) => !formData[key])
+      .map(([_, label]) => label);
+
+    if (missingFields.length > 0) {
+      console.error("[DSC] Missing required fields:", missingFields);
+      setError(`Missing required fields: ${missingFields.join(", ")}`);
+      setLoading(false);
+      return;
+    }
+
+    // Validate that either companyId or consumerId is provided, but not both
+    const hasCompanyId = formData.companyId && formData.companyId !== "null" && formData.companyId !== "";
+    const hasConsumerId = formData.consumerId && formData.consumerId !== "null" && formData.consumerId !== "";
+
+    if (!hasCompanyId && !hasConsumerId) {
+      console.error("[DSC] Neither company nor consumer selected");
+      setError("Please select either a company or a consumer");
+      setLoading(false);
+      return;
+    }
+
+    if (hasCompanyId && hasConsumerId) {
+      console.error("[DSC] Both company and consumer selected");
+      setError("Please select either a company or a consumer, not both");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Convert camelCase to snake_case
+      const sanitizedFormData = {
+        company_id: hasCompanyId ? Number(formData.companyId) : null,
+        consumer_id: hasConsumerId ? Number(formData.consumerId) : null,
+        certification_name: formData.certificationName,
+        expiry_date: formData.expiryDate,
+        status: formData.status,
+        remarks: formData.remarks,
+        email: formData.email,
+        mobile_number: formData.mobileNumber
+      };
+
+      console.log("Sanitized form data:", sanitizedFormData);
+
+      let response;
+      if (dsc) {
+        console.log("\n[DSC] Updating DSC:", dsc.dsc_id);
+        response = await dscAPI.updateDSC(dsc.dsc_id, sanitizedFormData);
+        toast.success("DSC updated successfully!");
+      } else {
+        console.log("\n[DSC] Creating new DSC");
+        response = await dscAPI.createDSC(sanitizedFormData);
+        toast.success("DSC created successfully!");
+      }
+
+      onDSCUpdated();
+    } catch (err) {
+      console.error("\n[DSC] Error submitting form:", err);
+      const errorMessage = err.response?.data?.message || "Failed to save DSC";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+      console.log("=== [DSC] Form Submit Ended ===\n");
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
-    <div className="dsc-container">
-      <h1 className="dsc-title">Digital Signature Certificate (DSC)</h1>
-    </div>
+    <>
+      {typeof error === 'string' && error && <div className="dsc-error">{error}</div>}
+      <form onSubmit={handleSubmit} className="dsc-form">
+        <div className="dsc-form-grid">
+          <div className="dsc-form-group">
+            <Select
+              options={combinedOptions}
+              value={combinedOptions
+                .flatMap((group) => group.options)
+                .find(
+                  (option) =>
+                    (option.type === "company" &&
+                      option.data.company_id === formData.companyId) ||
+                    (option.type === "consumer" &&
+                      option.data.consumer_id === formData.consumerId)
+                )}
+              onChange={handleHolderChange}
+              placeholder="Select Company or Consumer"
+              isClearable
+              isSearchable={true}
+              styles={{
+                menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: "44px",
+                  borderRadius: "8px",
+                  borderColor: "#d1d5db",
+                }),
+                groupHeading: (provided) => ({
+                  ...provided,
+                  fontWeight: "bold",
+                  color: "#1F4F9C",
+                  backgroundColor: "#f3f4f6",
+                  padding: "8px 12px",
+                  margin: 0,
+                }),
+              }}
+            />
+          </div>
+
+          <div className="dsc-form-group">
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="dsc-form-input"
+              readOnly
+            />
+          </div>
+
+          <div className="dsc-form-group">
+            <PhoneInput
+              international
+              defaultCountry="IN"
+              value={formData.mobileNumber}
+              onChange={handlePhoneChange}
+              placeholder="Mobile Number"
+              className="dsc-form-input phone-input-custom"
+              flags={flags}
+              readOnly
+            />
+          </div>
+
+          <div className="dsc-form-group">
+            <input
+              type="text"
+              name="certificationName"
+              value={formData.certificationName}
+              onChange={handleChange}
+              placeholder="Certification Name"
+              className="dsc-form-input"
+            />
+          </div>
+          <div className="dsc-form-group">
+            <input
+              type="date"
+              name="expiryDate"
+              value={formData.expiryDate}
+              onChange={handleChange}
+              className="dsc-form-input"
+            />
+          </div>
+          <div className="dsc-form-group">
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="dsc-form-input"
+            >
+              <option value="in">In</option>
+              <option value="out">Out</option>
+            </select>
+          </div>
+          <div className="dsc-form-group" style={{ gridColumn: "span 2" }}>
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              placeholder="Remarks"
+              className="dsc-form-input"
+              rows={2}
+            />
+          </div>
+        </div>
+        <div className="dsc-form-actions">
+          <Button type="button" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="contained" disabled={loading}>
+            {dsc ? "Update" : "Create"}
+          </Button>
+        </div>
+      </form>
+    </>
   );
 };
+
+function DSC() {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDSC, setSelectedDSC] = useState(null);
+  const [dscs, setDSCs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    console.log("DSC component mounted");
+    fetchDSCs();
+  }, []);
+
+  const toCamelCase = (dsc) => ({
+    dsc_id: dsc.dsc_id,
+    company_id: dsc.company_id,
+    consumer_id: dsc.consumer_id,
+    certification_name: dsc.certification_name,
+    expiry_date: dsc.expiry_date,
+    status: dsc.status,
+    remarks: dsc.remarks,
+    created_at: dsc.created_at,
+    updated_at: dsc.updated_at,
+    company: dsc.company,
+    consumer: dsc.consumer,
+  });
+
+  const fetchDSCs = async () => {
+    try {
+      console.log("Fetching DSCs...");
+      setLoading(true);
+      const response = await dscAPI.getAllDSCs();
+      console.log("DSCs API response:", response);
+
+      if (response && Array.isArray(response.dscs)) {
+        const mapped = response.dscs.map(toCamelCase);
+        console.log("Mapped DSCs:", mapped);
+        setDSCs(mapped);
+        setError(null);
+      } else {
+        console.error("Invalid response format:", response);
+        setError("Invalid data format received from server");
+        setDSCs([]);
+      }
+    } catch (err) {
+      console.error("Error fetching DSCs:", err);
+      setError("Failed to fetch DSCs");
+      setDSCs([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  };
+
+  const handleDelete = async (dscId) => {
+    if (window.confirm("Are you sure you want to delete this DSC?")) {
+      try {
+        await dscAPI.deleteDSC(dscId);
+        toast.success("DSC deleted successfully!");
+        await fetchDSCs();
+      } catch (err) {
+        const errorMessage = "Failed to delete DSC";
+        setError(errorMessage);
+        toast.error(errorMessage);
+        console.error(err);
+      }
+    }
+  };
+
+  const handleEdit = (dsc) => {
+    setSelectedDSC(dsc);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    console.log("Modal closing");
+    setSelectedDSC(null);
+    setShowModal(false);
+  };
+
+  const handleDSCUpdated = async () => {
+    console.log("DSC updated, refreshing list");
+    await fetchDSCs();
+    handleModalClose();
+  };
+
+  const columns = [
+    {
+      key: "sr_no",
+      label: "Sr No.",
+      sortable: true,
+      render: (_, __, index) => index + 1,
+    },
+    {
+      key: "certification_name",
+      label: "Certification Name",
+      sortable: true,
+      render: (_, dsc) => dsc.certification_name || '-'
+    },
+    {
+      key: "holder_details",
+      label: "Holder Details",
+      sortable: true,
+      render: (_, dsc) => (
+        <div className="whitespace-pre-line">
+          {dsc.company ? (
+            <>
+              <strong>{dsc.company.company_name}</strong>
+            </>
+          ) : dsc.consumer ? (
+            <>
+              <strong>{dsc.consumer.name}</strong>
+            </>
+          ) : (
+            '-'
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "expiry_date",
+      label: "Expiry Date",
+      sortable: true,
+      render: (_, dsc) => {
+        if (!dsc.expiry_date) return '-';
+        const date = new Date(dsc.expiry_date);
+        return date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (_, dsc) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          dsc.status === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {dsc.status.toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (_, dsc) => (
+        <div className="flex gap-2">
+          <ActionButton
+            onClick={() => handleEdit(dsc)}
+            variant="secondary"
+            size="small"
+          >
+            <BiEdit />
+          </ActionButton>
+          <ActionButton
+            onClick={() => handleDelete(dsc.dsc_id)}
+            variant="danger"
+            size="small"
+          >
+            <BiTrash />
+          </ActionButton>
+        </div>
+      ),
+    },
+  ];
+
+  const filteredDSCs = dscs.filter(dsc => {
+    if (statusFilter === 'all') return true;
+    return dsc.status === statusFilter;
+  });
+
+  return (
+    <div className="dsc">
+      <div className="dsc-content">
+        <div className="dsc-header">
+          <h1 className="dsc-title">Digital Signature Certificates</h1>
+          <div className="flex gap-4 items-center">
+            <FilterButton
+              label={`Status: ${statusFilter === 'all' ? 'All' : statusFilter.toUpperCase()}`}
+              options={['All', 'IN', 'OUT']}
+              onClick={(option) => setStatusFilter(option.toLowerCase())}
+            />
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add DSC
+            </Button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="dsc-error">
+            <BiErrorCircle className="inline mr-2" /> {error}
+          </div>
+        )}
+
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={filteredDSCs}
+            columns={columns}
+            defaultPageSize={10}
+          />
+        )}
+      </div>
+
+      <Modal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        title={selectedDSC ? "Edit DSC" : "Add New DSC"}
+      >
+        <DSCForm
+          dsc={selectedDSC}
+          onClose={handleModalClose}
+          onDSCUpdated={handleDSCUpdated}
+        />
+      </Modal>
+    </div>
+  );
+}
 
 export default DSC; 

@@ -15,6 +15,7 @@ const vehiclePolicyRoutes = require('./vehiclePolicyRoutes');
 const healthPolicyRoutes = require('./healthPolicyRoutes');
 const firePolicyRoutes = require('./firePolicyRoutes');
 const lifePolicyRoutes = require('./lifePolicyRoutes');
+const dscRoutes = require('./dscRoutes');
 
 // Route configuration object
 const routes = {
@@ -65,6 +66,10 @@ const routes = {
   lifePolicies: {
     path: '/life-policies',
     router: lifePolicyRoutes
+  },
+  dsc: {
+    path: '/dsc',
+    router: dscRoutes
   }
 };
 

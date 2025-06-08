@@ -819,3 +819,140 @@
   align-items: center;
   background: #ffffff;
 }
+
+.dsc-stats-section {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.dsc-stats-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.2s ease-in-out;
+  width: 100%;
+}
+
+.dsc-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dsc-stats-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+.dsc-stats-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dsc-stats-title h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.dsc-stats-title .stats-icon {
+  color: #4f46e5;
+  width: 24px;
+  height: 24px;
+}
+
+.dsc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.dsc-stat-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.dsc-stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #4f46e5;
+  opacity: 0.8;
+}
+
+.dsc-stat-item.total::before {
+  background: #4f46e5;
+}
+
+.dsc-stat-item.active::before {
+  background: #10b981;
+}
+
+.dsc-stat-item.inactive::before {
+  background: #ef4444;
+}
+
+.dsc-stat-item.recent::before {
+  background: #f59e0b;
+}
+
+.dsc-stat-item .stat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.dsc-stat-item .stat-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.dsc-stat-item .stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.dsc-stat-item .stat-percentage {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .dsc-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dsc-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dsc-stats-card {
+    padding: 1rem;
+  }
+  
+  .dsc-stat-item {
+    padding: 1rem;
+  }
+  
+  .dsc-stat-item .stat-value {
+    font-size: 1.5rem;
+  }
+}

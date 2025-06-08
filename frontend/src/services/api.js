@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.VITE_API_URL || 'https://api.radheconsultancy.co.in/api';
+const API_URL = process.env.VITE_API_URL || 'http://localhost:4000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -1376,6 +1376,129 @@ export const lifePolicyAPI = {
       return response.data;
     } catch (error) {
       console.error('API Service: Error deleting life policy:', error);
+      throw error;
+    }
+  }
+};
+
+// DSC API
+export const dscAPI = {
+  getAllDSCs: async () => {
+    try {
+      console.log('API Service: Fetching all DSCs');
+      const response = await api.get('/dsc');
+      console.log('API Service: DSCs fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching DSCs:', error);
+      throw error;
+    }
+  },
+
+  getDSCById: async (id) => {
+    try {
+      console.log('API Service: Fetching DSC by ID:', id);
+      const response = await api.get(`/dsc/${id}`);
+      console.log('API Service: DSC fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching DSC:', error);
+      throw error;
+    }
+  },
+
+  createDSC: async (dscData) => {
+    try {
+      console.log('API Service: Creating DSC');
+      const response = await api.post('/dsc', dscData);
+      console.log('API Service: DSC created successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error creating DSC:', error);
+      throw error;
+    }
+  },
+
+  updateDSC: async (id, dscData) => {
+    try {
+      console.log('API Service: Updating DSC:', id);
+      const response = await api.put(`/dsc/${id}`, dscData);
+      console.log('API Service: DSC updated successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error updating DSC:', error);
+      throw error;
+    }
+  },
+
+  changeDSCStatus: async (id, status) => {
+    try {
+      console.log('API Service: Changing DSC status:', id, status);
+      const response = await api.patch(`/dsc/${id}/status`, { status });
+      console.log('API Service: DSC status changed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error changing DSC status:', error);
+      throw error;
+    }
+  },
+
+  deleteDSC: async (id) => {
+    try {
+      console.log('API Service: Deleting DSC:', id);
+      const response = await api.delete(`/dsc/${id}`);
+      console.log('API Service: DSC deleted successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error deleting DSC:', error);
+      throw error;
+    }
+  },
+
+  getActiveCompanies: async () => {
+    try {
+      console.log('API Service: Fetching active companies');
+      const response = await api.get('/dsc/companies');
+      console.log('API Service: Active companies fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching active companies:', error);
+      return [];
+    }
+  },
+
+  getActiveConsumers: async () => {
+    try {
+      console.log('API Service: Fetching active consumers');
+      const response = await api.get('/dsc/consumers');
+      console.log('API Service: Active consumers fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching active consumers:', error);
+      return [];
+    }
+  },
+
+  getDSCsByCompany: async (companyId) => {
+    try {
+      console.log('API Service: Fetching DSCs by company:', companyId);
+      const response = await api.get(`/dsc/company/${companyId}`);
+      console.log('API Service: Company DSCs fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching company DSCs:', error);
+      throw error;
+    }
+  },
+
+  getDSCsByConsumer: async (consumerId) => {
+    try {
+      console.log('API Service: Fetching DSCs by consumer:', consumerId);
+      const response = await api.get(`/dsc/consumer/${consumerId}`);
+      console.log('API Service: Consumer DSCs fetched successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching consumer DSCs:', error);
       throw error;
     }
   }

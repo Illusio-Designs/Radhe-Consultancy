@@ -13,6 +13,7 @@ const VehiclePolicy = require('./vehiclePolicyModel');
 const HealthPolicy = require('./healthPolicyModel');
 const FirePolicy = require('./firePolicyModel');
 const LifePolicy = require('./lifePolicyModel');
+const DSC = require('./dscModel');
 
 // Define associations
 User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });
@@ -162,6 +163,24 @@ LifePolicy.belongsTo(InsuranceCompany, {
   as: 'provider'
 });
 
+// Add DSC associations
+Company.hasMany(DSC, {
+  foreignKey: 'company_id',
+  as: 'dscs'
+});
+Consumer.hasMany(DSC, {
+  foreignKey: 'consumer_id',
+  as: 'dscs'
+});
+DSC.belongsTo(Company, {
+  foreignKey: 'company_id',
+  as: 'company'
+});
+DSC.belongsTo(Consumer, {
+  foreignKey: 'consumer_id',
+  as: 'consumer'
+});
+
 module.exports = {
   sequelize,
   User,
@@ -175,5 +194,6 @@ module.exports = {
   VehiclePolicy,
   HealthPolicy,
   FirePolicy,
-  LifePolicy
+  LifePolicy,
+  DSC
 };
