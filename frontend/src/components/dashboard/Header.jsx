@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { BiBell, BiUser, BiLogOut, BiKey, BiSearch } from "react-icons/bi";
+import { BiBell, BiUser, BiLogOut, BiKey, BiSearch, BiFullscreen, BiExitFullscreen } from "react-icons/bi";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/components/dashboard/Header.css";
 
 const Header = ({ isCollapsed }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { user, logout } = useAuth();
   const profileMenuRef = useRef(null);
 
@@ -23,11 +24,37 @@ const Header = ({ isCollapsed }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Add fullscreen change event listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+          setIsFullscreen(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling fullscreen:", error);
     }
   };
 
@@ -46,6 +73,19 @@ const Header = ({ isCollapsed }) => {
 
         {/* Right - Search, Notifications, Profile */}
         <div className="head">
+          {/* Fullscreen Toggle */}
+          <button 
+            className="header-nav-item fullscreen-button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            {isFullscreen ? (
+              <BiExitFullscreen className="fullscreen-icon" />
+            ) : (
+              <BiFullscreen className="fullscreen-icon" />
+            )}
+          </button>
+
           {/* Notification */}
           <button className="header-nav-item">
             <BiBell className="notification-icon" />

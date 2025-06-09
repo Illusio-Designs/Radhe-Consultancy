@@ -36,18 +36,15 @@
 
 .header-nav-item {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 1rem;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #1f4f9c;
-  background: white;
-  font-weight: 500;
-  text-decoration: none;
+  justify-content: center;
+  padding: 8px;
   border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
 .head {
@@ -64,9 +61,7 @@
 }
 
 .header-nav-item:hover {
-  background-color: rgba(26, 66, 128, 0.8);
-  color: #ffffff;
-  transform: translateY(-1px);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .header-search {
@@ -160,4 +155,26 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.fullscreen-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.fullscreen-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.fullscreen-icon {
+  font-size: 1.25rem;
+  color: #64748b;
+}
+
+.fullscreen-button:hover .fullscreen-icon {
+  color: #1e293b;
 }
