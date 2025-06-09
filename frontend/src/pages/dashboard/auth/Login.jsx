@@ -6,6 +6,9 @@ import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
 import { authAPI } from "../../../services/api";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons
+import PhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import "react-phone-number-input/style.css";
 
 console.log("Login component: Module loaded");
 
@@ -15,10 +18,14 @@ function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    phone: "",
+    otp: ""
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
+  const [loginMethod, setLoginMethod] = useState("email"); // "email", "google", or "whatsapp"
+  const [otpSent, setOtpSent] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -53,15 +60,27 @@ function Login() {
     setLoading(true);
 
     try {
-      console.log(
-        "Login component: Submitting login form with email:",
-        formData.email
-      );
-      
-      const response = await authAPI.login(formData.email, formData.password);
-      await login(formData.email, formData.password);
-      toast.success("Login successful!");
-      navigate("/dashboard");
+      if (loginMethod === "email") {
+        console.log(
+          "Login component: Submitting login form with email:",
+          formData.email
+        );
+        
+        const response = await authAPI.login(formData.email, formData.password);
+        await login(formData.email, formData.password);
+        toast.success("Login successful!");
+        navigate("/dashboard");
+      } else if (loginMethod === "whatsapp") {
+        if (!otpSent) {
+          await authAPI.sendWhatsAppOTP(formData.phone);
+          setOtpSent(true);
+          toast.success("OTP sent to your WhatsApp!");
+        } else {
+          const response = await authAPI.verifyWhatsAppOTP(formData.phone, formData.otp);
+          toast.success("Login successful!");
+          navigate("/dashboard");
+        }
+      }
     } catch (err) {
       console.error("Login error:", err);
       
@@ -70,7 +89,7 @@ function Login() {
         setError("No internet connection. Please check your network and try again.");
         toast.error("Network connection error. Please check your internet connection.");
       } else if (err.response?.status === 401) {
-        setError("Invalid email or password. Please try again.");
+        setError("Invalid credentials. Please try again.");
         toast.error("Invalid credentials");
       } else if (err.response?.status === 500) {
         setError("Server error. Please try again later.");
@@ -127,6 +146,18 @@ function Login() {
     }
   };
 
+  const switchLoginMethod = (method) => {
+    setLoginMethod(method);
+    setOtpSent(false);
+    setError("");
+    setFormData({
+      email: "",
+      password: "",
+      phone: "",
+      otp: ""
+    });
+  };
+
   return (
     <div className="auth">
       <div className="auth-container">
@@ -134,49 +165,105 @@ function Login() {
           <h2>Welcome Back</h2>
           <p className="auth-subtitle">Sign in to your account</p>
 
+          <div className="login-methods">
+            <button
+              className={`login-method-btn ${loginMethod === "email" ? "active" : ""}`}
+              onClick={() => switchLoginMethod("email")}
+            >
+              Email
+            </button>
+            <button
+              className={`login-method-btn ${loginMethod === "whatsapp" ? "active" : ""}`}
+              onClick={() => switchLoginMethod("whatsapp")}
+            >
+              Phone
+            </button>
+          </div>
+
           {error && <div className="error-message">{error}</div>}
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-group">
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                required
-                className={formData.email ? "has-value" : ""}
-              />
-            </div>
+            {loginMethod === "email" ? (
+              <>
+                <div className="form-group">
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    required
+                    className={formData.email ? "has-value" : ""}
+                  />
+                </div>
 
-            <div className="form-group password-group">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Password"
-                required
-                className={formData.password ? "has-value" : ""}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
+                <div className="form-group password-group">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Password"
+                    required
+                    className={formData.password ? "has-value" : ""}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-password"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <PhoneInput
+                    international
+                    countryCallingCodeEditable={false}
+                    defaultCountry="IN"
+                    value={formData.phone}
+                    onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
+                    flags={flags}
+                    placeholder="Enter your phone number"
+                    className="phone-input"
+                  />
+                </div>
+                {otpSent && (
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      id="otp"
+                      name="otp"
+                      value={formData.otp}
+                      onChange={handleChange}
+                      placeholder="Enter OTP"
+                      required
+                      pattern="[0-9]{6}"
+                      maxLength="6"
+                      className={formData.otp ? "has-value" : ""}
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
             <button
               type="submit"
               className={`auth-button ${loading ? "loading" : ""}`}
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading
+                ? "Processing..."
+                : loginMethod === "whatsapp"
+                ? otpSent
+                  ? "Verify OTP"
+                  : "Send OTP"
+                : "Sign In"}
             </button>
           </form>
 

@@ -103,7 +103,28 @@ export const authAPI = {
 
   googleLogin: async (credential) => {
     try {
-      const response = await api.post('/auth/google-login', { token: credential });
+      const response = await api.post('/auth/google', { token: credential });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      return { token, user };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Add WhatsApp OTP functions
+  sendWhatsAppOTP: async (phone) => {
+    try {
+      const response = await api.post('/auth/whatsapp/send-otp', { phone });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  verifyWhatsAppOTP: async (phone, otp) => {
+    try {
+      const response = await api.post('/auth/whatsapp/verify-otp', { phone, otp });
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       return { token, user };

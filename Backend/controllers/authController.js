@@ -6,6 +6,7 @@ const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const determineUserRole = require('../utils/roleDetermination');
 const userService = require('../services/userService');
+const { sendWhatsAppOTP, verifyOTP } = require('../utils/otp');
 
 class AuthController {
   constructor() {
@@ -15,6 +16,8 @@ class AuthController {
     this.getCurrentUser = this.getCurrentUser.bind(this);
     this.forgotPassword = this.forgotPassword.bind(this);
     this.resetPassword = this.resetPassword.bind(this);
+    this.sendWhatsAppOTP = this.sendWhatsAppOTP.bind(this);
+    this.verifyWhatsAppOTP = this.verifyWhatsAppOTP.bind(this);
   }
 
   async register(req, res) {
@@ -162,7 +165,7 @@ class AuthController {
 
   async googleLogin(req, res) {
     try {
-      const { token, role_name = 'user' } = req.body;
+      const { token } = req.body;
       
       if (!token) {
         return res.status(400).json({ error: 'Google token is required' });
@@ -178,7 +181,7 @@ class AuthController {
       const { email, name, picture } = payload;
 
       // Get role
-      const role = await Role.findOne({ where: { role_name } });
+      const role = await Role.findOne({ where: { role_name: 'user' } });
       if (!role) {
         return res.status(400).json({ error: 'Invalid role' });
       }
@@ -366,6 +369,112 @@ class AuthController {
         success: false,
         error: 'An error occurred while resetting your password'
       });
+    }
+  }
+
+  async sendWhatsAppOTP(req, res) {
+    try {
+      const { phone } = req.body;
+      
+      // Validate phone number
+      if (!phone || phone.length < 10) {
+        return res.status(400).json({ message: 'Invalid phone number' });
+      }
+
+      // Check if user exists with this phone number in any of the tables
+      const user = await User.findOne({ 
+        where: { contact_number: phone }
+      });
+
+      const company = await Company.findOne({
+        where: { contact_number: phone }
+      });
+
+      const consumer = await Consumer.findOne({
+        where: { phone_number: phone }
+      });
+
+      if (!user && !company && !consumer) {
+        return res.status(404).json({ message: 'No account found with this phone number' });
+      }
+
+      // Send OTP
+      await sendWhatsAppOTP(phone);
+      res.json({ message: 'OTP sent successfully' });
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      res.status(500).json({ message: 'Failed to send OTP' });
+    }
+  }
+
+  async verifyWhatsAppOTP(req, res) {
+    try {
+      const { phone, otp } = req.body;
+
+      // Validate inputs
+      if (!phone || !otp) {
+        return res.status(400).json({ message: 'Phone and OTP are required' });
+      }
+
+      // Verify OTP
+      const isValid = verifyOTP(phone, otp);
+      if (!isValid) {
+        return res.status(401).json({ message: 'Invalid or expired OTP' });
+      }
+
+      // Get user from any of the tables
+      const user = await User.findOne({ 
+        where: { contact_number: phone }
+      });
+
+      const company = await Company.findOne({
+        where: { contact_number: phone }
+      });
+
+      const consumer = await Consumer.findOne({
+        where: { phone_number: phone }
+      });
+
+      let userData = null;
+      let userType = null;
+
+      if (user) {
+        userData = user;
+        userType = 'user';
+      } else if (company) {
+        userData = company;
+        userType = 'company';
+      } else if (consumer) {
+        userData = consumer;
+        userType = 'consumer';
+      } else {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: userData.id, 
+          email: userData.email,
+          type: userType
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name || userData.username,
+          phone: phone,
+          type: userType
+        }
+      });
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   }
 }

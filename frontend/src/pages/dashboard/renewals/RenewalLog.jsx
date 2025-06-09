@@ -28,7 +28,7 @@ const RenewalLog = () => {
 
   return (
     <div className="dashboard-page">
-      <h2>Renewal Reminder Log</h2>
+      <h2>Reminder Logs</h2>
       <div style={{ background: "#fff", borderRadius: 16, padding: 32, boxShadow: "0 2px 8px rgba(0,0,0,0.04)", minHeight: 400 }}>
         {loading ? (
           <Loader />

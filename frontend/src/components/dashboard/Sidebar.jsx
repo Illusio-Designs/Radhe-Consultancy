@@ -93,7 +93,7 @@ const Sidebar = ({ onCollapse }) => {
     toggle: () => handleDropdownToggle("renewals"),
     items: [
       { path: "/dashboard/renewals/list", icon: <ClipboardList />, label: "Renewal List" },
-      { path: "/dashboard/renewals/log", icon: <ClipboardList />, label: "Renewal Log" },
+      { path: "/dashboard/renewals/log", icon: <ClipboardList />, label: "Remonder Log" },
     ],
   };
 

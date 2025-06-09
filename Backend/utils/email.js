@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { sendWhatsAppMessage } = require('./whatsapp');
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -26,4 +27,23 @@ async function sendEmail(to, subject, text) {
   }
 }
 
-module.exports = { sendEmail }; 
+async function sendNotification(email, phone, subject, message) {
+  try {
+    // Send email
+    if (email) {
+      await sendEmail(email, subject, message);
+    }
+
+    // Send WhatsApp message
+    if (phone) {
+      await sendWhatsAppMessage(phone, message);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to send notification:', error);
+    throw error;
+  }
+}
+
+module.exports = { sendEmail, sendNotification }; 

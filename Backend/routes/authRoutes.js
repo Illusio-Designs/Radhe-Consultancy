@@ -1,17 +1,27 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const { auth } = require('../middleware/auth');
+const { 
+  validateLogin, 
+  validateGoogleLogin, 
+  validateWhatsAppOTP, 
+  validateOTPVerification 
+} = require('../middleware/validation');
 
 const router = express.Router();
 
 // Login route
-router.post('/login', authController.login);
+router.post('/login', validateLogin, authController.login);
 
 // Register route
 router.post('/register', authController.register);
 
-// Universal Google login route
-router.post('/google-login', authController.googleLogin);
+// Google OAuth login
+router.post('/google', validateGoogleLogin, authController.googleLogin);
+
+// WhatsApp OTP login
+router.post('/whatsapp/send-otp', validateWhatsAppOTP, authController.sendWhatsAppOTP);
+router.post('/whatsapp/verify-otp', validateOTPVerification, authController.verifyWhatsAppOTP);
 
 // Forgot password route
 router.post('/forgot-password', authController.forgotPassword);

@@ -1,6 +1,6 @@
 const { EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, Company, Consumer, ReminderLog } = require('../models');
 const { Op } = require('sequelize');
-const { sendEmail } = require('../utils/email'); // Assume you have a utility for sending emails
+const { sendNotification } = require('../utils/email');
 
 const getRemindables = async (Model, dateField, include) => {
   const now = new Date();
@@ -44,16 +44,39 @@ const sendRenewalReminders = async () => {
     for (const item of items) {
       if (shouldSendReminder(reminderLogs, item.id, type)) {
         let email = null;
-        if (item.policyHolder && item.policyHolder.email) email = item.policyHolder.email;
-        if (item.companyPolicyHolder && item.companyPolicyHolder.email) email = item.companyPolicyHolder.email;
-        if (item.consumerPolicyHolder && item.consumerPolicyHolder.email) email = item.consumerPolicyHolder.email;
-        if (item.company && item.company.email) email = item.company.email;
-        if (item.consumer && item.consumer.email) email = item.consumer.email;
+        let phone = null;
+
+        // Get email and phone from policy holder
+        if (item.policyHolder) {
+          email = item.policyHolder.email;
+          phone = item.policyHolder.phone;
+        }
+        if (item.companyPolicyHolder) {
+          email = item.companyPolicyHolder.email;
+          phone = item.companyPolicyHolder.phone;
+        }
+        if (item.consumerPolicyHolder) {
+          email = item.consumerPolicyHolder.email;
+          phone = item.consumerPolicyHolder.phone;
+        }
+        if (item.company) {
+          email = item.company.email;
+          phone = item.company.phone;
+        }
+        if (item.consumer) {
+          email = item.consumer.email;
+          phone = item.consumer.phone;
+        }
+
+        // Fallback to admin email if no email found
         if (!email) email = 'admin@example.com';
+
         // Compose reminder message
         const message = `Reminder: Your ${type} policy (ID: ${item.id}) is due for renewal on ${item[dateField]}.`;
-        // Send email (customize as needed)
-        await sendEmail(email, `${type} Policy Renewal Reminder`, message);
+        
+        // Send notifications (both email and WhatsApp if phone number is available)
+        await sendNotification(email, phone, `${type} Policy Renewal Reminder`, message);
+
         // Log the reminder
         await ReminderLog.create({
           policy_id: item.id,
