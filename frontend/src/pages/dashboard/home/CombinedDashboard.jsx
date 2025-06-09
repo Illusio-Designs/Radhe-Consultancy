@@ -240,58 +240,72 @@ const ConsumerStatsCard = ({ stats }) => {
   );
 };
 
-const DSCStatsCard = ({ stats }) => (
-  <div className="dsc-stats-card">
-    <div className="dsc-stats-header">
-      <div className="dsc-stats-title">
-        <FileKey className="stats-icon" />
-        <h2>Digital Signature Certificates</h2>
+const DSCStatsCard = ({ stats }) => {
+  if (!stats) return null;
+  
+  const {
+    total = 0,
+    in: inCount = 0,
+    out: outCount = 0,
+    recent = 0,
+    percent_in = 0,
+    percent_out = 0,
+    percent_recent = 0
+  } = stats;
+
+  return (
+    <div className="dsc-stats-card">
+      <div className="dsc-stats-header">
+        <div className="dsc-stats-title">
+          <FileKey className="stats-icon" />
+          <h2>Digital Signature Certificates</h2>
+        </div>
+      </div>
+      <div className="dsc-stats-grid">
+        <div className="dsc-stat-item total">
+          <div className="stat-label">
+            <Key className="stat-icon" />
+            Total DSCs
+          </div>
+          <div className="stat-value">{total}</div>
+        </div>
+
+        <div className="dsc-stat-item active">
+          <div className="stat-label">
+            <FileCheck className="stat-icon" />
+            IN DSCs
+          </div>
+          <div className="stat-value">{inCount}</div>
+          <div className="stat-percentage">
+            {percent_in}% of total
+          </div>
+        </div>
+
+        <div className="dsc-stat-item inactive">
+          <div className="stat-label">
+            <FileX className="stat-icon" />
+            OUT DSCs
+          </div>
+          <div className="stat-value">{outCount}</div>
+          <div className="stat-percentage">
+            {percent_out}% of total
+          </div>
+        </div>
+
+        <div className="dsc-stat-item recent">
+          <div className="stat-label">
+            <Clock className="stat-icon" />
+            Recent DSCs (30 days)
+          </div>
+          <div className="stat-value">{recent}</div>
+          <div className="stat-percentage">
+            {percent_recent}% of total
+          </div>
+        </div>
       </div>
     </div>
-    <div className="dsc-stats-grid">
-      <div className="dsc-stat-item total">
-        <div className="stat-label">
-          <Key className="stat-icon" />
-          Total DSCs
-        </div>
-        <div className="stat-value">{stats.total || 0}</div>
-      </div>
-
-      <div className="dsc-stat-item active">
-        <div className="stat-label">
-          <FileCheck className="stat-icon" />
-          Active DSCs
-        </div>
-        <div className="stat-value">{stats.in || 0}</div>
-        <div className="stat-percentage">
-          {stats.total ? Math.round((stats.in / stats.total) * 100) : 0}% of total
-        </div>
-      </div>
-
-      <div className="dsc-stat-item inactive">
-        <div className="stat-label">
-          <FileX className="stat-icon" />
-          Inactive DSCs
-        </div>
-        <div className="stat-value">{stats.out || 0}</div>
-        <div className="stat-percentage">
-          {stats.total ? Math.round((stats.out / stats.total) * 100) : 0}% of total
-        </div>
-      </div>
-
-      <div className="dsc-stat-item recent">
-        <div className="stat-label">
-          <Clock className="stat-icon" />
-          Recent DSCs (30 days)
-        </div>
-        <div className="stat-value">{stats.recent || 0}</div>
-        <div className="stat-percentage">
-          {stats.total ? Math.round((stats.recent / stats.total) * 100) : 0}% of total
-        </div>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 // Map roles to icons and colors
 const roleIconMap = {

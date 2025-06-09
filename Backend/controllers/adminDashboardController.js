@@ -77,7 +77,21 @@ const getCompanyStatistics = async (req, res) => {
         }
       }
     });
-    console.log('Backend: DSC stats:', { total: dscTotal, in: dscIn, out: dscOut, recent: dscRecent });
+
+    // Calculate percentages for DSC stats
+    const dscPercentIn = dscTotal > 0 ? Math.round((dscIn / dscTotal) * 100) : 0;
+    const dscPercentOut = dscTotal > 0 ? Math.round((dscOut / dscTotal) * 100) : 0;
+    const dscPercentRecent = dscTotal > 0 ? Math.round((dscRecent / dscTotal) * 100) : 0;
+
+    console.log('Backend: DSC stats:', { 
+      total: dscTotal, 
+      in: dscIn, 
+      out: dscOut, 
+      recent: dscRecent,
+      percentIn: dscPercentIn,
+      percentOut: dscPercentOut,
+      percentRecent: dscPercentRecent
+    });
 
     // --- Insurance Policy Stats ---
     // Real data for ECP
@@ -162,9 +176,9 @@ const getCompanyStatistics = async (req, res) => {
         in: dscIn,
         out: dscOut,
         recent: dscRecent,
-        percent_in: percent(dscIn, dscTotal),
-        percent_out: percent(dscOut, dscTotal),
-        percent_recent: percent(dscRecent, dscTotal)
+        percent_in: dscPercentIn,
+        percent_out: dscPercentOut,
+        percent_recent: dscPercentRecent
       },
       insurance_stats: {
         all: {
