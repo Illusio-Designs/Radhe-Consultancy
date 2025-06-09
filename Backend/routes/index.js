@@ -16,6 +16,7 @@ const healthPolicyRoutes = require('./healthPolicyRoutes');
 const firePolicyRoutes = require('./firePolicyRoutes');
 const lifePolicyRoutes = require('./lifePolicyRoutes');
 const dscRoutes = require('./dscRoutes');
+const renewalRoutes = require('./renewalRoutes');
 
 // Route configuration object
 const routes = {
@@ -70,6 +71,10 @@ const routes = {
   dsc: {
     path: '/dsc',
     router: dscRoutes
+  },
+  renewal: {
+    path: '/renewals',
+    router: renewalRoutes
   }
 };
 

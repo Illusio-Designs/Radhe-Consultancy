@@ -14,6 +14,7 @@ const HealthPolicy = require('./healthPolicyModel');
 const FirePolicy = require('./firePolicyModel');
 const LifePolicy = require('./lifePolicyModel');
 const DSC = require('./dscModel');
+const ReminderLog = require('./reminderLogModel');
 
 // Define associations
 User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });
@@ -195,5 +196,6 @@ module.exports = {
   HealthPolicy,
   FirePolicy,
   LifePolicy,
-  DSC
+  DSC,
+  ReminderLog
 };

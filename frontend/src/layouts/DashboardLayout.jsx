@@ -29,6 +29,9 @@ import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
 import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
 import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
 import DSC from "../pages/dashboard/dsc/DSC";
+import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
+import RenewalList from "../pages/dashboard/renewals/RenewalList";
+import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
 
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -108,6 +111,12 @@ function DashboardLayout() {
         return <LabourLicense />;
       case "/dashboard/dsc":
         return <DSC />;
+      case "/dashboard/renewals/manager":
+        return <RenewalManager />;
+      case "/dashboard/renewals/list":
+        return <RenewalList />;
+      case "/dashboard/renewals/log":
+        return <RenewalLog />;
       default:
         return <CombinedDashboard />;
     }

@@ -1504,4 +1504,63 @@ export const dscAPI = {
   }
 };
 
+// Renewal API
+export const renewalAPI = {
+  getCounts: async () => {
+    try {
+      const response = await api.get('/renewals/counts');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching renewal counts:', error);
+      throw error;
+    }
+  },
+  getList: async (type) => {
+    try {
+      const response = await api.get(`/renewals/list/${type}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching renewal list:', error);
+      throw error;
+    }
+  },
+  getRenewals: async (period) => {
+    try {
+      const response = await api.get(`/renewals/${period}`); // period: week, month, year
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching renewals:', error);
+      throw error;
+    }
+  },
+  sendReminder: async (payload) => {
+    try {
+      const response = await api.post('/renewals/remind', payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      throw error;
+    }
+  },
+  getLog: async () => {
+    try {
+      const response = await api.get('/renewals/log');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching renewal log:', error);
+      throw error;
+    }
+  },
+  getListByTypeAndPeriod: async (type, period) => {
+    try {
+      const response = await api.get(`/renewals/list/${type}/${period}`);
+      console.log("API Service: getListByTypeAndPeriod raw response.data:", response.data); // Debug log
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching renewal list by type and period:', error);
+      throw error;
+    }
+  }
+};
+
 export default api;

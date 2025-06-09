@@ -267,13 +267,8 @@ async function setupDatabase() {
       await User.sync({ alter: true });
       logToFile('Users table synced');
 
-      // Special handling for Consumer table
-      try {
-        await setupConsumerTable(sequelize);
-      } catch (error) {
-        logToFile('Error syncing Consumer: ' + error.message);
-        console.error('Error syncing Consumer:', error.message);
-      }
+      await Consumer.sync({ alter: true });
+      logToFile('Consumers table synced');
 
       await Company.sync({ alter: true });
       logToFile('Companies table synced');
@@ -291,6 +286,11 @@ async function setupDatabase() {
       logToFile('LifePolicies table synced');
       await DSC.sync({ alter: true });
       logToFile('DSCs table synced');
+
+      // Sync ReminderLog table
+      const ReminderLog = require('../models/reminderLogModel');
+      await ReminderLog.sync({ alter: true });
+      logToFile('ReminderLogs table synced');
 
       // Special handling for LifePolicy
       try {
@@ -364,6 +364,9 @@ async function setupDatabase() {
     const errorMessage = `Error during database setup: ${error.message}`;
     logToFile(errorMessage);
     console.error(errorMessage);
+    if (error.message && error.message.includes('Foreign key constraint is incorrectly formed')) {
+      console.error('Please check your foreign key definitions in the FirePolicies or related models.');
+    }
     return false;
   }
 }

@@ -64,15 +64,10 @@ const Header = ({ isCollapsed }) => {
         {/* Left - Title */}
         <div className="head">
           <h2 className="header-title">Dashboard</h2>
-          {/* Search Bar */}
-          <div className="header-search">
-            <BiSearch className="search-icon" />
-            <input type="text" placeholder="Search..." />
-          </div>
         </div>
 
-        {/* Right - Search, Notifications, Profile */}
-        <div className="head">
+        {/* Right - Profile */}
+        <div className="header-actions-right">
           {/* Fullscreen Toggle */}
           <button 
             className="header-nav-item fullscreen-button"
@@ -84,12 +79,6 @@ const Header = ({ isCollapsed }) => {
             ) : (
               <BiFullscreen className="fullscreen-icon" />
             )}
-          </button>
-
-          {/* Notification */}
-          <button className="header-nav-item">
-            <BiBell className="notification-icon" />
-            <span className="notification-badge">3</span>
           </button>
 
           {/* Profile */}

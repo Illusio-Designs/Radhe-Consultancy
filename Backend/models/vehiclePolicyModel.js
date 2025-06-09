@@ -30,7 +30,7 @@ const VehiclePolicy = sequelize.define('VehiclePolicy', {
     type: DataTypes.INTEGER,
     allowNull: true, // For Organisation
     references: {
-      model: Company,
+      model: 'Companies',
       key: 'company_id'
     }
   },
@@ -38,7 +38,7 @@ const VehiclePolicy = sequelize.define('VehiclePolicy', {
     type: DataTypes.INTEGER,
     allowNull: true, // For Individual
     references: {
-      model: Consumer,
+      model: 'Consumers',
       key: 'consumer_id'
     }
   },

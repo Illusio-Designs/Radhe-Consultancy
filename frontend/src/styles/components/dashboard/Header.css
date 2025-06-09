@@ -39,12 +39,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 0.625rem 1.25rem;
   border: none;
-  background: none;
+  background: white;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #1f4f9c;
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
 }
 
 .head {
@@ -55,13 +59,18 @@
 }
 
 .profile-button {
-  color: #1f4f9c;
-  background: white;
-  border: none;
+  /* Inherits styles from header-nav-item */
+  /* Removed color and background overrides to use header-nav-item styles */
+}
+
+.profile-button .profile-icon {
+  color: inherit;
 }
 
 .header-nav-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(26, 66, 128, 0.8);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .header-search {
@@ -106,7 +115,6 @@
 .profile-menu .dropdown-menu {
   position: absolute;
   right: 0;
-  left: -60%;
   background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -158,23 +166,28 @@
 }
 
 .fullscreen-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  /* Inherits styles from header-nav-item */
+  /* Removed explicit padding, border-radius, and transition */
 }
 
 .fullscreen-button:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  /* Inherits hover styles from header-nav-item:hover */
+  background-color: rgba(26, 66, 128, 0.8); /* Ensure consistent hover effect */
+  color: #ffffff; /* Ensure consistent text/icon color on hover */
+  transform: translateY(-1px); /* Ensure consistent transform on hover */
 }
 
 .fullscreen-icon {
   font-size: 1.25rem;
-  color: #64748b;
+  color: inherit;
 }
 
 .fullscreen-button:hover .fullscreen-icon {
-  color: #1e293b;
+  color: inherit;
+}
+
+.header-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

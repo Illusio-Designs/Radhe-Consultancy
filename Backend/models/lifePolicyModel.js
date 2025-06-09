@@ -22,7 +22,7 @@ const LifePolicy = sequelize.define('LifePolicy', {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: Company,
+      model: 'Companies',
       key: 'company_id'
     }
   },
@@ -30,7 +30,7 @@ const LifePolicy = sequelize.define('LifePolicy', {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: Consumer,
+      model: 'Consumers',
       key: 'consumer_id'
     }
   },

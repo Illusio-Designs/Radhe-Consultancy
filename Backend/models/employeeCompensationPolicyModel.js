@@ -33,7 +33,7 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: Company,
+      model: 'Companies',
       key: 'company_id'
     }
   },

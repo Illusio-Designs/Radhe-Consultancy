@@ -83,13 +83,34 @@ const Sidebar = ({ onCollapse }) => {
     }
   };
 
+  // Define the Renewals dropdown
+  const renewalsDropdown = {
+    path: "/dashboard/renewals/list",
+    icon: <ClipboardList />,
+    label: "Renewals",
+    isDropdown: true,
+    isOpen: activeDropdown === "renewals",
+    toggle: () => handleDropdownToggle("renewals"),
+    items: [
+      { path: "/dashboard/renewals/list", icon: <ClipboardList />, label: "Renewal List" },
+      { path: "/dashboard/renewals/log", icon: <ClipboardList />, label: "Renewal Log" },
+    ],
+  };
+
   let menuItems = [
     {
       path: "/dashboard",
       icon: <LayoutDashboard />,
       label: "Dashboard",
-      items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+      isDropdown: true,
+      isOpen: activeDropdown === "dashboard",
+      toggle: () => handleDropdownToggle("dashboard"),
+      items: [
+        { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+        { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+      ],
     },
+    renewalsDropdown,
   ];
 
   // Admin role has access to all features
@@ -100,8 +121,15 @@ const Sidebar = ({ onCollapse }) => {
         path: "/dashboard",
         icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        ],
       },
+      renewalsDropdown,
       {
         path: "/dashboard/users",
         label: "Users",
@@ -221,8 +249,15 @@ const Sidebar = ({ onCollapse }) => {
         path: "/dashboard",
         icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        ],
       },
+      renewalsDropdown,
       {
         label: "Users",
         icon: <Users />,
@@ -254,8 +289,15 @@ const Sidebar = ({ onCollapse }) => {
         path: "/dashboard",
         icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        ],
       },
+      renewalsDropdown,
       {
         label: "Vendors",
         icon: <Store />,
@@ -282,8 +324,15 @@ const Sidebar = ({ onCollapse }) => {
         path: "/dashboard",
         icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        ],
       },
+      renewalsDropdown,
       {
         label: "Insurance",
         icon: <HeartPulse />,
@@ -330,8 +379,15 @@ const Sidebar = ({ onCollapse }) => {
         path: "/dashboard",
         icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        ],
       },
+      renewalsDropdown,
       {
         label: "Compliance & Licensing",
         icon: <BadgeCheck />,
@@ -363,8 +419,15 @@ const Sidebar = ({ onCollapse }) => {
         path: "/dashboard",
         icon: <LayoutDashboard />,
         label: "Dashboard",
-        items: [{ path: "/dashboard", icon: <LayoutDashboard />, label: "Home" }],
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        ],
       },
+      renewalsDropdown,
       { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
     ];
   } else {

@@ -7,6 +7,12 @@
   padding: 20px;
 }
 
+/* Dropdown Container for Dashboard Headers */
+.dashboard-header-dropdown-container {
+  flex-shrink: 0;
+  width: 180px;
+}
+
 .dashboard-page.sidebar-collapsed {
   width: calc(100% - 7rem);
 }

@@ -12,7 +12,7 @@ import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
-import FilterButton from "../../../components/common/FilterButton/FilterButton";
+import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import "../../../styles/pages/dashboard/dsc/DSC.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -534,17 +534,18 @@ function DSC() {
     return dsc.status === statusFilter;
   });
 
+  const statusOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'in', label: 'IN' },
+    { value: 'out', label: 'OUT' },
+  ];
+
   return (
     <div className="dsc">
       <div className="dsc-content">
         <div className="dsc-header">
           <h1 className="dsc-title">Digital Signature Certificates</h1>
-          <div className="flex gap-4 items-center">
-            <FilterButton
-              label={`Status: ${statusFilter === 'all' ? 'All' : statusFilter.toUpperCase()}`}
-              options={['All', 'IN', 'OUT']}
-              onClick={(option) => setStatusFilter(option.toLowerCase())}
-            />
+          <div className="flex gap-2 items-center flex-nowrap">
             <Button
               variant="contained"
               onClick={() => setShowModal(true)}
@@ -552,6 +553,14 @@ function DSC() {
             >
               Add DSC
             </Button>
+            <div className="dashboard-header-dropdown-container">
+              <Dropdown
+                options={statusOptions}
+                value={statusOptions.find(opt => opt.value === statusFilter)}
+                onChange={(option) => setStatusFilter(option ? option.value : 'all')}
+                placeholder="Filter by Status"
+              />
+            </div>
           </div>
         </div>
 
