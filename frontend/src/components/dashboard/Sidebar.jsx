@@ -22,7 +22,10 @@ import {
   ChevronUp,
   Menu,
   X,
-  ScanHeart
+  ScanHeart,
+  Clock,
+  RefreshCw,
+  Home
 } from 'lucide-react';
 import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
@@ -86,14 +89,14 @@ const Sidebar = ({ onCollapse }) => {
   // Define the Renewals dropdown
   const renewalsDropdown = {
     path: "/dashboard/renewals/list",
-    icon: <ClipboardList />,
+    icon: <RefreshCw />,
     label: "Renewals",
     isDropdown: true,
     isOpen: activeDropdown === "renewals",
     toggle: () => handleDropdownToggle("renewals"),
     items: [
-      { path: "/dashboard/renewals/list", icon: <ClipboardList />, label: "Renewal List" },
-      { path: "/dashboard/renewals/log", icon: <ClipboardList />, label: "Remonder Log" },
+      { path: "/dashboard/renewals/list", icon: <RefreshCw />, label: "Renewal List" },
+      { path: "/dashboard/renewals/log", icon: <Clock />, label: "Reminder Log" },
     ],
   };
 
@@ -106,8 +109,8 @@ const Sidebar = ({ onCollapse }) => {
       isOpen: activeDropdown === "dashboard",
       toggle: () => handleDropdownToggle("dashboard"),
       items: [
-        { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-        { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+        { path: "/dashboard", icon: <Home />, label: "Home" },
+        { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
       ],
     },
     renewalsDropdown,
@@ -125,8 +128,8 @@ const Sidebar = ({ onCollapse }) => {
         isOpen: activeDropdown === "dashboard",
         toggle: () => handleDropdownToggle("dashboard"),
         items: [
-          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+          { path: "/dashboard", icon: <Home />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
         ],
       },
       renewalsDropdown,
@@ -253,8 +256,8 @@ const Sidebar = ({ onCollapse }) => {
         isOpen: activeDropdown === "dashboard",
         toggle: () => handleDropdownToggle("dashboard"),
         items: [
-          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+          { path: "/dashboard", icon: <Home />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
         ],
       },
       renewalsDropdown,
@@ -293,8 +296,8 @@ const Sidebar = ({ onCollapse }) => {
         isOpen: activeDropdown === "dashboard",
         toggle: () => handleDropdownToggle("dashboard"),
         items: [
-          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+          { path: "/dashboard", icon: <Home />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
         ],
       },
       renewalsDropdown,
@@ -328,8 +331,8 @@ const Sidebar = ({ onCollapse }) => {
         isOpen: activeDropdown === "dashboard",
         toggle: () => handleDropdownToggle("dashboard"),
         items: [
-          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+          { path: "/dashboard", icon: <Home />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
         ],
       },
       renewalsDropdown,
@@ -383,8 +386,8 @@ const Sidebar = ({ onCollapse }) => {
         isOpen: activeDropdown === "dashboard",
         toggle: () => handleDropdownToggle("dashboard"),
         items: [
-          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+          { path: "/dashboard", icon: <Home />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
         ],
       },
       renewalsDropdown,
@@ -423,8 +426,8 @@ const Sidebar = ({ onCollapse }) => {
         isOpen: activeDropdown === "dashboard",
         toggle: () => handleDropdownToggle("dashboard"),
         items: [
-          { path: "/dashboard", icon: <LayoutDashboard />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <ClipboardList />, label: "Renewals" },
+          { path: "/dashboard", icon: <Home />, label: "Home" },
+          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
         ],
       },
       renewalsDropdown,
