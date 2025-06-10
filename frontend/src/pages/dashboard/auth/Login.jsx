@@ -224,13 +224,13 @@ function Login() {
                 <div className="form-group">
                   <PhoneInput
                     international
-                    countryCallingCodeEditable={false}
                     defaultCountry="IN"
                     value={formData.phone}
                     onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
-                    flags={flags}
                     placeholder="Enter your phone number"
-                    className="phone-input"
+                    required
+                    className="insurance-form-input phone-input-custom"
+                    flags={flags}
                   />
                 </div>
                 {otpSent && (

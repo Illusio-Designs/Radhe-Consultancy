@@ -14,6 +14,9 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Select, { components } from "react-select";
 import { toast } from "react-toastify";
+import PhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import "react-phone-number-input/style.css";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
 
 // --- CreateInsuranceCompanyModal (copied from Vehicle.jsx) ---
@@ -549,13 +552,15 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
             />
           </div>
           <div className="insurance-form-group">
-            <input
-              type="text"
-              name="mobileNumber"
+            <PhoneInput
+              international
+              defaultCountry="IN"
               value={formData.mobileNumber}
-              onChange={handleChange}
+              onChange={handlePhoneChange}
               placeholder="Mobile Number"
-              className="insurance-form-input"
+              required
+              className="insurance-form-input phone-input-custom"
+              flags={flags}
               readOnly={!!formData.companyId}
             />
           </div>

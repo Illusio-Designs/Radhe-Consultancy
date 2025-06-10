@@ -545,7 +545,7 @@ function DSC() {
       <div className="dsc-content">
         <div className="dsc-header">
           <h1 className="dsc-title">Digital Signature Certificates</h1>
-          <div className="flex gap-2 items-center flex-nowrap">
+          <div className="list-container">
             <Button
               variant="contained"
               onClick={() => setShowModal(true)}

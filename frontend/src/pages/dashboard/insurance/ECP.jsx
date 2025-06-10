@@ -467,7 +467,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               placeholder="Select Company"
               isClearable
               isSearchable={true}
-              className="insurance-form-input"
               styles={{
                 menu: (provided) => ({ ...provided, zIndex: 9999 }),
                 control: (provided) => ({
