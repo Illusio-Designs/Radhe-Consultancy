@@ -14,7 +14,7 @@ const LifePolicy = sequelize.define('LifePolicy', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: InsuranceCompany,
+      model: 'InsuranceCompanies',
       key: 'id'
     }
   },

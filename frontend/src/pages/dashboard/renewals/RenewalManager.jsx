@@ -10,7 +10,7 @@ const categories = [
   { label: "Labour" },
 ];
 
-const types = ["ECP", "Health", "Fire", "Vehicles"];
+const types = ["ECP", "Health", "Fire", "Vehicle"];
 const periods = ["week", "month", "year"];
 
 const RenewalManager = () => {
