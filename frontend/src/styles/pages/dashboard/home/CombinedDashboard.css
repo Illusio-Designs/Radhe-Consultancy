@@ -209,6 +209,11 @@
   border-bottom: none;
 }
 
+.list-container{
+  display: flex;
+  gap: 10px;
+}
+
 .activity-time {
   font-size: 0.8rem;
   color: #666;

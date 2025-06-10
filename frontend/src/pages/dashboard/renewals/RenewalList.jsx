@@ -118,7 +118,7 @@ const RenewalList = () => {
       <div className="dsc-content">
         <div className="dsc-header">
           <h1 className="dsc-title">Renewals Due</h1>
-          <div className="flex gap-2 items-center flex-nowrap">
+          <div className="list-container">
             <div className="dashboard-header-dropdown-container">
                 <Dropdown
                     options={typeOptions}
