@@ -283,23 +283,23 @@
 
 .login-method-btn {
   padding: 0.5rem 1.5rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--primary-color);
   border-radius: 4px;
   background: white;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--primary-color);
 }
 
 .login-method-btn:hover {
-  background: #f5f5f5;
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .login-method-btn.active {
   background-color: var(--primary-color);
   color: white;
-  border-color: var(--primary-color);
 }
 
 /* Phone Input Styles */
