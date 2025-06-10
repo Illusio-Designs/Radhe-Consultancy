@@ -67,7 +67,7 @@ const ForgotPassword = () => {
           </form>
 
           <p className="auth-redirect">
-            <a href="/auth/login">Back to Login</a>
+            <a href="/login">Back to Login</a>
           </p>
         </div>
       </div>
