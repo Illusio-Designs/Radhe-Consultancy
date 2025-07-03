@@ -90,3 +90,18 @@
   gap: 8px;
   margin: 40px 0;
 }
+
+@media (max-width: 600px) {
+  .pagination-container, .pagination {
+    gap: 4px;
+    padding: 0.5rem;
+  }
+  .pagination-button {
+    padding: 6px 10px;
+    min-width: 28px;
+    font-size: 12px;
+  }
+  .page-size-selector {
+    gap: 0.25rem;
+  }
+}

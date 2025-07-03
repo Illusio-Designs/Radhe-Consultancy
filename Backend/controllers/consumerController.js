@@ -224,6 +224,28 @@ const consumerController = {
         error: error.message
       });
     }
+  },
+
+  // Search consumers by name, email, or phone_number
+  async searchConsumers(req, res) {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: 'Missing search query' });
+      }
+      const consumers = await Consumer.findAll({
+        where: {
+          [Op.or]: [
+            { name: { [Op.iLike]: `%${q}%` } },
+            { email: { [Op.iLike]: `%${q}%` } },
+            { phone_number: { [Op.iLike]: `%${q}%` } }
+          ]
+        }
+      });
+      res.json(consumers);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 

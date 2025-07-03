@@ -570,6 +570,17 @@ export const companyAPI = {
       console.error('Error deleting company:', error);
       throw error;
     }
+  },
+
+  // Add searchCompanies method
+  searchCompanies: async (params) => {
+    try {
+      const response = await api.get('/companies/search', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching companies:', error);
+      throw error;
+    }
   }
 };
 

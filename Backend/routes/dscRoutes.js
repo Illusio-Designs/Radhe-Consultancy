@@ -25,4 +25,7 @@ router.delete('/:id', dscController.deleteDSC);
 router.get('/company/:companyId', dscController.getDSCsByCompany);
 router.get('/consumer/:consumerId', dscController.getDSCsByConsumer);
 
+// Search DSCs
+router.get('/search', dscController.searchDSCs);
+
 module.exports = router; 

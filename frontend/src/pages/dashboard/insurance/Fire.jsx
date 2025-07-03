@@ -794,6 +794,20 @@ function Fire() {
         return (currentPage - 1) * pageSize + index + 1;
       },
     },
+    {
+      key: "company_or_consumer",
+      label: "Company Name / Consumer Name",
+      sortable: false,
+      render: (_, policy) => {
+        if (policy.companyPolicyHolder && policy.companyPolicyHolder.company_name) return policy.companyPolicyHolder.company_name;
+        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name) return policy.consumerPolicyHolder.name;
+        if (policy.company_name) return policy.company_name;
+        if (policy.consumer_name) return policy.consumer_name;
+        if (policy.company && policy.company.company_name) return policy.company.company_name;
+        if (policy.consumer && policy.consumer.name) return policy.consumer.name;
+        return '-';
+      }
+    },
     { key: "policy_number", label: "Policy Number", sortable: true },
     { key: "business_type", label: "Business Type", sortable: true },
     { key: "customer_type", label: "Customer Type", sortable: true },

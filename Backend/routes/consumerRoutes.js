@@ -34,4 +34,7 @@ router.put('/:id',
   consumerController.updateConsumer
 );
 
+// Search consumers
+router.get('/search', auth, consumerController.searchConsumers);
+
 module.exports = router; 

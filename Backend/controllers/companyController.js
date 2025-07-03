@@ -524,6 +524,42 @@ const companyController = {
         error: error.message
       });
     }
+  },
+
+  // Search companies by company_name, company_email, or owner_name
+  async searchCompanies(req, res) {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ success: false, error: 'Missing search query' });
+      }
+
+      console.log(`[CompanyController] Searching companies with query: "${q}"`);
+
+      const companies = await Company.findAll({
+        where: {
+          [Op.or]: [
+            { company_name: { [Op.iLike]: `%${q}%` } },
+            { company_email: { [Op.iLike]: `%${q}%` } },
+            { owner_name: { [Op.iLike]: `%${q}%` } }
+          ]
+        }
+      });
+
+      console.log(`[CompanyController] Found ${companies.length} companies for query: "${q}"`);
+
+      return res.json({
+        success: true,
+        count: companies.length,
+        data: companies
+      });
+    } catch (error) {
+      console.error('[CompanyController] Error searching companies:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
   }
 };
 

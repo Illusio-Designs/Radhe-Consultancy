@@ -571,7 +571,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   );
 };
 
-function CompanyList() {
+function CompanyList({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [companies, setCompanies] = useState([]);
@@ -579,47 +579,65 @@ function CompanyList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('CompanyList component mounted');
-    fetchCompanies();
-  }, []);
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchCompanies(searchQuery);
+    } else {
+      fetchCompanies();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const fetchCompanies = async () => {
     try {
-      console.log('Fetching companies...');
       setLoading(true);
       const response = await companyAPI.getAllCompanies();
-      console.log('Companies API response:', response);
-      
-      // Check if response is an array directly
       if (Array.isArray(response)) {
-        console.log('Setting companies from direct array');
         setCompanies(response);
         setError(null);
-      } 
-      // Check if response has data property and it's an array
-      else if (response && response.data && Array.isArray(response.data)) {
-        console.log('Setting companies from response.data');
+      } else if (response && response.data && Array.isArray(response.data)) {
         setCompanies(response.data);
         setError(null);
-      } 
-      // Check if response has data property and it's an object with data array
-      else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-        console.log('Setting companies from response.data.data');
+      } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
         setCompanies(response.data.data);
         setError(null);
       } else {
-        console.error("Invalid response format:", response);
         setError("Invalid data format received from server");
         setCompanies([]);
       }
     } catch (err) {
-      console.error('Error fetching companies:', err);
       setError("Failed to fetch companies");
       setCompanies([]);
     } finally {
       setTimeout(() => {
         setLoading(false);
       }, 2000);
+    }
+  };
+
+  const handleSearchCompanies = async (query) => {
+    try {
+      setLoading(true);
+      const response = await companyAPI.searchCompanies({ q: query });
+      if (Array.isArray(response)) {
+        setCompanies(response);
+        setError(null);
+      } else if (response && response.data && Array.isArray(response.data)) {
+        setCompanies(response.data);
+        setError(null);
+      } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+        setCompanies(response.data.data);
+        setError(null);
+      } else {
+        setError("Invalid data format received from server");
+        setCompanies([]);
+      }
+    } catch (err) {
+      setError("Failed to search companies");
+      setCompanies([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
 

@@ -62,4 +62,10 @@ router.put('/:id',
 // Delete company
 router.delete('/:id', auth, companyController.deleteCompany);
 
+// Search companies
+router.get('/search', auth, (req, res, next) => {
+  console.log('[DEBUG] /companies/search route hit. User:', req.user);
+  next();
+}, companyController.searchCompanies);
+
 module.exports = router; 

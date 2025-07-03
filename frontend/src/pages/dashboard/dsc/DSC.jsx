@@ -461,7 +461,7 @@ function DSC() {
     },
     {
       key: "holder_details",
-      label: "Holder Details",
+      label: "Company Name / Consumer Name",
       sortable: true,
       render: (_, dsc) => (
         <div className="whitespace-pre-line">

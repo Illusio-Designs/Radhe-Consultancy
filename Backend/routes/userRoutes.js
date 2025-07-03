@@ -101,4 +101,6 @@ router.get('/profile-image/:filename', (req, res) => {
   }
 });
 
+router.get('/search', auth, userController.searchUsers);
+
 module.exports = router;

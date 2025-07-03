@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { BiBell, BiUser, BiLogOut, BiKey, BiSearch, BiFullscreen, BiExitFullscreen } from "react-icons/bi";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/components/dashboard/Header.css";
+import SearchBar from "../common/SearchBar/SearchBar";
 
-const Header = ({ isCollapsed }) => {
+const Header = ({ isCollapsed, onSearch }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { user, logout } = useAuth();
@@ -64,6 +65,11 @@ const Header = ({ isCollapsed }) => {
         {/* Left - Title */}
         <div className="head">
           <h2 className="header-title">Dashboard</h2>
+        </div>
+
+        {/* Add SearchBar here */}
+        <div className="header-searchbar">
+          <SearchBar onSearch={onSearch} placeholder="Search..." />
         </div>
 
         {/* Right - Profile */}

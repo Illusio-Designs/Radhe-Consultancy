@@ -36,6 +36,7 @@ import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
 
   // Example notifications data
@@ -82,27 +83,27 @@ function DashboardLayout() {
       case "/dashboard/widget":
         return <Widget />;
       case "/dashboard/users/company":
-        return <CompanyUsers />;
+        return <CompanyUsers searchQuery={searchQuery} />;
       case "/dashboard/users/consumer":
-        return <ConsumerUsers />;
+        return <ConsumerUsers searchQuery={searchQuery} />;
       case "/dashboard/users/other":
-        return <OtherUsers />;
+        return <OtherUsers searchQuery={searchQuery} />;
       case "/dashboard/companies":
-        return <CompanyList />;
+        return <CompanyList searchQuery={searchQuery} />;
       case "/dashboard/consumers":
-        return <ConsumerList />;
+        return <ConsumerList searchQuery={searchQuery} />;
       case "/dashboard/insurance/ECP":
-        return <ECP />;
+        return <ECP searchQuery={searchQuery} />;
       case "/dashboard/insurance/health":
-        return <Health />;
+        return <Health searchQuery={searchQuery} />;
       case "/dashboard/insurance/fire":
-        return <Fire />;
+        return <Fire searchQuery={searchQuery} />;
       case "/dashboard/insurance/vehicle":
-        return <Vehicle />;
+        return <Vehicle searchQuery={searchQuery} />;
       case "/dashboard/insurance/life":
-        return <Life />;
+        return <Life searchQuery={searchQuery} />;
       case "/dashboard/insurance/companies":
-        return <Companies />;
+        return <Companies searchQuery={searchQuery} />;
       case "/dashboard/compliance/factory-act":
         return <FactoryAct />;
       case "/dashboard/compliance/labour-inspection":
@@ -110,7 +111,7 @@ function DashboardLayout() {
       case "/dashboard/compliance/labour-license":
         return <LabourLicense />;
       case "/dashboard/dsc":
-        return <DSC />;
+        return <DSC searchQuery={searchQuery} />;
       case "/dashboard/renewals/manager":
         return <RenewalManager />;
       case "/dashboard/renewals/list":
@@ -152,6 +153,7 @@ function DashboardLayout() {
               setShowNotifications={setShowNotifications}
               onProfileAction={handleProfileAction}
               profileMenuItems={profileMenuItems}
+              onSearch={setSearchQuery}
             />
           </header>
 

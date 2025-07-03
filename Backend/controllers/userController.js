@@ -319,6 +319,29 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+// Search users by username, email, or contact_number
+const searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Missing search query' });
+    }
+    const users = await User.findAll({
+      where: {
+        [Op.or]: [
+          { username: { [Op.iLike]: `%${q}%` } },
+          { email: { [Op.iLike]: `%${q}%` } },
+          { contact_number: { [Op.iLike]: `%${q}%` } }
+        ]
+      },
+      include: [{ model: Role, attributes: ['role_name'] }]
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getCompanyUsers,
@@ -331,5 +354,6 @@ module.exports = {
   deleteUser,
   updateProfileImage,
   getUserPermissions,
-  changePassword
+  changePassword,
+  searchUsers
 };

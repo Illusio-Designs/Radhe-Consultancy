@@ -20,8 +20,21 @@ const Pagination = ({
 
   const getPageNumbers = () => {
     const pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
+    const maxVisible = 2; // pages before/after current
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > maxVisible + 2) pages.push('start-ellipsis');
+      for (
+        let i = Math.max(2, currentPage - maxVisible);
+        i <= Math.min(totalPages - 1, currentPage + maxVisible);
+        i++
+      ) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - maxVisible - 1) pages.push('end-ellipsis');
+      pages.push(totalPages);
     }
     return pages;
   };
@@ -49,15 +62,20 @@ const Pagination = ({
           &lt;
         </button>
 
-        {getPageNumbers().map((page) => (
-          <button
-            key={page}
-            className={`pagination-button ${page === currentPage ? 'active' : ''}`}
-            onClick={() => onPageChange(page)}
-          >
-            {page}
-          </button>
-        ))}
+        {getPageNumbers().map((page, idx) =>
+          page === 'start-ellipsis' || page === 'end-ellipsis' ? (
+            <span key={page + idx} className="pagination-button" style={{ pointerEvents: 'none', background: 'none', border: 'none' }}>...</span>
+          ) : (
+            <button
+              key={page}
+              className={`pagination-button ${page === currentPage ? 'active' : ''}`}
+              onClick={() => onPageChange(page)}
+              disabled={page === currentPage}
+            >
+              {page}
+            </button>
+          )
+        )}
 
         <button
           className="pagination-button"

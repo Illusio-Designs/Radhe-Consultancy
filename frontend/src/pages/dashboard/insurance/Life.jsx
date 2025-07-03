@@ -851,7 +851,7 @@ function Life() {
     },
     { 
       key: "policy_holder", 
-      label: "Policy Holder", 
+      label: "Company Name / Consumer Name", 
       sortable: true,
       render: (_, policy) => {
         if (policy.companyPolicyHolder) {

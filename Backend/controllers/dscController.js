@@ -263,4 +263,28 @@ exports.getDSCsByConsumer = async (req, res) => {
         console.error('Error in getDSCsByConsumer:', error);
         res.status(500).json({ success: false, message: error.message });
     }
-}; 
+};
+
+// Search DSCs by certification_name, company.company_name, or consumer.name
+exports.searchDSCs = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.status(400).json({ error: 'Missing search query' });
+        }
+        const dscs = await DSC.findAll({
+            where: {
+                [Op.or]: [
+                    { certification_name: { [Op.iLike]: `%${q}%` } }
+                ]
+            },
+            include: [
+                { model: Company, where: { company_name: { [Op.iLike]: `%${q}%` } }, required: false },
+                { model: Consumer, where: { name: { [Op.iLike]: `%${q}%` } }, required: false }
+            ]
+        });
+        res.json(dscs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
