@@ -5,6 +5,8 @@ const { validationResult } = require('express-validator');
 const { uploadEmployeePolicyDocument } = require('../config/multerConfig');
 const path = require('path');
 const fs = require('fs');
+const { Op } = require('sequelize');
+const sequelize = require('../config/db');
 
 // Use the configured multer instance for employee policy documents
 exports.upload = uploadEmployeePolicyDocument;
@@ -298,40 +300,91 @@ exports.deletePolicy = async (req, res) => {
 // Search policies
 exports.searchPolicies = async (req, res) => {
   try {
-    const {
-      policyNumber,
-      companyId,
-      insuranceCompanyId,
-      startDate,
-      endDate,
-      status
-    } = req.query;
-
-    const where = {};
-
-    if (policyNumber) where.policyNumber = policyNumber;
-    if (companyId) where.companyId = companyId;
-    if (insuranceCompanyId) where.insuranceCompanyId = insuranceCompanyId;
-    if (status) where.status = status;
-    
-    if (startDate && endDate) {
-      where.policyStartDate = {
-        [Op.between]: [new Date(startDate), new Date(endDate)]
-      };
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Missing search query' });
     }
 
+    console.log(`[EmployeeCompensationController] Searching policies with query: "${q}"`);
+
     const policies = await EmployeeCompensationPolicy.findAll({
-      where,
+      where: {
+        [Op.or]: [
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('policy_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('mobile_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('medical_cover')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('gst_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('pan_number')), 'LIKE', `%${q.toLowerCase()}%`)
+        ]
+      },
       include: [
-        { model: Company, as: 'policyHolder' },
-        { model: InsuranceCompany, as: 'provider' }
+        {
+          model: Company,
+          as: 'policyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
+          required: false,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('policyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name'],
+          required: false,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('provider.name')), 'LIKE', `%${q.toLowerCase()}%`)
+        }
       ],
       order: [['created_at', 'DESC']]
     });
 
-    res.json(policies);
+    // Also search for policies where the company name matches, even if other fields don't
+    const policiesByCompany = await EmployeeCompensationPolicy.findAll({
+      include: [
+        {
+          model: Company,
+          as: 'policyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
+          required: true,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('policyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name']
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    const policiesByInsuranceCompany = await EmployeeCompensationPolicy.findAll({
+      include: [
+        {
+          model: Company,
+          as: 'policyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name'],
+          required: true,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('provider.name')), 'LIKE', `%${q.toLowerCase()}%`)
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    // Combine all results and remove duplicates
+    const allPolicies = [...policies, ...policiesByCompany, ...policiesByInsuranceCompany];
+    const uniquePolicies = allPolicies.filter((policy, index, self) => 
+      index === self.findIndex(p => p.id === policy.id)
+    );
+
+    console.log(`[EmployeeCompensationController] Found ${uniquePolicies.length} policies for query: "${q}"`);
+
+    res.json({ success: true, policies: uniquePolicies });
   } catch (error) {
-    console.error('Error searching policies:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error searching employee compensation policies:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }; 

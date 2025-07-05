@@ -7,7 +7,8 @@ import {
   BiUpload,
 } from "react-icons/bi";
 import { firePolicyAPI, insuranceCompanyAPI } from "../../../services/api";
-import TableWithControl from "../../../components/common/Table/TableWithControl";
+import Table from "../../../components/common/Table/Table";
+import Pagination from "../../../components/common/Pagination/Pagination";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
@@ -723,26 +724,44 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   );
 };
 
-function Fire() {
+function Fire({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    pageSize: 10
+  });
 
   useEffect(() => {
     fetchPolicies();
   }, []);
 
-  const fetchPolicies = async () => {
+  // Handle search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.length >= 3) {
+      handleSearchPolicies(searchQuery);
+    } else if (searchQuery === "") {
+      fetchPolicies();
+    }
+  }, [searchQuery]);
+
+  const fetchPolicies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const response = await firePolicyAPI.getAllPolicies();
+      const response = await firePolicyAPI.getAllPolicies({ page, limit: pageSize });
       if (response && Array.isArray(response.policies)) {
         setPolicies(response.policies);
-        setError(null);
-      } else if (Array.isArray(response)) {
-        setPolicies(response);
+        setPagination({
+          currentPage: response.currentPage || 1,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+          pageSize: pageSize
+        });
         setError(null);
       } else {
         setError("Invalid data format received from server");
@@ -756,12 +775,42 @@ function Fire() {
     }
   };
 
+  const handleSearchPolicies = async (query) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await firePolicyAPI.searchPolicies({ q: query });
+      
+      // Handle both expected format and direct array response
+      if (response && response.success && Array.isArray(response.policies)) {
+        setPolicies(response.policies);
+        setError(null);
+      } else if (Array.isArray(response)) {
+        // Handle case where response is directly an array
+        setPolicies(response);
+        setError(null);
+      } else {
+        console.error("Invalid search response format:", response);
+        setError("Invalid data format received from server");
+        setPolicies([]);
+      }
+    } catch (err) {
+      console.error("Error searching fire policies:", err);
+      setError("Failed to search fire policies");
+      setPolicies([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+  };
+
   const handleDelete = async (policyId) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
       try {
         await firePolicyAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
-        await fetchPolicies();
+        await fetchPolicies(pagination.currentPage, pagination.pageSize);
       } catch (err) {
         setError("Failed to delete policy");
         toast.error("Failed to delete policy");
@@ -780,8 +829,16 @@ function Fire() {
   };
 
   const handlePolicyUpdated = async () => {
-    await fetchPolicies();
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchPolicies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    await fetchPolicies(1, newPageSize);
   };
 
   const columns = [
@@ -862,11 +919,22 @@ function Fire() {
         {loading ? (
           <Loader size="large" color="primary" />
         ) : (
-          <TableWithControl
-            data={policies}
-            columns={columns}
-            defaultPageSize={10}
-          />
+          <>
+            <Table 
+              data={policies} 
+              columns={columns} 
+              pagination={{ currentPage: pagination.currentPage, pageSize: pagination.pageSize }}
+            />
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              pageSize={pagination.pageSize}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              pageSizeOptions={[10, 20, 50, 100]}
+            />
+          </>
         )}
       </div>
       <Modal

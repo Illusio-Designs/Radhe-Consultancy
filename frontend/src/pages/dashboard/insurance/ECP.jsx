@@ -10,7 +10,8 @@ import {
   employeeCompensationAPI,
   insuranceCompanyAPI,
 } from "../../../services/api";
-import TableWithControl from "../../../components/common/Table/TableWithControl";
+import Table from "../../../components/common/Table/Table";
+import Pagination from "../../../components/common/Pagination/Pagination";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
@@ -729,17 +730,93 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   );
 };
 
-function ECP() {
+function ECP({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    pageSize: 10
+  });
 
   useEffect(() => {
     console.log("ECP component mounted");
     fetchPolicies();
   }, []);
+
+  // Handle search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.length >= 3) {
+      handleSearchPolicies(searchQuery);
+    } else if (searchQuery === "") {
+      fetchPolicies();
+    }
+  }, [searchQuery]);
+
+  const fetchPolicies = async (page = 1, pageSize = 10) => {
+    try {
+      setLoading(true);
+      console.log('Fetching ECP policies with page:', page, 'pageSize:', pageSize);
+      const response = await employeeCompensationAPI.getAllPolicies({ page, limit: pageSize });
+      console.log('ECP API response:', response);
+      
+      if (response && Array.isArray(response.policies)) {
+        console.log('ECP policies found:', response.policies.length);
+        setPolicies(response.policies);
+        setPagination({
+          currentPage: response.currentPage || 1,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+          pageSize: pageSize
+        });
+        setError(null);
+      } else {
+        console.error('Invalid ECP response format:', response);
+        setError("Invalid data format received from server");
+        setPolicies([]);
+      }
+    } catch (err) {
+      console.error('Error fetching ECP policies:', err);
+      setError("");
+      setPolicies([]);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  };
+
+  const handleSearchPolicies = async (query) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await employeeCompensationAPI.searchPolicies({ q: query });
+      
+      // Handle both expected format and direct array response
+      if (response && response.success && Array.isArray(response.policies)) {
+        setPolicies(response.policies);
+        setError(null);
+      } else if (Array.isArray(response)) {
+        // Handle case where response is directly an array
+        setPolicies(response);
+        setError(null);
+      } else {
+        console.error("Invalid search response format:", response);
+        setError("Invalid data format received from server");
+        setPolicies([]);
+      }
+    } catch (err) {
+      console.error("Error searching ECP policies:", err);
+      setError("Failed to search ECP policies");
+      setPolicies([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+  };
 
   const toCamelCase = (policy) => ({
     id: policy.id,
@@ -767,39 +844,12 @@ function ECP() {
     provider: policy.provider,
   });
 
-  const fetchPolicies = async () => {
-    try {
-      console.log("Fetching policies...");
-      setLoading(true);
-      const response = await employeeCompensationAPI.getAllPolicies();
-      console.log("Policies API response:", response);
-
-      if (response && Array.isArray(response.policies)) {
-        const mapped = response.policies.map(toCamelCase);
-        setPolicies(mapped);
-        setError(null);
-      } else {
-        console.error("Invalid response format:", response);
-        setError("Invalid data format received from server");
-        setPolicies([]);
-      }
-    } catch (err) {
-      console.error("Error fetching policies:", err);
-      setError("Failed to fetch policies");
-      setPolicies([]);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    }
-  };
-
   const handleDelete = async (policyId) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
       try {
         await employeeCompensationAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
-        await fetchPolicies();
+        await fetchPolicies(pagination.currentPage, pagination.pageSize);
       } catch (err) {
         const errorMessage = "Failed to delete policy";
         setError(errorMessage);
@@ -822,8 +872,16 @@ function ECP() {
 
   const handlePolicyUpdated = async () => {
     console.log("Policy updated, refreshing list");
-    await fetchPolicies();
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchPolicies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    await fetchPolicies(1, newPageSize);
   };
 
   const columns = [
@@ -853,13 +911,13 @@ function ECP() {
         return '-';
       }
     },
-    { key: "policyNumber", label: "Policy Number", sortable: true },
-    { key: "businessType", label: "Business Type", sortable: true },
-    { key: "customerType", label: "Customer Type", sortable: true },
+    { key: "policy_number", label: "Policy Number", sortable: true },
+    { key: "business_type", label: "Business Type", sortable: true },
+    { key: "customer_type", label: "Customer Type", sortable: true },
     { key: "email", label: "Email", sortable: true },
-    { key: "mobileNumber", label: "Mobile Number", sortable: true },
-    { key: "medicalCover", label: "Medical Cover", sortable: true },
-    { key: "netPremium", label: "Net Premium", sortable: true },
+    { key: "mobile_number", label: "Mobile Number", sortable: true },
+    { key: "medical_cover", label: "Medical Cover", sortable: true },
+    { key: "net_premium", label: "Net Premium", sortable: true },
     {
       key: "actions",
       label: "Actions",
@@ -907,11 +965,22 @@ function ECP() {
         {loading ? (
           <Loader size="large" color="primary" />
         ) : (
-          <TableWithControl
-            data={policies}
-            columns={columns}
-            defaultPageSize={10}
-          />
+          <>
+            <Table 
+              data={policies} 
+              columns={columns} 
+              pagination={{ currentPage: pagination.currentPage, pageSize: pagination.pageSize }}
+            />
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              pageSize={pagination.pageSize}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              pageSizeOptions={[10, 20, 50, 100]}
+            />
+          </>
         )}
       </div>
 

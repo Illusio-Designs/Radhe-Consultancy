@@ -801,10 +801,10 @@ export const adminDashboardAPI = {
 
 // Employee Compensation API
 export const employeeCompensationAPI = {
-  getAllPolicies: async () => {
+  getAllPolicies: async (params = {}) => {
     try {
       console.log('API Service: Fetching all employee compensation policies');
-      const response = await api.get('/employee-compensation');
+      const response = await api.get('/employee-compensation', { params });
       console.log('API Service: Policies fetched successfully');
       return response.data;
     } catch (error) {
@@ -993,9 +993,9 @@ export const insuranceCompanyAPI = {
 
 // Vehicle Policy API
 export const vehiclePolicyAPI = {
-  getAllPolicies: async () => {
+  getAllPolicies: async (params = {}) => {
     try {
-      const response = await api.get('/vehicle-policies');
+      const response = await api.get('/vehicle-policies', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1097,9 +1097,9 @@ export const vehiclePolicyAPI = {
 
 // Health Policy API
 export const healthPolicyAPI = {
-  getAllPolicies: async () => {
+  getAllPolicies: async (params = {}) => {
     try {
-      const response = await api.get('/health-policies');
+      const response = await api.get('/health-policies', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1198,9 +1198,9 @@ export const healthPolicyAPI = {
 
 // Fire Policy API
 export const firePolicyAPI = {
-  getAllPolicies: async () => {
+  getAllPolicies: async (params = {}) => {
     try {
-      const response = await api.get('/fire-policies');
+      const response = await api.get('/fire-policies', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1299,10 +1299,10 @@ export const firePolicyAPI = {
 
 // Life Policy API
 export const lifePolicyAPI = {
-  getAllPolicies: async () => {
+  getAllPolicies: async (params = {}) => {
     try {
       console.log('API Service: Fetching all life policies');
-      const response = await api.get('/life-policies');
+      const response = await api.get('/life-policies', { params });
       console.log('API Service: Life policies fetched successfully');
       return response.data;
     } catch (error) {

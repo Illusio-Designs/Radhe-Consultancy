@@ -5,6 +5,8 @@ const InsuranceCompany = require('../models/insuranceCompanyModel');
 const { validationResult } = require('express-validator');
 const path = require('path');
 const fs = require('fs').promises;
+const { Op } = require('sequelize');
+const sequelize = require('../config/db');
 
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
@@ -280,40 +282,121 @@ exports.deletePolicy = async (req, res) => {
 
 exports.searchPolicies = async (req, res) => {
   try {
-    const {
-      policyNumber,
-      companyId,
-      consumerId,
-      insuranceCompanyId,
-      startDate,
-      endDate,
-      status
-    } = req.query;
-
-    const where = {};
-    if (policyNumber) where.policy_number = policyNumber;
-    if (companyId) where.company_id = companyId;
-    if (consumerId) where.consumer_id = consumerId;
-    if (insuranceCompanyId) where.insurance_company_id = insuranceCompanyId;
-    if (status) where.status = status;
-    if (startDate && endDate) {
-      where.policy_start_date = {
-        $between: [new Date(startDate), new Date(endDate)]
-      };
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Missing search query' });
     }
 
+    console.log(`[FirePolicyController] Searching policies with query: "${q}"`);
+
     const policies = await FirePolicy.findAll({
-      where,
+      where: {
+        [Op.or]: [
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('policy_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('proposer_name')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('mobile_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('property_address')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('property_type')), 'LIKE', `%${q.toLowerCase()}%`)
+        ]
+      },
       include: [
-        { model: Company, as: 'companyPolicyHolder' },
-        { model: Consumer, as: 'consumerPolicyHolder' },
-        { model: InsuranceCompany, as: 'provider' }
+        {
+          model: Company,
+          as: 'companyPolicyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
+          required: false,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('companyPolicyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+        },
+        {
+          model: Consumer,
+          as: 'consumerPolicyHolder',
+          attributes: ['consumer_id', 'name', 'email', 'phone_number'],
+          required: false,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumerPolicyHolder.name')), 'LIKE', `%${q.toLowerCase()}%`)
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name'],
+          required: false,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('provider.name')), 'LIKE', `%${q.toLowerCase()}%`)
+        }
       ],
       order: [['created_at', 'DESC']]
     });
-    res.json(policies);
+
+    // Also search for policies where the company or consumer name matches, even if other fields don't
+    const policiesByCompany = await FirePolicy.findAll({
+      include: [
+        {
+          model: Company,
+          as: 'companyPolicyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
+          required: true,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('companyPolicyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name']
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    const policiesByConsumer = await FirePolicy.findAll({
+      include: [
+        {
+          model: Consumer,
+          as: 'consumerPolicyHolder',
+          attributes: ['consumer_id', 'name', 'email', 'phone_number'],
+          required: true,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumerPolicyHolder.name')), 'LIKE', `%${q.toLowerCase()}%`)
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name']
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    const policiesByInsuranceCompany = await FirePolicy.findAll({
+      include: [
+        {
+          model: Company,
+          as: 'companyPolicyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
+        },
+        {
+          model: Consumer,
+          as: 'consumerPolicyHolder',
+          attributes: ['consumer_id', 'name', 'email', 'phone_number']
+        },
+        {
+          model: InsuranceCompany,
+          as: 'provider',
+          attributes: ['id', 'name'],
+          required: true,
+          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('provider.name')), 'LIKE', `%${q.toLowerCase()}%`)
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    // Combine all results and remove duplicates
+    const allPolicies = [...policies, ...policiesByCompany, ...policiesByConsumer, ...policiesByInsuranceCompany];
+    const uniquePolicies = allPolicies.filter((policy, index, self) => 
+      index === self.findIndex(p => p.id === policy.id)
+    );
+
+    console.log(`[FirePolicyController] Found ${uniquePolicies.length} policies for query: "${q}"`);
+
+    res.json({ success: true, policies: uniquePolicies });
   } catch (error) {
     console.error('Error searching fire policies:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }; 
