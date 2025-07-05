@@ -153,11 +153,7 @@
 }
 
 /* Dashboard Grid Styles */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1.5rem;
-}
+
 
 .dashboard-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -842,7 +838,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   transition: transform 0.2s ease-in-out;
-  width: 100%;
 }
 
 .dsc-stats-card:hover {

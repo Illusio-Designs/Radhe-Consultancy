@@ -7,7 +7,7 @@ const { auth, checkRole } = require('../middleware/auth');
 router.get(
   '/statistics',
   auth,
-  checkRole(['admin', 'vendor_manager', 'user_manager']),
+  checkRole(['admin', 'vendor_manager', 'user_manager', 'insurance_manager', 'dsc_manager']),
   adminDashboardController.getCompanyStatistics
 );
 

@@ -96,6 +96,7 @@ const Sidebar = ({ onCollapse }) => {
     ],
   };
 
+  // Always show dashboard and renewals
   let menuItems = [
     {
       path: "/dashboard",
@@ -112,23 +113,10 @@ const Sidebar = ({ onCollapse }) => {
     renewalsDropdown,
   ];
 
-  // Admin role has access to all features
+  // Add sections based on roles
   if (isRole("admin")) {
-    console.log("Sidebar: Setting admin menu items");
     menuItems = [
-      {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
-        label: "Dashboard",
-        isDropdown: true,
-        isOpen: activeDropdown === "dashboard",
-        toggle: () => handleDropdownToggle("dashboard"),
-        items: [
-          { path: "/dashboard", icon: <Home />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
-        ],
-      },
-      renewalsDropdown,
+      ...menuItems,
       {
         path: "/dashboard/users",
         label: "Users",
@@ -241,23 +229,10 @@ const Sidebar = ({ onCollapse }) => {
       },
       { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
     ];
-    console.log("Sidebar: Admin menu items set:", menuItems);
-  } else if (isRole("user_manager") || isRole("user")) {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
-        label: "Dashboard",
-        isDropdown: true,
-        isOpen: activeDropdown === "dashboard",
-        toggle: () => handleDropdownToggle("dashboard"),
-        items: [
-          { path: "/dashboard", icon: <Home />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
-        ],
-      },
-      renewalsDropdown,
-      {
+  } else {
+    // For all other roles, add sections as needed
+    if (isRole("user_manager") || isRole("user")) {
+      menuItems.push({
         label: "Users",
         icon: <Users />,
         isDropdown: true,
@@ -280,24 +255,11 @@ const Sidebar = ({ onCollapse }) => {
             label: "Employee",
           },
         ],
-      },
-    ];
-  } else if (isRole("vendor_manager")) {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
-        label: "Dashboard",
-        isDropdown: true,
-        isOpen: activeDropdown === "dashboard",
-        toggle: () => handleDropdownToggle("dashboard"),
-        items: [
-          { path: "/dashboard", icon: <Home />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
-        ],
-      },
-      renewalsDropdown,
-      {
+      });
+    }
+    if (isRole("vendor_manager")) {
+      menuItems.push({
+        path: "/dashboard/vendors",
         label: "Vendors",
         icon: <Store />,
         isDropdown: true,
@@ -315,24 +277,10 @@ const Sidebar = ({ onCollapse }) => {
             label: "Consumers",
           },
         ],
-      },
-    ];
-  } else if (isRole("insurance_manager")) {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
-        label: "Dashboard",
-        isDropdown: true,
-        isOpen: activeDropdown === "dashboard",
-        toggle: () => handleDropdownToggle("dashboard"),
-        items: [
-          { path: "/dashboard", icon: <Home />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
-        ],
-      },
-      renewalsDropdown,
-      {
+      });
+    }
+    if (isRole("insurance_manager")) {
+      menuItems.push({
         label: "Insurance",
         icon: <HeartPulse />,
         isDropdown: true,
@@ -370,24 +318,10 @@ const Sidebar = ({ onCollapse }) => {
             label: "Companies",
           },
         ],
-      },
-    ];
-  } else if (isRole("compliance_manager")) {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
-        label: "Dashboard",
-        isDropdown: true,
-        isOpen: activeDropdown === "dashboard",
-        toggle: () => handleDropdownToggle("dashboard"),
-        items: [
-          { path: "/dashboard", icon: <Home />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
-        ],
-      },
-      renewalsDropdown,
-      {
+      });
+    }
+    if (isRole("compliance_manager")) {
+      menuItems.push({
         label: "Compliance & Licensing",
         icon: <BadgeCheck />,
         isDropdown: true,
@@ -410,27 +344,11 @@ const Sidebar = ({ onCollapse }) => {
             label: "Labour License Management",
           },
         ],
-      },
-    ];
-  } else if (isRole("dsc_manager")) {
-    menuItems = [
-      {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
-        label: "Dashboard",
-        isDropdown: true,
-        isOpen: activeDropdown === "dashboard",
-        toggle: () => handleDropdownToggle("dashboard"),
-        items: [
-          { path: "/dashboard", icon: <Home />, label: "Home" },
-          { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
-        ],
-      },
-      renewalsDropdown,
-      { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
-    ];
-  } else {
-    console.log("Sidebar: Not a recognized role, using default menu items");
+      });
+    }
+    if (isRole("dsc_manager")) {
+      menuItems.push({ path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" });
+    }
   }
 
   const isActive = (path) => {

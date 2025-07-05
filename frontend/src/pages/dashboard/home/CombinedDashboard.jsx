@@ -391,78 +391,6 @@ const DashboardHeader = ({
   </div>
 );
 
-const AdminDashboard = ({ stats, isLoading, lastUpdated, fetchStats }) => {
-  const [timeFilter, setTimeFilter] = useState("7days");
-
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    try {
-      await fetchStats();
-    } catch (error) {
-      console.error("Error refreshing admin stats:", error);
-    } finally {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
-    }
-  };
-
-  const handleFilterChange = (e) => {
-    setTimeFilter(e.target.value);
-    handleRefresh();
-  };
-
-  return (
-    <div className="dashboard-page">
-      {isLoading ? (
-        <div className="loader-container">
-          <Loader size="large" color="primary" />
-        </div>
-      ) : (
-        <>
-          <div className="dashboard-header">
-            <div className="dashboard-title-area">
-              <h1>Admin Dashboard</h1>
-              <div className="dashboard-meta">
-                <span className="last-updated">
-                  <Clock className="meta-icon" /> Last updated: {lastUpdated}
-                </span>
-                <button
-                  className={`refresh-button ${isLoading ? "refreshing" : ""}`}
-                  onClick={handleRefresh}
-                  disabled={isLoading}
-                >
-                  <RefreshCcw className="refresh-icon" />
-                  {isLoading ? "Refreshing..." : "Refresh"}
-                </button>
-              </div>
-            </div>
-            <div className="date-filter">
-              <CalendarDays className="filter-icon" />
-              <select value={timeFilter} onChange={handleFilterChange}>
-                <option value="7days">Last 7 days</option>
-                <option value="30days">Last 30 days</option>
-                <option value="90days">Last 3 months</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="dashboard-content">
-            <div className="dashboard-grid">
-              <CompanyStatsCard stats={stats} />
-              <ConsumerStatsCard stats={stats.consumer_stats} />
-            </div>
-            <AllInsuranceCard stats={stats.insurance_stats} />
-            <div className="dsc-stats-section">
-              <DSCStatsCard stats={stats.dsc_stats} />
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
 const CombinedDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -503,15 +431,10 @@ const CombinedDashboard = () => {
   const fetchStats = async () => {
     try {
       setIsLoading(true);
-      console.log('Fetching stats...');
       const response = await adminDashboardAPI.getCompanyStatistics();
-      console.log('API Response:', response);
       if (response.success) {
-        console.log('Setting stats:', response.data);
         setStats(response.data);
         setLastUpdated(new Date().toLocaleTimeString());
-      } else {
-        console.error('API returned success: false');
       }
     } catch (error) {
       console.error("Error fetching admin stats:", error);
@@ -545,70 +468,35 @@ const CombinedDashboard = () => {
 
   // Get all user roles as lowercase
   const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
-  console.log('CombinedDashboard: User roles:', userRoles);
-  console.log('CombinedDashboard: User object:', user);
-  
+  const showAdmin = userRoles.includes('admin');
   const showInsurance = userRoles.includes('insurance_manager');
   const showDSC = userRoles.includes('dsc_manager');
-  const showAdmin = userRoles.includes('admin');
   const showCompany = userRoles.includes('company');
   const showConsumer = userRoles.includes('consumer');
   const showVendorManager = userRoles.includes('vendor_manager');
   const showUserManager = userRoles.includes('user_manager');
-  
-  console.log('CombinedDashboard: Role checks:', {
-    showInsurance,
-    showDSC,
-    showAdmin,
-    showCompany,
-    showConsumer,
-    showVendorManager,
-    showUserManager
-  });
 
-  // If admin, show admin dashboard
-  if (showAdmin) {
-    return (
-      <AdminDashboard
-        stats={stats}
-        isLoading={isLoading}
+  // Unified dashboard layout for all users
+  return (
+    <div className="dashboard-page">
+      <DashboardHeader
+        title="Dashboard"
         lastUpdated={lastUpdated}
-        fetchStats={fetchStats}
+        isLoading={isLoading}
+        onRefresh={handleRefresh}
+        timeFilter={timeFilter}
+        onFilterChange={handleFilterChange}
       />
-    );
-  }
-
-  // If user has multiple roles, show all relevant cards
-  if (showInsurance || showDSC || showCompany || showConsumer || showVendorManager || showUserManager) {
-    return (
-      <div className="dashboard-page">
-        <DashboardHeader
-          title="Dashboard"
-          lastUpdated={lastUpdated}
-          isLoading={isLoading}
-          onRefresh={handleRefresh}
-          timeFilter={timeFilter}
-          onFilterChange={handleFilterChange}
-        />
-        <div className="dashboard-content">
-          <div className="dashboard-grid">
-            {showCompany && <CompanyStatsCard stats={stats} />}
-            {showConsumer && <ConsumerStatsCard stats={stats.consumer_stats} />}
-            {showInsurance && <AllInsuranceCard stats={stats.insurance_stats} />}
-            {showDSC && <DSCStatsCard stats={stats.dsc_stats} />}
-            {showVendorManager && <CompanyStatsCard stats={stats} />}
-            {showUserManager && <UserRoleStatsCard stats={stats.user_role_stats || {}} />}
-          </div>
+      <div className="dashboard-content">
+        <div className="dashboard-grid">
+          {(showAdmin || showCompany) && <CompanyStatsCard stats={stats} />}
+          {(showAdmin || showConsumer) && <ConsumerStatsCard stats={stats.consumer_stats} />}
+          {(showAdmin || showInsurance) && <AllInsuranceCard stats={stats.insurance_stats} />}
+          {(showAdmin || showDSC) && <DSCStatsCard stats={stats.dsc_stats} />}
+          {(showAdmin || showVendorManager) && <CompanyStatsCard stats={stats} />}
+          {(showAdmin || showUserManager) && <UserRoleStatsCard stats={stats.user_role_stats || {}} />}
         </div>
       </div>
-    );
-  }
-
-  // Fallback for unknown role
-  return (
-    <div className="error-message">
-      <div className="error-icon">⚠️</div>
-      <p>Invalid role or access denied</p>
     </div>
   );
 };
