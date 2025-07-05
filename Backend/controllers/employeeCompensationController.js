@@ -307,37 +307,34 @@ exports.searchPolicies = async (req, res) => {
 
     console.log(`[EmployeeCompensationController] Searching policies with query: "${q}"`);
 
+    // Search in main policy fields
     const policies = await EmployeeCompensationPolicy.findAll({
       where: {
         [Op.or]: [
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('policy_number')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('mobile_number')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('medical_cover')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('gst_number')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('pan_number')), 'LIKE', `%${q.toLowerCase()}%`)
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('EmployeeCompensationPolicy.policy_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('EmployeeCompensationPolicy.email')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('EmployeeCompensationPolicy.mobile_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('EmployeeCompensationPolicy.medical_cover')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('EmployeeCompensationPolicy.gst_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('EmployeeCompensationPolicy.pan_number')), 'LIKE', `%${q.toLowerCase()}%`)
         ]
       },
       include: [
         {
           model: Company,
           as: 'policyHolder',
-          attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
-          required: false,
-          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('policyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
         },
         {
           model: InsuranceCompany,
           as: 'provider',
-          attributes: ['id', 'name'],
-          required: false,
-          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('provider.name')), 'LIKE', `%${q.toLowerCase()}%`)
+          attributes: ['id', 'name']
         }
       ],
       order: [['created_at', 'DESC']]
     });
 
-    // Also search for policies where the company name matches, even if other fields don't
+    // Search for policies where company name matches
     const policiesByCompany = await EmployeeCompensationPolicy.findAll({
       include: [
         {
@@ -356,6 +353,7 @@ exports.searchPolicies = async (req, res) => {
       order: [['created_at', 'DESC']]
     });
 
+    // Search for policies where insurance company name matches
     const policiesByInsuranceCompany = await EmployeeCompensationPolicy.findAll({
       include: [
         {

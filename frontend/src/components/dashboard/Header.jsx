@@ -8,6 +8,7 @@ import SearchBar from "../common/SearchBar/SearchBar";
 const Header = ({ isCollapsed, onSearch }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const { user, logout } = useAuth();
   const profileMenuRef = useRef(null);
 
@@ -59,6 +60,11 @@ const Header = ({ isCollapsed, onSearch }) => {
     }
   };
 
+  const handleSearch = (searchQuery) => {
+    setIsSearching(searchQuery.length >= 3);
+    onSearch?.(searchQuery);
+  };
+
   return (
     <header className={`header ${isCollapsed ? "sidebar-collapsed" : ""}`}>
       <div className="header-container">
@@ -67,9 +73,16 @@ const Header = ({ isCollapsed, onSearch }) => {
           <h2 className="header-title">Dashboard</h2>
         </div>
 
-        {/* Add SearchBar here */}
+        {/* Center - Enhanced SearchBar */}
         <div className="header-searchbar">
-          <SearchBar onSearch={onSearch} placeholder="Search..." minChars={3} />
+          <SearchBar 
+            onSearch={handleSearch}
+            placeholder="Search companies, policies, users..."
+            minChars={3}
+            showClearButton={true}
+            showLoading={isSearching}
+            className="header-searchbar-component"
+          />
         </div>
 
         {/* Right - Profile */}

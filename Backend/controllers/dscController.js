@@ -275,10 +275,10 @@ exports.searchDSCs = async (req, res) => {
 
         console.log(`[DSCController] Searching DSCs with query: "${q}"`);
 
+        // Search in main DSC fields
         const dscs = await DSC.findAll({
             where: {
                 [Op.or]: [
-                    sequelize.where(sequelize.fn('LOWER', sequelize.col('certification_name')), 'LIKE', `%${q.toLowerCase()}%`),
                     sequelize.where(sequelize.fn('LOWER', sequelize.col('DSC.certification_name')), 'LIKE', `%${q.toLowerCase()}%`)
                 ]
             },
@@ -286,22 +286,18 @@ exports.searchDSCs = async (req, res) => {
                 {
                     model: Company,
                     as: 'company',
-                    attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
-                    required: false,
-                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('company.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+                    attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
                 },
                 {
                     model: Consumer,
                     as: 'consumer',
-                    attributes: ['consumer_id', 'name', 'email', 'phone_number'],
-                    required: false,
-                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumer.name')), 'LIKE', `%${q.toLowerCase()}%`)
+                    attributes: ['consumer_id', 'name', 'email', 'phone_number']
                 }
             ],
             order: [['created_at', 'DESC']]
         });
 
-        // Also search for DSCs where the company or consumer name matches, even if certification name doesn't
+        // Search for DSCs where company name matches
         const dscsByCompany = await DSC.findAll({
             include: [
                 {
@@ -310,13 +306,24 @@ exports.searchDSCs = async (req, res) => {
                     attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
                     required: true,
                     where: sequelize.where(sequelize.fn('LOWER', sequelize.col('company.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+                },
+                {
+                    model: Consumer,
+                    as: 'consumer',
+                    attributes: ['consumer_id', 'name', 'email', 'phone_number']
                 }
             ],
             order: [['created_at', 'DESC']]
         });
 
+        // Search for DSCs where consumer name matches
         const dscsByConsumer = await DSC.findAll({
             include: [
+                {
+                    model: Company,
+                    as: 'company',
+                    attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
+                },
                 {
                     model: Consumer,
                     as: 'consumer',

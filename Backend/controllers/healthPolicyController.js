@@ -344,44 +344,39 @@ exports.searchPolicies = async (req, res) => {
 
     console.log(`[HealthPolicyController] Searching policies with query: "${q}"`);
 
+    // Search in main policy fields
     const policies = await HealthPolicy.findAll({
       where: {
         [Op.or]: [
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('policy_number')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('proposer_name')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('mobile_number')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('plan_name')), 'LIKE', `%${q.toLowerCase()}%`),
-          sequelize.where(sequelize.fn('LOWER', sequelize.col('medical_cover')), 'LIKE', `%${q.toLowerCase()}%`)
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('HealthPolicy.policy_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('HealthPolicy.proposer_name')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('HealthPolicy.email')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('HealthPolicy.mobile_number')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('HealthPolicy.plan_name')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('HealthPolicy.medical_cover')), 'LIKE', `%${q.toLowerCase()}%`)
         ]
       },
       include: [
         {
           model: Company,
           as: 'companyPolicyHolder',
-          attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
-          required: false,
-          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('companyPolicyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
         },
         {
           model: Consumer,
           as: 'consumerPolicyHolder',
-          attributes: ['consumer_id', 'name', 'email', 'phone_number'],
-          required: false,
-          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumerPolicyHolder.name')), 'LIKE', `%${q.toLowerCase()}%`)
+          attributes: ['consumer_id', 'name', 'email', 'phone_number']
         },
         {
           model: InsuranceCompany,
           as: 'provider',
-          attributes: ['id', 'name'],
-          required: false,
-          where: sequelize.where(sequelize.fn('LOWER', sequelize.col('provider.name')), 'LIKE', `%${q.toLowerCase()}%`)
+          attributes: ['id', 'name']
         }
       ],
       order: [['created_at', 'DESC']]
     });
 
-    // Also search for policies where the company or consumer name matches, even if other fields don't
+    // Search for policies where company name matches
     const policiesByCompany = await HealthPolicy.findAll({
       include: [
         {
@@ -392,6 +387,11 @@ exports.searchPolicies = async (req, res) => {
           where: sequelize.where(sequelize.fn('LOWER', sequelize.col('companyPolicyHolder.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
         },
         {
+          model: Consumer,
+          as: 'consumerPolicyHolder',
+          attributes: ['consumer_id', 'name', 'email', 'phone_number']
+        },
+        {
           model: InsuranceCompany,
           as: 'provider',
           attributes: ['id', 'name']
@@ -400,8 +400,14 @@ exports.searchPolicies = async (req, res) => {
       order: [['created_at', 'DESC']]
     });
 
+    // Search for policies where consumer name matches
     const policiesByConsumer = await HealthPolicy.findAll({
       include: [
+        {
+          model: Company,
+          as: 'companyPolicyHolder',
+          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
+        },
         {
           model: Consumer,
           as: 'consumerPolicyHolder',
@@ -418,6 +424,7 @@ exports.searchPolicies = async (req, res) => {
       order: [['created_at', 'DESC']]
     });
 
+    // Search for policies where insurance company name matches
     const policiesByInsuranceCompany = await HealthPolicy.findAll({
       include: [
         {

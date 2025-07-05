@@ -26,6 +26,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .header-nav {
@@ -56,6 +57,16 @@
   gap: 20px;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: -0.025em;
 }
 
 .profile-button {
@@ -71,6 +82,64 @@
   background-color: rgba(26, 66, 128, 0.8);
   color: #ffffff;
   transform: translateY(-1px);
+}
+
+/* Enhanced SearchBar Styling */
+.header-searchbar {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 1rem;
+}
+
+.header-searchbar-component {
+  width: 100%;
+  max-width: 500px;
+}
+
+.header-searchbar-component .search-bar-container {
+  width: 100%;
+}
+
+.header-searchbar-component .search-bar-input-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.header-searchbar-component .search-bar-container.focused .search-bar-input-wrapper {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 1);
+}
+
+.header-searchbar-component .search-bar-input {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.header-searchbar-component .search-bar-input::placeholder {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.header-searchbar-component .search-bar-icon {
+  color: #6b7280;
+}
+
+.header-searchbar-component .search-bar-container.focused .search-bar-icon {
+  color: #3b82f6;
+}
+
+.header-searchbar-component .search-bar-hint,
+.header-searchbar-component .search-bar-status {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .header-search {
@@ -190,4 +259,54 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .header-searchbar {
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+  }
+  
+  .header > div {
+    gap: 0.5rem;
+  }
+  
+  .header-title {
+    font-size: 1.25rem;
+  }
+  
+  .header-searchbar {
+    max-width: 300px;
+    margin: 0 0.5rem;
+  }
+  
+  .header-actions-right {
+    gap: 4px;
+  }
+  
+  .header-nav-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-searchbar {
+    display: none;
+  }
+  
+  .header > div {
+    justify-content: space-between;
+  }
+  
+  .head {
+    flex: 1;
+  }
 }

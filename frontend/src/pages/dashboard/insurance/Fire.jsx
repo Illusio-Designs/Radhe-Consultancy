@@ -7,7 +7,7 @@ import {
   BiUpload,
 } from "react-icons/bi";
 import { firePolicyAPI, insuranceCompanyAPI } from "../../../services/api";
-import Table from "../../../components/common/Table/Table";
+import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Pagination from "../../../components/common/Pagination/Pagination";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
@@ -730,12 +730,6 @@ function Fire({ searchQuery = "" }) {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    pageSize: 10
-  });
 
   useEffect(() => {
     fetchPolicies();
@@ -743,31 +737,34 @@ function Fire({ searchQuery = "" }) {
 
   // Handle search when searchQuery changes
   useEffect(() => {
+    console.log('Fire: searchQuery changed:', searchQuery);
     if (searchQuery && searchQuery.length >= 3) {
+      console.log('Fire: Triggering server search for:', searchQuery);
       handleSearchPolicies(searchQuery);
     } else if (searchQuery === "") {
+      console.log('Fire: Clearing search, fetching all policies');
       fetchPolicies();
     }
   }, [searchQuery]);
 
-  const fetchPolicies = async (page = 1, pageSize = 10) => {
+  const fetchPolicies = async () => {
     try {
       setLoading(true);
-      const response = await firePolicyAPI.getAllPolicies({ page, limit: pageSize });
+      console.log('Fire: Fetching all policies');
+      const response = await firePolicyAPI.getAllPolicies();
+      console.log('Fire: Fetch response:', response);
       if (response && Array.isArray(response.policies)) {
         setPolicies(response.policies);
-        setPagination({
-          currentPage: response.currentPage || 1,
-          totalPages: response.totalPages || 1,
-          totalItems: response.totalItems || 0,
-          pageSize: pageSize
-        });
+        setError(null);
+      } else if (Array.isArray(response)) {
+        setPolicies(response);
         setError(null);
       } else {
         setError("Invalid data format received from server");
         setPolicies([]);
       }
     } catch (err) {
+      console.error('Fire: Error fetching policies:', err);
       setError("");
       setPolicies([]);
     } finally {
@@ -779,7 +776,9 @@ function Fire({ searchQuery = "" }) {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fire: Searching policies with query:', query);
       const response = await firePolicyAPI.searchPolicies({ q: query });
+      console.log('Fire: Search response:', response);
       
       // Handle both expected format and direct array response
       if (response && response.success && Array.isArray(response.policies)) {
@@ -791,13 +790,13 @@ function Fire({ searchQuery = "" }) {
         setError(null);
       } else {
         console.error("Invalid search response format:", response);
-        setError("Invalid data format received from server");
-        setPolicies([]);
+        // Fallback to client-side search if server search fails
+        console.log('Fire: Server search failed, falling back to client-side search');
       }
     } catch (err) {
       console.error("Error searching fire policies:", err);
-      setError("Failed to search fire policies");
-      setPolicies([]);
+      // Fallback to client-side search if server search fails
+      console.log('Fire: Server search error, falling back to client-side search');
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -805,12 +804,74 @@ function Fire({ searchQuery = "" }) {
     }
   };
 
+  // Filter policies based on search query (client-side fallback)
+  const filteredPolicies = React.useMemo(() => {
+    console.log('Fire: Filtering policies with searchQuery:', searchQuery);
+    console.log('Fire: Total policies to filter:', policies.length);
+    
+    if (!searchQuery || searchQuery.length < 3) {
+      console.log('Fire: No search query or too short, returning all policies');
+      return policies;
+    }
+
+    const filtered = policies.filter((policy) => {
+      const searchLower = searchQuery.toLowerCase();
+      
+      // Search in policy fields
+      const policyFields = [
+        policy.policy_number,
+        policy.business_type,
+        policy.customer_type,
+        policy.email,
+        policy.mobile_number,
+        policy.proposer_name,
+        policy.property_address,
+        policy.property_type,
+        policy.net_premium,
+        policy.remarks
+      ].some(field => field && field.toString().toLowerCase().includes(searchLower));
+
+      // Search in company name
+      const companyName = policy.companyPolicyHolder?.company_name ||
+                         policy.company?.company_name ||
+                         policy.company_name;
+      const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
+
+      // Search in consumer name
+      const consumerName = policy.consumerPolicyHolder?.name ||
+                          policy.consumer?.name ||
+                          policy.consumer_name;
+      const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
+
+      // Search in insurance company name
+      const insuranceCompanyName = policy.provider?.name;
+      const insuranceMatch = insuranceCompanyName && insuranceCompanyName.toLowerCase().includes(searchLower);
+
+      const matches = policyFields || companyMatch || consumerMatch || insuranceMatch;
+      
+      if (matches) {
+        console.log('Fire: Policy matches search:', {
+          id: policy.id,
+          policy_number: policy.policy_number,
+          companyName,
+          consumerName,
+          insuranceCompanyName
+        });
+      }
+      
+      return matches;
+    });
+    
+    console.log('Fire: Filtered policies count:', filtered.length);
+    return filtered;
+  }, [policies, searchQuery]);
+
   const handleDelete = async (policyId) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
       try {
         await firePolicyAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
-        await fetchPolicies(pagination.currentPage, pagination.pageSize);
+        await fetchPolicies();
       } catch (err) {
         setError("Failed to delete policy");
         toast.error("Failed to delete policy");
@@ -829,16 +890,8 @@ function Fire({ searchQuery = "" }) {
   };
 
   const handlePolicyUpdated = async () => {
-    await fetchPolicies(pagination.currentPage, pagination.pageSize);
+    await fetchPolicies();
     handleModalClose();
-  };
-
-  const handlePageChange = async (page) => {
-    await fetchPolicies(page, pagination.pageSize);
-  };
-
-  const handlePageSizeChange = async (newPageSize) => {
-    await fetchPolicies(1, newPageSize);
   };
 
   const columns = [
@@ -870,7 +923,6 @@ function Fire({ searchQuery = "" }) {
     { key: "customer_type", label: "Customer Type", sortable: true },
     { key: "email", label: "Email", sortable: true },
     { key: "mobile_number", label: "Mobile Number", sortable: true },
-    { key: "total_sum_insured", label: "Total Sum Insured", sortable: true },
     { key: "net_premium", label: "Net Premium", sortable: true },
     { key: "status", label: "Status", sortable: true },
     {
@@ -899,56 +951,45 @@ function Fire({ searchQuery = "" }) {
 
   return (
     <div className="insurance">
-    <div className="insurance-container">
-      <div className="insurance-content">
-        <div className="insurance-header">
-          <h1 className="insurance-title">Fire Insurance Policies</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<BiPlus />}
-          >
-            Add Policy
-          </Button>
-        </div>
-        {error && (
-          <div className="insurance-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Fire Insurance Policies</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Policy
+            </Button>
           </div>
-        )}
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <>
-            <Table 
-              data={policies} 
-              columns={columns} 
-              pagination={{ currentPage: pagination.currentPage, pageSize: pagination.pageSize }}
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredPolicies}
+              columns={columns}
+              defaultPageSize={10}
             />
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              pageSize={pagination.pageSize}
-              totalItems={pagination.totalItems}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              pageSizeOptions={[10, 20, 50, 100]}
-            />
-          </>
-        )}
-      </div>
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedPolicy ? "Edit Policy" : "Add New Policy"}
-      >
-        <PolicyForm
-          policy={selectedPolicy}
+          )}
+        </div>
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onPolicyUpdated={handlePolicyUpdated}
-        />
-      </Modal>
-    </div>
+          title={selectedPolicy ? "Edit Policy" : "Add New Policy"}
+        >
+          <PolicyForm
+            policy={selectedPolicy}
+            onClose={handleModalClose}
+            onPolicyUpdated={handlePolicyUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }
