@@ -493,7 +493,6 @@ const CombinedDashboard = () => {
           {(showAdmin || showConsumer) && <ConsumerStatsCard stats={stats.consumer_stats} />}
           {(showAdmin || showInsurance) && <AllInsuranceCard stats={stats.insurance_stats} />}
           {(showAdmin || showDSC) && <DSCStatsCard stats={stats.dsc_stats} />}
-          {(showAdmin || showVendorManager) && <CompanyStatsCard stats={stats} />}
           {(showAdmin || showUserManager) && <UserRoleStatsCard stats={stats.user_role_stats || {}} />}
         </div>
       </div>
