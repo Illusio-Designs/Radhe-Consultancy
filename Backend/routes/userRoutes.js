@@ -10,20 +10,23 @@ const fs = require('fs');
 // Protected routes with authentication
 router.get('/', auth, userController.getAllUsers);
 
-// Search users (must be before /:userId routes)
+// Search users (must be before /:id routes)
 router.get('/search', auth, userController.searchUsers);
 
-// Get current user info (must be before /:userId routes)
+// Get current user info (must be before /:id routes)
 router.get('/me', auth, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
     
     // Get user from database with role information
-    const user = await User.findByPk(userId, {
-      attributes: ['user_id', 'email', 'username', 'role_id', 'contact_number', 'profile_image'],
+    const user = await User.findOne({
+      where: { user_id: userId },
+      attributes: ['user_id', 'email', 'username', 'contact_number', 'profile_image'],
       include: [{
         model: Role,
-        attributes: ['role_name']
+        as: 'roles',
+        attributes: ['role_name'],
+        through: { attributes: ['is_primary'] }
       }]
     });
     
@@ -31,16 +34,20 @@ router.get('/me', auth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Get primary role or first role
+    const primaryRole = user.roles.find(role => role.UserRole?.is_primary) || user.roles[0];
+    const roleName = primaryRole ? primaryRole.role_name : 'User';
+
     // Check if user has a company or consumer profile
     let companyInfo = null;
     let consumerInfo = null;
 
-    if (user.Role.role_name === 'company') {
+    if (roleName === 'Company') {
       companyInfo = await Company.findOne({ 
         where: { user_id: userId },
         attributes: ['company_id', 'company_name', 'owner_name', 'company_email', 'contact_number']
       });
-    } else if (user.Role.role_name === 'consumer') {
+    } else if (roleName === 'Consumer') {
       consumerInfo = await Consumer.findOne({ 
         where: { user_id: userId },
         attributes: ['consumer_id', 'name', 'email', 'phone_number']
@@ -52,8 +59,8 @@ router.get('/me', auth, async (req, res) => {
         user_id: user.user_id,
         email: user.email,
         username: user.username,
-        role_id: user.role_id,
-        role_name: user.Role.role_name,
+        role_name: roleName,
+        roles: user.roles.map(r => r.role_name),
         contact_number: user.contact_number,
         imageUrl: user.profile_image,
         profile: companyInfo || consumerInfo
@@ -69,11 +76,11 @@ router.get('/me', auth, async (req, res) => {
 router.post('/change-password', auth, userController.changePassword);
 
 // Other user routes
-router.get('/:userId', auth, userController.getUserById);
+router.get('/:id', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
-router.put('/:userId', auth, uploadProfileImage, userController.updateUser);
-router.delete('/:userId', auth, userController.deleteUser);
-router.get('/:userId/permissions', auth, userController.getUserPermissions);
+router.put('/:id', auth, uploadProfileImage, userController.updateUser);
+router.delete('/:id', auth, userController.deleteUser);
+router.get('/:id/permissions', auth, userController.getUserPermissions);
 
 // Role-specific user routes
 router.get('/company', auth, userController.getCompanyUsers);

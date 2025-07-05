@@ -1,4 +1,4 @@
-const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC } = require('../models');
+const { Company, EmployeeCompensationPolicy, Consumer, User, Role, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, UserRole } = require('../models');
 const { Op } = require('sequelize');
 
 const getCompanyStatistics = async (req, res) => {
@@ -62,7 +62,10 @@ const getCompanyStatistics = async (req, res) => {
     const roles = await Role.findAll();
     const userRoleStats = {};
     for (const role of roles) {
-      const count = await User.count({ where: { role_id: role.id } });
+      // Count users with this role using the UserRole junction table
+      const count = await UserRole.count({ 
+        where: { role_id: role.id } 
+      });
       userRoleStats[role.role_name] = count;
     }
 

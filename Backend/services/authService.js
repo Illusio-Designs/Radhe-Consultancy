@@ -16,7 +16,11 @@ class AuthService {
   
       const user = await User.findOne({
         where: { email },
-        include: [{ model: Role }]
+        include: [{ 
+          model: Role, 
+          as: 'roles',
+          through: { attributes: ['is_primary', 'assigned_at'] }
+        }]
       });
   
       if (!user) {
@@ -28,12 +32,19 @@ class AuthService {
         throw new Error('Incorrect password');
       }
   
-      const token = generateToken(user.user_id, user.Role.role_name);
+      // Get primary role or first role
+      const primaryRole = user.roles.find(role => role.UserRole.is_primary) || user.roles[0];
+      const token = generateToken(user.user_id, primaryRole.role_name);
       return { 
         user: {
           user_id: user.user_id,
           email: user.email,
-          role: user.Role.role_name
+          roles: user.roles.map(role => ({
+            id: role.id,
+            role_name: role.role_name,
+            is_primary: role.UserRole.is_primary
+          })),
+          primary_role: primaryRole.role_name
         },
         token 
       };
@@ -116,7 +127,14 @@ class AuthService {
 
     let user = await User.findOne({
       where: { email: payload.email },
-      include: [UserType, Role]
+      include: [
+        UserType, 
+        { 
+          model: Role, 
+          as: 'roles',
+          through: { attributes: ['is_primary', 'assigned_at'] }
+        }
+      ]
     });
 
     if (!user) {
@@ -125,18 +143,36 @@ class AuthService {
         username: payload.name,
         google_id: payload.sub,
         profile_image: payload.picture,
-        user_type_id: officeType.user_type_id,
-        role_id: 2 // Default to User role
+        user_type_id: officeType.user_type_id
       });
+      
+      // Assign default User role
+      const defaultRole = await Role.findOne({ where: { role_name: 'User' } });
+      if (defaultRole) {
+        await user.addRole(defaultRole, { 
+          through: { 
+            is_primary: true,
+            assigned_by: user.user_id 
+          } 
+        });
+      }
       
       // Fetch the complete user data with associations
       user = await User.findOne({
         where: { user_id: user.user_id },
-        include: [UserType, Role]
+        include: [
+          UserType, 
+          { 
+            model: Role, 
+            as: 'roles',
+            through: { attributes: ['is_primary', 'assigned_at'] }
+          }
+        ]
       });
     }
 
-    const token = generateToken(user.user_id, user.Role.role_name);
+    const primaryRole = user.roles.find(role => role.UserRole.is_primary) || user.roles[0];
+    const token = generateToken(user.user_id, primaryRole.role_name);
     return { user, token };
   }
 
@@ -160,11 +196,19 @@ class AuthService {
       // First check if user exists with this Google ID
       const existingUser = await User.findOne({
         where: { google_id: payload.sub },
-        include: [UserType, Role]
+        include: [
+          UserType, 
+          { 
+            model: Role, 
+            as: 'roles',
+            through: { attributes: ['is_primary', 'assigned_at'] }
+          }
+        ]
       });
 
       if (existingUser) {
-        const token = generateToken(existingUser.user_id, existingUser.Role.role_name);
+        const primaryRole = existingUser.roles.find(role => role.UserRole.is_primary) || existingUser.roles[0];
+        const token = generateToken(existingUser.user_id, primaryRole.role_name);
         return {
           user: existingUser,
           token,
@@ -184,9 +228,19 @@ class AuthService {
           username: payload.name,
           google_id: payload.sub,
           profile_image: payload.picture,
-          user_type_id: companyUser.user_type_id,
-          role_id: 2 // Default to User role
+          user_type_id: companyUser.user_type_id
         });
+
+        // Assign Company role
+        const companyRole = await Role.findOne({ where: { role_name: 'Company' } });
+        if (companyRole) {
+          await user.addRole(companyRole, { 
+            through: { 
+              is_primary: true,
+              assigned_by: user.user_id 
+            } 
+          });
+        }
 
         const token = generateToken(user.user_id, 'user');
         return {
@@ -208,9 +262,19 @@ class AuthService {
           username: payload.name,
           google_id: payload.sub,
           profile_image: payload.picture,
-          user_type_id: consumerUser.user_type_id,
-          role_id: 2 // Default to User role
+          user_type_id: consumerUser.user_type_id
         });
+
+        // Assign Consumer role
+        const consumerRole = await Role.findOne({ where: { role_name: 'Consumer' } });
+        if (consumerRole) {
+          await user.addRole(consumerRole, { 
+            through: { 
+              is_primary: true,
+              assigned_by: user.user_id 
+            } 
+          });
+        }
 
         const token = generateToken(user.user_id, 'user');
         return {
@@ -234,9 +298,19 @@ class AuthService {
         username: payload.name,
         google_id: payload.sub,
         profile_image: payload.picture,
-        user_type_id: officeType.user_type_id,
-        role_id: 2 // Default to User role
+        user_type_id: officeType.user_type_id
       });
+
+      // Assign default User role
+      const defaultRole = await Role.findOne({ where: { role_name: 'User' } });
+      if (defaultRole) {
+        await user.addRole(defaultRole, { 
+          through: { 
+            is_primary: true,
+            assigned_by: user.user_id 
+          } 
+        });
+      }
 
       const token = generateToken(user.user_id, 'user');
       return {

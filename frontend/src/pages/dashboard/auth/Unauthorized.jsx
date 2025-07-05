@@ -24,7 +24,7 @@ const Unauthorized = () => {
               You are logged in as: <strong>{user.email}</strong>
             </p>
             <p>
-              Role: <strong>{user.role}</strong>
+              Role: <strong>{user.roles ? user.roles.join(', ') : ''}</strong>
             </p>
           </div>
         ) : (

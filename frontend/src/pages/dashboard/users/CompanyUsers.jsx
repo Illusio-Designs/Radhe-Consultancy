@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiEdit2, FiTrash2, FiAlertCircle } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle } from "react-icons/fi";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
@@ -9,42 +9,40 @@ import "../../../styles/pages/dashboard/users/User.css";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useData } from "../../../contexts/DataContext";
 
-// UserForm component remains the same as in User.jsx
+// UserForm component
 const UserForm = ({ user, onClose, onUserUpdated }) => {
   const [formData, setFormData] = useState({
     username: user?.username || "",
     email: user?.email || "",
     password: "",
-    role_id: user?.role_id ? String(user.role_id) : "",
-    user_type_id: user?.user_type_id || 1,
     status: user?.status || "Active",
   });
   const [error, setError] = useState(null);
-  const { roles } = useData();
-  const companyRole = roles.find((role) => role.role_name === "Company");
 
   useEffect(() => {
-    if (companyRole && !user) {
-      setFormData((prev) => ({
-        ...prev,
-        role_id: String(companyRole.id),
-      }));
+    if (user) {
+      setFormData({
+        username: user.username || "",
+        email: user.email || "",
+        password: "",
+        status: user.status || "Active",
+      });
+    } else {
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        status: "Active",
+      });
     }
-  }, [companyRole, user]);
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!companyRole) {
-        setError("Company role not found");
-        return;
-      }
-
       const userData = {
         username: formData.username,
         email: formData.email,
-        role_id: Number(companyRole.id),
-        user_type_id: formData.user_type_id,
         status: formData.status,
       };
 
@@ -78,7 +76,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
               setFormData({ ...formData, username: e.target.value })
             }
             className="user-management-form-input"
-            placeholder="Enter Principal Owner Name"
+            placeholder="Enter Owner Name"
             required
           />
         </div>
@@ -92,7 +90,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
               setFormData({ ...formData, email: e.target.value })
             }
             className="user-management-form-input"
-            placeholder="Enter Company Email"
+            placeholder="Enter Email"
             required
           />
         </div>
@@ -112,23 +110,6 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             />
           </div>
         )}
-
-        <div className="user-management-form-group">
-          <select
-            name="role_id"
-            value={formData.role_id}
-            onChange={(e) =>
-              setFormData({ ...formData, role_id: e.target.value })
-            }
-            className="user-management-form-input"
-            required
-            disabled
-          >
-            <option value={companyRole?.id}>
-              {companyRole?.role_name || "Company"}
-            </option>
-          </select>
-        </div>
 
         <div className="user-management-form-group">
           <select
@@ -167,10 +148,41 @@ function CompanyUserList({ searchQuery = "" }) {
   const [filters, setFilters] = useState({ status: "" });
   const [localLoading, setLocalLoading] = useState(true);
 
-  const companyUsers = users.filter((user) => user.role_id === 5); // Filter for company users
+  // Filter users to show only Company users
+  const companyUsers = users.filter((user) => {
+    // Check if user has Company role in the new multiple roles structure
+    if (user.roles && user.roles.length > 0) {
+      return user.roles.some(role => role === "Company");
+    }
 
-  const getRoleName = (roleId) => {
-    return roleId === 5 ? "Company" : "Unknown";
+    // Fallback for old data structure
+    const roleName = user.Role?.role_name;
+    if (roleName) {
+      return roleName === "Company";
+    }
+
+    // If role is not in user object, try to find it in roles array
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return userRole && userRole.role_name === "Company";
+  });
+
+  const getRoleNames = (user) => {
+    // Check for new multiple roles structure
+    if (user.roles && user.roles.length > 0) {
+      return user.roles.map(role => {
+        const isPrimary = role.UserRole?.is_primary;
+        return `${role}${isPrimary ? ' (Primary)' : ''}`;
+      }).join(", ");
+    }
+
+    // Fallback for old single role structure
+    if (user.Role?.role_name) {
+      return user.Role.role_name;
+    }
+
+    // If role is not in user object, try to find it in roles array
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return userRole ? userRole.role_name : "Unknown";
   };
 
   const filteredUsers = companyUsers.filter((user) => {
@@ -198,6 +210,7 @@ function CompanyUserList({ searchQuery = "" }) {
   };
 
   const handleEdit = (user) => {
+    console.log("Editing company user:", user); // Debug log
     setSelectedUser(user);
     setShowModal(true);
   };
@@ -225,10 +238,10 @@ function CompanyUserList({ searchQuery = "" }) {
     { key: "username", label: "Owner Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     {
-      key: "role_id",
-      label: "Role",
+      key: "roles",
+      label: "Roles",
       sortable: true,
-      render: (value) => getRoleName(value),
+      render: (_, user) => getRoleNames(user),
     },
     {
       key: "status",
@@ -287,7 +300,7 @@ function CompanyUserList({ searchQuery = "" }) {
     initializeData();
   }, []);
 
-  if (!user || !['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(user.role_name || user.role)) {
+        if (!user || !user.roles?.some(role => ['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(role))) {
     return (
       <div className="user-management-error">
         <FiAlertCircle className="inline mr-2" /> You don't have permission to

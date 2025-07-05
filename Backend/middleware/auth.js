@@ -17,7 +17,9 @@ const auth = async (req, res, next) => {
       where: { user_id: decoded.userId },
       include: [{
         model: Role,
-        attributes: ['role_name']
+        as: 'roles',
+        attributes: ['role_name'],
+        through: { attributes: ['is_primary'] }
       }]
     });
 
@@ -25,12 +27,17 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
+    // Get primary role or first role
+    const primaryRole = user.roles.find(role => role.UserRole?.is_primary) || user.roles[0];
+    const roleName = primaryRole ? primaryRole.role_name : 'User';
+
     // Add user and role information to request
     req.user = {
       user_id: user.user_id,
       email: user.email,
-      role_id: user.role_id,
-      role_name: user.Role.role_name
+      role_name: roleName,
+      roles: user.roles.map(role => role.role_name),
+      allRoles: user.roles
     };
 
     next();
@@ -49,13 +56,20 @@ const checkRole = (allowedRoles) => {
       });
     }
 
-    const userRole = req.user.role_name;
-    const normalizedUserRole = userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase();
+    // Check if user has any of the allowed roles
+    const userRoles = req.user.roles || [];
+    const normalizedUserRoles = userRoles.map(role => 
+      role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
+    );
     const normalizedAllowedRoles = allowedRoles.map(role => 
       role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
     );
     
-    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
+    const hasAllowedRole = normalizedUserRoles.some(userRole => 
+      normalizedAllowedRoles.includes(userRole)
+    );
+    
+    if (!hasAllowedRole) {
       return res.status(403).json({
         success: false,
         error: 'Access denied: insufficient permissions'

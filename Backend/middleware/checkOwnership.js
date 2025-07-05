@@ -1,4 +1,4 @@
-const { User, Company, Consumer } = require('../models');
+const { User, Company, Consumer, Role } = require('../models');
 
 const checkOwnership = (type) => {
   return async (req, res, next) => {
@@ -9,8 +9,27 @@ const checkOwnership = (type) => {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
+      // Get user with roles to determine primary role
+      const userWithRoles = await User.findOne({
+        where: { user_id: user.user_id },
+        include: [{
+          model: Role,
+          as: 'roles',
+          attributes: ['role_name'],
+          through: { attributes: ['is_primary'] }
+        }]
+      });
+
+      if (!userWithRoles || !userWithRoles.roles || userWithRoles.roles.length === 0) {
+        return res.status(403).json({ error: 'Role not found' });
+      }
+
+      // Get primary role or first role
+      const primaryRole = userWithRoles.roles.find(role => role.UserRole?.is_primary) || userWithRoles.roles[0];
+      const roleName = primaryRole.role_name;
+
       // Normalize role names
-      const normalizedRoleName = user.Role.role_name.charAt(0).toUpperCase() + user.Role.role_name.slice(1).toLowerCase();
+      const normalizedRoleName = roleName.charAt(0).toUpperCase() + roleName.slice(1).toLowerCase();
 
       // Admin can access all data
       if (normalizedRoleName === 'Admin') {

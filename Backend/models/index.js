@@ -5,6 +5,7 @@ const User = require('./userModel');
 const Role = require('./roleModel');
 const Permission = require('./permissionModel');
 const RolePermission = require('./rolePermissionModel');
+const UserRole = require('./userRoleModel');
 const Company = require('./companyModel');
 const Consumer = require('./consumerModel');
 const InsuranceCompany = require('./insuranceCompanyModel');
@@ -17,8 +18,20 @@ const DSC = require('./dscModel');
 const ReminderLog = require('./reminderLogModel');
 
 // Define associations
-User.belongsTo(Role, { foreignKey: 'role_id', targetKey: 'id' });
-Role.hasMany(User, { foreignKey: 'role_id', sourceKey: 'id' });
+// Many-to-many relationship between User and Role through UserRole
+User.belongsToMany(Role, { 
+  through: UserRole,
+  foreignKey: 'user_id',
+  otherKey: 'role_id',
+  as: 'roles'
+});
+
+Role.belongsToMany(User, { 
+  through: UserRole,
+  foreignKey: 'role_id',
+  otherKey: 'user_id',
+  as: 'users'
+});
 
 // Many-to-many relationship between Role and Permission
 Role.belongsToMany(Permission, { 
@@ -188,6 +201,7 @@ module.exports = {
   Role,
   Permission,
   RolePermission,
+  UserRole,
   Company,
   Consumer,
   InsuranceCompany,

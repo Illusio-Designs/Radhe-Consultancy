@@ -221,3 +221,125 @@
   width: 100%;
   margin: 2rem auto;
 }
+
+/* User Role Management Styles */
+.user-role-assignment {
+  padding: 20px;
+}
+
+.user-role-assignment h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.user-role-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.user-role-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.user-role-section h4 {
+  margin-bottom: 15px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.user-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-role-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.user-role-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.primary-role-icon {
+  color: #ffc107;
+  font-size: 16px;
+}
+
+.non-primary-star {
+  color: #6c757d;
+  opacity: 0.6;
+}
+
+.user-role-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.user-role-actions-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.user-management-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.user-management-role-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-management-role-checkbox:hover {
+  background: #e9ecef;
+}
+
+.user-management-role-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .user-role-sections {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .user-management-roles-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-role-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .user-role-actions {
+    align-self: flex-end;
+  }
+}

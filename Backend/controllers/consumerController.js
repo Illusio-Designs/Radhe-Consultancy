@@ -1,4 +1,5 @@
 const { Consumer, User, Role, sequelize } = require('../models');
+const userService = require('../services/userService');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs').promises;
@@ -35,11 +36,18 @@ const consumerController = {
       if (!user) {
         // Create new user with consumer role
         const randomPassword = Math.random().toString(36).slice(-8);
-        user = await User.create({
+        
+        // Get consumer role
+        const consumerRole = await Role.findOne({ where: { role_name: 'Consumer' } });
+        if (!consumerRole) {
+          throw new Error('Consumer role not found');
+        }
+
+        user = await userService.createUser({
           username: formData.name,
           email: formData.email,
           password: randomPassword,
-          role_id: 6 // consumer role
+          role_ids: [consumerRole.id]
         });
       }
 
@@ -67,8 +75,7 @@ const consumerController = {
           user: {
             user_id: user.user_id,
             username: user.username,
-            email: user.email,
-            role_id: user.role_id
+            email: user.email
           }
         }
       });
@@ -89,7 +96,9 @@ const consumerController = {
           model: User,
           include: [{
             model: Role,
-            attributes: ['role_name']
+            as: 'roles',
+            attributes: ['role_name'],
+            through: { attributes: ['is_primary'] }
           }]
         }]
       });
@@ -113,7 +122,9 @@ const consumerController = {
           model: User,
           include: [{
             model: Role,
-            attributes: ['role_name']
+            as: 'roles',
+            attributes: ['role_name'],
+            through: { attributes: ['is_primary'] }
           }]
         }]
       });

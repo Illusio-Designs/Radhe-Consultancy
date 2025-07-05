@@ -7,13 +7,20 @@ const checkUserRole = (allowedRoles) => {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      // Normalize role names
-      const normalizedUserRole = user.Role.role_name.charAt(0).toUpperCase() + user.Role.role_name.slice(1).toLowerCase();
+      // Check if user has any of the allowed roles
+      const userRoles = user.roles || [];
+      const normalizedUserRoles = userRoles.map(role => 
+        role.role_name.charAt(0).toUpperCase() + role.role_name.slice(1).toLowerCase()
+      );
       const normalizedAllowedRoles = allowedRoles.map(role => 
         role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
       );
 
-      if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
+      const hasAllowedRole = normalizedUserRoles.some(userRole => 
+        normalizedAllowedRoles.includes(userRole)
+      );
+
+      if (!hasAllowedRole) {
         return res.status(403).json({ error: 'Access denied: insufficient role permissions' });
       }
 

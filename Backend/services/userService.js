@@ -25,25 +25,53 @@ class UserService {
   // Get all users with their roles
   async getAllUsers() {
     return User.findAll({
-      include: [{ model: Role }]
+      include: [{ 
+        model: Role, 
+        as: 'roles',
+        through: { attributes: ['is_primary', 'assigned_at'] }
+      }]
     });
   }
 
   // Get user by ID
   async getUserById(userId) {
     return User.findByPk(userId, {
-      include: [{ model: Role }]
+      include: [{ 
+        model: Role, 
+        as: 'roles',
+        through: { attributes: ['is_primary', 'assigned_at'] }
+      }]
     });
   }
 
   // Create new user
   async createUser(userData) {
-    const role = await Role.findByPk(userData.role_id);
-    if (!role) {
-      throw new Error('Role not found');
+    const { role_ids, ...userInfo } = userData;
+    
+    // Create user first
+    const user = await User.create(userInfo);
+    
+    // Assign roles if provided
+    if (role_ids && role_ids.length > 0) {
+      const roles = await Role.findAll({ where: { id: role_ids } });
+      if (roles.length !== role_ids.length) {
+        throw new Error('One or more roles not found');
+      }
+      
+      // Assign roles with primary role logic
+      for (let i = 0; i < roles.length; i++) {
+        const isPrimary = i === 0; // First role is primary
+        await user.addRole(roles[i], { 
+          through: { 
+            is_primary: isPrimary,
+            assigned_by: user.user_id 
+          } 
+        });
+      }
     }
-
-    return User.create(userData);
+    
+    // Return user with roles
+    return this.getUserById(user.user_id);
   }
 
   // Update user
@@ -65,30 +93,41 @@ class UserService {
 
       console.log('Found user:', user.toJSON());
 
-      // Handle role update separately
-      if (userData.role_id !== undefined) {
-        console.log('Processing role update:', userData.role_id);
-        const role = await Role.findByPk(userData.role_id, { transaction });
-        if (!role) {
-          console.error('Role not found:', userData.role_id);
-          throw new Error('Role not found');
-        }
-        console.log('Found role:', role.toJSON());
+      // Handle role updates separately
+      if (userData.role_ids !== undefined) {
+        console.log('Processing role update:', userData.role_ids);
         
-        // Update role_id using raw update within transaction
-        await User.update(
-          { role_id: userData.role_id },
-          { 
-            where: { user_id: userId },
+        // Remove all existing roles
+        await user.setRoles([], { transaction });
+        
+        // Assign new roles if provided
+        if (userData.role_ids.length > 0) {
+          const roles = await Role.findAll({ 
+            where: { id: userData.role_ids },
             transaction 
+          });
+          if (roles.length !== userData.role_ids.length) {
+            throw new Error('One or more roles not found');
           }
-        );
-        console.log('Role updated successfully');
+          
+          // Assign roles with primary role logic
+          for (let i = 0; i < roles.length; i++) {
+            const isPrimary = i === 0; // First role is primary
+            await user.addRole(roles[i], { 
+              through: { 
+                is_primary: isPrimary,
+                assigned_by: userId 
+              },
+              transaction 
+            });
+          }
+        }
+        console.log('Roles updated successfully');
       }
 
       // Handle other user data updates
       const updateData = { ...userData };
-      delete updateData.role_id; // Remove role_id as it's already handled
+      delete updateData.role_ids; // Remove role_ids as it's already handled
 
       // If password is provided, hash it
       if (updateData.password) {
@@ -110,9 +149,7 @@ class UserService {
       await transaction.commit();
       
       // Fetch the complete updated user with role information
-      const completeUser = await User.findByPk(userId, {
-        include: [{ model: Role }]
-      });
+      const completeUser = await this.getUserById(userId);
       console.log('Final user state:', completeUser.toJSON());
       return completeUser;
     } catch (error) {
@@ -191,6 +228,7 @@ class UserService {
     const user = await User.findByPk(userId, {
       include: [{
         model: Role,
+        as: 'roles',
         include: [{
           model: RolePermission
         }]
@@ -201,7 +239,20 @@ class UserService {
       throw new Error('User not found');
     }
 
-    return user.Role.RolePermissions;
+    // Collect all permissions from all user roles
+    const allPermissions = [];
+    user.roles.forEach(role => {
+      if (role.RolePermissions) {
+        allPermissions.push(...role.RolePermissions);
+      }
+    });
+
+    // Remove duplicates based on permission_id
+    const uniquePermissions = allPermissions.filter((permission, index, self) => 
+      index === self.findIndex(p => p.permission_id === permission.permission_id)
+    );
+
+    return uniquePermissions;
   }
 
   // Verify Reset Token

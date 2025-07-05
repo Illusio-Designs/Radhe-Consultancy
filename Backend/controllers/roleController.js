@@ -199,16 +199,16 @@ class RoleController {
 
   async assignRole(req, res) {
     try {
-      const { user_id, role_id } = req.body;
+      const { user_id, role_id, is_primary = false } = req.body;
       
-      // Verify user exists and is Office type
+      // Verify user exists
       const user = await User.findOne({
         where: { user_id },
         include: [UserType]
       });
   
-      if (!user || user.UserType.type_name !== 'Office') {
-        return res.status(403).json({ error: 'Only Office users can be assigned roles' });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
       }
   
       // Verify role exists
@@ -217,9 +217,53 @@ class RoleController {
         return res.status(404).json({ error: 'Role not found' });
       }
   
-      // Update user role
-      await user.update({ role_id });
-      res.json(user);
+      // Use role service to assign role
+      const roleService = require('../services/roleService');
+      const result = await roleService.assignRoleToUser(user_id, role_id, is_primary, req.user.user_id);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async removeRole(req, res) {
+    try {
+      const { user_id, role_id } = req.params;
+      
+      // Use role service to remove role
+      const roleService = require('../services/roleService');
+      const result = await roleService.removeRoleFromUser(user_id, role_id);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getUserRoles(req, res) {
+    try {
+      const { user_id } = req.params;
+      
+      // Use role service to get user roles
+      const roleService = require('../services/roleService');
+      const roles = await roleService.getUserRoles(user_id);
+      
+      res.json(roles);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async setPrimaryRole(req, res) {
+    try {
+      const { user_id, role_id } = req.body;
+      
+      // Use role service to set primary role
+      const roleService = require('../services/roleService');
+      const result = await roleService.setPrimaryRole(user_id, role_id);
+      
+      res.json(result);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

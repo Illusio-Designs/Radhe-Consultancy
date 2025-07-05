@@ -1,4 +1,5 @@
 const { Company, User, Role, Vendor, sequelize } = require('../models');
+const userService = require('../services/userService');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
@@ -102,11 +103,17 @@ const companyController = {
         console.log('[Company] Creating new user for email:', formData.company_email);
         // Create new user with company role
         const randomPassword = Math.random().toString(36).slice(-8);
-        user = await User.create({
+        // Get company role
+        const companyRole = await Role.findOne({ where: { role_name: 'Company' } });
+        if (!companyRole) {
+          throw new Error('Company role not found');
+        }
+
+        user = await userService.createUser({
           username: formData.owner_name,
           email: formData.company_email,
           password: randomPassword,
-          role_id: 5 // company role
+          role_ids: [companyRole.id]
         }, { transaction });
         console.log('[Company] New user created:', user.user_id);
       } else {
@@ -221,7 +228,9 @@ const companyController = {
           model: User,
           include: [{
             model: Role,
-            attributes: ['role_name']
+            as: 'roles',
+            attributes: ['role_name'],
+            through: { attributes: ['is_primary'] }
           }]
         }]
       });
@@ -267,7 +276,9 @@ const companyController = {
           model: User,
           include: [{
             model: Role,
-            attributes: ['role_name']
+            as: 'roles',
+            attributes: ['role_name'],
+            through: { attributes: ['is_primary'] }
           }]
         }]
       });

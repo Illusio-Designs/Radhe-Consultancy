@@ -44,13 +44,9 @@ const Sidebar = ({ onCollapse }) => {
   console.log("Sidebar: User role_name:", user?.role_name);
   console.log("Sidebar: User role:", user?.role);
 
-  // Get role from user object, handling both role_name and role properties
-  const userRole = user?.role_name || user?.role;
-  console.log("Sidebar: Combined user role:", userRole);
-
-  // Helper for case-insensitive role comparison
-  const isRole = (role) =>
-    userRole && userRole.toLowerCase() === role.toLowerCase();
+  // Get all user roles as lowercase
+  const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
+  const isRole = (role) => userRoles.includes(role.toLowerCase());
 
   // Set 'Users' dropdown open by default for admin
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -117,7 +113,7 @@ const Sidebar = ({ onCollapse }) => {
   ];
 
   // Admin role has access to all features
-  if (isRole("Admin")) {
+  if (isRole("admin")) {
     console.log("Sidebar: Setting admin menu items");
     menuItems = [
       {
@@ -246,7 +242,7 @@ const Sidebar = ({ onCollapse }) => {
       { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
     ];
     console.log("Sidebar: Admin menu items set:", menuItems);
-  } else if (isRole("User_manager") || isRole("User")) {
+  } else if (isRole("user_manager") || isRole("user")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -286,7 +282,7 @@ const Sidebar = ({ onCollapse }) => {
         ],
       },
     ];
-  } else if (isRole("Vendor_manager")) {
+  } else if (isRole("vendor_manager")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -321,7 +317,7 @@ const Sidebar = ({ onCollapse }) => {
         ],
       },
     ];
-  } else if (isRole("Insurance_manager")) {
+  } else if (isRole("insurance_manager")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -376,7 +372,7 @@ const Sidebar = ({ onCollapse }) => {
         ],
       },
     ];
-  } else if (isRole("Compliance_manager")) {
+  } else if (isRole("compliance_manager")) {
     menuItems = [
       {
         path: "/dashboard",
@@ -416,7 +412,7 @@ const Sidebar = ({ onCollapse }) => {
         ],
       },
     ];
-  } else if (isRole("DSC_manager")) {
+  } else if (isRole("dsc_manager")) {
     menuItems = [
       {
         path: "/dashboard",

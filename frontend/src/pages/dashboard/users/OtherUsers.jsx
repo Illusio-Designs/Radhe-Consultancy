@@ -8,6 +8,7 @@ import Loader from "../../../components/common/Loader/Loader";
 import Input from "../../../components/common/Input/Input";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import { userAPI, roleAPI } from "../../../services/api";
+import Select from "react-select";
 import "../../../styles/pages/dashboard/users/User.css";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useData } from "../../../contexts/DataContext";
@@ -18,7 +19,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     username: user?.username || "",
     email: user?.email || "",
     password: "",
-    role_id: user?.role_id ? String(user.role_id) : "",
+    role_ids: user?.roles?.map(role => role.id) || [],
     user_type_id: user?.user_type_id || 1,
     status: user?.status || "Active",
   });
@@ -35,27 +36,55 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     ].includes(role.role_name)
   );
 
+  // Fix: Only update formData if values actually change
   useEffect(() => {
-    if (!user && otherRoles.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        role_id: String(otherRoles[0].id),
-      }));
+    if (user) {
+      setFormData(prev => {
+        const newFormData = {
+          username: user.username || "",
+          email: user.email || "",
+          password: "",
+          role_ids: user.roles?.map(role => role.id) || [],
+          user_type_id: user.user_type_id || 1,
+          status: user.status || "Active",
+        };
+        if (JSON.stringify(prev) !== JSON.stringify(newFormData)) {
+          return newFormData;
+        }
+        return prev;
+      });
+    } else {
+      // For new users, don't set any default roles - let user choose
+      setFormData(prev => {
+        const newFormData = {
+          username: "",
+          email: "",
+          password: "",
+          role_ids: [],
+          user_type_id: 1,
+          status: "Active",
+        };
+        if (JSON.stringify(prev) !== JSON.stringify(newFormData)) {
+          return newFormData;
+        }
+        return prev;
+      });
     }
-  }, [otherRoles, user]);
+    // eslint-disable-next-line
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (otherRoles.length === 0) {
-        setError("No valid roles found");
+      if (formData.role_ids.length === 0) {
+        setError("At least one role must be selected");
         return;
       }
 
       const userData = {
         username: formData.username,
         email: formData.email,
-        role_id: Number(formData.role_id),
+        role_ids: formData.role_ids,
         user_type_id: formData.user_type_id,
         status: formData.status,
       };
@@ -76,20 +105,14 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    console.log("Form field changed:", { name, value });
+  // react-select options
+  const roleOptions = otherRoles.map(role => ({
+    value: role.id,
+    label: role.role_name,
+  }));
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const statusOptions = [
-    { value: "Active", label: "Active" },
-    { value: "Inactive", label: "Inactive" },
-  ];
+  // Get current selected values for react-select
+  const selectedValues = roleOptions.filter(opt => formData.role_ids.includes(opt.value));
 
   return (
     <>
@@ -101,7 +124,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             type="text"
             name="username"
             value={formData.username}
-            onChange={handleChange}
+            onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
             className="user-management-form-input"
             placeholder="Enter User Name"
             required
@@ -113,7 +136,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             type="email"
             name="email"
             value={formData.email}
-            onChange={handleChange}
+            onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
             className="user-management-form-input"
             placeholder="Enter Email"
             required
@@ -126,7 +149,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
               type="password"
               name="password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
               className="user-management-form-input"
               placeholder="Password"
               required={!user}
@@ -135,27 +158,32 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
         )}
 
         <div className="user-management-form-group">
-          <select
-            name="role_id"
-            value={formData.role_id}
-            onChange={handleChange}
-            className="user-management-form-input"
-            required
-          >
-            <option value="">Select Role</option>
-            {otherRoles.map((role) => (
-              <option key={role.id} value={String(role.id)}>
-                {role.role_name}
-              </option>
-            ))}
-          </select>
+          <label className="user-management-form-label">Select Roles:</label>
+          <Select
+            isMulti
+            options={roleOptions}
+            value={selectedValues}
+            onChange={(selected) => {
+              console.log('Selected:', selected);
+              const newRoleIds = selected ? selected.map(opt => opt.value) : [];
+              console.log('New role_ids:', newRoleIds);
+              setFormData(prev => ({
+                ...prev,
+                role_ids: newRoleIds,
+              }));
+            }}
+            classNamePrefix="react-select"
+            placeholder="Select roles..."
+            isClearable={true}
+            closeMenuOnSelect={false}
+          />
         </div>
 
         <div className="user-management-form-group">
           <select
             name="status"
             value={formData.status}
-            onChange={handleChange}
+            onChange={e => setFormData(prev => ({ ...prev, status: e.target.value }))}
             className="user-management-form-input"
             placeholder="Status"
           >
@@ -205,7 +233,14 @@ function OtherUserList({ searchQuery = "" }) {
 
   // Filter users to show Admin and other roles except Company and Consumer
   const otherUsers = users.filter((user) => {
-    // First try to get role from the user object
+    // Check if user has any roles that are not Company or Consumer
+    if (user.roles && user.roles.length > 0) {
+      return user.roles.some(role => 
+        role !== "Company" && role !== "Consumer"
+      );
+    }
+
+    // Fallback for old data structure
     const roleName = user.Role?.role_name;
     if (roleName) {
       return roleName !== "Company" && roleName !== "Consumer";
@@ -216,8 +251,16 @@ function OtherUserList({ searchQuery = "" }) {
     return userRole && userRole.role_name !== "Company" && userRole.role_name !== "Consumer";
   });
 
-  const getRoleName = (user) => {
-    // First try to get role from the user object
+  const getRoleNames = (user) => {
+    // Check for new multiple roles structure
+    if (user.roles && user.roles.length > 0) {
+      return user.roles.map(role => {
+        const isPrimary = role.UserRole?.is_primary;
+        return `${role}${isPrimary ? ' (Primary)' : ''}`;
+      }).join(", ");
+    }
+
+    // Fallback for old single role structure
     if (user.Role?.role_name) {
       return user.Role.role_name;
     }
@@ -281,10 +324,10 @@ function OtherUserList({ searchQuery = "" }) {
     { key: "username", label: "User Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     {
-      key: "role_id",
-      label: "Role",
+      key: "roles",
+      label: "Roles",
       sortable: true,
-      render: (_, user) => getRoleName(user),
+      render: (_, user) => getRoleNames(user),
     },
     {
       key: "status",

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiEdit2, FiTrash2, FiAlertCircle } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle } from "react-icons/fi";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
@@ -15,36 +15,34 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     username: user?.username || "",
     email: user?.email || "",
     password: "",
-    role_id: user?.role_id ? String(user.role_id) : "",
-    user_type_id: user?.user_type_id || 1,
     status: user?.status || "Active",
   });
   const [error, setError] = useState(null);
-  const { roles } = useData();
-  const consumerRole = roles.find((role) => role.role_name === "Consumer");
 
   useEffect(() => {
-    if (consumerRole && !user) {
-      setFormData((prev) => ({
-        ...prev,
-        role_id: String(consumerRole.id),
-      }));
+    if (user) {
+      setFormData({
+        username: user.username || "",
+        email: user.email || "",
+        password: "",
+        status: user.status || "Active",
+      });
+    } else {
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        status: "Active",
+      });
     }
-  }, [consumerRole, user]);
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!consumerRole) {
-        setError("Consumer role not found");
-        return;
-      }
-
       const userData = {
         username: formData.username,
         email: formData.email,
-        role_id: Number(consumerRole.id),
-        user_type_id: formData.user_type_id,
         status: formData.status,
       };
 
@@ -115,23 +113,6 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 
         <div className="user-management-form-group">
           <select
-            name="role_id"
-            value={formData.role_id}
-            onChange={(e) =>
-              setFormData({ ...formData, role_id: e.target.value })
-            }
-            className="user-management-form-input"
-            required
-            disabled
-          >
-            <option value={consumerRole?.id}>
-              {consumerRole?.role_name || "Consumer"}
-            </option>
-          </select>
-        </div>
-
-        <div className="user-management-form-group">
-          <select
             name="status"
             value={formData.status}
             onChange={(e) =>
@@ -167,10 +148,41 @@ function ConsumerUserList({ searchQuery = "" }) {
   const [filters, setFilters] = useState({ status: "" });
   const [localLoading, setLocalLoading] = useState(true);
 
-  const consumerUsers = users.filter((user) => user.role_id === 6); // Filter for consumer users
+  // Filter users to show only Consumer users
+  const consumerUsers = users.filter((user) => {
+    // Check if user has Consumer role in the new multiple roles structure
+    if (user.roles && user.roles.length > 0) {
+      return user.roles.some(role => role === "Consumer");
+    }
 
-  const getRoleName = (roleId) => {
-    return roleId === 6 ? "Consumer" : "Unknown";
+    // Fallback for old data structure
+    const roleName = user.Role?.role_name;
+    if (roleName) {
+      return roleName === "Consumer";
+    }
+
+    // If role is not in user object, try to find it in roles array
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return userRole && userRole.role_name === "Consumer";
+  });
+
+  const getRoleNames = (user) => {
+    // Check for new multiple roles structure
+    if (user.roles && user.roles.length > 0) {
+      return user.roles.map(role => {
+        const isPrimary = role.UserRole?.is_primary;
+        return `${role}${isPrimary ? ' (Primary)' : ''}`;
+      }).join(", ");
+    }
+
+    // Fallback for old single role structure
+    if (user.Role?.role_name) {
+      return user.Role.role_name;
+    }
+
+    // If role is not in user object, try to find it in roles array
+    const userRole = roles.find((role) => role.id === user.role_id);
+    return userRole ? userRole.role_name : "Unknown";
   };
 
   const filteredUsers = consumerUsers.filter((user) => {
@@ -198,6 +210,7 @@ function ConsumerUserList({ searchQuery = "" }) {
   };
 
   const handleEdit = (user) => {
+    console.log("Editing consumer user:", user); // Debug log
     setSelectedUser(user);
     setShowModal(true);
   };
@@ -225,10 +238,10 @@ function ConsumerUserList({ searchQuery = "" }) {
     { key: "username", label: "Consumer Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     {
-      key: "role_id",
-      label: "Role",
+      key: "roles",
+      label: "Roles",
       sortable: true,
-      render: (value) => getRoleName(value),
+      render: (_, user) => getRoleNames(user),
     },
     {
       key: "status",
@@ -287,7 +300,7 @@ function ConsumerUserList({ searchQuery = "" }) {
     initializeData();
   }, []);
 
-  if (!user || !['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(user.role_name || user.role)) {
+        if (!user || !user.roles?.some(role => ['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(role))) {
     return (
       <div className="user-management-error">
         <FiAlertCircle className="inline mr-2" /> You don't have permission to

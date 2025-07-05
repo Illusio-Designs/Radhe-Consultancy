@@ -71,23 +71,22 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Get the role from either role_name or role property
-  const userRole = user?.role_name || user?.role;
-  console.log('AuthContext: Current user role:', userRole);
+  // Helper: get all roles as lowercase
+  const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
+  const hasRole = (role) => userRoles.includes(role.toLowerCase());
 
   const value = {
-    user: {
-      ...user,
-      role: userRole // Ensure role is always available
-    },
+    user,
     loading,
     error,
     login,
     logout,
     isAuthenticated: !!user,
-    isAdmin: userRole === 'admin',
-    isCompany: userRole === 'company',
-    isConsumer: userRole === 'consumer'
+    hasRole,
+    userRoles,
+    isAdmin: hasRole('admin'),
+    isCompany: hasRole('company'),
+    isConsumer: hasRole('consumer')
   };
 
   console.log('AuthContext: Providing context value:', value);

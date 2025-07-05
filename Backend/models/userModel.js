@@ -36,17 +36,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  role_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 1,
-    references: {
-      model: 'Roles',
-      key: 'id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'NO ACTION'
-  },
+  // role_id field removed - now using many-to-many relationship through UserRole
   reset_token: {
     type: DataTypes.STRING,
     allowNull: true

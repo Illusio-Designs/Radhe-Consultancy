@@ -22,12 +22,7 @@ class AuthController {
 
   async register(req, res) {
     try {
-      const { email, password, username, role_name = 'user' } = req.body;
-
-      // Validate required fields
-      if (!email || !password || !username) {
-        return res.status(400).json({ error: 'All fields are required' });
-      }
+      const { email, password, username, role_name } = req.body;
 
       // Check if user already exists
       const existingUser = await User.findOne({ where: { email } });
@@ -41,12 +36,12 @@ class AuthController {
         return res.status(400).json({ error: 'Invalid role' });
       }
 
-      // Create user
-      const user = await User.create({
+      // Create user with roles
+      const user = await userService.createUser({
         email,
         password,
         username,
-        role_id: role.id
+        role_ids: [role.id]
       });
 
       // Generate JWT token
@@ -63,7 +58,6 @@ class AuthController {
           user_id: user.user_id,
           email: user.email,
           username: user.username,
-          role_id: user.role_id,
           role_name: role.role_name
         }
       });
@@ -120,21 +114,23 @@ class AuthController {
       const token = jwt.sign(
         { 
           userId: userData.user_id, 
-          role: role,
           email: userData.email
         },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
 
+      // Get all roles as strings
+      const roles = userData.roles ? userData.roles.map(r => r.role_name) : [];
+
       // Get role-specific data
       let additionalData = {};
-      if (role === 'company') {
+      if (roles.includes('Company')) {
         const companyData = await Company.findOne({
           where: { user_id: userData.user_id }
         });
         additionalData = { company: companyData };
-      } else if (role === 'consumer') {
+      } else if (roles.includes('Consumer')) {
         const consumerData = await Consumer.findOne({
           where: { user_id: userData.user_id }
         });
@@ -150,7 +146,9 @@ class AuthController {
           id: userData.user_id,
           username: userData.username,
           email: userData.email,
-          role: role,
+          imageUrl: userData.profile_image,
+          phone: userData.contact_number,
+          roles,
           ...additionalData
         }
       });
@@ -181,7 +179,7 @@ class AuthController {
       const { email, name, picture } = payload;
 
       // Get role
-      const role = await Role.findOne({ where: { role_name: 'user' } });
+      const role = await Role.findOne({ where: { role_name: 'User' } });
       if (!role) {
         return res.status(400).json({ error: 'Invalid role' });
       }
@@ -191,23 +189,29 @@ class AuthController {
         where: { email },
         include: [{
           model: Role,
-          attributes: ['role_name']
+          as: 'roles',
+          attributes: ['role_name'],
+          through: { attributes: ['is_primary'] }
         }]
       });
 
       if (!user) {
-        // Create new user
-        user = await User.create({
+        // Create new user with role
+        user = await userService.createUser({
           username: name,
           email,
           profile_image: picture,
-          role_id: role.id
+          role_ids: [role.id]
         });
       }
 
+      // Get primary role or first role
+      const primaryRole = user.roles.find(role => role.UserRole?.is_primary) || user.roles[0];
+      const roleName = primaryRole ? primaryRole.role_name : 'User';
+
       // Generate JWT token
       const authToken = jwt.sign(
-        { userId: user.user_id, role: role.role_name },
+        { userId: user.user_id, role: roleName },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
@@ -218,8 +222,7 @@ class AuthController {
           user_id: user.user_id,
           email: user.email,
           username: user.username,
-          role_id: user.role_id,
-          role_name: role.role_name,
+          role_name: roleName,
           profile_image: user.profile_image
         }
       });
@@ -235,65 +238,54 @@ class AuthController {
       
       // Use user_id instead of userId
       const userId = req.user.user_id;
-      const userRole = req.user.role_name;
       
-      console.log('getCurrentUser: Looking up user with ID:', userId);
-      
-      // Fetch the user with their role and permissions
+      // Get user from database with role and permissions
       const user = await User.findOne({
         where: { user_id: userId },
-        attributes: ['user_id', 'email', 'username', 'role_id', 'contact_number', 'profile_image'],
+        attributes: ['user_id', 'email', 'username', 'contact_number', 'profile_image'],
         include: [{
           model: Role,
+          as: 'roles',
           attributes: ['role_name'],
-          include: [{
-            model: Permission,
-            through: { attributes: [] },
-            attributes: ['permission_name']
-          }]
+          through: { attributes: ['is_primary'] }
         }]
       });
-
+      
       if (!user) {
-        console.log('getCurrentUser: User not found for ID:', userId);
         return res.status(404).json({ message: 'User not found' });
       }
 
-      console.log('getCurrentUser: User found:', { 
-        id: user.user_id, 
-        email: user.email, 
-        role: userRole,
-        profile_image: user.profile_image
-      });
+      // Get all roles as strings
+      const roles = user.roles ? user.roles.map(r => r.role_name) : [];
 
       // Get role-specific data
       let additionalData = {};
-      if (userRole === 'company') {
+      if (roles.includes('Company')) {
         const companyData = await Company.findOne({
           where: { user_id: userId }
         });
         additionalData = { company: companyData };
-      } else if (userRole === 'consumer') {
+      } else if (roles.includes('Consumer')) {
         const consumerData = await Consumer.findOne({
           where: { user_id: userId }
         });
         additionalData = { consumer: consumerData };
       }
 
+      // Format the response
       res.json({
         user: {
           id: user.user_id,
           email: user.email,
           username: user.username,
-          role: user.Role.role_name,
-          contact_number: user.contact_number,
+          phone: user.contact_number,
           imageUrl: user.profile_image,
-          permissions: user.Role.Permissions?.map(p => p.permission_name) || [],
+          roles,
           ...additionalData
         }
       });
     } catch (error) {
-      console.error('getCurrentUser error:', error);
+      console.error('Error getting current user:', error);
       res.status(500).json({ message: 'Error getting user information' });
     }
   }

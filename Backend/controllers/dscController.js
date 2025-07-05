@@ -4,6 +4,13 @@ const { Op } = require('sequelize');
 // Get all DSCs
 exports.getAllDSCs = async (req, res) => {
     try {
+        // Debug log: who is requesting
+        if (req.user) {
+            console.log('[getAllDSC] Requested by user:', req.user.user_id, 'roles:', req.user.roles || req.user.role_name);
+        } else {
+            console.log('[getAllDSC] Requested by unknown user');
+        }
+
         const dscs = await DSC.findAll({
             include: [
                 {
@@ -19,6 +26,8 @@ exports.getAllDSCs = async (req, res) => {
             ],
             order: [['created_at', 'DESC']]
         });
+        // Debug log: how many DSC records found
+        console.log('[getAllDSC] Found DSC records:', dscs.length);
         res.json({ success: true, dscs });
     } catch (error) {
         console.error('Error in getAllDSCs:', error);

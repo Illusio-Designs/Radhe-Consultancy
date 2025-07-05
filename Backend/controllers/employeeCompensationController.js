@@ -57,6 +57,13 @@ exports.getAllPolicies = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
+    // Debug log: who is requesting and what roles
+    if (req.user) {
+      console.log('[getAllPolicies] Requested by user:', req.user.user_id, 'roles:', req.user.roles || req.user.role_name);
+    } else {
+      console.log('[getAllPolicies] Requested by unknown user');
+    }
+
     const policies = await EmployeeCompensationPolicy.findAndCountAll({
       include: [
         { 
@@ -70,6 +77,9 @@ exports.getAllPolicies = async (req, res) => {
       offset,
       order: [['created_at', 'DESC']]
     });
+
+    // Debug log: how many policies found
+    console.log('[getAllPolicies] Found policies:', policies.count);
 
     res.json({
       policies: policies.rows,

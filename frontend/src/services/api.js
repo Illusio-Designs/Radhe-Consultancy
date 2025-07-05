@@ -456,12 +456,52 @@ export const roleAPI = {
     }
   },
 
-  assignRole: async (user_id, role_id) => {
+  assignRole: async (user_id, role_id, is_primary = false) => {
     try {
-      const response = await api.post('/roles/assign', { user_id, role_id });
+      const response = await api.post('/roles/assign', { user_id, role_id, is_primary });
       return response.data;
     } catch (error) {
       console.error('Error assigning role:', error);
+      throw error;
+    }
+  },
+
+  removeRole: async (user_id, role_id) => {
+    try {
+      const response = await api.delete(`/roles/users/${user_id}/roles/${role_id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error removing role:', error);
+      throw error;
+    }
+  },
+
+  getUserRoles: async (user_id) => {
+    try {
+      const response = await api.get(`/roles/users/${user_id}/roles`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      throw error;
+    }
+  },
+
+  setPrimaryRole: async (user_id, role_id) => {
+    try {
+      const response = await api.put('/roles/users/primary-role', { user_id, role_id });
+      return response.data;
+    } catch (error) {
+      console.error('Error setting primary role:', error);
+      throw error;
+    }
+  },
+
+  getAllPermissions: async () => {
+    try {
+      const response = await api.get('/roles/permissions/all');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
       throw error;
     }
   }
