@@ -1,5 +1,5 @@
 const userService = require('../services/userService');
-const { User, Role, Company, Consumer, Permission } = require('../models');
+const { User, Role, Company, Consumer, Permission, sequelize } = require('../models');
 const { uploadAndCompress } = require('../config/multerConfig');
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
@@ -326,16 +326,21 @@ const searchUsers = async (req, res) => {
     if (!q) {
       return res.status(400).json({ error: 'Missing search query' });
     }
+
     const users = await User.findAll({
       where: {
         [Op.or]: [
-          { username: { [Op.iLike]: `%${q}%` } },
-          { email: { [Op.iLike]: `%${q}%` } },
-          { contact_number: { [Op.iLike]: `%${q}%` } }
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('username')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), 'LIKE', `%${q.toLowerCase()}%`),
+          sequelize.where(sequelize.fn('LOWER', sequelize.col('contact_number')), 'LIKE', `%${q.toLowerCase()}%`)
         ]
       },
-      include: [{ model: Role, attributes: ['role_name'] }]
+      include: [{
+        model: Role,
+        attributes: ['role_name']
+      }]
     });
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });

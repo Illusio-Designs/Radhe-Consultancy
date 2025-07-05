@@ -13,6 +13,9 @@ router.use(checkRole(['Admin', 'DSC_manager']));
 router.get('/companies', dscController.getActiveCompanies);
 router.get('/consumers', dscController.getActiveConsumers);
 
+// Search DSCs (must be before /:id route)
+router.get('/search', dscController.searchDSCs);
+
 // DSC routes
 router.get('/', dscController.getAllDSCs);
 router.get('/:id', dscController.getDSCById);
@@ -24,8 +27,5 @@ router.delete('/:id', dscController.deleteDSC);
 // Get DSCs by company or consumer
 router.get('/company/:companyId', dscController.getDSCsByCompany);
 router.get('/consumer/:consumerId', dscController.getDSCsByConsumer);
-
-// Search DSCs
-router.get('/search', dscController.searchDSCs);
 
 module.exports = router; 

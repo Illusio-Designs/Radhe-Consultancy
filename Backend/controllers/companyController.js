@@ -539,9 +539,9 @@ const companyController = {
       const companies = await Company.findAll({
         where: {
           [Op.or]: [
-            { company_name: { [Op.iLike]: `%${q}%` } },
-            { company_email: { [Op.iLike]: `%${q}%` } },
-            { owner_name: { [Op.iLike]: `%${q}%` } }
+            sequelize.where(sequelize.fn('LOWER', sequelize.col('company_name')), 'LIKE', `%${q.toLowerCase()}%`),
+            sequelize.where(sequelize.fn('LOWER', sequelize.col('company_email')), 'LIKE', `%${q.toLowerCase()}%`),
+            sequelize.where(sequelize.fn('LOWER', sequelize.col('owner_name')), 'LIKE', `%${q.toLowerCase()}%`)
           ]
         }
       });

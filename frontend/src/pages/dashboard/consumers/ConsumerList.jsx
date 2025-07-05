@@ -229,7 +229,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   );
 };
 
-function ConsumerList() {
+function ConsumerList({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedConsumer, setSelectedConsumer] = useState(null);
   const [consumers, setConsumers] = useState([]);
@@ -238,8 +238,13 @@ function ConsumerList() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    fetchConsumers();
-  }, []);
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchConsumers(searchQuery);
+    } else {
+      fetchConsumers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const fetchConsumers = async () => {
     try {
@@ -267,12 +272,39 @@ function ConsumerList() {
       }
     } catch (err) {
       setError("Failed to fetch consumers");
-      console.error(err);ad
+      console.error(err);
       setConsumers([]);
     } finally {
       setTimeout(() => {
         setLoading(false);
       }, 2000); // Ensure loader is displayed for at least 2000ms
+    }
+  };
+
+  const handleSearchConsumers = async (query) => {
+    try {
+      setLoading(true);
+      const response = await consumerAPI.searchConsumers({ q: query });
+      if (Array.isArray(response)) {
+        setConsumers(response);
+        setError(null);
+      } else if (response && response.data && Array.isArray(response.data)) {
+        setConsumers(response.data);
+        setError(null);
+      } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+        setConsumers(response.data.data);
+        setError(null);
+      } else {
+        setError("Invalid data format received from server");
+        setConsumers([]);
+      }
+    } catch (err) {
+      setError("Failed to search consumers");
+      setConsumers([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
 

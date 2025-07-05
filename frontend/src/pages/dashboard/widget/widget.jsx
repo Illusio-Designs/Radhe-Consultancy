@@ -182,7 +182,14 @@ const WidgetPage = () => {
       {/* SearchBar */}
       <section>
         <h2>SearchBar</h2>
-        <SearchBar placeholder="Search..." onSearch={(value) => alert(`Search: ${value}`)} />
+        <SearchBar 
+          placeholder="Search..." 
+          onSearch={(value) => alert(`Search: ${value}`)} 
+          minChars={3}
+        />
+        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Try typing less than 3 characters to see the hint message
+        </p>
       </section>
 
       {/* Table */}

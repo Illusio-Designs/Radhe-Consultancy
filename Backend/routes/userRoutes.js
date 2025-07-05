@@ -10,6 +10,9 @@ const fs = require('fs');
 // Protected routes with authentication
 router.get('/', auth, userController.getAllUsers);
 
+// Search users (must be before /:userId routes)
+router.get('/search', auth, userController.searchUsers);
+
 // Get current user info (must be before /:userId routes)
 router.get('/me', auth, async (req, res) => {
   try {
@@ -100,7 +103,5 @@ router.get('/profile-image/:filename', (req, res) => {
     res.status(500).json({ error: 'Error serving image' });
   }
 });
-
-router.get('/search', auth, userController.searchUsers);
 
 module.exports = router;

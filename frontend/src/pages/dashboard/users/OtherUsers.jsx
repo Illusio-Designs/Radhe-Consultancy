@@ -177,7 +177,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
   );
 };
 
-function OtherUserList() {
+function OtherUserList({ searchQuery = "" }) {
   const { user } = useAuth();
   const { users, roles, loading, error: dataError, refreshData } = useData();
   const [showModal, setShowModal] = useState(false);
@@ -230,7 +230,13 @@ function OtherUserList() {
   const filteredUsers = otherUsers.filter((user) => {
     const matchesStatus =
       !filters.status || (user.status || "Active") === filters.status;
-    return matchesStatus;
+    
+    // Add search functionality
+    const matchesSearch = !searchQuery || 
+      user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesStatus && matchesSearch;
   });
 
   const handleDelete = async (userId) => {

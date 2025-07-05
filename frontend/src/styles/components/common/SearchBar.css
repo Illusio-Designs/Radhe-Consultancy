@@ -35,3 +35,11 @@
   font-size: 1rem;
   pointer-events: none;
 }
+
+.search-bar-hint {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+  font-style: italic;
+}

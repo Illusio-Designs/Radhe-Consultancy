@@ -1,4 +1,4 @@
-const { DSC, Company, Consumer } = require('../models');
+const { DSC, Company, Consumer, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Get all DSCs
@@ -265,26 +265,80 @@ exports.getDSCsByConsumer = async (req, res) => {
     }
 };
 
-// Search DSCs by certification_name, company.company_name, or consumer.name
+// Search DSCs
 exports.searchDSCs = async (req, res) => {
     try {
         const { q } = req.query;
         if (!q) {
             return res.status(400).json({ error: 'Missing search query' });
         }
+
+        console.log(`[DSCController] Searching DSCs with query: "${q}"`);
+
         const dscs = await DSC.findAll({
             where: {
                 [Op.or]: [
-                    { certification_name: { [Op.iLike]: `%${q}%` } }
+                    sequelize.where(sequelize.fn('LOWER', sequelize.col('certification_name')), 'LIKE', `%${q.toLowerCase()}%`),
+                    sequelize.where(sequelize.fn('LOWER', sequelize.col('DSC.certification_name')), 'LIKE', `%${q.toLowerCase()}%`)
                 ]
             },
             include: [
-                { model: Company, where: { company_name: { [Op.iLike]: `%${q}%` } }, required: false },
-                { model: Consumer, where: { name: { [Op.iLike]: `%${q}%` } }, required: false }
-            ]
+                {
+                    model: Company,
+                    as: 'company',
+                    attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
+                    required: false,
+                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('company.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+                },
+                {
+                    model: Consumer,
+                    as: 'consumer',
+                    attributes: ['consumer_id', 'name', 'email', 'phone_number'],
+                    required: false,
+                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumer.name')), 'LIKE', `%${q.toLowerCase()}%`)
+                }
+            ],
+            order: [['created_at', 'DESC']]
         });
-        res.json(dscs);
+
+        // Also search for DSCs where the company or consumer name matches, even if certification name doesn't
+        const dscsByCompany = await DSC.findAll({
+            include: [
+                {
+                    model: Company,
+                    as: 'company',
+                    attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
+                    required: true,
+                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('company.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+                }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+
+        const dscsByConsumer = await DSC.findAll({
+            include: [
+                {
+                    model: Consumer,
+                    as: 'consumer',
+                    attributes: ['consumer_id', 'name', 'email', 'phone_number'],
+                    required: true,
+                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumer.name')), 'LIKE', `%${q.toLowerCase()}%`)
+                }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+
+        // Combine all results and remove duplicates
+        const allDSCs = [...dscs, ...dscsByCompany, ...dscsByConsumer];
+        const uniqueDSCs = allDSCs.filter((dsc, index, self) => 
+            index === self.findIndex(d => d.dsc_id === dsc.dsc_id)
+        );
+
+        console.log(`[DSCController] Found ${uniqueDSCs.length} DSCs for query: "${q}"`);
+
+        res.json({ success: true, dscs: uniqueDSCs });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error in searchDSCs:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };

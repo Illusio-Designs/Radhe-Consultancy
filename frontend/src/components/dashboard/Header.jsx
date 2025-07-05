@@ -69,7 +69,7 @@ const Header = ({ isCollapsed, onSearch }) => {
 
         {/* Add SearchBar here */}
         <div className="header-searchbar">
-          <SearchBar onSearch={onSearch} placeholder="Search..." />
+          <SearchBar onSearch={onSearch} placeholder="Search..." minChars={3} />
         </div>
 
         {/* Right - Profile */}

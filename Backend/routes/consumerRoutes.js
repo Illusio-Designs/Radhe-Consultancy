@@ -19,6 +19,9 @@ router.get('/',
   consumerController.getAllConsumers
 );
 
+// Search consumers (must be before /:id route)
+router.get('/search', auth, consumerController.searchConsumers);
+
 // Get consumer by ID (admin, vendor manager, user manager, and consumer users)
 router.get('/:id', 
   auth, 
@@ -33,8 +36,5 @@ router.put('/:id',
   uploadProfileImage,
   consumerController.updateConsumer
 );
-
-// Search consumers
-router.get('/search', auth, consumerController.searchConsumers);
 
 module.exports = router; 

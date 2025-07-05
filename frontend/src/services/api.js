@@ -621,6 +621,41 @@ export const consumerAPI = {
     }
   },
 
+  searchConsumers: async (params) => {
+    try {
+      console.log('API Service: Searching consumers with params:', params);
+      const response = await api.get('/consumers/search', { params });
+      console.log('API Service: Consumer search completed successfully');
+      
+      // Check if response has data property
+      if (response && response.data) {
+        // If response.data is an array, return it directly
+        if (Array.isArray(response.data)) {
+          return response.data;
+        }
+        // If response.data has a data property that's an array, return that
+        else if (response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // If response.data has a success property and a data property that's an array
+        else if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // If none of the above, log the invalid format and return empty array
+        else {
+          console.error('API Service: Invalid response format:', response);
+          return [];
+        }
+      } else {
+        console.error('API Service: Invalid response format:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('API Service: Error searching consumers:', error);
+      throw error;
+    }
+  },
+
   getConsumerById: async (id) => {
     try {
       console.log('API Service: Fetching consumer by ID:', id);
@@ -1531,6 +1566,18 @@ export const dscAPI = {
       return response.data;
     } catch (error) {
       console.error('API Service: Error fetching consumer DSCs:', error);
+      throw error;
+    }
+  },
+
+  searchDSCs: async (params) => {
+    try {
+      console.log('API Service: Searching DSCs with params:', params);
+      const response = await api.get('/dsc/search', { params });
+      console.log('API Service: DSC search completed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error searching DSCs:', error);
       throw error;
     }
   }

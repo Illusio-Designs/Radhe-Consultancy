@@ -359,7 +359,7 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
   );
 };
 
-function DSC() {
+function DSC({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedDSC, setSelectedDSC] = useState(null);
   const [dscs, setDSCs] = useState([]);
@@ -369,8 +369,13 @@ function DSC() {
 
   useEffect(() => {
     console.log("DSC component mounted");
-    fetchDSCs();
-  }, []);
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchDSCs(searchQuery);
+    } else {
+      fetchDSCs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const toCamelCase = (dsc) => ({
     dsc_id: dsc.dsc_id,
@@ -411,6 +416,39 @@ function DSC() {
       setTimeout(() => {
         setLoading(false);
       }, 2000);
+    }
+  };
+
+  const handleSearchDSCs = async (query) => {
+    try {
+      console.log("Searching DSCs with query:", query);
+      setLoading(true);
+      const response = await dscAPI.searchDSCs({ q: query });
+      console.log("DSC search response:", response);
+
+      if (response && Array.isArray(response.dscs)) {
+        const mapped = response.dscs.map(toCamelCase);
+        console.log("Mapped search DSCs:", mapped);
+        setDSCs(mapped);
+        setError(null);
+      } else if (response && Array.isArray(response)) {
+        const mapped = response.map(toCamelCase);
+        console.log("Mapped search DSCs (direct array):", mapped);
+        setDSCs(mapped);
+        setError(null);
+      } else {
+        console.error("Invalid search response format:", response);
+        setError("Invalid data format received from server");
+        setDSCs([]);
+      }
+    } catch (err) {
+      console.error("Error searching DSCs:", err);
+      setError("Failed to search DSCs");
+      setDSCs([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
 
@@ -472,7 +510,25 @@ function DSC() {
           ) : dsc.consumer ? (
             <>
               <strong>{dsc.consumer.name}</strong>
+              <br />
+              <small className="text-gray-600">{dsc.consumer.email}</small>
             </>
+          ) : (
+            '-'
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "contact_details",
+      label: "Contact Details",
+      sortable: true,
+      render: (_, dsc) => (
+        <div>
+          {dsc.company ? (
+            dsc.company.contact_number || '-'
+          ) : dsc.consumer ? (
+            dsc.consumer.phone_number || '-'
           ) : (
             '-'
           )}

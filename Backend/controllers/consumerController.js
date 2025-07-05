@@ -1,4 +1,4 @@
-const { Consumer, User, Role } = require('../models');
+const { Consumer, User, Role, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs').promises;
@@ -236,9 +236,9 @@ const consumerController = {
       const consumers = await Consumer.findAll({
         where: {
           [Op.or]: [
-            { name: { [Op.iLike]: `%${q}%` } },
-            { email: { [Op.iLike]: `%${q}%` } },
-            { phone_number: { [Op.iLike]: `%${q}%` } }
+            sequelize.where(sequelize.fn('LOWER', sequelize.col('name')), 'LIKE', `%${q.toLowerCase()}%`),
+            sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), 'LIKE', `%${q.toLowerCase()}%`),
+            sequelize.where(sequelize.fn('LOWER', sequelize.col('phone_number')), 'LIKE', `%${q.toLowerCase()}%`)
           ]
         }
       });
