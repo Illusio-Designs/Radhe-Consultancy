@@ -50,7 +50,8 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
         status: dsc.status || "in",
         remarks: dsc.remarks || "",
         email: dsc.company?.company_email || dsc.consumer?.email || "",
-        mobileNumber: dsc.company?.contact_number || dsc.consumer?.phone_number || "",
+        mobileNumber:
+          dsc.company?.contact_number || dsc.consumer?.phone_number || "",
       });
     }
   }, [dsc]);
@@ -61,11 +62,11 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
         setLoading(true);
         const [companiesResponse, consumersResponse] = await Promise.all([
           dscAPI.getActiveCompanies(),
-          dscAPI.getActiveConsumers()
+          dscAPI.getActiveConsumers(),
         ]);
 
-        console.log('Companies response:', companiesResponse);
-        console.log('Consumers response:', consumersResponse);
+        console.log("Companies response:", companiesResponse);
+        console.log("Consumers response:", consumersResponse);
 
         setCompanies(companiesResponse || []);
         setConsumers(consumersResponse || []);
@@ -91,10 +92,10 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
           },
         ];
 
-        console.log('Combined options:', options);
+        console.log("Combined options:", options);
         setCombinedOptions(options);
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error("Error fetching data:", err);
         toast.error("Failed to fetch data");
         setCompanies([]);
         setConsumers([]);
@@ -179,8 +180,14 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
     }
 
     // Validate that either companyId or consumerId is provided, but not both
-    const hasCompanyId = formData.companyId && formData.companyId !== "null" && formData.companyId !== "";
-    const hasConsumerId = formData.consumerId && formData.consumerId !== "null" && formData.consumerId !== "";
+    const hasCompanyId =
+      formData.companyId &&
+      formData.companyId !== "null" &&
+      formData.companyId !== "";
+    const hasConsumerId =
+      formData.consumerId &&
+      formData.consumerId !== "null" &&
+      formData.consumerId !== "";
 
     if (!hasCompanyId && !hasConsumerId) {
       console.error("[DSC] Neither company nor consumer selected");
@@ -206,7 +213,7 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
         status: formData.status,
         remarks: formData.remarks,
         email: formData.email,
-        mobile_number: formData.mobileNumber
+        mobile_number: formData.mobileNumber,
       };
 
       console.log("Sanitized form data:", sanitizedFormData);
@@ -241,7 +248,9 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
 
   return (
     <>
-      {typeof error === 'string' && error && <div className="dsc-error">{error}</div>}
+      {typeof error === "string" && error && (
+        <div className="dsc-error">{error}</div>
+      )}
       <form onSubmit={handleSubmit} className="dsc-form">
         <div className="dsc-form-grid">
           <div className="dsc-form-group">
@@ -365,7 +374,7 @@ function DSC({ searchQuery = "" }) {
   const [dscs, setDSCs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     console.log("DSC component mounted");
@@ -495,7 +504,7 @@ function DSC({ searchQuery = "" }) {
       key: "certification_name",
       label: "Certification Name",
       sortable: true,
-      render: (_, dsc) => dsc.certification_name || '-'
+      render: (_, dsc) => dsc.certification_name || "-",
     },
     {
       key: "holder_details",
@@ -514,7 +523,7 @@ function DSC({ searchQuery = "" }) {
               <small className="text-gray-600">{dsc.consumer.email}</small>
             </>
           ) : (
-            '-'
+            "-"
           )}
         </div>
       ),
@@ -525,13 +534,11 @@ function DSC({ searchQuery = "" }) {
       sortable: true,
       render: (_, dsc) => (
         <div>
-          {dsc.company ? (
-            dsc.company.contact_number || '-'
-          ) : dsc.consumer ? (
-            dsc.consumer.phone_number || '-'
-          ) : (
-            '-'
-          )}
+          {dsc.company
+            ? dsc.company.contact_number || "-"
+            : dsc.consumer
+            ? dsc.consumer.phone_number || "-"
+            : "-"}
         </div>
       ),
     },
@@ -540,12 +547,12 @@ function DSC({ searchQuery = "" }) {
       label: "Expiry Date",
       sortable: true,
       render: (_, dsc) => {
-        if (!dsc.expiry_date) return '-';
+        if (!dsc.expiry_date) return "-";
         const date = new Date(dsc.expiry_date);
-        return date.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
+        return date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
         });
       },
     },
@@ -554,9 +561,13 @@ function DSC({ searchQuery = "" }) {
       label: "Status",
       sortable: true,
       render: (_, dsc) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-          dsc.status === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            dsc.status === "in"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
           {dsc.status.toUpperCase()}
         </span>
       ),
@@ -565,7 +576,7 @@ function DSC({ searchQuery = "" }) {
       key: "actions",
       label: "Actions",
       render: (_, dsc) => (
-        <div className="flex gap-2">
+        <div className="insurance-actions">
           <ActionButton
             onClick={() => handleEdit(dsc)}
             variant="secondary"
@@ -585,15 +596,15 @@ function DSC({ searchQuery = "" }) {
     },
   ];
 
-  const filteredDSCs = dscs.filter(dsc => {
-    if (statusFilter === 'all') return true;
+  const filteredDSCs = dscs.filter((dsc) => {
+    if (statusFilter === "all") return true;
     return dsc.status === statusFilter;
   });
 
   const statusOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'in', label: 'IN' },
-    { value: 'out', label: 'OUT' },
+    { value: "all", label: "All" },
+    { value: "in", label: "IN" },
+    { value: "out", label: "OUT" },
   ];
 
   return (
@@ -612,8 +623,10 @@ function DSC({ searchQuery = "" }) {
             <div className="dashboard-header-dropdown-container">
               <Dropdown
                 options={statusOptions}
-                value={statusOptions.find(opt => opt.value === statusFilter)}
-                onChange={(option) => setStatusFilter(option ? option.value : 'all')}
+                value={statusOptions.find((opt) => opt.value === statusFilter)}
+                onChange={(option) =>
+                  setStatusFilter(option ? option.value : "all")
+                }
                 placeholder="Filter by Status"
               />
             </div>
@@ -652,4 +665,4 @@ function DSC({ searchQuery = "" }) {
   );
 }
 
-export default DSC; 
+export default DSC;

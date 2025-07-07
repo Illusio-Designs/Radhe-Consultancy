@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiUpload } from "react-icons/bi";
+import {
+  BiPlus,
+  BiEdit,
+  BiTrash,
+  BiErrorCircle,
+  BiUpload,
+} from "react-icons/bi";
 import { consumerAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -7,9 +13,10 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
-import PhoneInput from 'react-phone-number-input';
-import flags from 'react-phone-number-input/flags';
-import 'react-phone-number-input/style.css';
+import PhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import "react-phone-number-input/style.css";
+import { toast } from "react-toastify";
 
 const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   const [formData, setFormData] = useState({
@@ -36,7 +43,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       });
       // Set filename if profile image exists
       if (consumer.profile_image) {
-        const imageName = consumer.profile_image.split('/').pop();
+        const imageName = consumer.profile_image.split("/").pop();
         setFileName(imageName);
       }
     }
@@ -44,71 +51,82 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      console.log('[ConsumerList] Starting form submission');
-      console.log('[ConsumerList] Form data:', formData);
+      console.log("[ConsumerList] Starting form submission");
+      console.log("[ConsumerList] Form data:", formData);
 
       // Validate required fields
-      const requiredFields = ['name', 'email', 'phone_number', 'contact_address'];
-      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
-      
+      const requiredFields = [
+        "name",
+        "email",
+        "phone_number",
+        "contact_address",
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => !formData[field] || formData[field].trim() === ""
+      );
+
       if (missingFields.length > 0) {
-        setError(`Missing required fields: ${missingFields.join(', ')}`);
+        setError(`Missing required fields: ${missingFields.join(", ")}`);
         return;
       }
 
       // Create FormData object
       const formDataToSend = new FormData();
-      
+
       // Append basic fields
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('phone_number', formData.phone_number);
-      formDataToSend.append('contact_address', formData.contact_address);
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("phone_number", formData.phone_number);
+      formDataToSend.append("contact_address", formData.contact_address);
 
       // Append profile image if it exists and is a File
       if (formData.profile_image instanceof File) {
-        console.log('[ConsumerList] Appending profile image:', {
+        console.log("[ConsumerList] Appending profile image:", {
           name: formData.profile_image.name,
           type: formData.profile_image.type,
-          size: formData.profile_image.size
+          size: formData.profile_image.size,
         });
-        formDataToSend.append('profile_image', formData.profile_image);
+        formDataToSend.append("profile_image", formData.profile_image);
       }
 
-      console.log('[ConsumerList] Sending data to API');
+      console.log("[ConsumerList] Sending data to API");
 
       let response;
       if (consumer) {
-        response = await consumerAPI.updateConsumer(consumer.consumer_id, formDataToSend);
-        setSuccess('Consumer updated successfully!');
+        response = await consumerAPI.updateConsumer(
+          consumer.consumer_id,
+          formDataToSend
+        );
+        setSuccess("Consumer updated successfully!");
       } else {
         response = await consumerAPI.createConsumer(formDataToSend);
-        setSuccess('Consumer created successfully!');
+        setSuccess("Consumer created successfully!");
       }
 
-      console.log('[ConsumerList] API Response:', response);
-      
+      console.log("[ConsumerList] API Response:", response);
+
       // Refresh the consumer list
       await onConsumerUpdated();
-      
+
       // Reset form
       setFormData({
-        name: '',
-        email: '',
-        phone_number: '',
-        contact_address: '',
-        profile_image: null
+        name: "",
+        email: "",
+        phone_number: "",
+        contact_address: "",
+        profile_image: null,
       });
-      setFileName('');
-      
+      setFileName("");
     } catch (error) {
-      console.error('[ConsumerList] Error during submission:', error);
-      setError(error.response?.data?.error || error.message || 'An error occurred');
+      console.error("[ConsumerList] Error during submission:", error);
+      setError(
+        error.response?.data?.error || error.message || "An error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -174,13 +192,15 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
               international
               defaultCountry="IN"
               value={formData.phone_number}
-              onChange={(value) => setFormData(prev => ({ ...prev, phone_number: value }))}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, phone_number: value }))
+              }
               placeholder="Enter phone number"
               required
               className="vendor-management-form-input phone-input-custom"
               flags={flags}
               countrySelectProps={{
-                className: "phone-input-country-select"
+                className: "phone-input-country-select",
               }}
             />
           </div>
@@ -208,10 +228,12 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
                   className="file-upload-input"
                 />
                 <div className="file-upload-button">
-                  <BiUpload /> {fileName || 'Upload Profile Image'}
+                  <BiUpload /> {fileName || "Upload Profile Image"}
                 </div>
               </div>
-              <small className="file-upload-helper">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
+              <small className="file-upload-helper">
+                Max file size: 5MB. Supported formats: JPG, PNG, GIF
+              </small>
             </label>
           </div>
         </div>
@@ -235,7 +257,7 @@ function ConsumerList({ searchQuery = "" }) {
   const [consumers, setConsumers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== "") {
@@ -250,19 +272,24 @@ function ConsumerList({ searchQuery = "" }) {
     try {
       setLoading(true);
       const response = await consumerAPI.getAllConsumers();
-  
+
       // Check if response is an array directly
       if (Array.isArray(response)) {
         setConsumers(response);
         setError(null);
-      } 
+      }
       // Check if response has data property and it's an array
       else if (response && response.data && Array.isArray(response.data)) {
         setConsumers(response.data);
         setError(null);
-      } 
+      }
       // Check if response has data property and it's an object with data array
-      else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+      else if (
+        response &&
+        response.data &&
+        response.data.data &&
+        Array.isArray(response.data.data)
+      ) {
         setConsumers(response.data.data);
         setError(null);
       } else {
@@ -291,7 +318,12 @@ function ConsumerList({ searchQuery = "" }) {
       } else if (response && response.data && Array.isArray(response.data)) {
         setConsumers(response.data);
         setError(null);
-      } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+      } else if (
+        response &&
+        response.data &&
+        response.data.data &&
+        Array.isArray(response.data.data)
+      ) {
         setConsumers(response.data.data);
         setError(null);
       } else {
@@ -313,9 +345,11 @@ function ConsumerList({ searchQuery = "" }) {
       try {
         await consumerAPI.deleteConsumer(consumerId);
         await fetchConsumers();
+        toast.success("Consumer deleted successfully!");
       } catch (err) {
         setError("Failed to delete consumer");
         console.error(err);
+        toast.error("An error occurred. Please try again.");
       }
     }
   };
@@ -333,6 +367,7 @@ function ConsumerList({ searchQuery = "" }) {
   const handleConsumerUpdated = async () => {
     await fetchConsumers();
     handleModalClose();
+    toast.success("Consumer updated successfully!");
   };
 
   const columns = [
@@ -386,11 +421,7 @@ function ConsumerList({ searchQuery = "" }) {
           </div>
         )}
 
-        {success && (
-          <div className="vendor-management-success">
-            {success}
-          </div>
-        )}
+        {success && <div className="vendor-management-success">{success}</div>}
 
         {loading ? (
           <Loader size="large" color="primary" />

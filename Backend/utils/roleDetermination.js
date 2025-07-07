@@ -1,111 +1,142 @@
-const { User, Company, Consumer, Role } = require('../models');
+const { User, Company, Consumer, Role } = require("../models");
 
 const determineUserRole = async (email) => {
   try {
-    console.log('Determining role for email:', email);
+    console.log("Determining role for email:", email);
 
     // Check in User table first
     const user = await User.findOne({
       where: { email },
-      include: [{
-        model: Role,
-        as: 'roles',
-        attributes: ['role_name'],
-        through: { attributes: ['is_primary'] }
-      }]
+      include: [
+        {
+          model: Role,
+          as: "roles",
+          attributes: ["role_name"],
+          through: { attributes: ["is_primary"] },
+        },
+      ],
     });
 
-    if (user) {
+    if (user && user.roles && user.roles.length > 0) {
       // Get primary role or first role
-      const primaryRole = user.roles.find(role => role.UserRole?.is_primary) || user.roles[0];
-      const roleName = primaryRole ? primaryRole.role_name : 'User';
-      
-      console.log('User found in User table:', {
+      const primaryRole =
+        user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
+      const roleName = primaryRole ? primaryRole.role_name : "User";
+
+      console.log("User found in User table:", {
         userId: user.user_id,
         role: roleName,
-        allRoles: user.roles.map(r => r.role_name)
+        allRoles: user.roles.map((r) => r.role_name),
+        primaryRole: primaryRole ? primaryRole.role_name : "None",
       });
       return {
         found: true,
         role: roleName,
-        userData: user
+        userData: user,
+      };
+    } else if (user) {
+      // User exists but has no roles - this shouldn't happen but handle gracefully
+      console.log("User found but has no roles:", {
+        userId: user.user_id,
+        email: user.email,
+      });
+      return {
+        found: true,
+        role: "User",
+        userData: user,
       };
     }
 
     // Check in Company table
     const company = await Company.findOne({
       where: { company_email: email },
-      include: [{
-        model: User,
-        as: 'User',
-        include: [{
-          model: Role,
-          as: 'roles',
-          attributes: ['role_name'],
-          through: { attributes: ['is_primary'] }
-        }]
-      }]
+      include: [
+        {
+          model: User,
+          as: "User",
+          include: [
+            {
+              model: Role,
+              as: "roles",
+              attributes: ["role_name"],
+              through: { attributes: ["is_primary"] },
+            },
+          ],
+        },
+      ],
     });
 
     if (company && company.User) {
       // Get primary role or first role
-      const primaryRole = company.User.roles.find(role => role.UserRole?.is_primary) || company.User.roles[0];
-      const roleName = primaryRole ? primaryRole.role_name : 'company';
-      
-      console.log('User found in Company table:', {
+      const primaryRole =
+        company.User.roles.find((role) => role.UserRole?.is_primary) ||
+        company.User.roles[0];
+      const roleName = primaryRole ? primaryRole.role_name : "Company";
+
+      console.log("User found in Company table:", {
         userId: company.User.user_id,
         role: roleName,
-        allRoles: company.User.roles.map(r => r.role_name)
+        allRoles: company.User.roles
+          ? company.User.roles.map((r) => r.role_name)
+          : [],
       });
       return {
         found: true,
         role: roleName,
-        userData: company.User
+        userData: company.User,
       };
     }
 
     // Check in Consumer table
     const consumer = await Consumer.findOne({
       where: { email },
-      include: [{
-        model: User,
-        as: 'User',
-        include: [{
-          model: Role,
-          as: 'roles',
-          attributes: ['role_name'],
-          through: { attributes: ['is_primary'] }
-        }]
-      }]
+      include: [
+        {
+          model: User,
+          as: "User",
+          include: [
+            {
+              model: Role,
+              as: "roles",
+              attributes: ["role_name"],
+              through: { attributes: ["is_primary"] },
+            },
+          ],
+        },
+      ],
     });
 
     if (consumer && consumer.User) {
       // Get primary role or first role
-      const primaryRole = consumer.User.roles.find(role => role.UserRole?.is_primary) || consumer.User.roles[0];
-      const roleName = primaryRole ? primaryRole.role_name : 'consumer';
-      
-      console.log('User found in Consumer table:', {
+      const primaryRole =
+        consumer.User.roles.find((role) => role.UserRole?.is_primary) ||
+        consumer.User.roles[0];
+      const roleName = primaryRole ? primaryRole.role_name : "Consumer";
+
+      console.log("User found in Consumer table:", {
         userId: consumer.User.user_id,
         role: roleName,
-        allRoles: consumer.User.roles.map(r => r.role_name)
+        allRoles: consumer.User.roles
+          ? consumer.User.roles.map((r) => r.role_name)
+          : [],
       });
       return {
         found: true,
         role: roleName,
-        userData: consumer.User
+        userData: consumer.User,
       };
     }
 
-    console.log('No user found for email:', email);
+    console.log("No user found for email:", email);
     return {
       found: false,
       role: null,
-      userData: null
+      userData: null,
     };
   } catch (error) {
-    console.error('Error in determineUserRole:', error);
+    console.error("Error in determineUserRole:", error);
     throw error;
   }
 };
 
-module.exports = determineUserRole; 
+module.exports = determineUserRole;

@@ -25,8 +25,8 @@ import {
   ScanHeart,
   Clock,
   RefreshCw,
-  Home
-} from 'lucide-react';
+  Home,
+} from "lucide-react";
 import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
 import { useAuth } from "../../contexts/AuthContext";
@@ -45,7 +45,7 @@ const Sidebar = ({ onCollapse }) => {
   console.log("Sidebar: User role:", user?.role);
 
   // Get all user roles as lowercase
-  const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
+  const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
   const isRole = (role) => userRoles.includes(role.toLowerCase());
 
   // Set 'Users' dropdown open by default for admin
@@ -91,8 +91,16 @@ const Sidebar = ({ onCollapse }) => {
     isOpen: activeDropdown === "renewals",
     toggle: () => handleDropdownToggle("renewals"),
     items: [
-      { path: "/dashboard/renewals/list", icon: <RefreshCw />, label: "Renewal List" },
-      { path: "/dashboard/renewals/log", icon: <Clock />, label: "Reminder Log" },
+      {
+        path: "/dashboard/renewals/list",
+        icon: <RefreshCw />,
+        label: "Renewal List",
+      },
+      {
+        path: "/dashboard/renewals/log",
+        icon: <Clock />,
+        label: "Reminder Log",
+      },
     ],
   };
 
@@ -107,7 +115,11 @@ const Sidebar = ({ onCollapse }) => {
       toggle: () => handleDropdownToggle("dashboard"),
       items: [
         { path: "/dashboard", icon: <Home />, label: "Home" },
-        { path: "/dashboard/renewals/manager", icon: <RefreshCw />, label: "Renewals" },
+        {
+          path: "/dashboard/renewals/manager",
+          icon: <RefreshCw />,
+          label: "Renewals",
+        },
       ],
     },
     renewalsDropdown,
@@ -347,7 +359,11 @@ const Sidebar = ({ onCollapse }) => {
       });
     }
     if (isRole("dsc_manager")) {
-      menuItems.push({ path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" });
+      menuItems.push({
+        path: "/dashboard/dsc",
+        icon: <KeyRound />,
+        label: "DSC",
+      });
     }
   }
 

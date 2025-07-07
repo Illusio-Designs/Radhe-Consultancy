@@ -19,7 +19,7 @@ function Login() {
     email: "",
     password: "",
     phone: "",
-    otp: ""
+    otp: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,7 @@ function Login() {
           "Login component: Submitting login form with email:",
           formData.email
         );
-        
+
         const response = await authAPI.login(formData.email, formData.password);
         await login(formData.email, formData.password);
         toast.success("Login successful!");
@@ -76,18 +76,25 @@ function Login() {
           setOtpSent(true);
           toast.success("OTP sent to your WhatsApp!");
         } else {
-          const response = await authAPI.verifyWhatsAppOTP(formData.phone, formData.otp);
+          const response = await authAPI.verifyWhatsAppOTP(
+            formData.phone,
+            formData.otp
+          );
           toast.success("Login successful!");
           navigate("/dashboard");
         }
       }
     } catch (err) {
       console.error("Login error:", err);
-      
+
       // Handle different types of errors
       if (!navigator.onLine) {
-        setError("No internet connection. Please check your network and try again.");
-        toast.error("Network connection error. Please check your internet connection.");
+        setError(
+          "No internet connection. Please check your network and try again."
+        );
+        toast.error(
+          "Network connection error. Please check your internet connection."
+        );
       } else if (err.response?.status === 401) {
         setError("Invalid credentials. Please try again.");
         toast.error("Invalid credentials");
@@ -95,10 +102,18 @@ function Login() {
         setError("Server error. Please try again later.");
         toast.error("Server error. Please try again later.");
       } else if (err.message === "Network Error") {
-        setError("Unable to connect to the server. Please check your internet connection.");
-        toast.error("Network connection error. Please check your internet connection.");
+        setError(
+          "Unable to connect to the server. Please check your internet connection."
+        );
+        toast.error(
+          "Network connection error. Please check your internet connection."
+        );
       } else {
-        setError(err.error || err.message || "An unexpected error occurred. Please try again.");
+        setError(
+          err.error ||
+            err.message ||
+            "An unexpected error occurred. Please try again."
+        );
         toast.error(err.error || err.message || "An unexpected error occurred");
       }
     } finally {
@@ -110,25 +125,45 @@ function Login() {
     try {
       setError("");
       setLoading(true);
-      console.log("Login component: Google login response:", credentialResponse);
-      
+      console.log(
+        "Login component: Google login response:",
+        credentialResponse
+      );
+
       const response = await authAPI.googleLogin(credentialResponse.credential);
-      console.log("Login component: Google login successful, response:", response);
-      
+      console.log(
+        "Login component: Google login successful, response:",
+        response
+      );
+
       toast.success("Google login successful!");
       navigate("/dashboard");
     } catch (err) {
       console.error("Google login error:", err);
-      
+
       if (!navigator.onLine) {
-        setError("No internet connection. Please check your network and try again.");
-        toast.error("Network connection error. Please check your internet connection.");
+        setError(
+          "No internet connection. Please check your network and try again."
+        );
+        toast.error(
+          "Network connection error. Please check your internet connection."
+        );
       } else if (err.message === "Network Error") {
-        setError("Unable to connect to the server. Please check your internet connection.");
-        toast.error("Network connection error. Please check your internet connection.");
+        setError(
+          "Unable to connect to the server. Please check your internet connection."
+        );
+        toast.error(
+          "Network connection error. Please check your internet connection."
+        );
       } else {
-        setError(err.error || err.message || "Failed to authenticate with Google. Please try again.");
-        toast.error(err.error || err.message || "Failed to authenticate with Google");
+        setError(
+          err.error ||
+            err.message ||
+            "Failed to authenticate with Google. Please try again."
+        );
+        toast.error(
+          err.error || err.message || "Failed to authenticate with Google"
+        );
       }
     } finally {
       setLoading(false);
@@ -138,8 +173,12 @@ function Login() {
   const handleGoogleLoginFailure = (error) => {
     console.error("Google login failed:", error);
     if (!navigator.onLine) {
-      setError("No internet connection. Please check your network and try again.");
-      toast.error("Network connection error. Please check your internet connection.");
+      setError(
+        "No internet connection. Please check your network and try again."
+      );
+      toast.error(
+        "Network connection error. Please check your internet connection."
+      );
     } else {
       setError("Failed to connect with Google. Please try again.");
       toast.error("Failed to connect with Google");
@@ -154,7 +193,7 @@ function Login() {
       email: "",
       password: "",
       phone: "",
-      otp: ""
+      otp: "",
     });
   };
 
@@ -167,13 +206,17 @@ function Login() {
 
           <div className="login-methods">
             <button
-              className={`login-method-btn ${loginMethod === "email" ? "active" : ""}`}
+              className={`login-method-btn ${
+                loginMethod === "email" ? "active" : ""
+              }`}
               onClick={() => switchLoginMethod("email")}
             >
               Email
             </button>
             <button
-              className={`login-method-btn ${loginMethod === "whatsapp" ? "active" : ""}`}
+              className={`login-method-btn ${
+                loginMethod === "whatsapp" ? "active" : ""
+              }`}
               onClick={() => switchLoginMethod("whatsapp")}
             >
               Phone
@@ -213,7 +256,9 @@ function Login() {
                     type="button"
                     className="toggle-password"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -226,7 +271,9 @@ function Login() {
                     international
                     defaultCountry="IN"
                     value={formData.phone}
-                    onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, phone: value }))
+                    }
                     placeholder="Enter your phone number"
                     required
                     className="insurance-form-input phone-input-custom"

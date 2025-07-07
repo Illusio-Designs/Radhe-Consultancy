@@ -287,7 +287,7 @@
 
 /* Add arrow to tooltip */
 .sidebar-collapsed .sidebar-nav-item:hover::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 100%;
   top: 50%;
@@ -333,8 +333,6 @@
   margin-left: 17px;
 }
 
-
-
 .sidebar-nav-item + .dropdown-open {
   max-height: 500px;
   /* padding: 0.25rem 0 0.5rem 0; */
@@ -344,10 +342,6 @@
 .sidebar-nav-item + .dropdown-close {
   max-height: 0px;
   display: block;
-}
-
-.sidebar-collapsed .sidebar-nav-item + .dropdown-open {
-  margin-top: -20px;
 }
 
 /* Rotate chevron icon smoothly */
@@ -363,7 +357,6 @@
 .sidebar-nav-item {
   transition: all 0.2s ease;
 }
-
 
 /* Nested items animation */
 .sidebar-nav-item + div a {
@@ -417,7 +410,3 @@
   transform: translateY(-50%) translateX(0);
   opacity: 1;
 }
-
-
-
-

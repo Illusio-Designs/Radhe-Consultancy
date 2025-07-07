@@ -8,38 +8,39 @@ import Loader from "../../../components/common/Loader/Loader";
 import { authAPI, userAPI } from "../../../services/api";
 import img from "../../../assets/img (1).png";
 import "../../../styles/pages/dashboard/profile/Profile.css";
-import PhoneInput from 'react-phone-number-input';
-import flags from 'react-phone-number-input/flags';
-import 'react-phone-number-input/style.css';
+import PhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import "react-phone-number-input/style.css";
+import { toast } from "react-toastify";
 
 // Add custom styles for phone input
 const phoneInputCustomStyles = {
-  '.PhoneInput': {
-    display: 'flex',
-    alignItems: 'center',
-    border: '1px solid #e2e8f0',
-    borderRadius: '0.375rem',
-    padding: '0.5rem',
-    backgroundColor: '#fff',
+  ".PhoneInput": {
+    display: "flex",
+    alignItems: "center",
+    border: "1px solid #e2e8f0",
+    borderRadius: "0.375rem",
+    padding: "0.5rem",
+    backgroundColor: "#fff",
   },
-  '.PhoneInputCountry': {
-    marginRight: '0.5rem',
+  ".PhoneInputCountry": {
+    marginRight: "0.5rem",
   },
-  '.PhoneInputInput': {
-    flex: '1',
-    border: 'none',
-    outline: 'none',
-    padding: '0.25rem',
-    fontSize: '1rem',
-    backgroundColor: 'transparent',
+  ".PhoneInputInput": {
+    flex: "1",
+    border: "none",
+    outline: "none",
+    padding: "0.25rem",
+    fontSize: "1rem",
+    backgroundColor: "transparent",
   },
-  '.PhoneInputCountrySelect': {
-    width: '90px',
+  ".PhoneInputCountrySelect": {
+    width: "90px",
   },
-  '.PhoneInputCountryIcon': {
-    width: '25px',
-    height: '20px',
-  }
+  ".PhoneInputCountryIcon": {
+    width: "25px",
+    height: "20px",
+  },
 };
 
 const Profile = () => {
@@ -52,7 +53,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const userType = localStorage.getItem("userType");
   const API_URL = import.meta.env.VITE_API_URL;
-  const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '');
+  const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "");
 
   // Function to convert image URL to data URL
   const getImageAsDataUrl = async (imageUrl) => {
@@ -66,7 +67,7 @@ const Profile = () => {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.error('Error converting image to data URL:', error);
+      console.error("Error converting image to data URL:", error);
       return null;
     }
   };
@@ -84,11 +85,13 @@ const Profile = () => {
     try {
       setLoading(true);
       const data = await authAPI.getCurrentUser();
-      
+
       // Convert image URL to data URL if it exists
       let imageDataUrl = null;
       if (data.user.imageUrl) {
-        const imageUrl = `${BASE_URL}/profile-images/${data.user.imageUrl.split('/').pop()}`;
+        const imageUrl = `${BASE_URL}/profile-images/${data.user.imageUrl
+          .split("/")
+          .pop()}`;
         imageDataUrl = await getImageAsDataUrl(imageUrl);
       }
 
@@ -96,11 +99,11 @@ const Profile = () => {
       const userData = {
         ...data.user,
         name: data.user.username,
-        imageUrl: imageDataUrl
+        imageUrl: imageDataUrl,
       };
-      
+
       setProfile(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(userData));
       setError(null);
     } catch (err) {
       setError(err.message || "Failed to load profile");
@@ -112,60 +115,62 @@ const Profile = () => {
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) {
-      console.log('No file selected');
+      console.log("No file selected");
       return;
     }
 
-    console.log('Selected file:', {
+    console.log("Selected file:", {
       name: file.name,
       type: file.type,
-      size: file.size
+      size: file.size,
     });
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      console.error('Invalid file type:', file.type);
-      setError('Please upload an image file');
+    if (!file.type.startsWith("image/")) {
+      console.error("Invalid file type:", file.type);
+      setError("Please upload an image file");
       return;
     }
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      console.error('File too large:', file.size);
-      setError('File size should be less than 5MB');
+      console.error("File too large:", file.size);
+      setError("File size should be less than 5MB");
       return;
     }
 
     try {
       setLoading(true);
       // Upload new profile image
-      console.log('Uploading profile image...', { userId: profile.id });
+      console.log("Uploading profile image...", { userId: profile.id });
       // Use the dedicated API endpoint for profile image upload
       const updatedUser = await userAPI.updateProfileImage(profile.id, file);
-      console.log('Profile image update response:', updatedUser);
+      console.log("Profile image update response:", updatedUser);
 
       if (!updatedUser || !updatedUser.imageUrl) {
-        throw new Error('No image URL received from server');
+        throw new Error("No image URL received from server");
       }
 
       // Convert new image to data URL
-      const imageUrl = `${BASE_URL}/profile-images/${updatedUser.imageUrl.split('/').pop()}`;
+      const imageUrl = `${BASE_URL}/profile-images/${updatedUser.imageUrl
+        .split("/")
+        .pop()}`;
       const imageDataUrl = await getImageAsDataUrl(imageUrl);
 
       // Update local state with the new image data URL
       const updatedProfile = {
         ...profile,
-        imageUrl: imageDataUrl
+        imageUrl: imageDataUrl,
       };
-      
-      console.log('Updating profile state:', updatedProfile);
-      localStorage.setItem('user', JSON.stringify(updatedProfile));
+
+      console.log("Updating profile state:", updatedProfile);
+      localStorage.setItem("user", JSON.stringify(updatedProfile));
       setProfile(updatedProfile);
       setSuccess("Profile image updated successfully");
     } catch (err) {
-      console.error('Error updating profile image:', err);
+      console.error("Error updating profile image:", err);
       if (err.response) {
-        console.error('Server response:', err.response.data);
+        console.error("Server response:", err.response.data);
         setError(err.response.data.message || "Failed to update profile image");
       } else {
         setError(err.message || "Failed to update profile image");
@@ -181,50 +186,50 @@ const Profile = () => {
 
   const handleProfileUpdate = async (event) => {
     event.preventDefault();
-    console.log('Profile update started');
-    
+    console.log("Profile update started");
+
     // Get the current values from the profile state
     const currentPhoneNumber = profile?.contact_number;
     const currentName = profile?.name;
-    console.log('Current values from state:', {
+    console.log("Current values from state:", {
       name: currentName,
-      contact_number: currentPhoneNumber
+      contact_number: currentPhoneNumber,
     });
 
     const formData = new FormData(event.target);
-    console.log('Form data before update:', {
-      name: formData.get('name'),
-      contact_number: formData.get('contact_number'),
-      email: formData.get('email')
+    console.log("Form data before update:", {
+      name: formData.get("name"),
+      contact_number: formData.get("contact_number"),
+      email: formData.get("email"),
     });
 
     // Create profile data with the current values from state
     const profileData = {
       username: currentName, // Use username instead of name
       contact_number: currentPhoneNumber,
-      email: formData.get('email')
+      email: formData.get("email"),
     };
 
-    console.log('Profile data to be sent:', profileData);
+    console.log("Profile data to be sent:", profileData);
 
     try {
       setLoading(true);
-      console.log('Sending update request to API...');
+      console.log("Sending update request to API...");
       const updatedUser = await userAPI.updateUser(profile.id, profileData);
-      console.log('API response:', updatedUser);
-      
+      console.log("API response:", updatedUser);
+
       // Update profile state with both username and name
       const updatedProfile = {
         ...updatedUser,
-        name: updatedUser.username // Set name from username
+        name: updatedUser.username, // Set name from username
       };
-      
-      localStorage.setItem('user', JSON.stringify(updatedProfile));
+
+      localStorage.setItem("user", JSON.stringify(updatedProfile));
       setProfile(updatedProfile);
       setSuccess("Profile updated successfully");
       setIsEditing(false);
     } catch (err) {
-      console.error('Error updating profile:', err);
+      console.error("Error updating profile:", err);
       setError(err.message || "Failed to update profile");
     } finally {
       setLoading(false);
@@ -233,25 +238,26 @@ const Profile = () => {
 
   const handleNameChange = (e) => {
     const value = e.target.value;
-    console.log('Name changed:', value);
-    setProfile(prev => ({
+    console.log("Name changed:", value);
+    setProfile((prev) => ({
       ...prev,
-      name: value
+      name: value,
     }));
   };
 
   const handlePhoneChange = (value) => {
-    console.log('Phone number changed:', value);
-    setProfile(prev => ({
+    console.log("Phone number changed:", value);
+    setProfile((prev) => ({
       ...prev,
-      contact_number: value
+      contact_number: value,
     }));
   };
 
   const handlePasswordUpdate = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    const { currentPassword, newPassword, confirmPassword } = Object.fromEntries(formData.entries());
+    const { currentPassword, newPassword, confirmPassword } =
+      Object.fromEntries(formData.entries());
 
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
@@ -286,7 +292,7 @@ const Profile = () => {
 
   const tabs = [
     { id: "personal", label: "Personal Info", icon: <FiUser /> },
-    { id: "security", label: "Security", icon: <FiLock /> }
+    { id: "security", label: "Security", icon: <FiLock /> },
   ];
 
   return (
@@ -351,7 +357,7 @@ const Profile = () => {
                           id="profile-image-upload-edit"
                           accept="image/*"
                           onChange={handleImageUpload}
-                          style={{ display: 'none' }}
+                          style={{ display: "none" }}
                         />
                         <label
                           htmlFor="profile-image-upload-edit"
@@ -393,7 +399,7 @@ const Profile = () => {
                         className="phone-input-custom"
                         flags={flags}
                         countrySelectProps={{
-                          className: "phone-input-country-select"
+                          className: "phone-input-country-select",
                         }}
                       />
                     </div>

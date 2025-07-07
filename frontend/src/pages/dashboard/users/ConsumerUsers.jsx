@@ -8,6 +8,7 @@ import { userAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/users/User.css";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useData } from "../../../contexts/DataContext";
+import { toast } from "react-toastify";
 
 // UserForm component
 const UserForm = ({ user, onClose, onUserUpdated }) => {
@@ -40,10 +41,18 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Find the Consumer role ID
+      const consumerRole = roles.find((role) => role.role_name === "Consumer");
+      if (!consumerRole) {
+        setError("Consumer role not found");
+        return;
+      }
+
       const userData = {
         username: formData.username,
         email: formData.email,
         status: formData.status,
+        role_ids: [consumerRole.id], // Automatically assign Consumer role
       };
 
       if (formData.password) {
@@ -141,38 +150,61 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 
 function ConsumerUserList({ searchQuery = "" }) {
   const { user } = useAuth();
-  const { users, roles, loading, error: dataError, refreshData } = useData();
+  const { roles, loading, error: dataError, refreshData } = useData();
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "" });
   const [localLoading, setLocalLoading] = useState(true);
+  const [consumerUsers, setConsumerUsers] = useState([]);
 
-  // Filter users to show only Consumer users
-  const consumerUsers = users.filter((user) => {
-    // Check if user has Consumer role in the new multiple roles structure
-    if (user.roles && user.roles.length > 0) {
-      return user.roles.some(role => role === "Consumer");
-    }
+  // Add effect to handle initial data loading
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setLocalLoading(true);
+        await refreshData();
+        // Fetch consumer users specifically
+        const response = await userAPI.getConsumerUsers();
+        console.log("Consumer users response:", response);
+        setConsumerUsers(response);
+      } catch (err) {
+        console.error("Error initializing data:", err);
+        setError("Failed to load users");
+      } finally {
+        setLocalLoading(false);
+      }
+    };
 
-    // Fallback for old data structure
-    const roleName = user.Role?.role_name;
-    if (roleName) {
-      return roleName === "Consumer";
-    }
+    initializeData();
+  }, []);
 
-    // If role is not in user object, try to find it in roles array
-    const userRole = roles.find((role) => role.id === user.role_id);
-    return userRole && userRole.role_name === "Consumer";
-  });
+  // Debug: Log users data structure
+  useEffect(() => {
+    console.log("Consumer users data:", consumerUsers);
+    console.log("Roles data:", roles);
+  }, [consumerUsers, roles]);
 
   const getRoleNames = (user) => {
-    // Check for new multiple roles structure
+    console.log("Getting role names for consumer user:", user);
+
+    // Check for new multiple roles structure with role_name property
     if (user.roles && user.roles.length > 0) {
-      return user.roles.map(role => {
-        const isPrimary = role.UserRole?.is_primary;
-        return `${role}${isPrimary ? ' (Primary)' : ''}`;
-      }).join(", ");
+      const roleNames = user.roles.map((role) => {
+        console.log("Processing role:", role);
+        // Check if role is an object with role_name property
+        if (typeof role === "object" && role.role_name) {
+          const isPrimary = role.UserRole?.is_primary;
+          return `${role.role_name}${isPrimary ? " (Primary)" : ""}`;
+        }
+        // If role is just a string
+        if (typeof role === "string") {
+          return role;
+        }
+        return "Unknown Role";
+      });
+      console.log("Role names:", roleNames);
+      return roleNames.join(", ");
     }
 
     // Fallback for old single role structure
@@ -188,12 +220,13 @@ function ConsumerUserList({ searchQuery = "" }) {
   const filteredUsers = consumerUsers.filter((user) => {
     const matchesStatus =
       !filters.status || (user.status || "Active") === filters.status;
-    
+
     // Add search functionality
-    const matchesSearch = !searchQuery || 
+    const matchesSearch =
+      !searchQuery ||
       user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesStatus && matchesSearch;
   });
 
@@ -202,9 +235,14 @@ function ConsumerUserList({ searchQuery = "" }) {
       try {
         await userAPI.deleteUser(userId);
         await refreshData();
+        // Refresh consumer users specifically
+        const response = await userAPI.getConsumerUsers();
+        setConsumerUsers(response);
+        toast.success("User deleted successfully!");
       } catch (err) {
         setError("Failed to delete user");
         console.error(err);
+        toast.error("An error occurred. Please try again.");
       }
     }
   };
@@ -221,7 +259,16 @@ function ConsumerUserList({ searchQuery = "" }) {
   };
 
   const handleUserUpdated = async () => {
-    await refreshData();
+    try {
+      await refreshData();
+      // Refresh consumer users specifically
+      const response = await userAPI.getConsumerUsers();
+      setConsumerUsers(response);
+      toast.success("User updated successfully!");
+    } catch (err) {
+      console.error("Error refreshing users:", err);
+      toast.error("An error occurred. Please try again.");
+    }
     handleModalClose();
   };
 
@@ -300,7 +347,12 @@ function ConsumerUserList({ searchQuery = "" }) {
     initializeData();
   }, []);
 
-        if (!user || !user.roles?.some(role => ['admin', 'Admin', 'vendor_manager', 'Vendor_manager'].includes(role))) {
+  if (
+    !user ||
+    !user.roles?.some((role) =>
+      ["admin", "Admin", "vendor_manager", "Vendor_manager"].includes(role)
+    )
+  ) {
     return (
       <div className="user-management-error">
         <FiAlertCircle className="inline mr-2" /> You don't have permission to
@@ -312,32 +364,26 @@ function ConsumerUserList({ searchQuery = "" }) {
   return (
     <div className="user-management">
       <div className="user-management-content">
-      <div className="user-management-header">
-        <h1 className="user-management-title">Consumer Users</h1>
-        <button
-          className="btn btn-contained"
-          onClick={() => setShowModal(true)}
-        >
-          Add Consumer User
-        </button>
-      </div>
-
-      {(error || dataError) && (
-        <div className="user-management-error">
-          <FiAlertCircle className="inline mr-2" />
-          {error || dataError}
+        <div className="user-management-header">
+          <h1 className="user-management-title">Consumer Users</h1>
         </div>
-      )}
 
-      {(loading || localLoading) ? (
-        <Loader size="large" color="primary" />
-      ) : (
-        <TableWithControl
-          data={filteredUsers}
-          columns={columns}
-          defaultPageSize={10}
-        />
-      )}
+        {(error || dataError) && (
+          <div className="user-management-error">
+            <FiAlertCircle className="inline mr-2" />
+            {error || dataError}
+          </div>
+        )}
+
+        {loading || localLoading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={filteredUsers}
+            columns={columns}
+            defaultPageSize={10}
+          />
+        )}
       </div>
 
       <Modal

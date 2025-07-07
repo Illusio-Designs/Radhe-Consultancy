@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import api from '../services/api';
+import api from "../services/api";
 
-console.log('AuthContext: Initializing context');
+console.log("AuthContext: Initializing context");
 
 const AuthContext = createContext(null);
 
@@ -10,7 +10,11 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  console.log('AuthContext: Setting up provider with initial state:', { user, loading, error });
+  console.log("AuthContext: Setting up provider with initial state:", {
+    user,
+    loading,
+    error,
+  });
 
   useEffect(() => {
     checkAuth();
@@ -18,28 +22,28 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        console.log('AuthContext: No token found, skipping auth check');
+        console.log("AuthContext: No token found, skipping auth check");
         setLoading(false);
         return;
       }
 
-      console.log('AuthContext: Checking authentication with token');
-      const response = await api.get('/auth/me');
-      console.log('AuthContext: User data from /me endpoint:', response.data);
-      
+      console.log("AuthContext: Checking authentication with token");
+      const response = await api.get("/auth/me");
+      console.log("AuthContext: User data from /me endpoint:", response.data);
+
       // Extract user data from the response
       if (response.data && response.data.user) {
         setUser(response.data.user);
-        console.log('AuthContext: User data set from /me endpoint');
+        console.log("AuthContext: User data set from /me endpoint");
       } else {
-        console.error('AuthContext: Invalid response format from /me endpoint');
-        localStorage.removeItem('token');
+        console.error("AuthContext: Invalid response format from /me endpoint");
+        localStorage.removeItem("token");
       }
     } catch (error) {
-      console.error('AuthContext: Auth check error:', error);
-      localStorage.removeItem('token');
+      console.error("AuthContext: Auth check error:", error);
+      localStorage.removeItem("token");
     } finally {
       setLoading(false);
     }
@@ -47,32 +51,32 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('AuthContext: Starting login process for:', email);
+      console.log("AuthContext: Starting login process for:", email);
       setError(null);
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post("/auth/login", { email, password });
       const { token, user } = response.data;
-      
-      console.log('AuthContext: Login response:', { token, user });
 
-      localStorage.setItem('token', token);
+      console.log("AuthContext: Login response:", { token, user });
+
+      localStorage.setItem("token", token);
       setUser(user);
 
       return user;
     } catch (error) {
-      console.error('AuthContext: Login error:', error);
-      setError(error.response?.data?.error || 'Login failed');
+      console.error("AuthContext: Login error:", error);
+      setError(error.response?.data?.error || "Login failed");
       throw error;
     }
   };
 
   const logout = () => {
-    console.log('AuthContext: Logging out user');
-    localStorage.removeItem('token');
+    console.log("AuthContext: Logging out user");
+    localStorage.removeItem("token");
     setUser(null);
   };
 
   // Helper: get all roles as lowercase
-  const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
+  const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
   const hasRole = (role) => userRoles.includes(role.toLowerCase());
 
   const value = {
@@ -84,12 +88,17 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     hasRole,
     userRoles,
-    isAdmin: hasRole('admin'),
-    isCompany: hasRole('company'),
-    isConsumer: hasRole('consumer')
+    isAdmin: hasRole("admin"),
+    isCompany: hasRole("company"),
+    isConsumer: hasRole("consumer"),
+    isVendorManager: hasRole("vendor_manager"),
+    isUserManager: hasRole("user_manager"),
+    isInsuranceManager: hasRole("insurance_manager"),
+    isComplianceManager: hasRole("compliance_manager"),
+    isDSCManager: hasRole("dsc_manager"),
   };
 
-  console.log('AuthContext: Providing context value:', value);
+  console.log("AuthContext: Providing context value:", value);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -1,9 +1,12 @@
-import { Outlet } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { Outlet } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AuthLayout = () => {
   return (
     <div className="auth-layout">
+      <ToastContainer />
       <div className="auth-container">
         <div className="auth-header">
           <Link to="/" className="logo">
@@ -18,4 +21,4 @@ const AuthLayout = () => {
   );
 };
 
-export default AuthLayout; 
+export default AuthLayout;

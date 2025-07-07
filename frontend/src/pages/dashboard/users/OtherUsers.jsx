@@ -12,6 +12,7 @@ import Select from "react-select";
 import "../../../styles/pages/dashboard/users/User.css";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useData } from "../../../contexts/DataContext";
+import { toast } from "react-toastify";
 
 // UserForm component
 const UserForm = ({ user, onClose, onUserUpdated }) => {
@@ -19,7 +20,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     username: user?.username || "",
     email: user?.email || "",
     password: "",
-    role_ids: user?.roles?.map(role => role.id) || [],
+    role_ids: user?.roles?.map((role) => role.id) || [],
     user_type_id: user?.user_type_id || 1,
     status: user?.status || "Active",
   });
@@ -39,12 +40,12 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
   // Fix: Only update formData if values actually change
   useEffect(() => {
     if (user) {
-      setFormData(prev => {
+      setFormData((prev) => {
         const newFormData = {
           username: user.username || "",
           email: user.email || "",
           password: "",
-          role_ids: user.roles?.map(role => role.id) || [],
+          role_ids: user.roles?.map((role) => role.id) || [],
           user_type_id: user.user_type_id || 1,
           status: user.status || "Active",
         };
@@ -55,7 +56,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
       });
     } else {
       // For new users, don't set any default roles - let user choose
-      setFormData(prev => {
+      setFormData((prev) => {
         const newFormData = {
           username: "",
           email: "",
@@ -106,13 +107,15 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
   };
 
   // react-select options
-  const roleOptions = otherRoles.map(role => ({
+  const roleOptions = otherRoles.map((role) => ({
     value: role.id,
     label: role.role_name,
   }));
 
   // Get current selected values for react-select
-  const selectedValues = roleOptions.filter(opt => formData.role_ids.includes(opt.value));
+  const selectedValues = roleOptions.filter((opt) =>
+    formData.role_ids.includes(opt.value)
+  );
 
   return (
     <>
@@ -124,7 +127,9 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             type="text"
             name="username"
             value={formData.username}
-            onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, username: e.target.value }))
+            }
             className="user-management-form-input"
             placeholder="Enter User Name"
             required
@@ -136,7 +141,9 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             type="email"
             name="email"
             value={formData.email}
-            onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, email: e.target.value }))
+            }
             className="user-management-form-input"
             placeholder="Enter Email"
             required
@@ -149,7 +156,9 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
               type="password"
               name="password"
               value={formData.password}
-              onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, password: e.target.value }))
+              }
               className="user-management-form-input"
               placeholder="Password"
               required={!user}
@@ -164,10 +173,12 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
             options={roleOptions}
             value={selectedValues}
             onChange={(selected) => {
-              console.log('Selected:', selected);
-              const newRoleIds = selected ? selected.map(opt => opt.value) : [];
-              console.log('New role_ids:', newRoleIds);
-              setFormData(prev => ({
+              console.log("Selected:", selected);
+              const newRoleIds = selected
+                ? selected.map((opt) => opt.value)
+                : [];
+              console.log("New role_ids:", newRoleIds);
+              setFormData((prev) => ({
                 ...prev,
                 role_ids: newRoleIds,
               }));
@@ -183,7 +194,9 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
           <select
             name="status"
             value={formData.status}
-            onChange={e => setFormData(prev => ({ ...prev, status: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, status: e.target.value }))
+            }
             className="user-management-form-input"
             placeholder="Status"
           >
@@ -231,13 +244,29 @@ function OtherUserList({ searchQuery = "" }) {
     initializeData();
   }, []);
 
+  // Debug: Log users data structure
+  useEffect(() => {
+    console.log("Users data:", users);
+    console.log("Roles data:", roles);
+  }, [users, roles]);
+
   // Filter users to show Admin and other roles except Company and Consumer
   const otherUsers = users.filter((user) => {
+    console.log("Filtering user:", user);
+
     // Check if user has any roles that are not Company or Consumer
     if (user.roles && user.roles.length > 0) {
-      return user.roles.some(role => 
-        role !== "Company" && role !== "Consumer"
-      );
+      return user.roles.some((role) => {
+        // Check if role is an object with role_name property
+        if (typeof role === "object" && role.role_name) {
+          return role.role_name !== "Company" && role.role_name !== "Consumer";
+        }
+        // If role is just a string
+        if (typeof role === "string") {
+          return role !== "Company" && role !== "Consumer";
+        }
+        return false;
+      });
     }
 
     // Fallback for old data structure
@@ -248,16 +277,33 @@ function OtherUserList({ searchQuery = "" }) {
 
     // If role is not in user object, try to find it in roles array
     const userRole = roles.find((role) => role.id === user.role_id);
-    return userRole && userRole.role_name !== "Company" && userRole.role_name !== "Consumer";
+    return (
+      userRole &&
+      userRole.role_name !== "Company" &&
+      userRole.role_name !== "Consumer"
+    );
   });
 
   const getRoleNames = (user) => {
-    // Check for new multiple roles structure
+    console.log("Getting role names for user:", user);
+
+    // Check for new multiple roles structure with role_name property
     if (user.roles && user.roles.length > 0) {
-      return user.roles.map(role => {
-        const isPrimary = role.UserRole?.is_primary;
-        return `${role}${isPrimary ? ' (Primary)' : ''}`;
-      }).join(", ");
+      const roleNames = user.roles.map((role) => {
+        console.log("Processing role:", role);
+        // Check if role is an object with role_name property
+        if (typeof role === "object" && role.role_name) {
+          const isPrimary = role.UserRole?.is_primary;
+          return `${role.role_name}${isPrimary ? " (Primary)" : ""}`;
+        }
+        // If role is just a string
+        if (typeof role === "string") {
+          return role;
+        }
+        return "Unknown Role";
+      });
+      console.log("Role names:", roleNames);
+      return roleNames.join(", ");
     }
 
     // Fallback for old single role structure
@@ -273,12 +319,13 @@ function OtherUserList({ searchQuery = "" }) {
   const filteredUsers = otherUsers.filter((user) => {
     const matchesStatus =
       !filters.status || (user.status || "Active") === filters.status;
-    
+
     // Add search functionality
-    const matchesSearch = !searchQuery || 
+    const matchesSearch =
+      !searchQuery ||
       user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesStatus && matchesSearch;
   });
 
@@ -287,9 +334,11 @@ function OtherUserList({ searchQuery = "" }) {
       try {
         await userAPI.deleteUser(userId);
         await refreshData();
+        toast.success("User deleted successfully!");
       } catch (err) {
         setError("Failed to delete user");
         console.error(err);
+        toast.error("An error occurred. Please try again.");
       }
     }
   };
@@ -308,6 +357,7 @@ function OtherUserList({ searchQuery = "" }) {
   const handleUserUpdated = async () => {
     await refreshData();
     handleModalClose();
+    toast.success("User updated successfully!");
   };
 
   const columns = [
@@ -389,7 +439,7 @@ function OtherUserList({ searchQuery = "" }) {
           </div>
         )}
 
-        {(loading || localLoading) ? (
+        {loading || localLoading ? (
           <Loader size="large" color="primary" />
         ) : (
           <TableWithControl

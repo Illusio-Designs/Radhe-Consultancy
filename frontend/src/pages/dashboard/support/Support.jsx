@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import '../../../styles/pages/dashboard//support/support.css'; // Import the CSS file for styling
+import React, { useState } from "react";
+import "../../../styles/pages/dashboard//support/support.css"; // Import the CSS file for styling
+import { toast } from "react-toastify";
 
 const Support = () => {
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const mailtoLink = `mailto:Info@illusiodesigns.agency?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    const mailtoLink = `mailto:Info@illusiodesigns.agency?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(message)}`;
     window.location.href = mailtoLink;
   };
 
@@ -35,7 +38,9 @@ const Support = () => {
               required
             ></textarea>
           </div>
-          <button type="submit" className="auth-button">Send</button>
+          <button type="submit" className="auth-button">
+            Send
+          </button>
         </form>
       </div>
     </div>

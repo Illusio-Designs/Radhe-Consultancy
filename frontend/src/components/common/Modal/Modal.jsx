@@ -47,7 +47,12 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
             <FaTimes />
           </button>
         </div>
-        <div className="modal-body" style={{ overflowY: 'auto', maxHeight: '70vh' }}>{children}</div>
+        <div
+          className="modal-body"
+          style={{ overflowY: "auto", maxHeight: "50vh" }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle } from 'react-icons/fi';
-import { roleAPI } from '../../../services/api';
-import TableWithControl from '../../../components/common/Table/TableWithControl';
-import Button from '../../../components/common/Button/Button';
-import ActionButton from '../../../components/common/ActionButton/ActionButton';
-import Modal from '../../../components/common/Modal/Modal';
-import Loader from '../../../components/common/Loader/Loader';
-import '../../../styles/pages/dashboard/roles/Role.css';
+import React, { useState, useEffect } from "react";
+import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle } from "react-icons/fi";
+import { roleAPI } from "../../../services/api";
+import TableWithControl from "../../../components/common/Table/TableWithControl";
+import Button from "../../../components/common/Button/Button";
+import ActionButton from "../../../components/common/ActionButton/ActionButton";
+import Modal from "../../../components/common/Modal/Modal";
+import Loader from "../../../components/common/Loader/Loader";
+import "../../../styles/pages/dashboard/roles/Role.css";
+import { toast } from "react-toastify";
 
 const RoleForm = ({ role, onClose, onRoleUpdated }) => {
   const [formData, setFormData] = useState({
-    role_name: '',
-    description: '',
-    permissions: []
+    role_name: "",
+    description: "",
+    permissions: [],
   });
 
   const handleSubmit = async (e) => {
@@ -20,7 +21,7 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
     try {
       if (role) {
         if (!role.role_id) {
-          throw new Error('Invalid role ID');
+          throw new Error("Invalid role ID");
         }
         await roleAPI.updateRole(role.role_id, formData);
       } else {
@@ -28,37 +29,35 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
       }
       onRoleUpdated();
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to save role');
+      setError(
+        err.response?.data?.error || err.message || "Failed to save role"
+      );
     }
   };
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (role) {
       setFormData({
-        role_name: role.role_name || '',
-        description: role.description || '',
-        permissions: role.permissions || []
+        role_name: role.role_name || "",
+        description: role.description || "",
+        permissions: role.permissions || [],
       });
     }
   }, [role]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   return (
     <>
-      {error && (
-        <div className="role-management-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="role-management-error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="role-management-form">
         <div className="role-management-form-group">
@@ -85,8 +84,12 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
         </div>
 
         <div className="role-management-form-actions">
-          <Button type="button" variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">{role ? 'Update' : 'Create'}</Button>
+          <Button type="button" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="contained">
+            {role ? "Update" : "Create"}
+          </Button>
         </div>
       </form>
     </>
@@ -111,8 +114,8 @@ function RoleManagement() {
       setRoles(data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch roles');
-      console.error('Error fetching roles:', err);
+      setError("Failed to fetch roles");
+      console.error("Error fetching roles:", err);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -121,20 +124,22 @@ function RoleManagement() {
   };
 
   const handleDelete = async (roleId) => {
-    if (window.confirm('Are you sure you want to delete this role?')) {
+    if (window.confirm("Are you sure you want to delete this role?")) {
       try {
         await roleAPI.deleteRole(roleId);
         await fetchRoles();
+        toast.success("Role deleted successfully!");
       } catch (err) {
-        setError('Failed to delete role');
-        console.error('Error deleting role:', err);
+        setError("Failed to delete role");
+        console.error("Error deleting role:", err);
+        toast.error("An error occurred. Please try again.");
       }
     }
   };
 
   const handleEdit = (role) => {
     if (!role || !role.role_id) {
-      setError('Invalid role data');
+      setError("Invalid role data");
       return;
     }
     setSelectedRole(role);
@@ -149,14 +154,15 @@ function RoleManagement() {
   const handleRoleUpdated = async () => {
     await fetchRoles();
     handleModalClose();
+    toast.success("Role updated successfully!");
   };
 
   const columns = [
-    { key: 'role_name', label: 'Role Name', sortable: true },
-    { key: 'description', label: 'Description', sortable: true },
+    { key: "role_name", label: "Role Name", sortable: true },
+    { key: "description", label: "Description", sortable: true },
     {
-      key: 'actions',
-      label: 'Actions',
+      key: "actions",
+      label: "Actions",
       render: (_, role) => (
         <div className="role-management-actions">
           <ActionButton
@@ -174,8 +180,8 @@ function RoleManagement() {
             <FiTrash2 />
           </ActionButton>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -183,9 +189,9 @@ function RoleManagement() {
       <div className="role-management-content">
         <div className="role-management-header">
           <h1 className="role-management-title">Role Management</h1>
-          <Button 
-            variant="contained" 
-            onClick={() => setShowModal(true)} 
+          <Button
+            variant="contained"
+            onClick={() => setShowModal(true)}
             icon={<FiPlus />}
           >
             Add Role
@@ -212,12 +218,12 @@ function RoleManagement() {
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
-        title={selectedRole ? 'Edit Role' : 'Add New Role'}
+        title={selectedRole ? "Edit Role" : "Add New Role"}
       >
-        <RoleForm 
-          role={selectedRole} 
-          onClose={handleModalClose} 
-          onRoleUpdated={handleRoleUpdated} 
+        <RoleForm
+          role={selectedRole}
+          onClose={handleModalClose}
+          onRoleUpdated={handleRoleUpdated}
         />
       </Modal>
     </div>

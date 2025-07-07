@@ -1,12 +1,12 @@
-const authService = require('../services/authService');
-const { User, Role, Company, Consumer, Permission } = require('../models');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const { OAuth2Client } = require('google-auth-library');
+const authService = require("../services/authService");
+const { User, Role, Company, Consumer, Permission } = require("../models");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const determineUserRole = require('../utils/roleDetermination');
-const userService = require('../services/userService');
-const { sendWhatsAppOTP, verifyOTP } = require('../utils/otp');
+const determineUserRole = require("../utils/roleDetermination");
+const userService = require("../services/userService");
+const { sendWhatsAppOTP, verifyOTP } = require("../utils/otp");
 
 class AuthController {
   constructor() {
@@ -27,13 +27,13 @@ class AuthController {
       // Check if user already exists
       const existingUser = await User.findOne({ where: { email } });
       if (existingUser) {
-        return res.status(400).json({ error: 'User already exists' });
+        return res.status(400).json({ error: "User already exists" });
       }
 
       // Get role
       const role = await Role.findOne({ where: { role_name } });
       if (!role) {
-        return res.status(400).json({ error: 'Invalid role' });
+        return res.status(400).json({ error: "Invalid role" });
       }
 
       // Create user with roles
@@ -41,43 +41,43 @@ class AuthController {
         email,
         password,
         username,
-        role_ids: [role.id]
+        role_ids: [role.id],
       });
 
       // Generate JWT token
       const token = jwt.sign(
         { userId: user.user_id, role: role.role_name },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
 
       res.status(201).json({
-        message: 'User registered successfully',
+        message: "User registered successfully",
         token,
         user: {
           user_id: user.user_id,
           email: user.email,
           username: user.username,
-          role_name: role.role_name
-        }
+          role_name: role.role_name,
+        },
       });
     } catch (error) {
-      console.error('Register error:', error);
+      console.error("Register error:", error);
       res.status(400).json({ error: error.message });
     }
   }
 
   async login(req, res) {
     try {
-      console.log('Login attempt:', { email: req.body.email });
-      
+      console.log("Login attempt:", { email: req.body.email });
+
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
-        console.log('Login failed: Missing credentials');
+        console.log("Login failed: Missing credentials");
         return res.status(400).json({
           success: false,
-          error: 'Email and password are required'
+          error: "Email and password are required",
         });
       }
 
@@ -85,10 +85,10 @@ class AuthController {
       const { found, role, userData } = await determineUserRole(email);
 
       if (!found) {
-        console.log('Login failed: User not found for email:', email);
+        console.log("Login failed: User not found for email:", email);
         return res.status(401).json({
           success: false,
-          error: 'Invalid credentials'
+          error: "Invalid credentials",
         });
       }
 
@@ -96,48 +96,50 @@ class AuthController {
       try {
         const isValidPassword = await userData.validatePassword(password);
         if (!isValidPassword) {
-          console.log('Login failed: Invalid password for user:', email);
+          console.log("Login failed: Invalid password for user:", email);
           return res.status(401).json({
             success: false,
-            error: 'Invalid credentials'
+            error: "Invalid credentials",
           });
         }
       } catch (error) {
-        console.error('Password validation error:', error);
+        console.error("Password validation error:", error);
         return res.status(500).json({
           success: false,
-          error: 'Error validating password'
+          error: "Error validating password",
         });
       }
 
       // Generate JWT token
       const token = jwt.sign(
-        { 
-          userId: userData.user_id, 
-          email: userData.email
+        {
+          userId: userData.user_id,
+          email: userData.email,
         },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
 
       // Get all roles as strings
-      const roles = userData.roles ? userData.roles.map(r => r.role_name) : [];
+      const roles = userData.roles
+        ? userData.roles.map((r) => r.role_name)
+        : [];
 
       // Get role-specific data
       let additionalData = {};
-      if (roles.includes('Company')) {
+      if (roles.includes("Company")) {
         const companyData = await Company.findOne({
-          where: { user_id: userData.user_id }
+          where: { user_id: userData.user_id },
         });
         additionalData = { company: companyData };
-      } else if (roles.includes('Consumer')) {
+      } else if (roles.includes("Consumer")) {
         const consumerData = await Consumer.findOne({
-          where: { user_id: userData.user_id }
+          where: { user_id: userData.user_id },
         });
         additionalData = { consumer: consumerData };
       }
 
-      console.log('Login successful for user:', email);
+      console.log("Login successful for user:", email, "with roles:", roles);
 
       res.json({
         success: true,
@@ -149,14 +151,14 @@ class AuthController {
           imageUrl: userData.profile_image,
           phone: userData.contact_number,
           roles,
-          ...additionalData
-        }
+          ...additionalData,
+        },
       });
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       res.status(500).json({
         success: false,
-        error: 'An error occurred during login'
+        error: "An error occurred during login",
       });
     }
   }
@@ -164,35 +166,37 @@ class AuthController {
   async googleLogin(req, res) {
     try {
       const { token } = req.body;
-      
+
       if (!token) {
-        return res.status(400).json({ error: 'Google token is required' });
+        return res.status(400).json({ error: "Google token is required" });
       }
 
       // Verify the Google token
       const ticket = await client.verifyIdToken({
         idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID
+        audience: process.env.GOOGLE_CLIENT_ID,
       });
-      
+
       const payload = ticket.getPayload();
       const { email, name, picture } = payload;
 
       // Get role
-      const role = await Role.findOne({ where: { role_name: 'User' } });
+      const role = await Role.findOne({ where: { role_name: "User" } });
       if (!role) {
-        return res.status(400).json({ error: 'Invalid role' });
+        return res.status(400).json({ error: "Invalid role" });
       }
 
       // Check if user exists
       let user = await User.findOne({
         where: { email },
-        include: [{
-          model: Role,
-          as: 'roles',
-          attributes: ['role_name'],
-          through: { attributes: ['is_primary'] }
-        }]
+        include: [
+          {
+            model: Role,
+            as: "roles",
+            attributes: ["role_name"],
+            through: { attributes: ["is_primary"] },
+          },
+        ],
       });
 
       if (!user) {
@@ -201,19 +205,20 @@ class AuthController {
           username: name,
           email,
           profile_image: picture,
-          role_ids: [role.id]
+          role_ids: [role.id],
         });
       }
 
       // Get primary role or first role
-      const primaryRole = user.roles.find(role => role.UserRole?.is_primary) || user.roles[0];
-      const roleName = primaryRole ? primaryRole.role_name : 'User';
+      const primaryRole =
+        user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
+      const roleName = primaryRole ? primaryRole.role_name : "User";
 
       // Generate JWT token
       const authToken = jwt.sign(
         { userId: user.user_id, role: roleName },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
 
       res.json({
@@ -223,51 +228,59 @@ class AuthController {
           email: user.email,
           username: user.username,
           role_name: roleName,
-          profile_image: user.profile_image
-        }
+          profile_image: user.profile_image,
+        },
       });
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error("Google login error:", error);
       res.status(401).json({ error: error.message });
     }
   }
 
   async getCurrentUser(req, res) {
     try {
-      console.log('getCurrentUser: Request user object:', req.user);
-      
+      console.log("getCurrentUser: Request user object:", req.user);
+
       // Use user_id instead of userId
       const userId = req.user.user_id;
-      
+
       // Get user from database with role and permissions
       const user = await User.findOne({
         where: { user_id: userId },
-        attributes: ['user_id', 'email', 'username', 'contact_number', 'profile_image'],
-        include: [{
-          model: Role,
-          as: 'roles',
-          attributes: ['role_name'],
-          through: { attributes: ['is_primary'] }
-        }]
+        attributes: [
+          "user_id",
+          "email",
+          "username",
+          "contact_number",
+          "profile_image",
+        ],
+        include: [
+          {
+            model: Role,
+            as: "roles",
+            attributes: ["role_name"],
+            through: { attributes: ["is_primary"] },
+          },
+        ],
       });
-      
+
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Get all roles as strings
-      const roles = user.roles ? user.roles.map(r => r.role_name) : [];
+      const roles = user.roles ? user.roles.map((r) => r.role_name) : [];
 
       // Get role-specific data
       let additionalData = {};
-      if (roles.includes('Company')) {
+      if (roles.includes("Company")) {
         const companyData = await Company.findOne({
-          where: { user_id: userId }
+          where: { user_id: userId },
         });
         additionalData = { company: companyData };
-      } else if (roles.includes('Consumer')) {
+      } else if (roles.includes("Consumer")) {
         const consumerData = await Consumer.findOne({
-          where: { user_id: userId }
+          where: { user_id: userId },
         });
         additionalData = { consumer: consumerData };
       }
@@ -281,12 +294,12 @@ class AuthController {
           phone: user.contact_number,
           imageUrl: user.profile_image,
           roles,
-          ...additionalData
-        }
+          ...additionalData,
+        },
       });
     } catch (error) {
-      console.error('Error getting current user:', error);
-      res.status(500).json({ message: 'Error getting user information' });
+      console.error("Error getting current user:", error);
+      res.status(500).json({ message: "Error getting user information" });
     }
   }
 
@@ -296,7 +309,7 @@ class AuthController {
       if (!email) {
         return res.status(400).json({
           success: false,
-          error: 'Email is required'
+          error: "Email is required",
         });
       }
 
@@ -305,13 +318,14 @@ class AuthController {
 
       res.json({
         success: true,
-        message: 'If an account exists with this email, you will receive a password reset link.'
+        message:
+          "If an account exists with this email, you will receive a password reset link.",
       });
     } catch (error) {
-      console.error('Forgot password error:', error);
+      console.error("Forgot password error:", error);
       res.status(500).json({
         success: false,
-        error: 'An error occurred while processing your request'
+        error: "An error occurred while processing your request",
       });
     }
   }
@@ -324,7 +338,7 @@ class AuthController {
       if (!password) {
         return res.status(400).json({
           success: false,
-          error: 'New password is required'
+          error: "New password is required",
         });
       }
 
@@ -337,7 +351,7 @@ class AuthController {
       if (!user) {
         return res.status(404).json({
           success: false,
-          error: 'User not found'
+          error: "User not found",
         });
       }
 
@@ -347,19 +361,22 @@ class AuthController {
 
       res.json({
         success: true,
-        message: 'Password has been reset successfully'
+        message: "Password has been reset successfully",
       });
     } catch (error) {
-      console.error('Reset password error:', error);
-      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      console.error("Reset password error:", error);
+      if (
+        error.name === "JsonWebTokenError" ||
+        error.name === "TokenExpiredError"
+      ) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid or expired reset token'
+          error: "Invalid or expired reset token",
         });
       }
       res.status(500).json({
         success: false,
-        error: 'An error occurred while resetting your password'
+        error: "An error occurred while resetting your password",
       });
     }
   }
@@ -367,35 +384,37 @@ class AuthController {
   async sendWhatsAppOTP(req, res) {
     try {
       const { phone } = req.body;
-      
+
       // Validate phone number
       if (!phone || phone.length < 10) {
-        return res.status(400).json({ message: 'Invalid phone number' });
+        return res.status(400).json({ message: "Invalid phone number" });
       }
 
       // Check if user exists with this phone number in any of the tables
-      const user = await User.findOne({ 
-        where: { contact_number: phone }
+      const user = await User.findOne({
+        where: { contact_number: phone },
       });
 
       const company = await Company.findOne({
-        where: { contact_number: phone }
+        where: { contact_number: phone },
       });
 
       const consumer = await Consumer.findOne({
-        where: { phone_number: phone }
+        where: { phone_number: phone },
       });
 
       if (!user && !company && !consumer) {
-        return res.status(404).json({ message: 'No account found with this phone number' });
+        return res
+          .status(404)
+          .json({ message: "No account found with this phone number" });
       }
 
       // Send OTP
       await sendWhatsAppOTP(phone);
-      res.json({ message: 'OTP sent successfully' });
+      res.json({ message: "OTP sent successfully" });
     } catch (error) {
-      console.error('Send OTP error:', error);
-      res.status(500).json({ message: 'Failed to send OTP' });
+      console.error("Send OTP error:", error);
+      res.status(500).json({ message: "Failed to send OTP" });
     }
   }
 
@@ -405,26 +424,26 @@ class AuthController {
 
       // Validate inputs
       if (!phone || !otp) {
-        return res.status(400).json({ message: 'Phone and OTP are required' });
+        return res.status(400).json({ message: "Phone and OTP are required" });
       }
 
       // Verify OTP
       const isValid = verifyOTP(phone, otp);
       if (!isValid) {
-        return res.status(401).json({ message: 'Invalid or expired OTP' });
+        return res.status(401).json({ message: "Invalid or expired OTP" });
       }
 
       // Get user from any of the tables
-      const user = await User.findOne({ 
-        where: { contact_number: phone }
+      const user = await User.findOne({
+        where: { contact_number: phone },
       });
 
       const company = await Company.findOne({
-        where: { contact_number: phone }
+        where: { contact_number: phone },
       });
 
       const consumer = await Consumer.findOne({
-        where: { phone_number: phone }
+        where: { phone_number: phone },
       });
 
       let userData = null;
@@ -432,26 +451,26 @@ class AuthController {
 
       if (user) {
         userData = user;
-        userType = 'user';
+        userType = "user";
       } else if (company) {
         userData = company;
-        userType = 'company';
+        userType = "company";
       } else if (consumer) {
         userData = consumer;
-        userType = 'consumer';
+        userType = "consumer";
       } else {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Generate JWT token
       const token = jwt.sign(
-        { 
-          id: userData.id, 
+        {
+          id: userData.id,
           email: userData.email,
-          type: userType
+          type: userType,
         },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
 
       res.json({
@@ -461,12 +480,12 @@ class AuthController {
           email: userData.email,
           name: userData.name || userData.username,
           phone: phone,
-          type: userType
-        }
+          type: userType,
+        },
       });
     } catch (error) {
-      console.error('Verify OTP error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      console.error("Verify OTP error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 }

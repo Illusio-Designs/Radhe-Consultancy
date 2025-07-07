@@ -735,41 +735,63 @@ function ECP({ searchQuery = "" }) {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
-    fetchPolicies();
+    fetchPolicies(1, 10);
   }, []);
 
   // Handle search when searchQuery changes
   useEffect(() => {
-    console.log('ECP: searchQuery changed:', searchQuery);
+    console.log("ECP: searchQuery changed:", searchQuery);
     if (searchQuery && searchQuery.length >= 3) {
-      console.log('ECP: Triggering server search for:', searchQuery);
+      console.log("ECP: Triggering server search for:", searchQuery);
       handleSearchPolicies(searchQuery);
     } else if (searchQuery === "") {
-      console.log('ECP: Clearing search, fetching all policies');
-      fetchPolicies();
+      console.log("ECP: Clearing search, fetching all policies");
+      fetchPolicies(1, pagination.pageSize);
     }
-  }, [searchQuery]);
+  }, [searchQuery, pagination.pageSize]);
 
-  const fetchPolicies = async () => {
+  const fetchPolicies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      console.log('ECP: Fetching all policies');
-      const response = await employeeCompensationAPI.getAllPolicies();
-      console.log('ECP: Fetch response:', response);
-      if (response && Array.isArray(response.policies)) {
+      console.log(
+        "ECP: Fetching policies for page:",
+        page,
+        "pageSize:",
+        pageSize
+      );
+      const response = await employeeCompensationAPI.getAllPolicies({
+        page,
+        pageSize,
+      });
+      console.log("ECP: Fetch response:", response);
+
+      if (response && response.policies && Array.isArray(response.policies)) {
         setPolicies(response.policies);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
         setError(null);
       } else if (Array.isArray(response)) {
         setPolicies(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else {
         setError("Invalid data format received from server");
         setPolicies([]);
       }
     } catch (err) {
-      console.error('ECP: Error fetching policies:', err);
+      console.error("ECP: Error fetching policies:", err);
       setError("");
       setPolicies([]);
     } finally {
@@ -781,22 +803,39 @@ function ECP({ searchQuery = "" }) {
     try {
       setLoading(true);
       setError(null);
-      console.log('ECP: Searching policies with query:', query);
-      const response = await employeeCompensationAPI.searchPolicies({ q: query });
-      console.log('ECP: Search response:', response);
-      
+      console.log("ECP: Searching policies with query:", query);
+      const response = await employeeCompensationAPI.searchPolicies({
+        q: query,
+        page: 1,
+        pageSize: pagination.pageSize,
+      });
+      console.log("ECP: Search response:", response);
+
       // Handle both expected format and direct array response
       if (response && response.success && Array.isArray(response.policies)) {
         setPolicies(response.policies);
+        setPagination({
+          currentPage: response.currentPage || 1,
+          pageSize: response.pageSize || pagination.pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || response.policies.length,
+        });
         setError(null);
       } else if (Array.isArray(response)) {
         // Handle case where response is directly an array
         setPolicies(response);
+        setPagination((prev) => ({
+          ...prev,
+          currentPage: 1,
+          totalItems: response.length,
+        }));
         setError(null);
       } else {
         console.error("Invalid search response format:", response);
         // Fallback to client-side search if server search fails
-        console.log('ECP: Server search failed, falling back to client-side search');
+        console.log(
+          "ECP: Server search failed, falling back to client-side search"
+        );
         // Don't set error here, let client-side search handle it
         // setError("Invalid data format received from server");
         // setPolicies([]);
@@ -804,7 +843,9 @@ function ECP({ searchQuery = "" }) {
     } catch (err) {
       console.error("Error searching ECP policies:", err);
       // Fallback to client-side search if server search fails
-      console.log('ECP: Server search error, falling back to client-side search');
+      console.log(
+        "ECP: Server search error, falling back to client-side search"
+      );
       // Don't set error here, let client-side search handle it
       // setError("Failed to search ECP policies");
       // setPolicies([]);
@@ -815,69 +856,9 @@ function ECP({ searchQuery = "" }) {
     }
   };
 
-  // Filter policies based on search query (client-side fallback)
-  const filteredPolicies = React.useMemo(() => {
-    console.log('ECP: Filtering policies with searchQuery:', searchQuery);
-    console.log('ECP: Total policies to filter:', policies.length);
-    
-    if (!searchQuery || searchQuery.length < 3) {
-      console.log('ECP: No search query or too short, returning all policies');
-      return policies;
-    }
-
-    const filtered = policies.filter((policy) => {
-      const searchLower = searchQuery.toLowerCase();
-      
-      // Search in policy fields
-      const policyFields = [
-        policy.policy_number,
-        policy.business_type,
-        policy.customer_type,
-        policy.email,
-        policy.mobile_number,
-        policy.medical_cover,
-        policy.net_premium,
-        policy.gst_number,
-        policy.pan_number,
-        policy.remarks
-      ].some(field => field && field.toString().toLowerCase().includes(searchLower));
-
-      // Search in company name
-      const companyName = policy.policyHolder?.company_name || 
-                         policy.companyPolicyHolder?.company_name ||
-                         policy.company?.company_name ||
-                         policy.company_name;
-      const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
-
-      // Search in consumer name
-      const consumerName = policy.policyHolder?.name || 
-                          policy.consumerPolicyHolder?.name ||
-                          policy.consumer?.name ||
-                          policy.consumer_name;
-      const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
-
-      // Search in insurance company name
-      const insuranceCompanyName = policy.provider?.name;
-      const insuranceMatch = insuranceCompanyName && insuranceCompanyName.toLowerCase().includes(searchLower);
-
-      const matches = policyFields || companyMatch || consumerMatch || insuranceMatch;
-      
-      if (matches) {
-        console.log('ECP: Policy matches search:', {
-          id: policy.id,
-          policy_number: policy.policy_number,
-          companyName,
-          consumerName,
-          insuranceCompanyName
-        });
-      }
-      
-      return matches;
-    });
-    
-    console.log('ECP: Filtered policies count:', filtered.length);
-    return filtered;
-  }, [policies, searchQuery]);
+  // For server-side pagination, we don't need client-side filtering
+  // The server handles the filtering and pagination
+  const filteredPolicies = policies;
 
   const toCamelCase = (policy) => ({
     id: policy.id,
@@ -910,7 +891,7 @@ function ECP({ searchQuery = "" }) {
       try {
         await employeeCompensationAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
-        await fetchPolicies();
+        await fetchPolicies(pagination.currentPage, pagination.pageSize);
       } catch (err) {
         setError("Failed to delete policy");
         toast.error("Failed to delete policy");
@@ -929,8 +910,18 @@ function ECP({ searchQuery = "" }) {
   };
 
   const handlePolicyUpdated = async () => {
-    await fetchPolicies();
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("ECP: Page changed to:", page);
+    await fetchPolicies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("ECP: Page size changed to:", newPageSize);
+    await fetchPolicies(1, newPageSize);
   };
 
   const columns = [
@@ -948,16 +939,25 @@ function ECP({ searchQuery = "" }) {
       label: "Company Name / Consumer Name",
       sortable: false,
       render: (_, policy) => {
-        if (policy.policyHolder && policy.policyHolder.company_name) return policy.policyHolder.company_name;
-        if (policy.policyHolder && policy.policyHolder.name) return policy.policyHolder.name;
-        if (policy.companyPolicyHolder && policy.companyPolicyHolder.company_name) return policy.companyPolicyHolder.company_name;
-        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name) return policy.consumerPolicyHolder.name;
+        if (policy.policyHolder && policy.policyHolder.company_name)
+          return policy.policyHolder.company_name;
+        if (policy.policyHolder && policy.policyHolder.name)
+          return policy.policyHolder.name;
+        if (
+          policy.companyPolicyHolder &&
+          policy.companyPolicyHolder.company_name
+        )
+          return policy.companyPolicyHolder.company_name;
+        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name)
+          return policy.consumerPolicyHolder.name;
         if (policy.company_name) return policy.company_name;
         if (policy.consumer_name) return policy.consumer_name;
-        if (policy.company && policy.company.company_name) return policy.company.company_name;
-        if (policy.consumer && policy.consumer.name) return policy.consumer.name;
-        return '-';
-      }
+        if (policy.company && policy.company.company_name)
+          return policy.company.company_name;
+        if (policy.consumer && policy.consumer.name)
+          return policy.consumer.name;
+        return "-";
+      },
     },
     { key: "policy_number", label: "Policy Number", sortable: true },
     { key: "business_type", label: "Business Type", sortable: true },
@@ -1014,7 +1014,13 @@ function ECP({ searchQuery = "" }) {
           <TableWithControl
             data={filteredPolicies}
             columns={columns}
-            defaultPageSize={10}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
           />
         )}
       </div>
