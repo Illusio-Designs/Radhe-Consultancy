@@ -37,50 +37,82 @@ class UserService {
 
   // Get user by ID
   async getUserById(userId) {
-    return User.findByPk(userId, {
-      include: [
-        {
-          model: Role,
-          as: "roles",
-          through: { attributes: ["is_primary", "assigned_at"] },
-        },
-      ],
-    });
+    try {
+      // Try with roles include
+      const userWithRoles = await User.findByPk(userId, {
+        include: [
+          {
+            model: Role,
+            as: "roles",
+            through: { attributes: ["is_primary", "assigned_at"] },
+          },
+        ],
+      });
+      if (userWithRoles) {
+        console.log(`[UserService] getUserById: User with roles found for userId=${userId}`);
+        return userWithRoles;
+      } else {
+        console.error(`[UserService] getUserById: No user found for userId=${userId} with roles. Trying without include...`);
+        // Try without include
+        const user = await User.findByPk(userId);
+        if (user) {
+          console.log(`[UserService] getUserById: User found for userId=${userId} WITHOUT roles include`);
+        } else {
+          console.error(`[UserService] getUserById: No user found for userId=${userId} even WITHOUT roles include`);
+        }
+        return user;
+      }
+    } catch (error) {
+      console.error(`[UserService] getUserById: Error fetching user for userId=${userId}:`, error);
+      throw error;
+    }
   }
 
   // Create new user
   async createUser(userData, options = {}) {
-    const { role_ids, ...userInfo } = userData;
-    const { transaction } = options;
+    try {
+      const { role_ids, ...userInfo } = userData;
+      const { transaction } = options;
 
-    // Create user first
-    const user = await User.create(userInfo, { transaction });
+      // Create user first
+      const user = await User.create(userInfo, { transaction });
+      console.log('[UserService] createUser: User created:', user ? user.user_id : user);
 
-    // Assign roles if provided
-    if (role_ids && role_ids.length > 0) {
-      const roles = await Role.findAll({
-        where: { id: role_ids },
-        transaction,
-      });
-      if (roles.length !== role_ids.length) {
-        throw new Error("One or more roles not found");
-      }
-
-      // Assign roles with primary role logic
-      for (let i = 0; i < roles.length; i++) {
-        const isPrimary = i === 0; // First role is primary
-        await user.addRole(roles[i], {
-          through: {
-            is_primary: isPrimary,
-            assigned_by: user.user_id,
-          },
+      // Assign roles if provided
+      if (role_ids && role_ids.length > 0) {
+        const roles = await Role.findAll({
+          where: { id: role_ids },
           transaction,
         });
-      }
-    }
+        if (roles.length !== role_ids.length) {
+          throw new Error("One or more roles not found");
+        }
 
-    // Return user with roles
-    return this.getUserById(user.user_id);
+        // Assign roles with primary role logic
+        for (let i = 0; i < roles.length; i++) {
+          const isPrimary = i === 0; // First role is primary
+          await user.addRole(roles[i], {
+            through: {
+              is_primary: isPrimary,
+              assigned_by: user.user_id,
+            },
+            transaction,
+          });
+        }
+      }
+
+      // Return user with roles
+      const userWithRoles = await this.getUserById(user.user_id);
+      if (!userWithRoles) {
+        console.error(`[UserService] createUser: getUserById returned null for user_id=${user.user_id}`);
+      } else {
+        console.log(`[UserService] createUser: getUserById returned user for user_id=${user.user_id}`);
+      }
+      return userWithRoles;
+    } catch (error) {
+      console.error('[UserService] Error in createUser:', error);
+      throw error;
+    }
   }
 
   // Update user

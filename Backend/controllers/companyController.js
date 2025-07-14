@@ -13,35 +13,6 @@ const companyController = {
       console.log('[Company] ===== Starting company creation process =====');
       console.log('[Company] Request body:', JSON.stringify(req.body, null, 2));
       console.log('[Company] Request files:', req.files ? JSON.stringify(req.files, null, 2) : 'No files');
-      
-      if (req.files) {
-        console.log('[Company] File details:');
-        if (req.files.gst_document) {
-          console.log('[Company] GST Document:', {
-            fieldname: req.files.gst_document[0].fieldname,
-            originalname: req.files.gst_document[0].originalname,
-            encoding: req.files.gst_document[0].encoding,
-            mimetype: req.files.gst_document[0].mimetype,
-            filename: req.files.gst_document[0].filename,
-            size: req.files.gst_document[0].size
-          });
-        } else {
-          console.log('[Company] No GST document uploaded');
-        }
-
-        if (req.files.pan_document) {
-          console.log('[Company] PAN Document:', {
-            fieldname: req.files.pan_document[0].fieldname,
-            originalname: req.files.pan_document[0].originalname,
-            encoding: req.files.pan_document[0].encoding,
-            mimetype: req.files.pan_document[0].mimetype,
-            filename: req.files.pan_document[0].filename,
-            size: req.files.pan_document[0].size
-          });
-        } else {
-          console.log('[Company] No PAN document uploaded');
-        }
-      }
 
       // Extract form data from request body
       const formData = req.body;
@@ -51,8 +22,6 @@ const companyController = {
       const requiredFields = [
         'company_name',
         'owner_name',
-        'owner_address',
-        'designation',
         'company_address',
         'contact_number',
         'company_email',
@@ -62,10 +31,8 @@ const companyController = {
         'nature_of_work',
         'type_of_company'
       ];
-
       const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
       if (missingFields.length > 0) {
-        console.log('[Company] Missing required fields:', missingFields);
         return res.status(400).json({
           success: false,
           error: `Missing required fields: ${missingFields.join(', ')}`
@@ -81,9 +48,7 @@ const companyController = {
         const existingCompany = await Company.findOne({
           where: { gst_number: formData.gst_number }
         });
-
         if (existingCompany) {
-          console.log('[Company] Company with GST number already exists:', formData.gst_number);
           await transaction.rollback();
           return res.status(400).json({
             success: false,
@@ -93,83 +58,101 @@ const companyController = {
       }
 
       // Check if user with same email exists
-      let user = await User.findOne({
-        where: {
-          email: formData.company_email
-        }
-      });
-
+      let user = await User.findOne({ where: { email: formData.company_email } });
       if (!user) {
-        console.log('[Company] Creating new user for email:', formData.company_email);
         // Create new user with company role
         const randomPassword = Math.random().toString(36).slice(-8);
-        // Get company role
         const companyRole = await Role.findOne({ where: { role_name: 'Company' } });
         if (!companyRole) {
-          throw new Error('Company role not found');
+          await transaction.rollback();
+          return res.status(500).json({
+            success: false,
+            error: 'Company role not found in database'
+          });
         }
-
-        user = await userService.createUser({
-          username: formData.owner_name,
-          email: formData.company_email,
-          password: randomPassword,
-          role_ids: [companyRole.id]
-        }, { transaction });
-        console.log('[Company] New user created:', user.user_id);
+        try {
+          user = await userService.createUser({
+            username: formData.owner_name,
+            email: formData.company_email,
+            password: randomPassword,
+            role_ids: [companyRole.id]
+          }, { transaction });
+        } catch (err) {
+          await transaction.rollback();
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to create user',
+            details: err.message
+          });
+        }
       } else {
-        console.log('[Company] Existing user found:', user.user_id);
+        // Ensure user has the Company role
+        const companyRole = await Role.findOne({ where: { role_name: 'Company' } });
+        if (companyRole) {
+          const hasRole = await user.hasRole(companyRole);
+          if (!hasRole) {
+            await user.addRole(companyRole, { through: { is_primary: true, assigned_by: user.user_id }, transaction });
+          }
+        }
       }
-
       if (!user || !user.user_id) {
-        throw new Error('Failed to create or find user');
+        await transaction.rollback();
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create or find user',
+          userObject: user
+        });
       }
 
       // Create new company
-      console.log('[Company] Creating new company record');
-      const company = await Company.create({
-        company_name: formData.company_name,
-        owner_name: formData.owner_name,
-        owner_address: formData.owner_address,
-        designation: formData.designation,
-        company_address: formData.company_address,
-        contact_number: formData.contact_number,
-        company_email: formData.company_email,
-        gst_number: formData.gst_number,
-        pan_number: formData.pan_number,
-        firm_type: formData.firm_type,
-        nature_of_work: formData.nature_of_work,
-        factory_license_number: formData.factory_license_number,
-        labour_license_number: formData.labour_license_number,
-        type_of_company: formData.type_of_company,
-        company_website: formData.company_website,
-        user_id: user.user_id
-      }, { transaction });
-
-      if (!company || !company.company_id) {
-        throw new Error('Failed to create company');
+      let company;
+      try {
+        company = await Company.create({
+          company_name: formData.company_name,
+          owner_name: formData.owner_name,
+          owner_address: formData.owner_address,
+          designation: formData.designation,
+          company_address: formData.company_address,
+          contact_number: formData.contact_number,
+          company_email: formData.company_email,
+          gst_number: formData.gst_number,
+          pan_number: formData.pan_number,
+          firm_type: formData.firm_type,
+          nature_of_work: formData.nature_of_work,
+          factory_license_number: formData.factory_license_number,
+          labour_license_number: formData.labour_license_number,
+          type_of_company: formData.type_of_company,
+          company_website: formData.company_website,
+          user_id: user.user_id
+        }, { transaction });
+      } catch (err) {
+        await transaction.rollback();
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create company',
+          details: err.message
+        });
       }
-
-      console.log('[Company] Company record created:', company.company_id);
+      if (!company || !company.company_id) {
+        await transaction.rollback();
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create company',
+          companyObject: company
+        });
+      }
 
       // Handle file uploads if present
       if (req.files) {
-        console.log('[Company] Processing file uploads');
         const updateData = {};
-        
         if (req.files.gst_document && req.files.gst_document[0]) {
           updateData.gst_document_name = req.files.gst_document[0].filename;
-          console.log('[Company] GST document filename saved:', updateData.gst_document_name);
         }
-        
         if (req.files.pan_document && req.files.pan_document[0]) {
           updateData.pan_document_name = req.files.pan_document[0].filename;
-          console.log('[Company] PAN document filename saved:', updateData.pan_document_name);
         }
-
         if (Object.keys(updateData).length > 0) {
-          console.log('[Company] Updating company with document names:', updateData);
           await company.update(updateData, { transaction });
-          console.log('[Company] Company updated with document names');
         }
       }
 
@@ -185,34 +168,19 @@ const companyController = {
         }]
       });
 
-      console.log('[Company] Final company data:', {
-        id: createdCompany.company_id,
-        gstDocument: createdCompany.gst_document_name,
-        panDocument: createdCompany.pan_document_name,
-        user: createdCompany.User ? {
-          id: createdCompany.User.user_id,
-          username: createdCompany.User.username,
-          email: createdCompany.User.email
-        } : null
-      });
-
       res.status(201).json({
         success: true,
         data: createdCompany
       });
     } catch (error) {
       console.error('[Company] Error creating company:', error);
-      
-      // Only attempt rollback if transaction exists and hasn't been committed
       if (transaction && !transaction.finished) {
         try {
           await transaction.rollback();
-          console.log('[Company] Transaction rolled back');
         } catch (rollbackError) {
           console.error('[Company] Error rolling back transaction:', rollbackError);
         }
       }
-
       res.status(500).json({
         success: false,
         error: error.message

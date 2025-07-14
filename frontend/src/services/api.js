@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "https://api.radheconsultancy.co.in/api";
+  // import.meta.env.VITE_API_URL || "https://api.radheconsultancy.co.in/api";
+  import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
 
 // Create axios instance with default config
 const api = axios.create({

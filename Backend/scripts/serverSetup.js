@@ -256,6 +256,53 @@ async function setupDatabase() {
     // Disable foreign key checks temporarily
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0;');
 
+    // Clean up redundant indexes and foreign keys on all tables
+    try {
+      // Get all table names in the current database
+      const [tables] = await sequelize.query(`
+        SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();
+      `);
+      for (const tableRow of tables) {
+        const tableName = tableRow.TABLE_NAME;
+        // Drop foreign key constraints if they exist
+        const [fkConstraints] = await sequelize.query(`
+          SELECT CONSTRAINT_NAME
+          FROM information_schema.KEY_COLUMN_USAGE
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = '${tableName}'
+            AND REFERENCED_TABLE_NAME IS NOT NULL;
+        `);
+        for (const row of fkConstraints) {
+          try {
+            await sequelize.query(`ALTER TABLE \`${tableName}\` DROP FOREIGN KEY \`${row.CONSTRAINT_NAME}\`;`);
+            logToFile(`Dropped foreign key constraint: ${row.CONSTRAINT_NAME} on table ${tableName}`);
+            console.log(`Dropped foreign key constraint: ${row.CONSTRAINT_NAME} on table ${tableName}`);
+          } catch (err) {
+            logToFile(`Warning: Could not drop foreign key ${row.CONSTRAINT_NAME} on table ${tableName}: ${err.message}`);
+            console.log(`Warning: Could not drop foreign key ${row.CONSTRAINT_NAME} on table ${tableName}: ${err.message}`);
+          }
+        }
+        // Drop redundant indexes if they exist
+        const [indexes] = await sequelize.query(`SHOW INDEX FROM \`${tableName}\`;`);
+        // Skip dropping PRIMARY index
+        for (const idx of indexes) {
+          if (idx.Key_name !== 'PRIMARY') {
+            try {
+              await sequelize.query(`ALTER TABLE \`${tableName}\` DROP INDEX \`${idx.Key_name}\`;`);
+              logToFile(`Dropped index: ${idx.Key_name} on table ${tableName}`);
+              console.log(`Dropped index: ${idx.Key_name} on table ${tableName}`);
+            } catch (err) {
+              logToFile(`Warning: Could not drop index ${idx.Key_name} on table ${tableName}: ${err.message}`);
+              console.log(`Warning: Could not drop index ${idx.Key_name} on table ${tableName}: ${err.message}`);
+            }
+          }
+        }
+      }
+    } catch (cleanupError) {
+      logToFile(`Error during global table cleanup: ${cleanupError.message}`);
+      console.log(`Error during global table cleanup: ${cleanupError.message}`);
+    }
+
     try {
       // Sync tables in correct order
       await Role.sync({ alter: true });
