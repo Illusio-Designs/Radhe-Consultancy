@@ -175,10 +175,30 @@ const deleteInsuranceCompany = async (req, res) => {
   }
 };
 
+// Search insurance companies by name
+const searchInsuranceCompanies = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ success: false, error: 'Missing search query' });
+    }
+    const companies = await InsuranceCompany.findAll({
+      where: {
+        name: { [Op.like]: `%${q}%` }
+      },
+      order: [['name', 'ASC']]
+    });
+    res.json({ success: true, data: companies });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
   getAllInsuranceCompanies,
   getInsuranceCompany,
   createInsuranceCompany,
   updateInsuranceCompany,
-  deleteInsuranceCompany
+  deleteInsuranceCompany,
+  searchInsuranceCompanies
 }; 

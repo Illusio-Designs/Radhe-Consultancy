@@ -139,7 +139,8 @@ const EditInsuranceCompanyModal = ({ isOpen, onClose, company, onUpdated }) => {
   );
 };
 
-const Companies = () => {
+// Accept searchQuery as a prop
+const Companies = ({ searchQuery = "" }) => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -148,8 +149,13 @@ const Companies = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
 
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchCompanies(searchQuery);
+    } else {
+      fetchCompanies();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const fetchCompanies = async () => {
     try {
@@ -164,6 +170,25 @@ const Companies = () => {
       setError(null);
     } catch (err) {
       setError("Failed to fetch insurance companies");
+      setCompanies([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchCompanies = async (query) => {
+    try {
+      setLoading(true);
+      const response = await insuranceCompanyAPI.searchCompanies({ q: query });
+      const list = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response?.data?.data)
+        ? response.data.data
+        : [];
+      setCompanies(list);
+      setError(null);
+    } catch (err) {
+      setError("Failed to search insurance companies");
       setCompanies([]);
     } finally {
       setLoading(false);
@@ -227,13 +252,12 @@ const Companies = () => {
             Add Insurance Company
           </Button>
         </div>
-
+        {/* Removed local search bar */}
         {error && (
           <div className="insurance-error">
             <BiErrorCircle className="inline mr-2" /> {error}
           </div>
         )}
-
         {loading ? (
           <Loader size="large" color="primary" />
         ) : (

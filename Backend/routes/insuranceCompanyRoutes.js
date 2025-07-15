@@ -6,7 +6,8 @@ const {
   getInsuranceCompany,
   createInsuranceCompany,
   updateInsuranceCompany,
-  deleteInsuranceCompany
+  deleteInsuranceCompany,
+  searchInsuranceCompanies
 } = require('../controllers/insuranceCompanyController');
 const { auth } = require('../middleware/auth');
 
@@ -24,6 +25,7 @@ const validateInsuranceCompany = [
 
 // Routes with role-based access control
 router.get('/', auth, getAllInsuranceCompanies);
+router.get('/search', auth, searchInsuranceCompanies);
 router.get('/:id', auth, getInsuranceCompany);
 router.post('/', auth, validateInsuranceCompany, createInsuranceCompany);
 router.put('/:id', auth, validateInsuranceCompany, updateInsuranceCompany);

@@ -36,8 +36,9 @@ class UserService {
   }
 
   // Get user by ID
-  async getUserById(userId) {
+  async getUserById(userId, options = {}) {
     try {
+      const { transaction } = options;
       // Try with roles include
       const userWithRoles = await User.findByPk(userId, {
         include: [
@@ -47,6 +48,7 @@ class UserService {
             through: { attributes: ["is_primary", "assigned_at"] },
           },
         ],
+        transaction,
       });
       if (userWithRoles) {
         console.log(`[UserService] getUserById: User with roles found for userId=${userId}`);
@@ -54,7 +56,7 @@ class UserService {
       } else {
         console.error(`[UserService] getUserById: No user found for userId=${userId} with roles. Trying without include...`);
         // Try without include
-        const user = await User.findByPk(userId);
+        const user = await User.findByPk(userId, { transaction });
         if (user) {
           console.log(`[UserService] getUserById: User found for userId=${userId} WITHOUT roles include`);
         } else {
@@ -101,8 +103,8 @@ class UserService {
         }
       }
 
-      // Return user with roles
-      const userWithRoles = await this.getUserById(user.user_id);
+      // Return user with roles, using the same transaction
+      const userWithRoles = await this.getUserById(user.user_id, { transaction });
       if (!userWithRoles) {
         console.error(`[UserService] createUser: getUserById returned null for user_id=${user.user_id}`);
       } else {

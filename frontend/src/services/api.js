@@ -1094,6 +1094,15 @@ export const insuranceCompanyAPI = {
       throw error;
     }
   },
+
+  searchCompanies: async (params) => {
+    try {
+      const response = await api.get("/insurance-companies/search", { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // Vehicle Policy API
