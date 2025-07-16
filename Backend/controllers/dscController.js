@@ -1,4 +1,4 @@
-const { DSC, Company, Consumer, sequelize } = require('../models');
+const { DSC, Company, Consumer, sequelize, DSCLog } = require('../models');
 const { Op } = require('sequelize');
 
 // Get all DSCs
@@ -133,6 +133,18 @@ exports.createDSC = async (req, res) => {
             remarks
         });
 
+        // Log creation
+        try {
+            await DSCLog.create({
+                dsc_id: dsc.dsc_id || dsc.id,
+                action: 'create',
+                performed_by: req.user ? req.user.user_id : null,
+                details: JSON.stringify(req.body)
+            });
+        } catch (logErr) {
+            console.error('[DSCLog] Failed to log createDSC:', logErr);
+        }
+
         res.status(201).json({ success: true, dsc });
     } catch (error) {
         console.error('Error in createDSC:', error);
@@ -156,6 +168,18 @@ exports.updateDSC = async (req, res) => {
             status,
             remarks
         });
+
+        // Log update
+        try {
+            await DSCLog.create({
+                dsc_id: dsc.dsc_id || dsc.id,
+                action: 'update',
+                performed_by: req.user ? req.user.user_id : null,
+                details: JSON.stringify(req.body)
+            });
+        } catch (logErr) {
+            console.error('[DSCLog] Failed to log updateDSC:', logErr);
+        }
 
         res.json({ success: true, dsc });
     } catch (error) {

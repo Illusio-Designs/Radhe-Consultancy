@@ -649,7 +649,6 @@ function DSC({ searchQuery = "" }) {
           />
         )}
       </div>
-
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}

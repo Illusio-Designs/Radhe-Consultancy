@@ -16,6 +16,7 @@ const FirePolicy = require("./firePolicyModel");
 const LifePolicy = require("./lifePolicyModel");
 const DSC = require("./dscModel");
 const ReminderLog = require("./reminderLogModel");
+const DSCLog = require("./dscLogModel");
 
 // Define associations
 // Many-to-many relationship between User and Role through UserRole
@@ -199,6 +200,8 @@ DSC.belongsTo(Consumer, {
   as: "consumer",
 });
 
+DSCLog.belongsTo(User, { foreignKey: 'performed_by', as: 'user' });
+
 module.exports = {
   sequelize,
   User,
@@ -216,4 +219,5 @@ module.exports = {
   LifePolicy,
   DSC,
   ReminderLog,
+  DSCLog,
 };

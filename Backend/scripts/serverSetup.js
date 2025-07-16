@@ -378,6 +378,17 @@ async function setupDatabase() {
         console.log('Warning: ReminderLog sync failed:', error.message);
       }
 
+      // Sync DSCLog table
+      try {
+        const DSCLog = require('../models/dscLogModel');
+        await DSCLog.sync({ alter: true });
+        logToFile('DSCLogs table synced');
+        console.log('DSCLogs table synced');
+      } catch (error) {
+        logToFile('Warning: DSCLog sync failed: ' + error.message);
+        console.log('Warning: DSCLog sync failed:', error.message);
+      }
+
       // Special handling for LifePolicy - try to sync without constraints first
       try {
         // First, try to sync the basic table structure

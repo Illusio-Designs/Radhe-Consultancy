@@ -392,7 +392,7 @@ const DashboardHeader = ({
 );
 
 const CombinedDashboard = () => {
-  const { user } = useAuth();
+  const { user, userRoles } = useAuth();
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -467,7 +467,6 @@ const CombinedDashboard = () => {
   }, [user, navigate]);
 
   // Get all user roles as lowercase
-  const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
   const showAdmin = userRoles.includes('admin');
   const showInsurance = userRoles.includes('insurance_manager');
   const showDSC = userRoles.includes('dsc_manager');
@@ -475,6 +474,11 @@ const CombinedDashboard = () => {
   const showConsumer = userRoles.includes('consumer');
   const showVendorManager = userRoles.includes('vendor_manager');
   const showUserManager = userRoles.includes('user_manager');
+
+  // If only company or only consumer role, show nothing
+  const onlyCompanyOrConsumer =
+    (userRoles.length === 1 && (showCompany || showConsumer)) ||
+    (userRoles.length === 2 && showCompany && showConsumer);
 
   // Unified dashboard layout for all users
   return (
@@ -489,11 +493,11 @@ const CombinedDashboard = () => {
       />
       <div className="dashboard-content">
         <div className="dashboard-grid">
-          {(showAdmin || showCompany) && <CompanyStatsCard stats={stats} />}
-          {(showAdmin || showConsumer) && <ConsumerStatsCard stats={stats.consumer_stats} />}
-          {(showAdmin || showInsurance) && <AllInsuranceCard stats={stats.insurance_stats} />}
-          {(showAdmin || showDSC) && <DSCStatsCard stats={stats.dsc_stats} />}
-          {(showAdmin || showUserManager) && <UserRoleStatsCard stats={stats.user_role_stats || {}} />}
+          {!onlyCompanyOrConsumer && ((showAdmin || showCompany || showUserManager) && <CompanyStatsCard stats={stats} />)}
+          {!onlyCompanyOrConsumer && ((showAdmin || showConsumer || showUserManager) && <ConsumerStatsCard stats={stats.consumer_stats} />)}
+          {!onlyCompanyOrConsumer && ((showAdmin || showInsurance) && <AllInsuranceCard stats={stats.insurance_stats} />)}
+          {!onlyCompanyOrConsumer && ((showAdmin || showDSC) && <DSCStatsCard stats={stats.dsc_stats} />)}
+          {!onlyCompanyOrConsumer && (showAdmin && <UserRoleStatsCard stats={stats.user_role_stats || {}} />)}
         </div>
       </div>
     </div>

@@ -1709,6 +1709,16 @@ export const dscAPI = {
       throw error;
     }
   },
+
+  getLogs: async () => {
+    try {
+      const response = await api.get("/dsc-logs/logs");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching DSC logs:", error);
+      throw error;
+    }
+  },
 };
 
 // Renewal API

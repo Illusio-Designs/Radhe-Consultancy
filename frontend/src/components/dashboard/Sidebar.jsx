@@ -36,97 +36,43 @@ const Sidebar = ({ onCollapse }) => {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const location = useLocation();
   const { user } = useAuth();
+
+  // Get all user roles as lowercase
+  const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
+  const isRole = (role) => userRoles.includes(role.toLowerCase());
+  // If only company or only consumer role, show nothing in sidebar
+  const onlyCompanyOrConsumer =
+    (userRoles.length === 1 && (isRole("company") || isRole("consumer"))) ||
+    (userRoles.length === 2 && isRole("company") && isRole("consumer"));
+  // Always show dashboard and renewals unless onlyCompanyOrConsumer
+  let menuItems = [];
+  if (!onlyCompanyOrConsumer) {
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <LayoutDashboard />,
+        label: "Dashboard",
+      },
+      {
+        path: "/dashboard/renewals/list",
+        icon: <RefreshCw />,
+        label: "Renewals",
+      },
+    ];
+  }
 
   // Debug logging for user data
   console.log("Sidebar: Raw user data:", user);
   console.log("Sidebar: User role_name:", user?.role_name);
   console.log("Sidebar: User role:", user?.role);
 
-  // Get all user roles as lowercase
-  const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
-  const isRole = (role) => userRoles.includes(role.toLowerCase());
-
-  // Set 'Users' dropdown open by default for admin
-  const [activeDropdown, setActiveDropdown] = useState(null);
-
-  // Function to handle dropdown toggle
-  const handleDropdownToggle = (dropdownName) => {
-    console.log("Sidebar: Toggling dropdown:", dropdownName);
-    setActiveDropdown((currentDropdown) =>
-      currentDropdown === dropdownName ? null : dropdownName
-    );
-  };
-
-  useEffect(() => {
-    console.log("Sidebar: useEffect running");
-    const handleResize = () => {
-      if (window.innerWidth <= 1023) {
-        setIsCollapsed(true);
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleCollapse = () => {
-    console.log("Sidebar: Toggling collapse state");
-    setIsCollapsed(!isCollapsed);
-    if (onCollapse) {
-      onCollapse(!isCollapsed);
-    }
-  };
-
-  // Define the Renewals dropdown
-  const renewalsDropdown = {
-    path: "/dashboard/renewals/list",
-    icon: <RefreshCw />,
-    label: "Renewals",
-    isDropdown: true,
-    isOpen: activeDropdown === "renewals",
-    toggle: () => handleDropdownToggle("renewals"),
-    items: [
-      {
-        path: "/dashboard/renewals/list",
-        icon: <RefreshCw />,
-        label: "Renewal List",
-      },
-      {
-        path: "/dashboard/renewals/log",
-        icon: <Clock />,
-        label: "Reminder Log",
-      },
-    ],
-  };
-
-  // Always show dashboard and renewals
-  let menuItems = [
-    {
-      path: "/dashboard",
-      icon: <LayoutDashboard />,
-      label: "Dashboard",
-      isDropdown: true,
-      isOpen: activeDropdown === "dashboard",
-      toggle: () => handleDropdownToggle("dashboard"),
-      items: [
-        { path: "/dashboard", icon: <Home />, label: "Home" },
-        {
-          path: "/dashboard/renewals/manager",
-          icon: <RefreshCw />,
-          label: "Renewals",
-        },
-      ],
-    },
-    renewalsDropdown,
-  ];
-
-  // Add sections based on roles
-  if (isRole("admin")) {
+  // If only company or only consumer role, show nothing in sidebar
+  if (onlyCompanyOrConsumer) {
+    menuItems = [];
+  } else if (isRole("admin")) {
     menuItems = [
       ...menuItems,
       {
@@ -240,6 +186,20 @@ const Sidebar = ({ onCollapse }) => {
         ],
       },
       { path: "/dashboard/dsc", icon: <KeyRound />, label: "DSC" },
+      {
+        label: "Logs",
+        icon: <ClipboardList />,
+        isDropdown: true,
+        isOpen: activeDropdown === "logs",
+        toggle: () => handleDropdownToggle("logs"),
+        items: [
+          {
+            path: "/dashboard/dsc/logs",
+            icon: <KeyRound />,
+            label: "DSC Logs",
+          },
+        ],
+      },
     ];
   } else {
     // For all other roles, add sections as needed
@@ -359,18 +319,29 @@ const Sidebar = ({ onCollapse }) => {
       });
     }
     if (isRole("dsc_manager")) {
+      // Show DSC page to dsc_manager
       menuItems.push({
         path: "/dashboard/dsc",
         icon: <KeyRound />,
         label: "DSC",
       });
     }
+    // Only admin sees DSC Logs (already handled above in the admin block)
   }
 
   const isActive = (path) => {
     const active = location.pathname.startsWith(path);
     console.log("Sidebar: Checking if path is active:", { path, active });
     return active;
+  };
+
+  const handleDropdownToggle = (label) => {
+    setActiveDropdown((prev) => (prev === label ? null : label));
+  };
+
+  const handleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    onCollapse();
   };
 
   const renderMenuItem = (item, index) => {

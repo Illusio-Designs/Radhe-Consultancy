@@ -74,9 +74,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     setUser(null);
   };
-
-  // Helper: get all roles as lowercase
-  const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
+  // Helper: get all roles as lowercase (supports string or object)
+  const userRoles = user?.roles
+    ? user.roles.map((r) =>
+        typeof r === "string"
+          ? r.toLowerCase()
+          : r.role_name
+          ? r.role_name.toLowerCase()
+          : ""
+      )
+    : [];
   const hasRole = (role) => userRoles.includes(role.toLowerCase());
 
   const value = {
