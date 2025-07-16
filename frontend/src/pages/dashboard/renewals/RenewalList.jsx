@@ -6,6 +6,7 @@ import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import { toast } from "react-toastify";
 import { BiErrorCircle } from "react-icons/bi";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const typeOptions = [
   { value: "all", label: "All" },
@@ -28,19 +29,36 @@ const RenewalList = () => {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedPeriod, setSelectedPeriod] = useState("month");
 
+  const { user, userRoles } = useAuth();
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id;
+  const consumerId = user?.profile?.consumer_id;
+
+  const filteredRenewals = React.useMemo(() => {
+    if (isCompany) {
+      return renewals.filter((r) => r.company_id === companyId);
+    }
+    if (isConsumer) {
+      return renewals.filter((r) => r.consumer_id === consumerId);
+    }
+    return renewals;
+  }, [renewals, isCompany, isConsumer, companyId, consumerId]);
+
+  // Disable update/edit for company/consumer users
+  const canEdit = !(isCompany || isConsumer);
+  const onlyCompanyOrConsumer = (isCompany && !isConsumer && userRoles.length === 1) || (isConsumer && !isCompany && userRoles.length === 1);
+
   useEffect(() => {
     const fetchRenewals = async () => {
       setLoading(true);
       setError(null);
       try {
         const res = await renewalAPI.getListByTypeAndPeriod(selectedType, selectedPeriod);
-        console.log("API Response Data:", res);
         setRenewals(Array.isArray(res) ? res : []);
-        console.log("Renewals after setRenewals:", Array.isArray(res) ? res : []);
       } catch (err) {
         setError("Failed to fetch renewals");
         setRenewals([]);
-        console.error("Error fetching renewals:", err);
         toast.error("Failed to fetch renewals");
       } finally {
         setLoading(false);
@@ -144,14 +162,18 @@ const RenewalList = () => {
           </div>
         )}
 
-        {console.log("Renewals data passed to TableWithControl:", renewals)}
-        {loading ? (
+        {onlyCompanyOrConsumer ? (
+          <div style={{ textAlign: 'center', color: '#888', padding: '40px 0', fontSize: 20 }}>
+            Renewal list is not available for your account.
+          </div>
+        ) : loading ? (
           <Loader size="large" color="primary" />
         ) : (
           <TableWithControl
-            data={renewals}
+            data={filteredRenewals}
             columns={columns}
             defaultPageSize={10}
+            canEdit={canEdit}
           />
         )}
       </div>

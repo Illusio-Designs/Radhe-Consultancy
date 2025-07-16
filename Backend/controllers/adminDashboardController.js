@@ -231,6 +231,119 @@ const getCompanyStatistics = async (req, res) => {
   }
 };
 
+// Company-specific stats
+const getCompanyStats = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Policies for this company
+    const ecpTotal = await EmployeeCompensationPolicy.count({ where: { company_id: companyId } });
+    const ecpRecent = await EmployeeCompensationPolicy.count({ where: { company_id: companyId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const vehicleTotal = await VehiclePolicy.count({ where: { company_id: companyId } });
+    const vehicleRecent = await VehiclePolicy.count({ where: { company_id: companyId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const fireTotal = await FirePolicy.count({ where: { company_id: companyId } });
+    const fireRecent = await FirePolicy.count({ where: { company_id: companyId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const healthTotal = await HealthPolicy.count({ where: { company_id: companyId } });
+    const healthRecent = await HealthPolicy.count({ where: { company_id: companyId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const lifeTotal = await LifePolicy.count({ where: { company_id: companyId } });
+    const lifeRecent = await LifePolicy.count({ where: { company_id: companyId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    // DSCs for this company
+    const dscTotal = await DSC.count({ where: { company_id: companyId } });
+    const dscIn = await DSC.count({ where: { company_id: companyId, status: 'in' } });
+    const dscOut = await DSC.count({ where: { company_id: companyId, status: 'out' } });
+    const dscRecent = await DSC.count({ where: { company_id: companyId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    // Helper for percent
+    const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
+    const percentInsurance = (recent, total) => total > 0 ? Math.round((recent / total) * 100) : 0;
+    const allTotal = ecpTotal + vehicleTotal + fireTotal + healthTotal + lifeTotal;
+    const allRecent = ecpRecent + vehicleRecent + fireRecent + healthRecent + lifeRecent;
+    res.json({
+      success: true,
+      data: {
+        insurance_stats: {
+          all: { total: allTotal, recent: allRecent, percent: percentInsurance(allRecent, allTotal) },
+          ecp: { total: ecpTotal, recent: ecpRecent, percent: percentInsurance(ecpRecent, ecpTotal) },
+          vehicle: { total: vehicleTotal, recent: vehicleRecent, percent: percentInsurance(vehicleRecent, vehicleTotal) },
+          fire: { total: fireTotal, recent: fireRecent, percent: percentInsurance(fireRecent, fireTotal) },
+          health: { total: healthTotal, recent: healthRecent, percent: percentInsurance(healthRecent, healthTotal) },
+          life: { total: lifeTotal, recent: lifeRecent, percent: percentInsurance(lifeRecent, lifeTotal) },
+        },
+        dsc_stats: {
+          total: dscTotal,
+          in: dscIn,
+          out: dscOut,
+          recent: dscRecent,
+          percent_in: percent(dscIn, dscTotal),
+          percent_out: percent(dscOut, dscTotal),
+          percent_recent: percent(dscRecent, dscTotal)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Backend: Error fetching company stats:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch company stats' });
+  }
+};
+
+// Consumer-specific stats
+const getConsumerStats = async (req, res) => {
+  try {
+    const { consumerId } = req.params;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Policies for this consumer
+    const ecpTotal = await EmployeeCompensationPolicy.count({ where: { consumer_id: consumerId } });
+    const ecpRecent = await EmployeeCompensationPolicy.count({ where: { consumer_id: consumerId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const vehicleTotal = await VehiclePolicy.count({ where: { consumer_id: consumerId } });
+    const vehicleRecent = await VehiclePolicy.count({ where: { consumer_id: consumerId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const fireTotal = await FirePolicy.count({ where: { consumer_id: consumerId } });
+    const fireRecent = await FirePolicy.count({ where: { consumer_id: consumerId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const healthTotal = await HealthPolicy.count({ where: { consumer_id: consumerId } });
+    const healthRecent = await HealthPolicy.count({ where: { consumer_id: consumerId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    const lifeTotal = await LifePolicy.count({ where: { consumer_id: consumerId } });
+    const lifeRecent = await LifePolicy.count({ where: { consumer_id: consumerId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    // DSCs for this consumer
+    const dscTotal = await DSC.count({ where: { consumer_id: consumerId } });
+    const dscIn = await DSC.count({ where: { consumer_id: consumerId, status: 'in' } });
+    const dscOut = await DSC.count({ where: { consumer_id: consumerId, status: 'out' } });
+    const dscRecent = await DSC.count({ where: { consumer_id: consumerId, created_at: { [Op.gte]: thirtyDaysAgo } } });
+    // Helper for percent
+    const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
+    const percentInsurance = (recent, total) => total > 0 ? Math.round((recent / total) * 100) : 0;
+    const allTotal = ecpTotal + vehicleTotal + fireTotal + healthTotal + lifeTotal;
+    const allRecent = ecpRecent + vehicleRecent + fireRecent + healthRecent + lifeRecent;
+    res.json({
+      success: true,
+      data: {
+        insurance_stats: {
+          all: { total: allTotal, recent: allRecent, percent: percentInsurance(allRecent, allTotal) },
+          ecp: { total: ecpTotal, recent: ecpRecent, percent: percentInsurance(ecpRecent, ecpTotal) },
+          vehicle: { total: vehicleTotal, recent: vehicleRecent, percent: percentInsurance(vehicleRecent, vehicleTotal) },
+          fire: { total: fireTotal, recent: fireRecent, percent: percentInsurance(fireRecent, fireTotal) },
+          health: { total: healthTotal, recent: healthRecent, percent: percentInsurance(healthRecent, healthTotal) },
+          life: { total: lifeTotal, recent: lifeRecent, percent: percentInsurance(lifeRecent, lifeTotal) },
+        },
+        dsc_stats: {
+          total: dscTotal,
+          in: dscIn,
+          out: dscOut,
+          recent: dscRecent,
+          percent_in: percent(dscIn, dscTotal),
+          percent_out: percent(dscOut, dscTotal),
+          percent_recent: percent(dscRecent, dscTotal)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Backend: Error fetching consumer stats:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch consumer stats' });
+  }
+};
+
 module.exports = {
-  getCompanyStatistics
+  getCompanyStatistics,
+  getCompanyStats,
+  getConsumerStats
 }; 

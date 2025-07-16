@@ -71,7 +71,44 @@ const Sidebar = ({ onCollapse }) => {
 
   // If only company or only consumer role, show nothing in sidebar
   if (onlyCompanyOrConsumer) {
-    menuItems = [];
+    // Show only Dashboard and their own policies/DSC (no Renewals)
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <LayoutDashboard />,
+        label: "Dashboard",
+      },
+      {
+        path: "/dashboard/insurance/health",
+        icon: <HeartPulse />,
+        label: "Health Policies",
+      },
+      {
+        path: "/dashboard/insurance/fire",
+        icon: <Flame />,
+        label: "Fire Policies",
+      },
+      {
+        path: "/dashboard/insurance/vehicle",
+        icon: <Car />,
+        label: "Vehicle Policies",
+      },
+      {
+        path: "/dashboard/insurance/life",
+        icon: <ScanHeart />,
+        label: "Life Policies",
+      },
+      {
+        path: "/dashboard/insurance/ECP",
+        icon: <UserCog />,
+        label: "ECP Policies",
+      },
+      {
+        path: "/dashboard/dsc",
+        icon: <KeyRound />,
+        label: "DSC",
+      },
+    ];
   } else if (isRole("admin")) {
     menuItems = [
       ...menuItems,

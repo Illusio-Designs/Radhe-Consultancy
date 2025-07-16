@@ -22,6 +22,7 @@ import "react-phone-number-input/style.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Select, { components } from "react-select";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
   const [form, setForm] = useState({ name: "" });
@@ -742,6 +743,12 @@ function ECP({ searchQuery = "" }) {
     totalItems: 0,
   });
 
+  const { user, userRoles } = useAuth();
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id || user?.company?.company_id;
+  const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
+
   useEffect(() => {
     fetchPolicies(1, 10);
   }, []);
@@ -856,9 +863,42 @@ function ECP({ searchQuery = "" }) {
     }
   };
 
-  // For server-side pagination, we don't need client-side filtering
-  // The server handles the filtering and pagination
-  const filteredPolicies = policies;
+  const filteredPolicies = React.useMemo(() => {
+    if (isCompany) {
+      return policies.filter((p) => p.company_id === companyId);
+    }
+    if (isConsumer) {
+      return policies.filter((p) => p.consumer_id === consumerId);
+    }
+    return policies;
+  }, [policies, isCompany, isConsumer, companyId, consumerId]);
+
+  const searchFilteredPolicies = React.useMemo(() => {
+    if (!searchQuery || searchQuery.length < 3) {
+      return filteredPolicies;
+    }
+    return filteredPolicies.filter((policy) => {
+      const searchLower = searchQuery.toLowerCase();
+      const policyFields = [
+        policy.policy_number,
+        policy.business_type,
+        policy.customer_type,
+        policy.email,
+        policy.mobile_number,
+        policy.plan_name,
+        policy.medical_cover,
+        policy.net_premium,
+        policy.remarks
+      ].some(field => field && field.toString().toLowerCase().includes(searchLower));
+      const companyName = policy.companyPolicyHolder?.company_name || policy.company?.company_name || policy.company_name;
+      const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
+      const consumerName = policy.consumerPolicyHolder?.name || policy.consumer?.name || policy.consumer_name;
+      const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
+      const insuranceCompanyName = policy.provider?.name;
+      const insuranceMatch = insuranceCompanyName && insuranceCompanyName.toLowerCase().includes(searchLower);
+      return policyFields || companyMatch || consumerMatch || insuranceMatch;
+    });
+  }, [filteredPolicies, searchQuery]);
 
   const toCamelCase = (policy) => ({
     id: policy.id,
@@ -939,25 +979,16 @@ function ECP({ searchQuery = "" }) {
       label: "Company Name / Consumer Name",
       sortable: false,
       render: (_, policy) => {
-        if (policy.policyHolder && policy.policyHolder.company_name)
-          return policy.policyHolder.company_name;
-        if (policy.policyHolder && policy.policyHolder.name)
-          return policy.policyHolder.name;
-        if (
-          policy.companyPolicyHolder &&
-          policy.companyPolicyHolder.company_name
-        )
-          return policy.companyPolicyHolder.company_name;
-        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name)
-          return policy.consumerPolicyHolder.name;
-        if (policy.company_name) return policy.company_name;
-        if (policy.consumer_name) return policy.consumer_name;
-        if (policy.company && policy.company.company_name)
-          return policy.company.company_name;
-        if (policy.consumer && policy.consumer.name)
-          return policy.consumer.name;
-        return "-";
-      },
+        return (
+          policy.companyPolicyHolder?.company_name ||
+          policy.consumerPolicyHolder?.name ||
+          policy.company_name ||
+          policy.consumer_name ||
+          policy.company?.company_name ||
+          policy.consumer?.name ||
+          '-'
+        );
+      }
     },
     { key: "policy_number", label: "Policy Number", sortable: true },
     { key: "business_type", label: "Business Type", sortable: true },
@@ -1012,7 +1043,7 @@ function ECP({ searchQuery = "" }) {
           <Loader size="large" color="primary" />
         ) : (
           <TableWithControl
-            data={filteredPolicies}
+            data={searchFilteredPolicies}
             columns={columns}
             defaultPageSize={pagination.pageSize}
             currentPage={pagination.currentPage}

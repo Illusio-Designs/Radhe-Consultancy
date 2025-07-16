@@ -23,6 +23,7 @@ import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
 import Select, { components } from "react-select";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // Add CreateInsuranceCompanyModal component
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
@@ -767,6 +768,11 @@ function Life({ searchQuery = "" }) {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, userRoles } = useAuth();
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id || user?.company?.company_id;
+  const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
 
   useEffect(() => {
     fetchPolicies();
@@ -843,18 +849,21 @@ function Life({ searchQuery = "" }) {
 
   // Filter policies based on search query (client-side fallback)
   const filteredPolicies = React.useMemo(() => {
-    console.log('Life: Filtering policies with searchQuery:', searchQuery);
-    console.log('Life: Total policies to filter:', policies.length);
-    
-    if (!searchQuery || searchQuery.length < 3) {
-      console.log('Life: No search query or too short, returning all policies');
-      return policies;
+    if (isCompany) {
+      return policies.filter((p) => p.company_id === companyId);
     }
+    if (isConsumer) {
+      return policies.filter((p) => p.consumer_id === consumerId);
+    }
+    return policies;
+  }, [policies, isCompany, isConsumer, companyId, consumerId]);
 
-    const filtered = policies.filter((policy) => {
+  const searchFilteredPolicies = React.useMemo(() => {
+    if (!searchQuery || searchQuery.length < 3) {
+      return filteredPolicies;
+    }
+    return filteredPolicies.filter((policy) => {
       const searchLower = searchQuery.toLowerCase();
-      
-      // Search in policy fields
       const policyFields = [
         policy.current_policy_number,
         policy.business_type,
@@ -867,41 +876,15 @@ function Life({ searchQuery = "" }) {
         policy.net_premium,
         policy.remarks
       ].some(field => field && field.toString().toLowerCase().includes(searchLower));
-
-      // Search in company name
-      const companyName = policy.companyPolicyHolder?.company_name ||
-                         policy.company?.company_name ||
-                         policy.company_name;
+      const companyName = policy.companyPolicyHolder?.company_name || policy.company?.company_name || policy.company_name;
       const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
-
-      // Search in consumer name
-      const consumerName = policy.consumerPolicyHolder?.name ||
-                          policy.consumer?.name ||
-                          policy.consumer_name;
+      const consumerName = policy.consumerPolicyHolder?.name || policy.consumer?.name || policy.consumer_name;
       const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
-
-      // Search in insurance company name
       const insuranceCompanyName = policy.provider?.name;
       const insuranceMatch = insuranceCompanyName && insuranceCompanyName.toLowerCase().includes(searchLower);
-
-      const matches = policyFields || companyMatch || consumerMatch || insuranceMatch;
-      
-      if (matches) {
-        console.log('Life: Policy matches search:', {
-          id: policy.id,
-          policy_number: policy.current_policy_number,
-          companyName,
-          consumerName,
-          insuranceCompanyName
-        });
-      }
-      
-      return matches;
+      return policyFields || companyMatch || consumerMatch || insuranceMatch;
     });
-    
-    console.log('Life: Filtered policies count:', filtered.length);
-    return filtered;
-  }, [policies, searchQuery]);
+  }, [filteredPolicies, searchQuery]);
 
   const handleDelete = async (policyId) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
@@ -946,13 +929,15 @@ function Life({ searchQuery = "" }) {
       label: "Company Name / Consumer Name",
       sortable: false,
       render: (_, policy) => {
-        if (policy.companyPolicyHolder && policy.companyPolicyHolder.company_name) return policy.companyPolicyHolder.company_name;
-        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name) return policy.consumerPolicyHolder.name;
-        if (policy.company_name) return policy.company_name;
-        if (policy.consumer_name) return policy.consumer_name;
-        if (policy.company && policy.company.company_name) return policy.company.company_name;
-        if (policy.consumer && policy.consumer.name) return policy.consumer.name;
-        return '-';
+        return (
+          policy.companyPolicyHolder?.company_name ||
+          policy.consumerPolicyHolder?.name ||
+          policy.company_name ||
+          policy.consumer_name ||
+          policy.company?.company_name ||
+          policy.consumer?.name ||
+          '-'
+        );
       }
     },
     { key: "current_policy_number", label: "Policy Number", sortable: true },
@@ -1009,7 +994,7 @@ function Life({ searchQuery = "" }) {
             <Loader size="large" color="primary" />
           ) : (
             <TableWithControl
-              data={filteredPolicies}
+              data={searchFilteredPolicies}
               columns={columns}
               defaultPageSize={10}
             />

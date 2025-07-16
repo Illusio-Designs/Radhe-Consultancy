@@ -19,6 +19,7 @@ import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // --- CreateInsuranceCompanyModal (copied from Vehicle.jsx) ---
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
@@ -390,9 +391,11 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
           submitData.append(apiKey, value);
         }
       });
-      // Add calculated fields
-      submitData.append("gst", gst.toFixed(2));
-      submitData.append("gross_premium", grossPremium.toFixed(2));
+      // Add calculated fields (ensure single value, not array)
+      const gstValue = Array.isArray(gst) ? gst[gst.length - 1] : gst;
+      const grossPremiumValue = Array.isArray(grossPremium) ? grossPremium[grossPremium.length - 1] : grossPremium;
+      submitData.append("gst", parseFloat(gstValue).toFixed(2));
+      submitData.append("gross_premium", parseFloat(grossPremiumValue).toFixed(2));
       // Add file if selected
       if (files.policyDocument) {
         submitData.append(
@@ -730,6 +733,11 @@ function Fire({ searchQuery = "" }) {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, userRoles } = useAuth();
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id || user?.company?.company_id;
+  const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
 
   useEffect(() => {
     fetchPolicies();
@@ -804,20 +812,22 @@ function Fire({ searchQuery = "" }) {
     }
   };
 
-  // Filter policies based on search query (client-side fallback)
   const filteredPolicies = React.useMemo(() => {
-    console.log('Fire: Filtering policies with searchQuery:', searchQuery);
-    console.log('Fire: Total policies to filter:', policies.length);
-    
-    if (!searchQuery || searchQuery.length < 3) {
-      console.log('Fire: No search query or too short, returning all policies');
-      return policies;
+    if (isCompany) {
+      return policies.filter((p) => p.company_id === companyId);
     }
+    if (isConsumer) {
+      return policies.filter((p) => p.consumer_id === consumerId);
+    }
+    return policies;
+  }, [policies, isCompany, isConsumer, companyId, consumerId]);
 
-    const filtered = policies.filter((policy) => {
+  const searchFilteredPolicies = React.useMemo(() => {
+    if (!searchQuery || searchQuery.length < 3) {
+      return filteredPolicies;
+    }
+    return filteredPolicies.filter((policy) => {
       const searchLower = searchQuery.toLowerCase();
-      
-      // Search in policy fields
       const policyFields = [
         policy.policy_number,
         policy.business_type,
@@ -830,41 +840,15 @@ function Fire({ searchQuery = "" }) {
         policy.net_premium,
         policy.remarks
       ].some(field => field && field.toString().toLowerCase().includes(searchLower));
-
-      // Search in company name
-      const companyName = policy.companyPolicyHolder?.company_name ||
-                         policy.company?.company_name ||
-                         policy.company_name;
+      const companyName = policy.companyPolicyHolder?.company_name || policy.company?.company_name || policy.company_name;
       const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
-
-      // Search in consumer name
-      const consumerName = policy.consumerPolicyHolder?.name ||
-                          policy.consumer?.name ||
-                          policy.consumer_name;
+      const consumerName = policy.consumerPolicyHolder?.name || policy.consumer?.name || policy.consumer_name;
       const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
-
-      // Search in insurance company name
       const insuranceCompanyName = policy.provider?.name;
       const insuranceMatch = insuranceCompanyName && insuranceCompanyName.toLowerCase().includes(searchLower);
-
-      const matches = policyFields || companyMatch || consumerMatch || insuranceMatch;
-      
-      if (matches) {
-        console.log('Fire: Policy matches search:', {
-          id: policy.id,
-          policy_number: policy.policy_number,
-          companyName,
-          consumerName,
-          insuranceCompanyName
-        });
-      }
-      
-      return matches;
+      return policyFields || companyMatch || consumerMatch || insuranceMatch;
     });
-    
-    console.log('Fire: Filtered policies count:', filtered.length);
-    return filtered;
-  }, [policies, searchQuery]);
+  }, [filteredPolicies, searchQuery]);
 
   const handleDelete = async (policyId) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
@@ -909,13 +893,15 @@ function Fire({ searchQuery = "" }) {
       label: "Company Name / Consumer Name",
       sortable: false,
       render: (_, policy) => {
-        if (policy.companyPolicyHolder && policy.companyPolicyHolder.company_name) return policy.companyPolicyHolder.company_name;
-        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name) return policy.consumerPolicyHolder.name;
-        if (policy.company_name) return policy.company_name;
-        if (policy.consumer_name) return policy.consumer_name;
-        if (policy.company && policy.company.company_name) return policy.company.company_name;
-        if (policy.consumer && policy.consumer.name) return policy.consumer.name;
-        return '-';
+        return (
+          policy.companyPolicyHolder?.company_name ||
+          policy.consumerPolicyHolder?.name ||
+          policy.company_name ||
+          policy.consumer_name ||
+          policy.company?.company_name ||
+          policy.consumer?.name ||
+          '-'
+        );
       }
     },
     { key: "policy_number", label: "Policy Number", sortable: true },
@@ -972,7 +958,7 @@ function Fire({ searchQuery = "" }) {
             <Loader size="large" color="primary" />
           ) : (
             <TableWithControl
-              data={filteredPolicies}
+              data={searchFilteredPolicies}
               columns={columns}
               defaultPageSize={10}
             />

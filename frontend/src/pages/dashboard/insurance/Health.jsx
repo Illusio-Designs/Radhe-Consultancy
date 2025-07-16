@@ -18,6 +18,7 @@ import flags from "react-phone-number-input/flags";
 import { toast } from "react-toastify";
 import "react-phone-number-input/style.css";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // --- CreateInsuranceCompanyModal (copied from Vehicle.jsx) ---
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
@@ -797,6 +798,11 @@ function Health({ searchQuery = "" }) {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, userRoles } = useAuth();
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id || user?.company?.company_id;
+  const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
 
   useEffect(() => {
     fetchPolicies();
@@ -873,15 +879,20 @@ function Health({ searchQuery = "" }) {
 
   // Filter policies based on search query (client-side fallback)
   const filteredPolicies = React.useMemo(() => {
-    console.log('Health: Filtering policies with searchQuery:', searchQuery);
-    console.log('Health: Total policies to filter:', policies.length);
-    
-    if (!searchQuery || searchQuery.length < 3) {
-      console.log('Health: No search query or too short, returning all policies');
-      return policies;
+    if (isCompany) {
+      return policies.filter((p) => p.company_id === companyId);
     }
+    if (isConsumer) {
+      return policies.filter((p) => p.consumer_id === consumerId);
+    }
+    return policies;
+  }, [policies, isCompany, isConsumer, companyId, consumerId]);
 
-    const filtered = policies.filter((policy) => {
+  const searchFilteredPolicies = React.useMemo(() => {
+    if (!searchQuery || searchQuery.length < 3) {
+      return filteredPolicies;
+    }
+    return filteredPolicies.filter((policy) => {
       const searchLower = searchQuery.toLowerCase();
       
       // Search in policy fields
@@ -928,10 +939,7 @@ function Health({ searchQuery = "" }) {
       
       return matches;
     });
-    
-    console.log('Health: Filtered policies count:', filtered.length);
-    return filtered;
-  }, [policies, searchQuery]);
+  }, [filteredPolicies, searchQuery]);
 
   const handleDelete = async (policyId) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
@@ -976,13 +984,15 @@ function Health({ searchQuery = "" }) {
       label: "Company Name / Consumer Name",
       sortable: false,
       render: (_, policy) => {
-        if (policy.companyPolicyHolder && policy.companyPolicyHolder.name) return policy.companyPolicyHolder.name;
-        if (policy.consumerPolicyHolder && policy.consumerPolicyHolder.name) return policy.consumerPolicyHolder.name;
-        if (policy.company_name) return policy.company_name;
-        if (policy.consumer_name) return policy.consumer_name;
-        if (policy.company && policy.company.company_name) return policy.company.company_name;
-        if (policy.consumer && policy.consumer.name) return policy.consumer.name;
-        return '-';
+        return (
+          policy.companyPolicyHolder?.company_name ||
+          policy.consumerPolicyHolder?.name ||
+          policy.company_name ||
+          policy.consumer_name ||
+          policy.company?.company_name ||
+          policy.consumer?.name ||
+          '-'
+        );
       }
     },
     { key: "policy_number", label: "Policy Number", sortable: true },
@@ -1039,7 +1049,7 @@ function Health({ searchQuery = "" }) {
             <Loader size="large" color="primary" />
           ) : (
             <TableWithControl
-              data={filteredPolicies}
+              data={searchFilteredPolicies}
               columns={columns}
               defaultPageSize={10}
             />

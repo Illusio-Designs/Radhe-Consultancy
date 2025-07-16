@@ -426,18 +426,27 @@ const CombinedDashboard = () => {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [user, userRoles]);
 
   const fetchStats = async () => {
     try {
       setIsLoading(true);
-      const response = await adminDashboardAPI.getCompanyStatistics();
+      let response;
+      if (user && userRoles.includes("company") && (user.profile?.company_id || user.company?.company_id)) {
+        const companyId = user.profile?.company_id || user.company?.company_id;
+        response = await adminDashboardAPI.getCompanyStats(companyId);
+      } else if (user && userRoles.includes("consumer") && (user.profile?.consumer_id || user.consumer?.consumer_id)) {
+        const consumerId = user.profile?.consumer_id || user.consumer?.consumer_id;
+        response = await adminDashboardAPI.getConsumerStats(consumerId);
+      } else {
+        response = await adminDashboardAPI.getCompanyStatistics();
+      }
       if (response.success) {
         setStats(response.data);
         setLastUpdated(new Date().toLocaleTimeString());
       }
     } catch (error) {
-      console.error("Error fetching admin stats:", error);
+      console.error("Error fetching dashboard stats:", error);
     } finally {
       setIsLoading(false);
     }
@@ -466,6 +475,29 @@ const CombinedDashboard = () => {
     }
   }, [user, navigate]);
 
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id;
+  const consumerId = user?.profile?.consumer_id;
+
+  // Only show company/consumer's own stats
+  const filteredStats = React.useMemo(() => {
+    if (isCompany) {
+      return {
+        ...stats,
+        // Optionally filter stats fields to only this company
+        // e.g., filter policies, dscs, etc. if needed
+      };
+    }
+    if (isConsumer) {
+      return {
+        ...stats,
+        // Optionally filter stats fields to only this consumer
+      };
+    }
+    return stats;
+  }, [stats, isCompany, isConsumer, companyId, consumerId]);
+
   // Get all user roles as lowercase
   const showAdmin = userRoles.includes('admin');
   const showInsurance = userRoles.includes('insurance_manager');
@@ -493,11 +525,20 @@ const CombinedDashboard = () => {
       />
       <div className="dashboard-content">
         <div className="dashboard-grid">
-          {!onlyCompanyOrConsumer && ((showAdmin || showCompany || showUserManager) && <CompanyStatsCard stats={stats} />)}
-          {!onlyCompanyOrConsumer && ((showAdmin || showConsumer || showUserManager) && <ConsumerStatsCard stats={stats.consumer_stats} />)}
-          {!onlyCompanyOrConsumer && ((showAdmin || showInsurance) && <AllInsuranceCard stats={stats.insurance_stats} />)}
-          {!onlyCompanyOrConsumer && ((showAdmin || showDSC) && <DSCStatsCard stats={stats.dsc_stats} />)}
-          {!onlyCompanyOrConsumer && (showAdmin && <UserRoleStatsCard stats={stats.user_role_stats || {}} />)}
+          {((isCompany || isConsumer) && !showAdmin && !showUserManager && !showVendorManager) ? (
+            <>
+              <AllInsuranceCard stats={stats.insurance_stats || {}} />
+              <DSCStatsCard stats={stats.dsc_stats || {}} />
+            </>
+          ) : (
+            <>
+              {!onlyCompanyOrConsumer && ((showAdmin || showCompany || showUserManager) && <CompanyStatsCard stats={filteredStats} />)}
+              {!onlyCompanyOrConsumer && ((showAdmin || showConsumer || showUserManager) && <ConsumerStatsCard stats={filteredStats.consumer_stats} />)}
+              {!onlyCompanyOrConsumer && ((showAdmin || showInsurance) && <AllInsuranceCard stats={filteredStats.insurance_stats} />)}
+              {!onlyCompanyOrConsumer && ((showAdmin || showDSC) && <DSCStatsCard stats={filteredStats.dsc_stats} />)}
+              {!onlyCompanyOrConsumer && (showAdmin && <UserRoleStatsCard stats={filteredStats.user_role_stats || {}} />)}
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -894,6 +894,22 @@ export const adminDashboardAPI = {
       throw error;
     }
   },
+  getCompanyStats: async (companyId) => {
+    try {
+      const response = await api.get(`/admin-dashboard/statistics/company/${companyId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getConsumerStats: async (consumerId) => {
+    try {
+      const response = await api.get(`/admin-dashboard/statistics/consumer/${consumerId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // Employee Compensation API

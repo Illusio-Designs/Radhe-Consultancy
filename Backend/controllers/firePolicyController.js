@@ -142,6 +142,13 @@ exports.createPolicy = async (req, res) => {
       policy_document_path: filename
     };
 
+    // Sanitize gst and gross_premium fields
+    let { gst, gross_premium } = policyData;
+    if (Array.isArray(gst)) gst = gst[gst.length - 1];
+    if (Array.isArray(gross_premium)) gross_premium = gross_premium[gross_premium.length - 1];
+    policyData.gst = gst !== undefined ? parseFloat(gst) : 0;
+    policyData.gross_premium = gross_premium !== undefined ? parseFloat(gross_premium) : 0;
+
     // Convert string 'null' or '' or undefined to actual null for company_id and consumer_id
     if (policyData.company_id === '' || policyData.company_id === 'null' || policyData.company_id === undefined) policyData.company_id = null;
     if (policyData.consumer_id === '' || policyData.consumer_id === 'null' || policyData.consumer_id === undefined) policyData.consumer_id = null;

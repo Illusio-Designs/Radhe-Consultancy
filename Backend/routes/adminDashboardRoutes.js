@@ -11,4 +11,17 @@ router.get(
   adminDashboardController.getCompanyStatistics
 );
 
+// Company-specific stats
+router.get(
+  '/statistics/company/:companyId',
+  auth,
+  adminDashboardController.getCompanyStats
+);
+// Consumer-specific stats
+router.get(
+  '/statistics/consumer/:consumerId',
+  auth,
+  adminDashboardController.getConsumerStats
+);
+
 module.exports = router; 

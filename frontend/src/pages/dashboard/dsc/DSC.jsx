@@ -21,6 +21,7 @@ import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
   const [formData, setFormData] = useState({
@@ -375,16 +376,53 @@ function DSC({ searchQuery = "" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const { user, userRoles } = useAuth();
+  const isCompany = userRoles.includes("company");
+  const isConsumer = userRoles.includes("consumer");
+  const companyId = user?.profile?.company_id || user?.company?.company_id;
+  const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
 
   useEffect(() => {
     console.log("DSC component mounted");
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        let response;
+        if (isCompany && companyId) {
+          response = await dscAPI.getDSCsByCompany(companyId);
+        } else if (isConsumer && consumerId) {
+          response = await dscAPI.getDSCsByConsumer(consumerId);
+        } else {
+          response = await dscAPI.getAllDSCs();
+        }
+        if (response && Array.isArray(response.dscs)) {
+          const mapped = response.dscs.map(toCamelCase);
+          setDSCs(mapped);
+          setError(null);
+        } else if (Array.isArray(response)) {
+          const mapped = response.map(toCamelCase);
+          setDSCs(mapped);
+          setError(null);
+        } else {
+          setError("Invalid data format received from server");
+          setDSCs([]);
+        }
+      } catch (err) {
+        setError("Failed to fetch DSCs");
+        setDSCs([]);
+      } finally {
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+      }
+    };
     if (searchQuery && searchQuery.trim() !== "") {
       handleSearchDSCs(searchQuery);
     } else {
-      fetchDSCs();
+      fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
+  }, [searchQuery, isCompany, isConsumer, companyId, consumerId]);
 
   const toCamelCase = (dsc) => ({
     dsc_id: dsc.dsc_id,
@@ -581,6 +619,7 @@ function DSC({ searchQuery = "" }) {
             onClick={() => handleEdit(dsc)}
             variant="secondary"
             size="small"
+            disabled={!canEdit}
           >
             <BiEdit />
           </ActionButton>
@@ -596,10 +635,18 @@ function DSC({ searchQuery = "" }) {
     },
   ];
 
-  const filteredDSCs = dscs.filter((dsc) => {
-    if (statusFilter === "all") return true;
-    return dsc.status === statusFilter;
-  });
+  const filteredDSCs = React.useMemo(() => {
+    if (isCompany) {
+      return dscs.filter((d) => d.company_id === companyId);
+    }
+    if (isConsumer) {
+      return dscs.filter((d) => d.consumer_id === consumerId);
+    }
+    return dscs;
+  }, [dscs, isCompany, isConsumer, companyId, consumerId]);
+
+  // Disable update/edit for company/consumer users
+  const canEdit = !(isCompany || isConsumer);
 
   const statusOptions = [
     { value: "all", label: "All" },
