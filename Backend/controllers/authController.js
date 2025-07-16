@@ -180,8 +180,19 @@ class AuthController {
       const payload = ticket.getPayload();
       const { email, name, picture } = payload;
 
-      // Get role
-      const role = await Role.findOne({ where: { role_name: "User" } });
+      // Determine role based on email in Company/Consumer tables
+      let roleName = "User";
+      const company = await Company.findOne({ where: { company_email: email } });
+      if (company) {
+        roleName = "Company";
+      } else {
+        const consumer = await Consumer.findOne({ where: { email } });
+        if (consumer) {
+          roleName = "Consumer";
+        }
+      }
+      // Get role object
+      const role = await Role.findOne({ where: { role_name: roleName } });
       if (!role) {
         return res.status(400).json({ error: "Invalid role" });
       }
@@ -207,16 +218,34 @@ class AuthController {
           profile_image: picture,
           role_ids: [role.id],
         });
+      } else {
+        // Ensure user has the correct role
+        const hasRole = user.roles.some((r) => r.role_name === roleName);
+        if (!hasRole) {
+          await user.addRole(role, { through: { is_primary: true, assigned_by: user.user_id } });
+        }
       }
 
+      // Refetch user with updated roles
+      user = await User.findOne({
+        where: { email },
+        include: [
+          {
+            model: Role,
+            as: "roles",
+            attributes: ["role_name"],
+            through: { attributes: ["is_primary"] },
+          },
+        ],
+      });
+
       // Get primary role or first role
-      const primaryRole =
-        user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
-      const roleName = primaryRole ? primaryRole.role_name : "User";
+      const primaryRole = user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
+      const finalRoleName = primaryRole ? primaryRole.role_name : roleName;
 
       // Generate JWT token
       const authToken = jwt.sign(
-        { userId: user.user_id, role: roleName },
+        { userId: user.user_id, role: finalRoleName },
         process.env.JWT_SECRET,
         { expiresIn: "24h" }
       );
@@ -227,8 +256,9 @@ class AuthController {
           user_id: user.user_id,
           email: user.email,
           username: user.username,
-          role_name: roleName,
+          role_name: finalRoleName,
           profile_image: user.profile_image,
+          roles: user.roles.map((r) => r.role_name),
         },
       });
     } catch (error) {
