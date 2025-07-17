@@ -329,8 +329,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       .map(([_, label]) => label);
 
     if (missingFields.length > 0) {
-      console.error("[Health] Missing required fields:", missingFields);
-      setError(`Missing required fields: ${missingFields.join(", ")}`);
+      const msg = `Missing required fields: ${missingFields.join(", ")}`;
+      toast.error(msg);
       setLoading(false);
       return;
     }
@@ -532,7 +532,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   return (
     <>
-      {typeof error === 'string' && error && <div className="insurance-error">{error}</div>}
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">

@@ -36,9 +36,7 @@ const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
       onClose();
       setForm({ name: "" }); // Reset form after successful creation
     } catch (err) {
-      const msg =
-        err?.response?.data?.message || "Failed to create insurance company";
-      setError(msg);
+      const msg = err?.response?.data?.message || "Failed to create insurance company";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -55,7 +53,7 @@ const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
         required
         className="insurance-form-input"
       />
-      {error && <div className="insurance-error">{error}</div>}
+      {/* Remove inline error display */}
       <div className="insurance-form-actions">
         <Button type="button" variant="outlined" onClick={onClose}>
           Cancel
@@ -102,9 +100,7 @@ const EditInsuranceCompanyModal = ({ isOpen, onClose, company, onUpdated }) => {
       onUpdated();
       onClose();
     } catch (err) {
-      const msg =
-        err?.response?.data?.message || "Failed to update insurance company";
-      setError(msg);
+      const msg = err?.response?.data?.message || "Failed to update insurance company";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -121,7 +117,7 @@ const EditInsuranceCompanyModal = ({ isOpen, onClose, company, onUpdated }) => {
         required
         className="insurance-form-input"
       />
-      {error && <div className="insurance-error">{error}</div>}
+      {/* Remove inline error display */}
       <div className="insurance-form-actions">
         <Button type="button" variant="outlined" onClick={onClose}>
           Cancel

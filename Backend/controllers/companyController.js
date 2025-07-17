@@ -173,18 +173,32 @@ const companyController = {
         data: createdCompany
       });
     } catch (error) {
-      console.error('[Company] Error creating company:', error);
+      console.error('[Company] Error creating company:', error.message);
       if (transaction && !transaction.finished) {
         try {
           await transaction.rollback();
         } catch (rollbackError) {
-          console.error('[Company] Error rolling back transaction:', rollbackError);
+          console.error('[Company] Error rolling back transaction:', rollbackError.message);
         }
       }
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+        return res.status(400).json({
+          success: false,
+          error: `Duplicate entry: ${fields} must be unique.`
+        });
+      } else if (error.name === 'SequelizeValidationError') {
+        const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+        return res.status(400).json({
+          success: false,
+          error: `Validation error: ${details}`
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: `Company creation failed: ${error.message}`
+        });
+      }
     }
   },
 

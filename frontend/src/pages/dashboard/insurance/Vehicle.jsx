@@ -353,16 +353,16 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       );
     });
     if (missingFields.length > 0) {
-      setError(`Missing required fields: ${missingFields.join(", ")}`);
-      console.error("[Vehicle] Missing required fields:", missingFields);
+      const msg = `Missing required fields: ${missingFields.join(", ")}`;
+      toast.error(msg);
       setLoading(false);
       return;
     }
 
     // Validate file upload for new policies
     if (!policy && !files.policyDocument) {
-      setError("Policy document is required for new policies");
-      console.error("[Vehicle] Policy document is missing for new policy");
+      const msg = "Policy document is required for new policies";
+      toast.error(msg);
       setLoading(false);
       return;
     }
@@ -521,7 +521,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   return (
     <>
-      {error && <div className="insurance-error">{error}</div>}
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">

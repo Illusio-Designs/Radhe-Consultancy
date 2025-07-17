@@ -350,7 +350,16 @@ const createUser = async (req, res) => {
     const user = await userService.createUser(req.body);
     res.status(201).json(user);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('[UserController] Error:', error.message);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+      return res.status(400).json({ error: `Duplicate entry: ${fields} must be unique.` });
+    } else if (error.name === 'SequelizeValidationError') {
+      const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+      return res.status(400).json({ error: `Validation error: ${details}` });
+    } else {
+      return res.status(500).json({ error: `User operation failed: ${error.message}` });
+    }
   }
 };
 

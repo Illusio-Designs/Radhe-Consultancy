@@ -112,8 +112,20 @@ class UserService {
       }
       return userWithRoles;
     } catch (error) {
-      console.error('[UserService] Error in createUser:', error);
-      throw error;
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        // Find which field is duplicate
+        const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+        const message = `Duplicate entry: ${fields} must be unique.`;
+        console.error('[UserService] Duplicate error:', message);
+        throw new Error(message);
+      } else if (error.name === 'SequelizeValidationError') {
+        const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+        console.error('[UserService] Validation error:', details);
+        throw new Error(`Validation error: ${details}`);
+      } else {
+        console.error('[UserService] Error in createUser:', error.message);
+        throw new Error(`User creation failed: ${error.message}`);
+      }
     }
   }
 
@@ -196,10 +208,20 @@ class UserService {
       console.log("Final user state:", completeUser.toJSON());
       return completeUser;
     } catch (error) {
-      // If anything goes wrong, rollback the transaction
       await transaction.rollback();
-      console.error("Error updating user:", error);
-      throw error;
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+        const message = `Duplicate entry: ${fields} must be unique.`;
+        console.error('[UserService] Duplicate error:', message);
+        throw new Error(message);
+      } else if (error.name === 'SequelizeValidationError') {
+        const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+        console.error('[UserService] Validation error:', details);
+        throw new Error(`Validation error: ${details}`);
+      } else {
+        console.error('[UserService] Error updating user:', error.message);
+        throw new Error(`User update failed: ${error.message}`);
+      }
     }
   }
 

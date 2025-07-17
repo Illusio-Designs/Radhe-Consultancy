@@ -67,13 +67,15 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
       onUserUpdated();
     } catch (err) {
       console.error("Error saving user:", err);
-      setError(err.response?.data?.error || "Failed to save user");
+      if (err.message && err.message !== "An error occurred") {
+        toast.error(err.message);
+      }
     }
   };
 
   return (
     <>
-      {error && <div className="user-management-error">{error}</div>}
+      {/* Removed inline error display */}
 
       <form onSubmit={handleSubmit} className="user-management-form">
         <div className="user-management-form-group">

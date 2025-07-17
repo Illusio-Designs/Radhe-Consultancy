@@ -147,8 +147,16 @@ exports.createDSC = async (req, res) => {
 
         res.status(201).json({ success: true, dsc });
     } catch (error) {
-        console.error('Error in createDSC:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('[DSCController] Error:', error.message);
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+            return res.status(400).json({ message: `Duplicate entry: ${fields} must be unique.` });
+        } else if (error.name === 'SequelizeValidationError') {
+            const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+            return res.status(400).json({ message: `Validation error: ${details}` });
+        } else {
+            return res.status(500).json({ message: `DSC operation failed: ${error.message}` });
+        }
     }
 };
 

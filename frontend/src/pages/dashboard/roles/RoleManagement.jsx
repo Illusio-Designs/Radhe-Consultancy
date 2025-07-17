@@ -29,9 +29,8 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
       }
       onRoleUpdated();
     } catch (err) {
-      setError(
-        err.response?.data?.error || err.message || "Failed to save role"
-      );
+      const errorMsg = err.response?.data?.error || err.message || "Failed to save role";
+      toast.error(errorMsg);
     }
   };
 
@@ -57,7 +56,7 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
 
   return (
     <>
-      {error && <div className="role-management-error">{error}</div>}
+      {/* Removed inline error display */}
 
       <form onSubmit={handleSubmit} className="role-management-form">
         <div className="role-management-form-group">

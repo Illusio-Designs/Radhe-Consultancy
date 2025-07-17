@@ -76,12 +76,25 @@ const createInsuranceCompany = async (req, res) => {
       data: company
     });
   } catch (error) {
-    console.error('Error creating insurance company:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create insurance company',
-      error: error.message
-    });
+    console.error('Error creating insurance company:', error.message);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+      return res.status(400).json({
+        success: false,
+        message: `Duplicate entry: ${fields} must be unique.`
+      });
+    } else if (error.name === 'SequelizeValidationError') {
+      const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+      return res.status(400).json({
+        success: false,
+        message: `Validation error: ${details}`
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: `Failed to create insurance company: ${error.message}`
+      });
+    }
   }
 };
 

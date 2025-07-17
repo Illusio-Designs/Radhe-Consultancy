@@ -47,9 +47,7 @@ const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
       onCreated(created);
       onClose();
     } catch (err) {
-      const msg =
-        err?.response?.data?.message || "Failed to create insurance company";
-      setError(msg);
+      const msg = err?.response?.data?.message || "Failed to create insurance company";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -374,15 +372,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       onPolicyUpdated();
       onClose();
     } catch (error) {
-      console.error("Error submitting form:", error);
-      setError(
-        error.response?.data?.message ||
-          "An error occurred while submitting the form"
-      );
-      toast.error(
-        error.response?.data?.message ||
-          "An error occurred while submitting the form"
-      );
+      const errorMsg = error.response?.data?.message || error.message || 'Error saving company';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -432,7 +423,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   return (
     <>
-      {error && <div className="insurance-error">{error}</div>}
+      {/* Remove inline error display */}
 
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">

@@ -12,7 +12,15 @@ exports.getDSCLogs = async (req, res) => {
         });
         res.json({ success: true, logs });
     } catch (error) {
-        console.error('Error fetching DSC logs:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('[DSCLogController] Error:', error.message);
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+            return res.status(400).json({ message: `Duplicate entry: ${fields} must be unique.` });
+        } else if (error.name === 'SequelizeValidationError') {
+            const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+            return res.status(400).json({ message: `Validation error: ${details}` });
+        } else {
+            return res.status(500).json({ message: `DSC log operation failed: ${error.message}` });
+        }
     }
 }; 

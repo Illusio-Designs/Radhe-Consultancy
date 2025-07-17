@@ -80,11 +80,25 @@ const consumerController = {
         }
       });
     } catch (error) {
-      console.error('[ConsumerController] Error creating consumer:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      console.error('[ConsumerController] Error creating consumer:', error.message);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+        return res.status(400).json({
+          success: false,
+          error: `Duplicate entry: ${fields} must be unique.`
+        });
+      } else if (error.name === 'SequelizeValidationError') {
+        const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+        return res.status(400).json({
+          success: false,
+          error: `Validation error: ${details}`
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: `Consumer creation failed: ${error.message}`
+        });
+      }
     }
   },
 

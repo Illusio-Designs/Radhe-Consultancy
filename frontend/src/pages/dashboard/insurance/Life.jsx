@@ -354,16 +354,15 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       );
     });
     if (missingFields.length > 0) {
-      setError(`Missing required fields: ${missingFields.join(", ")}`);
-      console.error("[Life] Missing required fields:", missingFields);
+      const msg = `Missing required fields: ${missingFields.join(", ")}`;
+      toast.error(msg);
       setLoading(false);
       return;
     }
 
     // Validate file upload for new policies
     if (!policy && !files.policyDocument) {
-      setError("Policy document is required for new policies");
-      console.error("[Life] Policy document is missing for new policy");
+      toast.error("Policy document is required for new policies");
       setLoading(false);
       return;
     }
@@ -483,7 +482,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
         err.response?.data?.error ||
         err.response?.data?.message ||
         "Failed to save policy";
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -526,7 +524,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   return (
     <>
-      {error && <div className="insurance-error">{error}</div>}
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">

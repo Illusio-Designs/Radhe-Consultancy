@@ -86,10 +86,10 @@ const getRenewals = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error in getRenewals:', error);
-    res.status(500).json({ 
+    console.error('[RenewalController] Error:', error.message);
+    return res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch renewals', 
+      error: `Failed to fetch renewals: ${error.message}`,
       details: error.message 
     });
   }
@@ -157,10 +157,10 @@ const getRenewalCounts = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error in getRenewalCounts:', error);
-    res.status(500).json({ 
+    console.error('[RenewalController] Error:', error.message);
+    return res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch renewal counts',
+      error: `Failed to fetch renewal counts: ${error.message}`,
       details: error.message
     });
   }
@@ -227,10 +227,10 @@ const getRenewalList = async (req, res) => {
       data: policies
     });
   } catch (error) {
-    console.error('Error in getRenewalList:', error);
-    res.status(500).json({
+    console.error('[RenewalController] Error:', error.message);
+    return res.status(500).json({
       success: false,
-      error: 'Failed to fetch renewal list',
+      error: `Failed to fetch renewal list: ${error.message}`,
       details: error.message
     });
   }
@@ -249,10 +249,10 @@ const getRenewalLog = async (req, res) => {
       data: logs
     });
   } catch (error) {
-    console.error('Error in getRenewalLog:', error);
-    res.status(500).json({
+    console.error('[RenewalController] Error:', error.message);
+    return res.status(500).json({
       success: false,
-      error: 'Failed to fetch renewal log',
+      error: `Failed to fetch renewal log: ${error.message}`,
       details: error.message
     });
   }
@@ -353,10 +353,10 @@ const sendRenewalReminder = async (req, res) => {
       message: 'Reminder sent successfully'
     });
   } catch (error) {
-    console.error('Error in sendRenewalReminder:', error);
-    res.status(500).json({
+    console.error('[RenewalController] Error:', error.message);
+    return res.status(500).json({
       success: false,
-      error: 'Failed to send reminder',
+      error: `Failed to send reminder: ${error.message}`,
       details: error.message
     });
   }
@@ -539,12 +539,12 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
     }
     res.status(200).json(result);
   } catch (error) {
-    console.error('Error in getRenewalListByTypeAndPeriod:', error);
-    res.status(500).json({
+    console.error('[RenewalController] Error:', error.message);
+    return res.status(500).json({
       success: false,
-      error: 'Failed to fetch renewal list by type and period',
+      error: `Failed to fetch renewal list by type and period: ${error.message}`,
       details: error.message,
-      data: [] // Always return an empty array in the data field for frontend consistency
+      data: []
     });
   }
 };

@@ -47,9 +47,7 @@ const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
       onCreated(created);
       onClose();
     } catch (err) {
-      const msg =
-        err?.response?.data?.message || "Failed to create insurance company";
-      setError(msg);
+      const msg = err?.response?.data?.message || "Failed to create insurance company";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -315,7 +313,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       .filter(([key]) => !formData[key])
       .map(([_, label]) => label);
     if (missingFields.length > 0) {
-      setError(`Missing required fields: ${missingFields.join(", ")}`);
+      const msg = `Missing required fields: ${missingFields.join(", ")}`;
+      toast.error(msg);
       setLoading(false);
       return;
     }
@@ -329,18 +328,21 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       formData.consumerId !== "null" &&
       formData.consumerId !== "";
     if (!hasCompanyId && !hasConsumerId) {
-      setError("Please select either a company or a consumer");
+      const msg = "Please select either a company or a consumer";
+      toast.error(msg);
       setLoading(false);
       return;
     }
     if (hasCompanyId && hasConsumerId) {
-      setError("Please select either a company or a consumer, not both");
+      const msg = "Please select either a company or a consumer, not both";
+      toast.error(msg);
       setLoading(false);
       return;
     }
     // Validate file
     if (!policy && !files.policyDocument) {
-      setError("Policy document is required for new policies");
+      const msg = "Policy document is required for new policies";
+      toast.error(msg);
       setLoading(false);
       return;
     }
@@ -348,7 +350,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     const startDate = new Date(formData.policyStartDate);
     const endDate = new Date(formData.policyEndDate);
     if (endDate <= startDate) {
-      setError("Policy end date must be after start date");
+      toast.error("Policy end date must be after start date");
       setLoading(false);
       return;
     }
@@ -359,7 +361,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       return isNaN(value) || value < 0;
     });
     if (invalidNumericFields.length > 0) {
-      setError(
+      toast.error(
         `Please enter valid numbers for: ${invalidNumericFields.join(", ")}`
       );
       setLoading(false);
@@ -419,7 +421,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
         err.response?.data?.error ||
         err.response?.data?.message ||
         "Failed to save policy";
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -461,7 +462,7 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   return (
     <>
-      {error && <div className="insurance-error">{error}</div>}
+      {/* Remove inline error display */}
       <form onSubmit={handleSubmit} className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">

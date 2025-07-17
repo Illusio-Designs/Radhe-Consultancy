@@ -52,14 +52,42 @@ const Sidebar = ({ onCollapse }) => {
   if (!onlyCompanyOrConsumer) {
     menuItems = [
       {
-        path: "/dashboard",
-        icon: <LayoutDashboard />,
         label: "Dashboard",
+        icon: <LayoutDashboard />,
+        isDropdown: true,
+        isOpen: activeDropdown === "dashboard",
+        toggle: () => handleDropdownToggle("dashboard"),
+        items: [
+          {
+            path: "/dashboard",
+            icon: <Home />,
+            label: "Home",
+          },
+          {
+            path: "/dashboard/renewals/manager",
+            icon: <RefreshCw />,
+            label: "Renewals",
+          },
+        ],
       },
       {
-        path: "/dashboard/renewals/list",
-        icon: <RefreshCw />,
         label: "Renewals",
+        icon: <RefreshCw />,
+        isDropdown: true,
+        isOpen: activeDropdown === "renewals",
+        toggle: () => handleDropdownToggle("renewals"),
+        items: [
+          {
+            path: "/dashboard/renewals/list",
+            icon: <RefreshCw />,
+            label: "Renewal List",
+          },
+          {
+            path: "/dashboard/renewals/log",
+            icon: <Clock />,
+            label: "Reminder Log",
+          },
+        ],
       },
     ];
   }

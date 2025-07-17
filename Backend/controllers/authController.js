@@ -62,8 +62,16 @@ class AuthController {
         },
       });
     } catch (error) {
-      console.error("Register error:", error);
-      res.status(400).json({ error: error.message });
+      console.error('Register error:', error.message);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+        return res.status(400).json({ error: `Duplicate entry: ${fields} must be unique.` });
+      } else if (error.name === 'SequelizeValidationError') {
+        const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+        return res.status(400).json({ error: `Validation error: ${details}` });
+      } else {
+        return res.status(500).json({ error: `Registration failed: ${error.message}` });
+      }
     }
   }
 
@@ -155,10 +163,10 @@ class AuthController {
         },
       });
     } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({
+      console.error('Login error:', error.message);
+      return res.status(500).json({
         success: false,
-        error: "An error occurred during login",
+        error: `An error occurred during login: ${error.message}`,
       });
     }
   }
@@ -262,8 +270,8 @@ class AuthController {
         },
       });
     } catch (error) {
-      console.error("Google login error:", error);
-      res.status(401).json({ error: error.message });
+      console.error('Google login error:', error.message);
+      return res.status(401).json({ error: `Google login failed: ${error.message}` });
     }
   }
 
@@ -328,8 +336,8 @@ class AuthController {
         },
       });
     } catch (error) {
-      console.error("Error getting current user:", error);
-      res.status(500).json({ message: "Error getting user information" });
+      console.error('Error getting current user:', error.message);
+      return res.status(500).json({ message: `Error getting user information: ${error.message}` });
     }
   }
 
@@ -352,10 +360,10 @@ class AuthController {
           "If an account exists with this email, you will receive a password reset link.",
       });
     } catch (error) {
-      console.error("Forgot password error:", error);
-      res.status(500).json({
+      console.error('Forgot password error:', error.message);
+      return res.status(500).json({
         success: false,
-        error: "An error occurred while processing your request",
+        error: `An error occurred while processing your request: ${error.message}`,
       });
     }
   }
@@ -394,7 +402,7 @@ class AuthController {
         message: "Password has been reset successfully",
       });
     } catch (error) {
-      console.error("Reset password error:", error);
+      console.error('Reset password error:', error.message);
       if (
         error.name === "JsonWebTokenError" ||
         error.name === "TokenExpiredError"
@@ -404,9 +412,9 @@ class AuthController {
           error: "Invalid or expired reset token",
         });
       }
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
-        error: "An error occurred while resetting your password",
+        error: `An error occurred while resetting your password: ${error.message}`,
       });
     }
   }
@@ -443,8 +451,8 @@ class AuthController {
       await sendWhatsAppOTP(phone);
       res.json({ message: "OTP sent successfully" });
     } catch (error) {
-      console.error("Send OTP error:", error);
-      res.status(500).json({ message: "Failed to send OTP" });
+      console.error('Send OTP error:', error.message);
+      return res.status(500).json({ message: `Failed to send OTP: ${error.message}` });
     }
   }
 
@@ -514,8 +522,8 @@ class AuthController {
         },
       });
     } catch (error) {
-      console.error("Verify OTP error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      console.error('Verify OTP error:', error.message);
+      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
   }
 }

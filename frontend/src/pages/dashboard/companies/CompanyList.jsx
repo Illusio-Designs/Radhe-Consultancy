@@ -309,7 +309,9 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setError(error.response?.data?.message || error.message || 'Error saving company');
+      if (error.message && error.message !== 'An error occurred') {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -336,7 +338,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
 
   return (
     <>
-      {error && <div className="vendor-management-error">{error}</div>}
+      {/* Removed inline error display */}
 
       <form onSubmit={handleSubmit} className="vendor-management-form">
         <div className="vendor-management-form-grid">

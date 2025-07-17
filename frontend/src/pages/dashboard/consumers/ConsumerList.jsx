@@ -124,9 +124,9 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       setFileName("");
     } catch (error) {
       console.error("[ConsumerList] Error during submission:", error);
-      setError(
-        error.response?.data?.error || error.message || "An error occurred"
-      );
+      if (error.message && error.message !== "An error occurred") {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -158,7 +158,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
 
   return (
     <>
-      {error && <div className="vendor-management-error">{error}</div>}
+      {/* Removed inline error display */}
       {success && <div className="vendor-management-success">{success}</div>}
 
       <form onSubmit={handleSubmit} className="vendor-management-form">

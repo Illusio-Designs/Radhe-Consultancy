@@ -78,7 +78,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     e.preventDefault();
     try {
       if (formData.role_ids.length === 0) {
-        setError("At least one role must be selected");
+        toast.error("At least one role must be selected");
         return;
       }
 
@@ -102,7 +102,9 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
       onUserUpdated();
     } catch (err) {
       console.error("Error saving user:", err);
-      setError(err.response?.data?.error || "Failed to save user");
+      if (err.message && err.message !== "An error occurred") {
+        toast.error(err.message);
+      }
     }
   };
 
@@ -119,7 +121,7 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 
   return (
     <>
-      {error && <div className="user-management-error">{error}</div>}
+      {/* Removed inline error display */}
 
       <form onSubmit={handleSubmit} className="user-management-form">
         <div className="user-management-form-group">

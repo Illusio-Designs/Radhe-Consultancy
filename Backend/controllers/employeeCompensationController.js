@@ -177,17 +177,18 @@ exports.createPolicy = async (req, res) => {
 
     res.status(201).json(createdPolicy);
   } catch (error) {
-    console.error('[EmployeeCompensation] Error creating policy:', error);
+    console.error('[EmployeeCompensationController] Error:', error.message);
     if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({ message: 'Policy number must be unique' });
+      const fields = error.errors ? error.errors.map(e => e.path).join(', ') : 'unknown';
+      return res.status(400).json({ message: `Duplicate entry: ${fields} must be unique.` });
+    } else if (error.name === 'SequelizeValidationError') {
+      const details = error.errors ? error.errors.map(e => e.message).join('; ') : error.message;
+      return res.status(400).json({ message: `Validation error: ${details}` });
+    } else if (error.name === 'SequelizeForeignKeyConstraintError') {
+      return res.status(400).json({ message: 'Invalid company or consumer ID', details: error.message });
+    } else {
+      return res.status(500).json({ message: `Employee compensation policy operation failed: ${error.message}` });
     }
-    if (error.name === 'SequelizeValidationError') {
-      return res.status(400).json({ 
-        message: 'Validation error',
-        details: error.errors.map(e => e.message)
-      });
-    }
-    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

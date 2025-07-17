@@ -223,10 +223,10 @@ const getCompanyStatistics = async (req, res) => {
       data: responseData
     });
   } catch (error) {
-    console.error('Backend: Error fetching company statistics:', error);
-    res.status(500).json({
+    console.error('Backend: Error fetching company statistics:', error.message);
+    return res.status(500).json({
       success: false,
-      error: 'Failed to fetch company statistics'
+      error: `Failed to fetch company statistics: ${error.message}`
     });
   }
 };
@@ -282,8 +282,8 @@ const getCompanyStats = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Backend: Error fetching company stats:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch company stats' });
+    console.error('Backend: Error fetching company stats:', error.message);
+    return res.status(500).json({ success: false, error: `Failed to fetch company stats: ${error.message}` });
   }
 };
 
@@ -337,8 +337,8 @@ const getConsumerStats = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Backend: Error fetching consumer stats:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch consumer stats' });
+    console.error('Backend: Error fetching consumer stats:', error.message);
+    return res.status(500).json({ success: false, error: `Failed to fetch consumer stats: ${error.message}` });
   }
 };
 

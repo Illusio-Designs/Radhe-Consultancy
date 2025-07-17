@@ -67,28 +67,27 @@ api.interceptors.response.use(
         localStorage.removeItem("token");
         window.location.href = "/login";
         return Promise.reject({
-          message: "Session expired. Please login again.",
+          message: error.response.data?.message || error.response.data?.error || "Session expired. Please login again.",
           status: 401,
         });
       case 403:
         return Promise.reject({
-          message: "You do not have permission to perform this action.",
+          message: error.response.data?.message || error.response.data?.error || "You do not have permission to perform this action.",
           status: 403,
         });
       case 404:
         return Promise.reject({
-          message: "The requested resource was not found.",
+          message: error.response.data?.message || error.response.data?.error || "The requested resource was not found.",
           status: 404,
         });
       case 500:
         return Promise.reject({
-          message: "Server error. Please try again later.",
+          message: error.response.data?.message || error.response.data?.error || "Server error. Please try again later.",
           status: 500,
         });
       default:
         return Promise.reject({
-          message:
-            error.response.data?.message || "An unexpected error occurred.",
+          message: error.response.data?.message || error.response.data?.error || "An unexpected error occurred.",
           status: error.response.status,
         });
     }

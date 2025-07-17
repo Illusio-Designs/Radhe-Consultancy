@@ -234,7 +234,6 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
     } catch (err) {
       console.error("\n[DSC] Error submitting form:", err);
       const errorMessage = err.response?.data?.message || "Failed to save DSC";
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -249,9 +248,6 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
 
   return (
     <>
-      {typeof error === "string" && error && (
-        <div className="dsc-error">{error}</div>
-      )}
       <form onSubmit={handleSubmit} className="dsc-form">
         <div className="dsc-form-grid">
           <div className="dsc-form-group">
