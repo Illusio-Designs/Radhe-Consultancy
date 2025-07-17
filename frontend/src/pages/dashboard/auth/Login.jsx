@@ -26,7 +26,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
   const [loginMethod, setLoginMethod] = useState("email"); // "email", "google", or "whatsapp"
   const [otpSent, setOtpSent] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -135,6 +135,11 @@ function Login() {
         "Login component: Google login successful, response:",
         response
       );
+
+      // Set in-memory auth state immediately
+      if (response && response.user && response.token) {
+        loginWithGoogle(response.user, response.token);
+      }
 
       toast.success("Google login successful!");
       navigate("/dashboard");

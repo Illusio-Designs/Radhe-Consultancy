@@ -69,6 +69,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = (user, token) => {
+    try {
+      localStorage.setItem("token", token);
+      setUser(user);
+    } catch (error) {
+      console.error("AuthContext: Google login error:", error);
+      setError("Google login failed");
+      throw error;
+    }
+  };
+
   const logout = () => {
     console.log("AuthContext: Logging out user");
     localStorage.removeItem("token");
@@ -91,6 +102,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     login,
+    loginWithGoogle,
     logout,
     isAuthenticated: !!user,
     hasRole,
