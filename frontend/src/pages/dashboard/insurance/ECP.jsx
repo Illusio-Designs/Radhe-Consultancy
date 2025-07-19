@@ -772,7 +772,16 @@ function ECP({ searchQuery = "" }) {
       console.log("ECP: Fetch response:", response);
 
       if (response && response.policies && Array.isArray(response.policies)) {
-        setPolicies(response.policies);
+        // Transform the policies to ensure consistent data structure
+        const transformedPolicies = response.policies.map(policy => ({
+          ...policy,
+          // Ensure policyHolder is available for company name display
+          policyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          // Keep original properties for backward compatibility
+          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          consumerPolicyHolder: policy.consumerPolicyHolder,
+        }));
+        setPolicies(transformedPolicies);
         setPagination({
           currentPage: response.currentPage || page,
           pageSize: response.pageSize || pageSize,
@@ -781,7 +790,16 @@ function ECP({ searchQuery = "" }) {
         });
         setError(null);
       } else if (Array.isArray(response)) {
-        setPolicies(response);
+        // Transform the policies to ensure consistent data structure
+        const transformedPolicies = response.map(policy => ({
+          ...policy,
+          // Ensure policyHolder is available for company name display
+          policyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          // Keep original properties for backward compatibility
+          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          consumerPolicyHolder: policy.consumerPolicyHolder,
+        }));
+        setPolicies(transformedPolicies);
         setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else {
@@ -811,7 +829,16 @@ function ECP({ searchQuery = "" }) {
 
       // Handle both expected format and direct array response
       if (response && response.success && Array.isArray(response.policies)) {
-        setPolicies(response.policies);
+        // Transform the policies to ensure consistent data structure
+        const transformedPolicies = response.policies.map(policy => ({
+          ...policy,
+          // Ensure policyHolder is available for company name display
+          policyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          // Keep original properties for backward compatibility
+          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          consumerPolicyHolder: policy.consumerPolicyHolder,
+        }));
+        setPolicies(transformedPolicies);
         setPagination({
           currentPage: response.currentPage || 1,
           pageSize: response.pageSize || pagination.pageSize,
@@ -821,7 +848,16 @@ function ECP({ searchQuery = "" }) {
         setError(null);
       } else if (Array.isArray(response)) {
         // Handle case where response is directly an array
-        setPolicies(response);
+        // Transform the policies to ensure consistent data structure
+        const transformedPolicies = response.map(policy => ({
+          ...policy,
+          // Ensure policyHolder is available for company name display
+          policyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          // Keep original properties for backward compatibility
+          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          consumerPolicyHolder: policy.consumerPolicyHolder,
+        }));
+        setPolicies(transformedPolicies);
         setPagination((prev) => ({
           ...prev,
           currentPage: 1,
@@ -881,7 +917,7 @@ function ECP({ searchQuery = "" }) {
         policy.net_premium,
         policy.remarks
       ].some(field => field && field.toString().toLowerCase().includes(searchLower));
-      const companyName = policy.companyPolicyHolder?.company_name || policy.company?.company_name || policy.company_name;
+      const companyName = policy.policyHolder?.company_name || policy.companyPolicyHolder?.company_name || policy.company?.company_name || policy.company_name;
       const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
       const consumerName = policy.consumerPolicyHolder?.name || policy.consumer?.name || policy.consumer_name;
       const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
@@ -915,6 +951,9 @@ function ECP({ searchQuery = "" }) {
     updatedAt: policy.updated_at,
     policyHolder: policy.policyHolder,
     provider: policy.provider,
+    // Keep original properties for backward compatibility
+    companyPolicyHolder: policy.policyHolder,
+    consumerPolicyHolder: policy.consumerPolicyHolder,
   });
 
   const handleDelete = async (policyId) => {
@@ -971,6 +1010,7 @@ function ECP({ searchQuery = "" }) {
       sortable: false,
       render: (_, policy) => {
         return (
+          policy.policyHolder?.company_name ||
           policy.companyPolicyHolder?.company_name ||
           policy.consumerPolicyHolder?.name ||
           policy.company_name ||
