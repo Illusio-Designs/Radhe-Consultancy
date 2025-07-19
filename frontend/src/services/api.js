@@ -1796,4 +1796,23 @@ export const renewalAPI = {
   },
 };
 
+export const userRoleWorkLogAPI = {
+  getAllLogs: async (params = {}) => {
+    try {
+      const response = await api.get('/user-role-logs', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  createLog: async (logData) => {
+    try {
+      const response = await api.post('/user-role-logs', logData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
 export default api;

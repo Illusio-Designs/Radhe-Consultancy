@@ -17,6 +17,7 @@ const LifePolicy = require("./lifePolicyModel");
 const DSC = require("./dscModel");
 const ReminderLog = require("./reminderLogModel");
 const DSCLog = require("./dscLogModel");
+const UserRoleWorkLog = require("./userRoleWorkLogModel");
 
 // Define associations
 // Many-to-many relationship between User and Role through UserRole
@@ -202,6 +203,11 @@ DSC.belongsTo(Consumer, {
 
 DSCLog.belongsTo(User, { foreignKey: 'performed_by', as: 'user' });
 
+// UserRoleWorkLog associations
+UserRoleWorkLog.belongsTo(User, { foreignKey: 'user_id', as: 'actor' });
+UserRoleWorkLog.belongsTo(User, { foreignKey: 'target_user_id', as: 'targetUser' });
+UserRoleWorkLog.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
+
 module.exports = {
   sequelize,
   User,
@@ -220,4 +226,5 @@ module.exports = {
   DSC,
   ReminderLog,
   DSCLog,
+  UserRoleWorkLog,
 };

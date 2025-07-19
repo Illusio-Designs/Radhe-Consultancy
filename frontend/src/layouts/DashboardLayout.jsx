@@ -33,6 +33,7 @@ import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
 import RenewalList from "../pages/dashboard/renewals/RenewalList";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
+import UserRoleWorkLog from "../pages/dashboard/roles/UserRoleWorkLog";
 
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -121,6 +122,8 @@ function DashboardLayout() {
         return <RenewalList />;
       case "/dashboard/renewals/log":
         return <RenewalLog />;
+      case "/dashboard/roles/user-role-work-log":
+        return <UserRoleWorkLog />;
       default:
         return <CombinedDashboard />;
     }

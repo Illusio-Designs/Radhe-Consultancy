@@ -1,7 +1,7 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
 // This script handles database setup, roles/permissions setup, and admin user setup
 
-const { sequelize, User, Role, Permission, RolePermission, UserRole, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC } = require('../models');
+const { sequelize, User, Role, Permission, RolePermission, UserRole, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, ReminderLog, DSCLog, UserRoleWorkLog } = require('../models');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -387,6 +387,16 @@ async function setupDatabase() {
       } catch (error) {
         logToFile('Warning: DSCLog sync failed: ' + error.message);
         console.log('Warning: DSCLog sync failed:', error.message);
+      }
+
+      // Sync UserRoleWorkLog table
+      try {
+        await UserRoleWorkLog.sync({ alter: true });
+        logToFile('UserRoleWorkLogs table synced');
+        console.log('UserRoleWorkLogs table synced');
+      } catch (error) {
+        logToFile('Warning: UserRoleWorkLog sync failed: ' + error.message);
+        console.log('Warning: UserRoleWorkLog sync failed:', error.message);
       }
 
       // Special handling for LifePolicy - try to sync without constraints first

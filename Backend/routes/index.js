@@ -18,6 +18,7 @@ const lifePolicyRoutes = require('./lifePolicyRoutes');
 const dscRoutes = require('./dscRoutes');
 const renewalRoutes = require('./renewalRoutes');
 const dscLogRoutes = require('./dscLogRoutes');
+const userRoleWorkLogRoutes = require('./userRoleWorkLogRoutes');
 
 // Route configuration object
 const routes = {
@@ -80,6 +81,10 @@ const routes = {
   dscLogs: {
     path: '/dsc-logs',
     router: dscLogRoutes
+  },
+  userRoleWorkLogs: {
+    path: '/user-role-logs',
+    router: userRoleWorkLogRoutes
   }
 };
 

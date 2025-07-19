@@ -263,6 +263,11 @@ const Sidebar = ({ onCollapse }) => {
             icon: <KeyRound />,
             label: "DSC Logs",
           },
+          {
+            path: "/dashboard/roles/user-role-work-log",
+            icon: <ClipboardList />,
+            label: "User Role Work Log",
+          },
         ],
       },
     ];
