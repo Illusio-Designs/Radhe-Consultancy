@@ -1,4 +1,4 @@
-const { Company, User, Role, Vendor, sequelize } = require('../models');
+const { Company, User, Role, Vendor, sequelize, UserRoleWorkLog } = require('../models');
 const userService = require('../services/userService');
 const { Op } = require('sequelize');
 const path = require('path');
@@ -167,6 +167,16 @@ const companyController = {
           attributes: ['user_id', 'username', 'email']
         }]
       });
+
+      try {
+        await UserRoleWorkLog.create({
+          user_id: req.user?.user_id || null,
+          target_user_id: user.user_id,
+          role_id: null,
+          action: 'created_company',
+          details: JSON.stringify({ company_id: company.company_id, company_name: company.company_name })
+        });
+      } catch (logErr) { console.error('Log error:', logErr); }
 
       res.status(201).json({
         success: true,
@@ -396,6 +406,21 @@ const companyController = {
 
         await transaction.commit();
         console.log('[CompanyController] Transaction committed successfully');
+
+        // Log the action
+        try {
+          await UserRoleWorkLog.create({
+            user_id: req.user?.user_id || null,
+            target_user_id: null,
+            role_id: null,
+            action: 'updated_company',
+            details: JSON.stringify({
+              company_id: company.company_id,
+              company_name: company.company_name,
+              changes: updateData
+            })
+          });
+        } catch (logErr) { console.error('Log error:', logErr); }
 
         // Get updated company with user details
         const updatedCompany = await Company.findByPk(id, {

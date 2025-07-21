@@ -11,7 +11,7 @@ import { useData } from "../../../contexts/DataContext";
 import { toast } from "react-toastify";
 
 // UserForm component
-const UserForm = ({ user, onClose, onUserUpdated }) => {
+const UserForm = ({ user, onClose, onUserUpdated, roles = [] }) => {
   const [formData, setFormData] = useState({
     username: user?.username || "",
     email: user?.email || "",
@@ -397,6 +397,7 @@ function ConsumerUserList({ searchQuery = "" }) {
           user={selectedUser}
           onClose={handleModalClose}
           onUserUpdated={handleUserUpdated}
+          roles={roles}
         />
       </Modal>
     </div>

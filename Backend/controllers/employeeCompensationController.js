@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
+const { UserRoleWorkLog } = require('../models');
 
 // Use the configured multer instance for employee policy documents
 exports.upload = uploadEmployeePolicyDocument;
@@ -170,10 +171,32 @@ exports.createPolicy = async (req, res) => {
       ]
     });
 
-    console.log('[EmployeeCompensation] Policy created successfully:', {
+    console.log('\n[ECP] Policy created successfully:', {
       id: createdPolicy.id,
-      documentPath: createdPolicy.policy_document_path
+      documentPath: createdPolicy.policy_document_path,
+      company_id: createdPolicy.company_id,
+      consumer_id: createdPolicy.consumer_id
     });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
+        role_id: null,
+        action: 'created_ecp_policy',
+        details: JSON.stringify({
+          policy_id: createdPolicy.id,
+          policy_number: createdPolicy.policy_number,
+          customer_type: createdPolicy.customer_type,
+          company_id: createdPolicy.company_id,
+          consumer_id: createdPolicy.consumer_id,
+          total_employees: createdPolicy.total_employees,
+          total_wages: createdPolicy.total_wages,
+          proposer_name: createdPolicy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.status(201).json(createdPolicy);
   } catch (error) {
@@ -276,11 +299,33 @@ exports.updatePolicy = async (req, res) => {
       ]
     });
 
-    console.log('[EmployeeCompensation] Policy updated successfully:', {
+    console.log('\n[ECP] Policy updated successfully:', {
       id: updatedPolicy.id,
       documentPath: updatedPolicy.policy_document_path,
-      updatedAt: updatedPolicy.updated_at
+      company_id: updatedPolicy.company_id,
+      consumer_id: updatedPolicy.consumer_id
     });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: updatedPolicy.company_id || updatedPolicy.consumer_id,
+        role_id: null,
+        action: 'updated_ecp_policy',
+        details: JSON.stringify({
+          policy_id: updatedPolicy.id,
+          policy_number: updatedPolicy.policy_number,
+          customer_type: updatedPolicy.customer_type,
+          company_id: updatedPolicy.company_id,
+          consumer_id: updatedPolicy.consumer_id,
+          total_employees: updatedPolicy.total_employees,
+          total_wages: updatedPolicy.total_wages,
+          proposer_name: updatedPolicy.proposer_name,
+          changes: req.body
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.json(updatedPolicy);
   } catch (error) {
@@ -301,6 +346,27 @@ exports.deletePolicy = async (req, res) => {
     }
 
     await policy.update({ status: 'cancelled' });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: policy.company_id || policy.consumer_id,
+        role_id: null,
+        action: 'cancelled_ecp_policy',
+        details: JSON.stringify({
+          policy_id: policy.id,
+          policy_number: policy.policy_number,
+          customer_type: policy.customer_type,
+          company_id: policy.company_id,
+          consumer_id: policy.consumer_id,
+          total_employees: policy.total_employees,
+          total_wages: policy.total_wages,
+          proposer_name: policy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
+
     res.json({ message: 'Policy cancelled successfully' });
   } catch (error) {
     console.error('Error deleting policy:', error);

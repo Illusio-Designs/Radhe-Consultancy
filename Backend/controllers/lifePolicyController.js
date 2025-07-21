@@ -8,6 +8,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
+const { UserRoleWorkLog } = require('../models');
 
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
@@ -108,10 +109,10 @@ exports.getPolicy = async (req, res) => {
 
 exports.createPolicy = async (req, res) => {
   try {
-    console.log('[Life] Creating new policy with data:', {
-      body: req.body,
-      file: req.file
-    });
+    console.log('=== Multer Processed FormData ===');
+    console.log('Request Body:', req.body);
+    console.log('Request File:', req.file);
+    console.log('=== End Multer Processed FormData ===');
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -152,10 +153,31 @@ exports.createPolicy = async (req, res) => {
       ]
     });
 
-    console.log('[Life] Policy created successfully:', {
+    console.log('\n[Life] Policy created successfully:', {
       id: createdPolicy.id,
-      documentPath: createdPolicy.policy_document_path
+      documentPath: createdPolicy.policy_document_path,
+      company_id: createdPolicy.company_id,
+      consumer_id: createdPolicy.consumer_id
     });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
+        role_id: null,
+        action: 'created_life_policy',
+        details: JSON.stringify({
+          policy_id: createdPolicy.id,
+          policy_number: createdPolicy.policy_number,
+          customer_type: createdPolicy.customer_type,
+          company_id: createdPolicy.company_id,
+          consumer_id: createdPolicy.consumer_id,
+          sum_assured: createdPolicy.sum_assured,
+          proposer_name: createdPolicy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.status(201).json(createdPolicy);
   } catch (error) {
@@ -234,10 +256,32 @@ exports.updatePolicy = async (req, res) => {
       ]
     });
 
-    console.log('[Life] Policy updated successfully:', {
+    console.log('\n[Life] Policy updated successfully:', {
       id: updatedPolicy.id,
-      documentPath: updatedPolicy.policy_document_path
+      documentPath: updatedPolicy.policy_document_path,
+      company_id: updatedPolicy.company_id,
+      consumer_id: updatedPolicy.consumer_id
     });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: updatedPolicy.company_id || updatedPolicy.consumer_id,
+        role_id: null,
+        action: 'updated_life_policy',
+        details: JSON.stringify({
+          policy_id: updatedPolicy.id,
+          policy_number: updatedPolicy.policy_number,
+          customer_type: updatedPolicy.customer_type,
+          company_id: updatedPolicy.company_id,
+          consumer_id: updatedPolicy.consumer_id,
+          sum_assured: updatedPolicy.sum_assured,
+          proposer_name: updatedPolicy.proposer_name,
+          changes: req.body
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.json(updatedPolicy);
   } catch (error) {
@@ -268,8 +312,28 @@ exports.deletePolicy = async (req, res) => {
       }
     }
 
-    await policy.destroy();
-    res.json({ message: 'Policy deleted successfully' });
+    await policy.update({ status: 'cancelled' });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: policy.company_id || policy.consumer_id,
+        role_id: null,
+        action: 'cancelled_life_policy',
+        details: JSON.stringify({
+          policy_id: policy.id,
+          policy_number: policy.policy_number,
+          customer_type: policy.customer_type,
+          company_id: policy.company_id,
+          consumer_id: policy.consumer_id,
+          sum_assured: policy.sum_assured,
+          proposer_name: policy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
+
+    res.json({ message: 'Policy cancelled successfully' });
   } catch (error) {
     console.error('Error deleting life policy:', error);
     res.status(500).json({ message: 'Internal server error' });

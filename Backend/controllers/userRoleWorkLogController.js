@@ -5,8 +5,8 @@ const userRoleWorkLogController = {
   async createLog(req, res) {
     try {
       const { user_id, target_user_id, role_id, action, details } = req.body;
-      if (!user_id || !role_id || !action) {
-        return res.status(400).json({ error: 'user_id, role_id, and action are required.' });
+      if (!user_id || !action) {
+        return res.status(400).json({ error: 'user_id and action are required.' });
       }
       const log = await UserRoleWorkLog.create({
         user_id,

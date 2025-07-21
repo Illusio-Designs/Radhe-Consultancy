@@ -123,7 +123,7 @@ function DashboardLayout() {
       case "/dashboard/renewals/log":
         return <RenewalLog />;
       case "/dashboard/roles/user-role-work-log":
-        return <UserRoleWorkLog />;
+        return <UserRoleWorkLog searchQuery={searchQuery} />;
       default:
         return <CombinedDashboard />;
     }

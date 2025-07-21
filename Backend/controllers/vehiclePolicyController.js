@@ -8,6 +8,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
+const { UserRoleWorkLog } = require('../models');
 
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
@@ -108,10 +109,10 @@ exports.getPolicy = async (req, res) => {
 
 exports.createPolicy = async (req, res) => {
   try {
-    console.log('[Vehicle] Creating new policy with data:', {
-      body: req.body,
-      file: req.file
-    });
+    console.log('=== Multer Processed FormData ===');
+    console.log('Request Body:', req.body);
+    console.log('Request File:', req.file);
+    console.log('=== End Multer Processed FormData ===');
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -169,10 +170,32 @@ exports.createPolicy = async (req, res) => {
       ]
     });
 
-    console.log('[Vehicle] Policy created successfully:', {
+    console.log('\n[Vehicle] Policy created successfully:', {
       id: createdPolicy.id,
-      documentPath: createdPolicy.policy_document_path
+      documentPath: createdPolicy.policy_document_path,
+      company_id: createdPolicy.company_id,
+      consumer_id: createdPolicy.consumer_id
     });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
+        role_id: null,
+        action: 'created_vehicle_policy',
+        details: JSON.stringify({
+          policy_id: createdPolicy.id,
+          policy_number: createdPolicy.policy_number,
+          customer_type: createdPolicy.customer_type,
+          company_id: createdPolicy.company_id,
+          consumer_id: createdPolicy.consumer_id,
+          vehicle_number: createdPolicy.vehicle_number,
+          idv: createdPolicy.idv,
+          proposer_name: createdPolicy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.status(201).json(createdPolicy);
   } catch (error) {
@@ -246,10 +269,33 @@ exports.updatePolicy = async (req, res) => {
       ]
     });
 
-    console.log('[Vehicle] Policy updated successfully:', {
+    console.log('\n[Vehicle] Policy updated successfully:', {
       id: updatedPolicy.id,
-      documentPath: updatedPolicy.policy_document_path
+      documentPath: updatedPolicy.policy_document_path,
+      company_id: updatedPolicy.company_id,
+      consumer_id: updatedPolicy.consumer_id
     });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: updatedPolicy.company_id || updatedPolicy.consumer_id,
+        role_id: null,
+        action: 'updated_vehicle_policy',
+        details: JSON.stringify({
+          policy_id: updatedPolicy.id,
+          policy_number: updatedPolicy.policy_number,
+          customer_type: updatedPolicy.customer_type,
+          company_id: updatedPolicy.company_id,
+          consumer_id: updatedPolicy.consumer_id,
+          vehicle_number: updatedPolicy.vehicle_number,
+          idv: updatedPolicy.idv,
+          proposer_name: updatedPolicy.proposer_name,
+          changes: req.body
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.json(updatedPolicy);
   } catch (error) {
@@ -268,6 +314,27 @@ exports.deletePolicy = async (req, res) => {
       return res.status(404).json({ message: 'Policy not found' });
     }
     await policy.update({ status: 'cancelled' });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: policy.company_id || policy.consumer_id,
+        role_id: null,
+        action: 'cancelled_vehicle_policy',
+        details: JSON.stringify({
+          policy_id: policy.id,
+          policy_number: policy.policy_number,
+          customer_type: policy.customer_type,
+          company_id: policy.company_id,
+          consumer_id: policy.consumer_id,
+          vehicle_number: policy.vehicle_number,
+          idv: policy.idv,
+          proposer_name: policy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
+
     res.json({ message: 'Policy cancelled successfully' });
   } catch (error) {
     console.error('Error deleting vehicle policy:', error);

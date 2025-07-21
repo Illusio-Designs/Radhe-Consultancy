@@ -2,16 +2,56 @@ import React, { useEffect, useState } from 'react';
 import { userRoleWorkLogAPI } from '../../../services/api';
 import '../../../styles/pages/dashboard/dsc/DSC.css';
 import Pagination from '../../../components/common/Pagination/Pagination';
+import { Tooltip } from 'react-tooltip';
+import SearchBar from '../../../components/common/SearchBar/SearchBar';
 
-const FIELDS = [
-  { key: 'actor', label: 'Actor' },
-  { key: 'targetUser', label: 'Target User' },
-  { key: 'role', label: 'Role' },
-  { key: 'action', label: 'Action' },
-  { key: 'details', label: 'Details' },
-];
+// Format action name for display (simplified version)
+const formatAction = (action) => {
+  if (!action) return '-';
+  return action
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+// Get details for display
+const getDetails = (details) => {
+  if (!details) return '-';
+  try {
+    const parsedDetails = JSON.parse(details);
+    // Try top-level first
+    let name = parsedDetails.company_name || parsedDetails.proposer_name || parsedDetails.username;
+    // If not found, try inside 'changes'
+    if (!name && parsedDetails.changes) {
+      name = parsedDetails.changes.company_name || parsedDetails.changes.proposer_name || parsedDetails.changes.username;
+    }
+    // No additional info (no email, no policy number)
+    return name ? name : '-';
+  } catch (e) {
+    return '-';
+  }
+};
+
+// Get tooltip content (no email, no policy number)
+const getTooltipContent = (details) => {
+  if (!details) return '';
+  try {
+    const parsedDetails = JSON.parse(details);
+    const relevantDetails = [];
+    if (parsedDetails.customer_type) {
+      relevantDetails.push(`Customer Type: ${parsedDetails.customer_type}`);
+    }
+    // Add user/company details if present (no email, no policy number)
+    if (parsedDetails.changes) {
+      if (parsedDetails.changes.mobile_number) {
+        relevantDetails.push(`Mobile: ${parsedDetails.changes.mobile_number}`);
+      }
+    }
+    return relevantDetails.join('\n');
+  } catch (e) {
+    return details;
+  }
+};
 
 const UserRoleWorkLog = ({ searchQuery = '' }) => {
   const [logs, setLogs] = useState([]);
@@ -29,6 +69,7 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
         setLogs(data);
       } catch (err) {
         setError('Failed to fetch logs');
+        console.error('Error fetching logs:', err);
       } finally {
         setLoading(false);
       }
@@ -36,15 +77,11 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
     fetchLogs();
   }, []);
 
-  // Filter logs by global search query
+  // Filter logs by search query
   const filteredLogs = logs.filter((log) => {
     const search = (searchQuery || '').toLowerCase();
     return (
       (log.actor?.username || '').toLowerCase().includes(search) ||
-      (log.actor?.email || '').toLowerCase().includes(search) ||
-      (log.targetUser?.username || '').toLowerCase().includes(search) ||
-      (log.targetUser?.email || '').toLowerCase().includes(search) ||
-      (log.role?.role_name || '').toLowerCase().includes(search) ||
       (log.action || '').toLowerCase().includes(search) ||
       (log.details || '').toLowerCase().includes(search)
     );
@@ -57,6 +94,7 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
   };
+
   const handlePageSizeChange = (newPageSize) => {
     setPageSize(Number(newPageSize));
     setPage(1);
@@ -73,11 +111,11 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
           <h1 className="dsc-title">User Role Work Log</h1>
         </div>
         {loading ? (
-          <div>Loading...</div>
+          <div className="dsc-loading">Loading...</div>
         ) : error ? (
           <div className="dsc-error">{error}</div>
         ) : filteredLogs.length === 0 ? (
-          <div>No logs found.</div>
+          <div className="dsc-empty">No logs found.</div>
         ) : (
           <>
             <div className="table-responsive">
@@ -85,22 +123,29 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
                 <thead>
                   <tr>
                     <th>Sr No.</th>
+                    <th>Performed By</th>
                     <th>Timestamp</th>
-                    {FIELDS.map((f) => (
-                      <th key={f.key}>{f.label}</th>
-                    ))}
+                    <th>Action</th>
+                    <th>Details</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedLogs.map((log, idx) => (
                     <tr key={log.id}>
                       <td>{(page - 1) * pageSize + idx + 1}</td>
+                      <td>{log.actor ? log.actor.username : '-'}</td>
                       <td>{new Date(log.created_at).toLocaleString()}</td>
-                      <td>{log.actor ? `${log.actor.username} (${log.actor.email})` : '-'}</td>
-                      <td>{log.targetUser ? `${log.targetUser.username} (${log.targetUser.email})` : '-'}</td>
-                      <td>{log.role ? log.role.role_name : '-'}</td>
-                      <td>{log.action}</td>
-                      <td>{log.details || '-'}</td>
+                      <td>{formatAction(log.action)}</td>
+                      <td>
+                        <span
+                          data-tooltip-id={`log-${log.id}`}
+                          data-tooltip-content={getTooltipContent(log.details)}
+                          style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}
+                        >
+                          {getDetails(log.details)}
+                        </span>
+                        <Tooltip id={`log-${log.id}`} place="top" />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -113,7 +158,7 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
               totalItems={filteredLogs.length}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              pageSizeOptions={[10, 20, 50, 100]}
             />
           </>
         )}

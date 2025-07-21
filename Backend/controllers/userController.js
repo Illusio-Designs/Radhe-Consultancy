@@ -6,6 +6,7 @@ const Consumer = require("../models/consumerModel");
 const userService = require("../services/userService");
 const { Op } = require("sequelize");
 const sequelize = require("../config/db");
+const { UserRoleWorkLog } = require('../models');
 
 // Get all users with optional role filtering
 const getAllUsers = async (req, res) => {
@@ -348,6 +349,16 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const user = await userService.createUser(req.body);
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: user.user_id,
+        role_id: null,
+        action: 'created_user',
+        details: JSON.stringify({ username: user.username, email: user.email })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
     res.status(201).json(user);
   } catch (error) {
     console.error('[UserController] Error:', error.message);
@@ -388,7 +399,7 @@ const updateUser = async (req, res) => {
         {
           model: Role,
           as: "roles",
-          attributes: ["role_name"],
+          attributes: ["id", "role_name"],
           through: { attributes: ["is_primary"] },
           include: [
             {
@@ -406,6 +417,21 @@ const updateUser = async (req, res) => {
       updatedUser.roles.find((role) => role.UserRole?.is_primary) ||
       updatedUser.roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
+
+    // Log the action with role information
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: updatedUser.user_id,
+        role_id: primaryRole?.id || null,
+        action: 'updated_user',
+        details: JSON.stringify({
+          changes: updateData,
+          role: roleName,
+          username: updatedUser.username
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
 
     res.json({
       id: updatedUser.user_id,
@@ -432,6 +458,16 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     await user.destroy();
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: user.user_id,
+        role_id: null,
+        action: 'deleted_user',
+        details: JSON.stringify({ deletedUserId: user.user_id })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -2,6 +2,7 @@ const HealthPolicy = require('../models/healthPolicyModel');
 const Company = require('../models/companyModel');
 const Consumer = require('../models/consumerModel');
 const InsuranceCompany = require('../models/insuranceCompanyModel');
+const { UserRoleWorkLog } = require('../models');
 const { validationResult } = require('express-validator');
 const path = require('path');
 const fs = require('fs').promises;
@@ -200,6 +201,24 @@ exports.createPolicy = async (req, res) => {
     });
     console.log('=== End Create Policy Request ===\n');
 
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
+        role_id: null,
+        action: 'created_health_policy',
+        details: JSON.stringify({
+          policy_id: createdPolicy.id,
+          policy_number: createdPolicy.policy_number,
+          customer_type: createdPolicy.customer_type,
+          company_id: createdPolicy.company_id,
+          consumer_id: createdPolicy.consumer_id,
+          proposer_name: createdPolicy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
+
     res.status(201).json(createdPolicy);
   } catch (error) {
     console.error('[HealthPolicyController] Error:', error.message);
@@ -306,6 +325,25 @@ exports.updatePolicy = async (req, res) => {
     });
     console.log('=== End Update Policy Request ===\n');
 
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: updatedPolicy.company_id || updatedPolicy.consumer_id,
+        role_id: null,
+        action: 'updated_health_policy',
+        details: JSON.stringify({
+          policy_id: updatedPolicy.id,
+          policy_number: updatedPolicy.policy_number,
+          customer_type: updatedPolicy.customer_type,
+          company_id: updatedPolicy.company_id,
+          consumer_id: updatedPolicy.consumer_id,
+          proposer_name: updatedPolicy.proposer_name,
+          changes: req.body
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
+
     res.json(updatedPolicy);
   } catch (error) {
     console.error('[HealthPolicyController] Error:', error.message);
@@ -330,6 +368,25 @@ exports.deletePolicy = async (req, res) => {
       return res.status(404).json({ message: 'Policy not found' });
     }
     await policy.update({ status: 'cancelled' });
+
+    // Log the action
+    try {
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
+        target_user_id: policy.company_id || policy.consumer_id,
+        role_id: null,
+        action: 'cancelled_health_policy',
+        details: JSON.stringify({
+          policy_id: policy.id,
+          policy_number: policy.policy_number,
+          customer_type: policy.customer_type,
+          company_id: policy.company_id,
+          consumer_id: policy.consumer_id,
+          proposer_name: policy.proposer_name
+        })
+      });
+    } catch (logErr) { console.error('Log error:', logErr); }
+
     res.json({ message: 'Policy cancelled successfully' });
   } catch (error) {
     console.error('Error deleting health policy:', error);
