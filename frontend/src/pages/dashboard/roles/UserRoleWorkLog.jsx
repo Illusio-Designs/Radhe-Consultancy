@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { userRoleWorkLogAPI, consumerAPI } from '../../../services/api';
+import { userRoleWorkLogAPI, consumerAPI, companyAPI } from '../../../services/api';
 import '../../../styles/pages/dashboard/dsc/DSC.css';
 import Pagination from '../../../components/common/Pagination/Pagination';
 import { Tooltip } from 'react-tooltip';
@@ -63,6 +63,8 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
   const [consumerNameCache, setConsumerNameCache] = useState({});
   // Track loading consumer names
   const [loadingConsumerIds, setLoadingConsumerIds] = useState([]);
+  const [companyNameCache, setCompanyNameCache] = useState({});
+  const [loadingCompanyIds, setLoadingCompanyIds] = useState([]);
 
   // Helper to get details (company/consumer/proposer/username)
   const getDetailsDisplay = (log) => {
@@ -73,21 +75,23 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
     } catch {
       return '-';
     }
-    // Company name direct
+
+    // 1. Company name direct
     if (parsedDetails.company_name) return parsedDetails.company_name;
-    // If consumer_id present, always prefer consumer name over proposer_name
-    const consumerId = parsedDetails.consumer_id || (parsedDetails.changes && parsedDetails.changes.consumer_id);
-    if (consumerId) {
-      if (consumerNameCache[consumerId]) {
-        return consumerNameCache[consumerId];
-      } else if (loadingConsumerIds.includes(consumerId)) {
+
+    // 2. Fetch company name by company_id
+    const companyId = parsedDetails.company_id || (parsedDetails.changes && parsedDetails.changes.company_id);
+    if (companyId) {
+      if (companyNameCache[companyId] !== undefined) {
+        return companyNameCache[companyId];
+      } else if (!loadingCompanyIds.includes(companyId)) {
+        fetchCompanyName(companyId);
         return 'Loading...';
       } else {
-        // Trigger fetch
-        fetchConsumerName(consumerId);
         return 'Loading...';
       }
     }
+
     // If proposer_name or username present (only if no company and no consumer)
     if (parsedDetails.proposer_name) return parsedDetails.proposer_name;
     if (parsedDetails.username) return parsedDetails.username;
@@ -109,6 +113,19 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
       setConsumerNameCache((prev) => ({ ...prev, [consumerId]: '-' }));
     } finally {
       setLoadingConsumerIds((prev) => prev.filter((id) => id !== consumerId));
+    }
+  };
+
+  const fetchCompanyName = async (companyId) => {
+    setLoadingCompanyIds((prev) => [...prev, companyId]);
+    try {
+      const company = await companyAPI.getCompanyById(companyId);
+      const name = company.company_name || company.name || '-';
+      setCompanyNameCache((prev) => ({ ...prev, [companyId]: name }));
+    } catch {
+      setCompanyNameCache((prev) => ({ ...prev, [companyId]: '-' }));
+    } finally {
+      setLoadingCompanyIds((prev) => prev.filter((id) => id !== companyId));
     }
   };
 
