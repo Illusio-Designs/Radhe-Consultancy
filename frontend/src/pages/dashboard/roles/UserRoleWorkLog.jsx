@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { userRoleWorkLogAPI } from '../../../services/api';
+import { userRoleWorkLogAPI, consumerAPI } from '../../../services/api';
 import '../../../styles/pages/dashboard/dsc/DSC.css';
 import Pagination from '../../../components/common/Pagination/Pagination';
 import { Tooltip } from 'react-tooltip';
@@ -59,6 +59,58 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  // Add a cache for consumer names
+  const [consumerNameCache, setConsumerNameCache] = useState({});
+  // Track loading consumer names
+  const [loadingConsumerIds, setLoadingConsumerIds] = useState([]);
+
+  // Helper to get details (company/consumer/proposer/username)
+  const getDetailsDisplay = (log) => {
+    if (!log.details) return '-';
+    let parsedDetails;
+    try {
+      parsedDetails = JSON.parse(log.details);
+    } catch {
+      return '-';
+    }
+    // Company name direct
+    if (parsedDetails.company_name) return parsedDetails.company_name;
+    // If consumer_id present, always prefer consumer name over proposer_name
+    const consumerId = parsedDetails.consumer_id || (parsedDetails.changes && parsedDetails.changes.consumer_id);
+    if (consumerId) {
+      if (consumerNameCache[consumerId]) {
+        return consumerNameCache[consumerId];
+      } else if (loadingConsumerIds.includes(consumerId)) {
+        return 'Loading...';
+      } else {
+        // Trigger fetch
+        fetchConsumerName(consumerId);
+        return 'Loading...';
+      }
+    }
+    // If proposer_name or username present (only if no company and no consumer)
+    if (parsedDetails.proposer_name) return parsedDetails.proposer_name;
+    if (parsedDetails.username) return parsedDetails.username;
+    if (parsedDetails.changes) {
+      if (parsedDetails.changes.proposer_name) return parsedDetails.changes.proposer_name;
+      if (parsedDetails.changes.username) return parsedDetails.changes.username;
+    }
+    return '-';
+  };
+
+  // Fetch and cache consumer name
+  const fetchConsumerName = async (consumerId) => {
+    setLoadingConsumerIds((prev) => [...prev, consumerId]);
+    try {
+      const consumer = await consumerAPI.getConsumerById(consumerId);
+      const name = consumer.consumer_name || consumer.name || consumer.username || '-';
+      setConsumerNameCache((prev) => ({ ...prev, [consumerId]: name }));
+    } catch {
+      setConsumerNameCache((prev) => ({ ...prev, [consumerId]: '-' }));
+    } finally {
+      setLoadingConsumerIds((prev) => prev.filter((id) => id !== consumerId));
+    }
+  };
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -142,7 +194,7 @@ const UserRoleWorkLog = ({ searchQuery = '' }) => {
                           data-tooltip-content={getTooltipContent(log.details)}
                           style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}
                         >
-                          {getDetails(log.details)}
+                          {getDetailsDisplay(log)}
                         </span>
                         <Tooltip id={`log-${log.id}`} place="top" />
                       </td>

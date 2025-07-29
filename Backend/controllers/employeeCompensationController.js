@@ -180,21 +180,33 @@ exports.createPolicy = async (req, res) => {
 
     // Log the action
     try {
+      let companyName = null;
+      if (createdPolicy.company_id) {
+        const company = await Company.findByPk(createdPolicy.company_id);
+        companyName = company ? company.company_name : null;
+      }
+      const logDetails = {
+        policy_id: createdPolicy.id,
+        policy_number: createdPolicy.policy_number,
+        customer_type: createdPolicy.customer_type,
+        company_id: createdPolicy.company_id,
+        consumer_id: createdPolicy.consumer_id,
+        total_employees: createdPolicy.total_employees,
+        total_wages: createdPolicy.total_wages,
+        proposer_name: createdPolicy.proposer_name,
+        company_name: companyName
+      };
+      console.log('[ECP LOG DEBUG]', {
+        company_id: createdPolicy.company_id,
+        companyName,
+        logDetails
+      });
       await UserRoleWorkLog.create({
         user_id: req.user?.user_id || null,
         target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
         role_id: null,
         action: 'created_ecp_policy',
-        details: JSON.stringify({
-          policy_id: createdPolicy.id,
-          policy_number: createdPolicy.policy_number,
-          customer_type: createdPolicy.customer_type,
-          company_id: createdPolicy.company_id,
-          consumer_id: createdPolicy.consumer_id,
-          total_employees: createdPolicy.total_employees,
-          total_wages: createdPolicy.total_wages,
-          proposer_name: createdPolicy.proposer_name
-        })
+        details: JSON.stringify(logDetails)
       });
     } catch (logErr) { console.error('Log error:', logErr); }
 

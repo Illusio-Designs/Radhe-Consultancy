@@ -162,6 +162,11 @@ exports.createPolicy = async (req, res) => {
 
     // Log the action
     try {
+      let companyName = null;
+      if (createdPolicy.company_id) {
+        const company = await Company.findByPk(createdPolicy.company_id);
+        companyName = company ? company.company_name : null;
+      }
       await UserRoleWorkLog.create({
         user_id: req.user?.user_id || null,
         target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
@@ -174,7 +179,8 @@ exports.createPolicy = async (req, res) => {
           company_id: createdPolicy.company_id,
           consumer_id: createdPolicy.consumer_id,
           sum_assured: createdPolicy.sum_assured,
-          proposer_name: createdPolicy.proposer_name
+          proposer_name: createdPolicy.proposer_name,
+          company_name: companyName
         })
       });
     } catch (logErr) { console.error('Log error:', logErr); }
