@@ -1,6 +1,5 @@
 const User = require("../models/userModel");
 const Role = require("../models/roleModel");
-const Permission = require("../models/permissionModel");
 const Company = require("../models/companyModel");
 const Consumer = require("../models/consumerModel");
 const userService = require("../services/userService");
@@ -23,7 +22,6 @@ const getAllUsers = async (req, res) => {
 
     let includeOptions = {
       model: Role,
-      as: "roles",
       attributes: ["role_name"],
       through: { attributes: ["is_primary"] },
     };
@@ -52,6 +50,12 @@ const getAllUsers = async (req, res) => {
         console.log(
           "[getAllUsers] Filtering for Other role users (excluding Company and Consumer)"
         );
+      } else if (role === "Plan_manager") {
+        // Show users who have Plan_manager role
+        includeOptions.where = { role_name: "Plan_manager" };
+        console.log(
+          "[getAllUsers] Filtering for Plan_manager role users"
+        );
       }
     }
 
@@ -64,7 +68,6 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
-              as: "roles",
               where: { role_name: "Company" },
               attributes: ["role_name"],
               through: { attributes: ["is_primary"] },
@@ -78,7 +81,6 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
-              as: "roles",
               where: { role_name: "Consumer" },
               attributes: ["role_name"],
               through: { attributes: ["is_primary"] },
@@ -92,7 +94,6 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
-              as: "roles",
               where: {
                 role_name: {
                   [Op.notIn]: ["Company", "Consumer"],
@@ -101,6 +102,19 @@ const getAllUsers = async (req, res) => {
               attributes: ["role_name"],
               through: { attributes: ["is_primary"] },
               required: true, // This ensures only users with other roles are returned
+            },
+          ],
+        });
+      } else if (role === "Plan_manager") {
+        // Find users who have Plan_manager role
+        users = await User.findAll({
+          include: [
+            {
+              model: Role,
+              where: { role_name: "Plan_manager" },
+              attributes: ["role_name"],
+              through: { attributes: ["is_primary"] },
+              required: true,
             },
           ],
         });
@@ -119,7 +133,7 @@ const getAllUsers = async (req, res) => {
         id: u.user_id,
         email: u.email,
         username: u.username,
-        roles: u.roles.map((r) => ({
+        roles: u.Roles.map((r) => ({
           name: r.role_name,
           isPrimary: r.UserRole?.is_primary,
         })),
@@ -132,7 +146,6 @@ const getAllUsers = async (req, res) => {
         include: [
           {
             model: Role,
-            as: "roles",
             attributes: ["role_name"],
             through: { attributes: ["is_primary"] },
           },
@@ -145,7 +158,7 @@ const getAllUsers = async (req, res) => {
           id: u.user_id,
           email: u.email,
           username: u.username,
-          roles: u.roles.map((r) => ({
+          roles: u.Roles.map((r) => ({
             name: r.role_name,
             isPrimary: r.UserRole?.is_primary,
           })),
@@ -200,7 +213,6 @@ const getCompanyUsers = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           where: { role_name: "Company" },
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
@@ -217,7 +229,7 @@ const getCompanyUsers = async (req, res) => {
       users.map((u) => ({
         id: u.user_id,
         email: u.email,
-        roles: u.roles.map((r) => r.role_name),
+        roles: u.Roles.map((r) => r.role_name),
       }))
     );
 
@@ -246,7 +258,6 @@ const getConsumerUsers = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           where: { role_name: "Consumer" },
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
@@ -263,7 +274,7 @@ const getConsumerUsers = async (req, res) => {
       users.map((u) => ({
         id: u.user_id,
         email: u.email,
-        roles: u.roles.map((r) => r.role_name),
+        roles: u.Roles.map((r) => r.role_name),
       }))
     );
 
@@ -281,7 +292,6 @@ const getOtherUsers = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           where: {
             role_name: {
               [Op.notIn]: ["Company", "Consumer"],
@@ -306,16 +316,8 @@ const getUserById = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
-          include: [
-            {
-              model: Permission,
-              through: { attributes: [] },
-              attributes: ["permission_name"],
-            },
-          ],
         },
       ],
     });
@@ -326,7 +328,7 @@ const getUserById = async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
+      user.Roles.find((role) => role.UserRole?.is_primary) || user.Roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     res.json({
@@ -336,9 +338,7 @@ const getUserById = async (req, res) => {
       contact_number: user.contact_number,
       imageUrl: user.profile_image,
       role: roleName,
-      roles: user.roles.map((r) => r.role_name),
-      permissions:
-        primaryRole?.Permissions?.map((p) => p.permission_name) || [],
+      roles: user.Roles.map((r) => r.role_name),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -385,7 +385,7 @@ const updateUser = async (req, res) => {
     const updateData = { ...req.body };
     await userService.updateUser(user.user_id, updateData);
 
-    // Get updated user with role information and permissions
+    // Get updated user with role information
     const updatedUser = await User.findOne({
       where: { user_id: user.user_id },
       attributes: [
@@ -398,24 +398,16 @@ const updateUser = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           attributes: ["id", "role_name"],
           through: { attributes: ["is_primary"] },
-          include: [
-            {
-              model: Permission,
-              through: { attributes: [] },
-              attributes: ["permission_name"],
-            },
-          ],
         },
       ],
     });
 
     // Get primary role or first role
     const primaryRole =
-      updatedUser.roles.find((role) => role.UserRole?.is_primary) ||
-      updatedUser.roles[0];
+      updatedUser.Roles.find((role) => role.UserRole?.is_primary) ||
+      updatedUser.Roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     // Log the action with role information
@@ -440,9 +432,7 @@ const updateUser = async (req, res) => {
       contact_number: updatedUser.contact_number,
       imageUrl: updatedUser.profile_image,
       role: roleName,
-      roles: updatedUser.roles.map((r) => r.role_name),
-      permissions:
-        primaryRole?.Permissions?.map((p) => p.permission_name) || [],
+      roles: updatedUser.Roles.map((r) => r.role_name),
     });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -502,16 +492,6 @@ const updateProfileImage = async (req, res) => {
   }
 };
 
-// Get user permissions
-const getUserPermissions = async (req, res) => {
-  try {
-    const permissions = await userService.getUserPermissions(req.params.id);
-    res.json(permissions);
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
-};
-
 // Change Password
 const changePassword = async (req, res) => {
   try {
@@ -556,16 +536,8 @@ const getCurrentUser = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
-          include: [
-            {
-              model: Permission,
-              through: { attributes: [] },
-              attributes: ["permission_name"],
-            },
-          ],
         },
       ],
     });
@@ -576,7 +548,7 @@ const getCurrentUser = async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
+      user.Roles.find((role) => role.UserRole?.is_primary) || user.Roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     // Get role-specific data
@@ -601,9 +573,7 @@ const getCurrentUser = async (req, res) => {
       phone: user.contact_number,
       imageUrl: user.profile_image,
       role: roleName,
-      roles: user.roles.map((r) => r.role_name),
-      permissions:
-        primaryRole?.Permissions?.map((p) => p.permission_name) || [],
+      roles: user.Roles.map((r) => r.role_name),
       ...additionalData,
     });
   } catch (error) {
@@ -643,7 +613,6 @@ const searchUsers = async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -667,7 +636,6 @@ module.exports = {
   updateUser,
   deleteUser,
   updateProfileImage,
-  getUserPermissions,
   changePassword,
   searchUsers,
 };

@@ -1,5 +1,7 @@
 # Radhe Consultancy - Codebase Index
 
+*Last Updated: December 2024*
+
 ## Project Overview
 
 Radhe Consultancy is a comprehensive CRM (Customer Relationship Management) system for insurance and compliance services. The application consists of a Node.js/Express backend with MySQL database and a React frontend with Vite build system.
@@ -48,6 +50,7 @@ Backend/models/
 ├── index.js                           # Model associations and exports
 ├── userModel.js                       # User authentication and profiles
 ├── roleModel.js                       # Role definitions
+├── userRoleModel.js                   # User-role mappings
 ├── permissionModel.js                 # Permission system
 ├── rolePermissionModel.js             # Role-permission mappings
 ├── companyModel.js                    # Company profiles
@@ -59,6 +62,9 @@ Backend/models/
 ├── firePolicyModel.js                 # Fire insurance
 ├── lifePolicyModel.js                 # Life insurance
 ├── dscModel.js                        # Digital Signature Certificates
+├── dscLogModel.js                     # DSC activity logs
+├── factoryQuotationModel.js           # Factory quotation data
+├── userRoleWorkLogModel.js            # User role work logs
 └── reminderLogModel.js                # Policy renewal reminders
 ```
 
@@ -79,6 +85,9 @@ Backend/controllers/
 ├── firePolicyController.js             # Fire policy operations
 ├── lifePolicyController.js             # Life policy operations
 ├── dscController.js                    # DSC management
+├── dscLogController.js                 # DSC log management
+├── factoryQuotationController.js       # Factory quotation management
+├── userRoleWorkLogController.js        # User role work log management
 └── renewalController.js                # Policy renewal management
 ```
 
@@ -100,6 +109,9 @@ Backend/routes/
 ├── firePolicyRoutes.js                # Fire policy endpoints
 ├── lifePolicyRoutes.js                # Life policy endpoints
 ├── dscRoutes.js                       # DSC endpoints
+├── dscLogRoutes.js                    # DSC log endpoints
+├── factoryQuotationRoutes.js          # Factory quotation endpoints
+├── userRoleWorkLogRoutes.js           # User role work log endpoints
 └── renewalRoutes.js                   # Renewal endpoints
 ```
 
@@ -223,6 +235,8 @@ frontend/src/pages/
     │   └── LabourLicense.jsx
     ├── dsc/
     │   └── DSC.jsx
+    ├── logs/                          # Log management
+    │   └── DSCLogs.jsx
     ├── renewals/                      # Renewal management
     │   ├── RenewalList.jsx
     │   ├── RenewalLog.jsx
@@ -361,6 +375,8 @@ frontend/src/assets/
 - Labour inspection management
 - Labour license management
 - Digital Signature Certificates (DSC)
+- Factory quotation management
+- DSC activity logging and tracking
 
 ### Dashboard & Analytics
 
@@ -369,6 +385,8 @@ frontend/src/assets/
 - Renewal tracking
 - Admin statistics
 - Recent activities
+- User role work activity tracking
+- DSC activity logs
 
 ### Communication
 
@@ -433,6 +451,24 @@ frontend/src/assets/
 - `POST /api/renewals` - Create renewal
 - `PUT /api/renewals/:id` - Update renewal
 
+### DSC Management
+
+- `GET /api/dsc` - Get DSC records
+- `POST /api/dsc` - Create DSC record
+- `PUT /api/dsc/:id` - Update DSC record
+- `DELETE /api/dsc/:id` - Delete DSC record
+- `GET /api/dsc-logs` - Get DSC activity logs
+
+### Factory Quotation
+
+- `GET /api/factory-quotations` - Get factory quotations
+- `POST /api/factory-quotations` - Create factory quotation
+
+### User Role Work Logs
+
+- `GET /api/user-role-work-logs` - Get user role work logs
+- `POST /api/user-role-work-logs` - Create user role work log
+
 ### Admin Dashboard
 
 - `GET /api/admin-dashboard/stats` - Get admin statistics
@@ -475,6 +511,13 @@ frontend/src/assets/
 ### Supporting Tables
 
 - `DSC` - Digital Signature Certificates
+  - `id` (PK), `user_id` (FK), `dsc_type`, `valid_from`, `valid_to`, `status`, `document_path`
+- `DSCLogs` - DSC activity logs
+  - `id` (PK), `dsc_id` (FK), `action`, `performed_by`, `timestamp`
+- `FactoryQuotations` - Factory quotation data
+  - `id` (PK), `company_id` (FK), `quotation_details`, `status`
+- `UserRoleWorkLogs` - User role work activity logs
+  - `id` (PK), `user_id` (FK), `role_id` (FK), `action`, `details`, `timestamp`
 - `ReminderLogs` - Policy renewal reminders
   - `policy_id`, `policy_type`, `sent_at`
   - Tracks reminder history to prevent spam

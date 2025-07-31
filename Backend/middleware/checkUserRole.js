@@ -10,7 +10,7 @@ const checkUserRole = (allowedRoles) => {
       // Check if user has any of the allowed roles
       const userRoles = user.roles || [];
       const normalizedUserRoles = userRoles.map(role => 
-        role.role_name.charAt(0).toUpperCase() + role.role_name.slice(1).toLowerCase()
+        role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
       );
       const normalizedAllowedRoles = allowedRoles.map(role => 
         role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
@@ -30,4 +30,6 @@ const checkUserRole = (allowedRoles) => {
       res.status(500).json({ error: 'Internal server error' });
     }
   };
-}; 
+};
+
+module.exports = checkUserRole; 

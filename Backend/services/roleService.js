@@ -62,7 +62,7 @@ class RoleService {
       throw new Error('User not found');
     }
 
-    return user.roles;
+    return user.Roles;
   }
 
   async setPrimaryRole(userId, roleId) {
@@ -95,50 +95,6 @@ class RoleService {
     );
 
     return { user, role };
-  }
-
-  async assignPermissionToRole(roleId, permissionId) {
-    const role = await Role.findByPk(roleId);
-    const permission = await Permission.findByPk(permissionId);
-    
-    if (!role || !permission) {
-      throw new Error('Role or permission not found');
-    }
-
-    await role.addPermission(permission);
-    return { role, permission };
-  }
-
-  async getUserPermissions(userId) {
-    const user = await User.findByPk(userId, {
-      include: [{
-        model: Role,
-        as: 'roles',
-        include: [{
-          model: Permission,
-          through: { attributes: [] }
-        }]
-      }]
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // Collect all permissions from all user roles
-    const allPermissions = [];
-    user.roles.forEach(role => {
-      if (role.Permissions) {
-        allPermissions.push(...role.Permissions);
-      }
-    });
-
-    // Remove duplicates based on permission_id
-    const uniquePermissions = allPermissions.filter((permission, index, self) => 
-      index === self.findIndex(p => p.id === permission.id)
-    );
-
-    return uniquePermissions;
   }
 }
 

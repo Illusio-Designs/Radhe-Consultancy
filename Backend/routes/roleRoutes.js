@@ -21,21 +21,11 @@ router.get('/:id',
   roleController.getRoleById
 );
 
-// Get role permissions (admin and user manager only)
-router.get('/:id/permissions', 
-  auth, 
-  checkRole(['admin', 'user_manager']), 
-  roleController.getRolePermissions
-);
-
 // Update role
 router.put('/:role_id', roleController.updateRole);
 
 // Delete role
 router.delete('/:role_id', roleController.deleteRole);
-
-// Get all permissions
-router.get('/permissions/all', roleController.getAllPermissions);
 
 // Assign role to user
 router.post('/assign', 

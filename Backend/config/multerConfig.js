@@ -80,6 +80,142 @@ const profileStorage = multer.diskStorage({
     }
 });
 
+// Configure storage for plan documents
+const planStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        // Use the main plan directory without subdirectories
+        const uploadDir = getUploadDir('plan');
+        try {
+            console.log('[Multer] Setting destination for plan document:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                uploadDir: uploadDir
+            });
+            if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating plan directory:', uploadDir);
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            console.log('[Multer] Using plan directory:', uploadDir);
+            cb(null, uploadDir);
+        } catch (error) {
+            console.error('[Multer] Error in plan destination function:', error);
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const timestamp = Date.now();
+        const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filename = `${timestamp}_${originalName}`;
+        console.log('[Multer] Generated filename for plan document:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
+        cb(null, filename);
+    }
+});
+
+// File filter for plan documents
+const planFileFilter = (req, file, cb) => {
+    // Allow common document types
+    const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'text/plain'
+    ];
+
+    console.log('[Multer] Checking plan file type:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        fieldname: file.fieldname,
+        size: file.size
+    });
+
+    if (allowedTypes.includes(file.mimetype)) {
+        console.log('[Multer] Plan file type accepted');
+        cb(null, true);
+    } else {
+        console.log('[Multer] Plan file type rejected');
+        cb(new Error('Invalid file type. Only PDF, Word, Excel, images, and text files are allowed.'), false);
+    }
+};
+
+// Configure storage for stability documents
+const stabilityStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        // Use the main stability directory without subdirectories
+        const uploadDir = getUploadDir('stability');
+        try {
+            console.log('[Multer] Setting destination for stability document:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                uploadDir: uploadDir
+            });
+            if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating stability directory:', uploadDir);
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            console.log('[Multer] Using stability directory:', uploadDir);
+            cb(null, uploadDir);
+        } catch (error) {
+            console.error('[Multer] Error in stability destination function:', error);
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const timestamp = Date.now();
+        const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filename = `${timestamp}_${originalName}`;
+        console.log('[Multer] Generated filename for stability document:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
+        cb(null, filename);
+    }
+});
+
+// File filter for stability documents
+const stabilityFileFilter = (req, file, cb) => {
+    // Allow common document types
+    const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'text/plain'
+    ];
+
+    console.log('[Multer] Checking stability file type:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        fieldname: file.fieldname,
+        size: file.size
+    });
+
+    if (allowedTypes.includes(file.mimetype)) {
+        console.log('[Multer] Stability file type accepted');
+        cb(null, true);
+    } else {
+        console.log('[Multer] Stability file type rejected');
+        cb(new Error('Invalid file type. Only PDF, Word, Excel, images, and text files are allowed.'), false);
+    }
+};
+
 // Configure storage for employee policy documents
 const employeePolicyStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
@@ -385,6 +521,92 @@ const uploadLifePolicyDocument = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
+// Create multer upload instance for plan documents
+const uploadPlanFiles = multer({
+    storage: planStorage,
+    fileFilter: planFileFilter,
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files per upload
+    }
+}).array('files', 10);
+
+// Add logging for plan file upload
+const uploadPlanFilesWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting plan file upload process');
+    console.log('[Multer] Request body:', req.body);
+    console.log('[Multer] Request files:', req.files);
+
+    uploadPlanFiles(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error uploading plan files:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log uploaded files
+        if (req.files && req.files.length > 0) {
+            console.log('[Multer] Plan files uploaded successfully:', req.files.map(file => ({
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                filename: file.filename,
+                mimetype: file.mimetype,
+                size: file.size,
+                path: file.path
+            })));
+        } else {
+            console.log('[Multer] No plan files uploaded');
+        }
+
+        next();
+    });
+};
+
+// Create multer upload instance for stability documents
+const uploadStabilityFiles = multer({
+    storage: stabilityStorage,
+    fileFilter: stabilityFileFilter,
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files per upload
+    }
+}).array('files', 10);
+
+// Add logging for stability file upload
+const uploadStabilityFilesWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting stability file upload process');
+    console.log('[Multer] Request body:', req.body);
+    console.log('[Multer] Request files:', req.files);
+
+    uploadStabilityFiles(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error uploading stability files:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log uploaded files
+        if (req.files && req.files.length > 0) {
+            console.log('[Multer] Stability files uploaded successfully:', req.files.map(file => ({
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                filename: file.filename,
+                mimetype: file.mimetype,
+                size: file.size,
+                path: file.path
+            })));
+        } else {
+            console.log('[Multer] No stability files uploaded');
+        }
+
+        next();
+    });
+};
+
 // Export the multer instances
 module.exports = {
     uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
@@ -393,5 +615,7 @@ module.exports = {
     uploadVehiclePolicyDocument,
     uploadHealthPolicyDocument,
     uploadFirePolicyDocument,
-    uploadLifePolicyDocument
+    uploadLifePolicyDocument,
+    uploadPlanFiles: uploadPlanFilesWithLogging,
+    uploadStabilityFiles: uploadStabilityFilesWithLogging
 }; 

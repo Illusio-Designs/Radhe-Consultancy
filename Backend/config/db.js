@@ -9,7 +9,7 @@ console.log('Loading .env file from:', envPath);
 try {
   // Read file as UTF-16
   const envFile = fs.readFileSync(envPath, 'utf16le');
-  console.log('Successfully read .env file');
+  console.log('✅ Successfully read .env file');
   
   // Parse .env file manually
   const envConfig = {};
@@ -27,21 +27,11 @@ try {
     }
   });
 
-  console.log('Parsed environment variables:', envConfig);
+  console.log('✅ Environment variables loaded');
 } catch (error) {
-  console.error('Error reading .env file:', error);
+  console.error('❌ Error reading .env file:', error);
   throw new Error('Failed to read .env file');
 }
-
-// Debug: Log specific database variables
-console.log('Database variables:', {
-  DB_HOST: process.env.DB_HOST,
-  DB_USER: process.env.DB_USER,
-  DB_PASSWORD: process.env.DB_PASSWORD ? '****' : '(empty)',
-  DB_NAME: process.env.DB_NAME,
-  DB_PORT: process.env.DB_PORT,
-  DB_DIALECT: process.env.DB_DIALECT
-});
 
 // Validate required database configuration
 const requiredConfig = ['DB_HOST', 'DB_USER', 'DB_NAME', 'DB_PORT', 'DB_DIALECT'];
@@ -59,7 +49,7 @@ const dbConfig = {
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   dialect: process.env.DB_DIALECT,
-  logging: console.log,
+  logging: false, // Disable SQL query logging for cleaner output
   pool: {
     max: 5,
     min: 0,
@@ -81,10 +71,7 @@ const dbConfig = {
   timezone: '+05:30',
 };
 
-console.log('Database configuration:', {
-  ...dbConfig,
-  password: dbConfig.password ? '****' : '(empty)'
-});
+console.log('✅ Database configuration loaded');
 
 const sequelize = new Sequelize(dbConfig);
 
@@ -92,7 +79,7 @@ const sequelize = new Sequelize(dbConfig);
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connection has been established successfully.');
+    console.log('✅ Database connection established successfully');
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
     if (error.original && error.original.code === 'ER_ACCESS_DENIED_ERROR') {

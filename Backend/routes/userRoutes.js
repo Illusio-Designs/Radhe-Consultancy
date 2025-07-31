@@ -31,7 +31,6 @@ router.get("/me", auth, async (req, res) => {
       include: [
         {
           model: Role,
-          as: "roles",
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -44,7 +43,7 @@ router.get("/me", auth, async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
+      user.Roles.find((role) => role.UserRole?.is_primary) || user.Roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     // Check if user has a company or consumer profile
@@ -75,7 +74,7 @@ router.get("/me", auth, async (req, res) => {
         email: user.email,
         username: user.username,
         role_name: roleName,
-        roles: user.roles.map((r) => r.role_name),
+        roles: user.Roles.map((r) => r.role_name),
         contact_number: user.contact_number,
         imageUrl: user.profile_image,
         profile: companyInfo || consumerInfo,
@@ -100,7 +99,6 @@ router.get("/:id", auth, userController.getUserById);
 router.post("/", auth, userController.createUser);
 router.put("/:id", auth, uploadProfileImage, userController.updateUser);
 router.delete("/:id", auth, userController.deleteUser);
-router.get("/:id/permissions", auth, userController.getUserPermissions);
 
 // Add new route to serve profile images
 router.get("/profile-image/:filename", (req, res) => {

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Navigate } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import Header from "../components/dashboard/Header";
 import Footer from "../components/dashboard/Footer";
 import "../styles/layout/DashboardLayout.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../contexts/AuthContext";
 
 // Import all dashboard pages
 import CombinedDashboard from "../pages/dashboard/home/CombinedDashboard";
@@ -25,9 +26,11 @@ import Fire from "../pages/dashboard/insurance/Fire";
 import Vehicle from "../pages/dashboard/insurance/Vehicle";
 import Life from "../pages/dashboard/insurance/Life";
 import Companies from "../pages/dashboard/insurance/Companies";
-import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
+import FactoryQuotation from "../pages/dashboard/compliance/FactoryQuotation";
 import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
 import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
+import PlanManagement from "../pages/dashboard/compliance/PlanManagement";
+import StabilityManagement from "../pages/dashboard/compliance/StabilityManagement";
 import DSC from "../pages/dashboard/dsc/DSC";
 import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
@@ -40,6 +43,7 @@ function DashboardLayout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
+  const { user } = useAuth();
 
   // Example notifications data
   const notifications = [
@@ -67,6 +71,24 @@ function DashboardLayout() {
   // Function to render the appropriate page based on the current route
   const renderPage = () => {
     const path = location.pathname;
+
+    // Role-based access control
+    const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
+    const isRole = (role) => userRoles.includes(role.toLowerCase());
+
+    // Plan Management - only accessible to plan_manager
+    if (path === "/dashboard/compliance/plan-management") {
+      if (!isRole("plan_manager")) {
+        return <Navigate to="/dashboard" replace />;
+      }
+    }
+
+    // Stability Management - only accessible to stability_manager
+    if (path === "/dashboard/compliance/stability-management") {
+      if (!isRole("stability_manager")) {
+        return <Navigate to="/dashboard" replace />;
+      }
+    }
 
     switch (path) {
       case "/dashboard":
@@ -106,12 +128,16 @@ function DashboardLayout() {
         return <Life searchQuery={searchQuery} />;
       case "/dashboard/insurance/companies":
         return <Companies searchQuery={searchQuery} />;
-      case "/dashboard/compliance/factory-act":
-        return <FactoryAct />;
+      case "/dashboard/compliance/factory-quotation":
+        return <FactoryQuotation />;
       case "/dashboard/compliance/labour-inspection":
         return <LabourInspection />;
       case "/dashboard/compliance/labour-license":
         return <LabourLicense />;
+      case "/dashboard/compliance/plan-management":
+        return <PlanManagement />;
+      case "/dashboard/compliance/stability-management":
+        return <StabilityManagement />;
       case "/dashboard/dsc":
         return <DSC searchQuery={searchQuery} />;
       case "/dashboard/dsc/logs":

@@ -25,7 +25,7 @@ import Health from "../pages/dashboard/insurance/Health";
 import Fire from "../pages/dashboard/insurance/Fire";
 import Vehicle from "../pages/dashboard/insurance/Vehicle";
 import Companies from "../pages/dashboard/insurance/Companies";
-import FactoryAct from "../pages/dashboard/compliance/FactoryAct";
+import FactoryQuotation from "../pages/dashboard/compliance/FactoryQuotation";
 import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
 import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
 import DSC from "../pages/dashboard/dsc/DSC";

@@ -18,7 +18,6 @@ const auth = async (req, res, next) => {
       include: [
         {
           model: Role,
-          as: "roles",
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -29,8 +28,11 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: "User not found" });
     }
 
+    // Extract roles from the user object
+    const userRoles = user.Roles ? user.Roles.map((role) => role.role_name) : [];
+
     // Get all roles and determine primary role
-    const allRoles = user.roles || [];
+    const allRoles = user.Roles || [];
     const primaryRole =
       allRoles.find((role) => role.UserRole?.is_primary) || allRoles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
@@ -40,7 +42,7 @@ const auth = async (req, res, next) => {
       user_id: user.user_id,
       email: user.email,
       role_name: roleName,
-      roles: allRoles.map((role) => role.role_name),
+      roles: userRoles,
       allRoles: allRoles,
       primaryRole: roleName,
     };

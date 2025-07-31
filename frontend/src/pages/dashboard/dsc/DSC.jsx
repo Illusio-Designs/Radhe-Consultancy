@@ -632,14 +632,23 @@ function DSC({ searchQuery = "" }) {
   ];
 
   const filteredDSCs = React.useMemo(() => {
+    let filtered = dscs;
+    
+    // Apply role-based filtering
     if (isCompany) {
-      return dscs.filter((d) => d.company_id === companyId);
+      filtered = filtered.filter((d) => d.company_id === companyId);
     }
     if (isConsumer) {
-      return dscs.filter((d) => d.consumer_id === consumerId);
+      filtered = filtered.filter((d) => d.consumer_id === consumerId);
     }
-    return dscs;
-  }, [dscs, isCompany, isConsumer, companyId, consumerId]);
+    
+    // Apply status filtering
+    if (statusFilter && statusFilter !== "all") {
+      filtered = filtered.filter((d) => d.status === statusFilter);
+    }
+    
+    return filtered;
+  }, [dscs, isCompany, isConsumer, companyId, consumerId, statusFilter]);
 
   // Disable update/edit for company/consumer users
   const canEdit = !(isCompany || isConsumer);

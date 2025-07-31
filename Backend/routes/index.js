@@ -19,8 +19,10 @@ const dscRoutes = require('./dscRoutes');
 const renewalRoutes = require('./renewalRoutes');
 const dscLogRoutes = require('./dscLogRoutes');
 const userRoleWorkLogRoutes = require('./userRoleWorkLogRoutes');
+const factoryQuotationRoutes = require('./factoryQuotationRoutes');
+const planManagementRoutes = require('./planManagementRoutes');
+const stabilityManagementRoutes = require('./stabilityManagementRoutes');
 
-// Route configuration object
 const routes = {
   auth: {
     path: '/auth',
@@ -85,6 +87,18 @@ const routes = {
   userRoleWorkLogs: {
     path: '/user-role-logs',
     router: userRoleWorkLogRoutes
+  },
+  factoryQuotations: {
+    path: '/factory-quotations',
+    router: factoryQuotationRoutes
+  },
+  planManagement: {
+    path: '/plan-management',
+    router: planManagementRoutes
+  },
+  stabilityManagement: {
+    path: '/stability-management',
+    router: stabilityManagementRoutes
   }
 };
 

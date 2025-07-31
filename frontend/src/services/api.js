@@ -212,40 +212,22 @@ export const authAPI = {
 
 // User API
 export const userAPI = {
+  // Get all users
   getAllUsers: async () => {
-    try {
-      console.log("API Service: Fetching all users");
-      const response = await api.get("/users");
-      console.log("API Service: Users fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching users:", error);
-      throw error;
-    }
+    const response = await api.get('/users');
+    return response.data;
   },
 
+  // Get users by role
+  getUsersByRole: async (role) => {
+    const response = await api.get(`/users?role=${role}`);
+    return response.data;
+  },
+
+  // Get user by ID
   getUserById: async (id) => {
-    try {
-      console.log("API Service: Fetching user by ID:", id);
-
-      // First try to get the current user's ID from localStorage
-      const currentUser = JSON.parse(localStorage.getItem("user"));
-      const userId = id || currentUser?.id;
-
-      if (!userId) {
-        throw new Error("No user ID provided and no current user found");
-      }
-
-      const response = await api.get(`/users/${userId}`);
-      console.log("API Service: User fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching user:", error);
-      if (error.response?.status === 404) {
-        throw new Error("User not found");
-      }
-      throw error;
-    }
+    const response = await api.get(`/users/${id}`);
+    return response.data;
   },
 
   createUser: async (userData) => {
@@ -396,143 +378,46 @@ export const userAPI = {
       throw error;
     }
   },
-
-  getUserPermissions: async (userId) => {
-    const response = await api.get(`/users/${userId}/permissions`);
-    return response.data;
-  },
 };
 
 // Role API
 export const roleAPI = {
   getAllRoles: async () => {
-    try {
-      console.log("API Service: Fetching all roles");
-      const response = await api.get("/roles");
-      console.log("API Service: Roles fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching roles:", error);
-      throw error;
-    }
+    const response = await api.get('/roles');
+    return response.data;
   },
-
   getRoleById: async (id) => {
-    try {
-      console.log("API Service: Fetching role by ID:", id);
-      const response = await api.get(`/roles/${id}`);
-      console.log("API Service: Role fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching role:", error);
-      throw error;
-    }
+    const response = await api.get(`/roles/${id}`);
+    return response.data;
   },
-
   createRole: async (roleData) => {
-    try {
-      console.log("API Service: Creating role");
-      const response = await api.post("/roles", roleData);
-      console.log("API Service: Role created successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error creating role:", error);
-      throw error;
-    }
+    const response = await api.post('/roles', roleData);
+    return response.data;
   },
-
   updateRole: async (id, roleData) => {
-    try {
-      console.log("API Service: Updating role:", id);
-      const response = await api.put(`/roles/${id}`, roleData);
-      console.log("API Service: Role updated successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error updating role:", error);
-      throw error;
-    }
+    const response = await api.put(`/roles/${id}`, roleData);
+    return response.data;
   },
-
   deleteRole: async (id) => {
-    try {
-      console.log("API Service: Deleting role:", id);
-      const response = await api.delete(`/roles/${id}`);
-      console.log("API Service: Role deleted successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error deleting role:", error);
-      throw error;
-    }
+    const response = await api.delete(`/roles/${id}`);
+    return response.data;
   },
-
-  getRolePermissions: async (roleId) => {
-    try {
-      const response = await api.get(`/roles/${roleId}/permissions`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching role permissions:", error);
-      throw error;
-    }
+  assignRoleToUser: async (userId, roleId, isPrimary = false) => {
+    const response = await api.post('/roles/assign', { userId, roleId, isPrimary });
+    return response.data;
   },
-
-  assignRole: async (user_id, role_id, is_primary = false) => {
-    try {
-      const response = await api.post("/roles/assign", {
-        user_id,
-        role_id,
-        is_primary,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error assigning role:", error);
-      throw error;
-    }
+  removeRoleFromUser: async (userId, roleId) => {
+    const response = await api.delete(`/roles/assign/${userId}/${roleId}`);
+    return response.data;
   },
-
-  removeRole: async (user_id, role_id) => {
-    try {
-      const response = await api.delete(
-        `/roles/users/${user_id}/roles/${role_id}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error removing role:", error);
-      throw error;
-    }
+  getUserRoles: async (userId) => {
+    const response = await api.get(`/roles/user/${userId}`);
+    return response.data;
   },
-
-  getUserRoles: async (user_id) => {
-    try {
-      const response = await api.get(`/roles/users/${user_id}/roles`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching user roles:", error);
-      throw error;
-    }
-  },
-
-  setPrimaryRole: async (user_id, role_id) => {
-    try {
-      const response = await api.put("/roles/users/primary-role", {
-        user_id,
-        role_id,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error setting primary role:", error);
-      throw error;
-    }
-  },
-
-  getAllPermissions: async () => {
-    try {
-      const response = await api.get("/roles/permissions/all");
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching permissions:", error);
-      throw error;
-    }
-  },
+  setPrimaryRole: async (userId, roleId) => {
+    const response = await api.put(`/roles/user/${userId}/primary/${roleId}`);
+    return response.data;
+  }
 };
 
 // Company API
@@ -1812,6 +1697,157 @@ export const userRoleWorkLogAPI = {
     } catch (error) {
       throw error;
     }
+  },
+};
+
+// Factory Quotation API
+export const factoryQuotationAPI = {
+  // Get calculation options
+  getCalculationOptions: async () => {
+    const response = await api.get('/factory-quotations/options');
+    return response.data;
+  },
+  // Calculate amount based on horse power and number of workers
+  calculateAmount: async (horsePower, noOfWorkers) => {
+    const response = await api.post('/factory-quotations/calculate', {
+      horsePower,
+      noOfWorkers
+    });
+    return response.data;
+  },
+  // Get all quotations
+  getAllQuotations: async () => {
+    const response = await api.get('/factory-quotations');
+    return response.data;
+  },
+  // Get quotation by ID
+  getQuotationById: async (id) => {
+    const response = await api.get(`/factory-quotations/${id}`);
+    return response.data;
+  },
+  // Create quotation
+  createQuotation: async (data) => {
+    const response = await api.post('/factory-quotations', data);
+    return response.data;
+  },
+  // Update quotation
+  updateQuotation: async (id, data) => {
+    const response = await api.put(`/factory-quotations/${id}`, data);
+    return response.data;
+  },
+  // Delete quotation
+  deleteQuotation: async (id) => {
+    const response = await api.delete(`/factory-quotations/${id}`);
+    return response.data;
+  },
+  // Update status
+  updateStatus: async (id, statusData) => {
+    const response = await api.put(`/factory-quotations/${id}/status`, statusData);
+    return response.data;
+  },
+  // Assign plan manager
+  assignPlanManager: async (quotationId, planManagerId) => {
+    const response = await api.post('/plan-management', {
+      factory_quotation_id: quotationId,
+      plan_manager_id: planManagerId
+    });
+    return response.data;
+  },
+};
+
+export const planManagementAPI = {
+  // Get plan managers (users with Plan_manager role)
+  getPlanManagers: async () => {
+    const response = await api.get('/plan-management/managers');
+    return response.data;
+  },
+
+  // Get all plan management records
+  getAllPlanManagement: async () => {
+    const response = await api.get('/plan-management');
+    return response.data;
+  },
+
+  // Get plan management by factory quotation ID
+  getPlanManagementByQuotationId: async (quotationId) => {
+    const response = await api.get(`/plan-management/quotation/${quotationId}`);
+    return response.data;
+  },
+
+  // Create plan management (assign to plan manager)
+  createPlanManagement: async (data) => {
+    const response = await api.post('/plan-management', data);
+    return response.data;
+  },
+
+  // Submit plan (Plan Manager only)
+  submitPlan: async (id) => {
+    const response = await api.put(`/plan-management/${id}/submit`);
+    return response.data;
+  },
+
+  // Update plan status (Plan Manager only)
+  updatePlanStatus: async (id, data) => {
+    const response = await api.put(`/plan-management/${id}/status`, data);
+    return response.data;
+  },
+
+  // Review plan (approve/reject) - Admin only
+  reviewPlan: async (id, data) => {
+    const response = await api.put(`/plan-management/${id}/review`, data);
+    return response.data;
+  },
+
+  // Upload files for plan - Plan Manager only
+  uploadPlanFiles: async (id, formData) => {
+    const response = await api.put(`/plan-management/${id}/upload-files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
+export const stabilityManagementAPI = {
+  // Get stability managers (users with Stability_manager role)
+  getStabilityManagers: async () => {
+    const response = await api.get('/stability-management/managers');
+    return response.data;
+  },
+
+  // Get all stability management records
+  getAllStabilityManagement: async () => {
+    const response = await api.get('/stability-management');
+    return response.data;
+  },
+
+  // Get stability management by factory quotation ID
+  getStabilityManagementByQuotationId: async (quotationId) => {
+    const response = await api.get(`/stability-management/quotation/${quotationId}`);
+    return response.data;
+  },
+
+  // Create stability management (assign to stability manager)
+  createStabilityManagement: async (data) => {
+    const response = await api.post('/stability-management', data);
+    return response.data;
+  },
+
+  // Update stability status (Stability Manager only)
+  updateStabilityStatus: async (id, data) => {
+    const response = await api.put(`/stability-management/${id}/status`, data);
+    return response.data;
+  },
+
+  // Upload files for stability (Stability Manager only)
+  uploadStabilityFiles: async (id, formData) => {
+    const response = await api.put(`/stability-management/${id}/upload-files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   },
 };
 

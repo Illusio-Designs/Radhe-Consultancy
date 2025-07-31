@@ -1,7 +1,11 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
 // This script handles database setup, roles/permissions setup, and admin user setup
 
-const { sequelize, User, Role, Permission, RolePermission, UserRole, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, ReminderLog, DSCLog, UserRoleWorkLog } = require('../models');
+const { User, Role, UserRole, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, ReminderLog, DSCLog, UserRoleWorkLog } = require('../models');
+const sequelize = require('../config/db');
+const FactoryQuotation = require('../models/factoryQuotationModel');
+const PlanManagement = require('../models/planManagementModel');
+const StabilityManagement = require('../models/stabilityManagementModel');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -37,94 +41,10 @@ const roles = [
   { role_name: 'Consumer', description: 'Consumer access' },
   { role_name: 'Insurance_manager', description: 'Insurance management access' },
   { role_name: 'Compliance_manager', description: 'Compliance management access' },
-  { role_name: 'DSC_manager', description: 'Digital Signature Certificate management access' }
+  { role_name: 'DSC_manager', description: 'Digital Signature Certificate management access' },
+  { role_name: 'Plan_manager', description: 'Plan management access' },
+  { role_name: 'Stability_manager', description: 'Stability management access' }
 ];
-
-// Permission definitions
-const permissions = [
-  // User Management
-  { permission_name: 'view_users' },
-  { permission_name: 'create_user' },
-  { permission_name: 'edit_user' },
-  { permission_name: 'delete_user' },
-  // Company Management
-  { permission_name: 'view_companies' },
-  { permission_name: 'create_company' },
-  { permission_name: 'edit_company' },
-  { permission_name: 'delete_company' },
-  { permission_name: 'upload_company_documents' },
-  // Consumer Management
-  { permission_name: 'view_consumers' },
-  { permission_name: 'create_consumer' },
-  { permission_name: 'edit_consumer' },
-  { permission_name: 'delete_consumer' },
-  // Role Management
-  { permission_name: 'view_roles' },
-  { permission_name: 'assign_roles' },
-  // System Access
-  { permission_name: 'access_dashboard' },
-  { permission_name: 'access_reports' },
-  { permission_name: 'access_settings' },
-  // Insurance Management
-  { permission_name: 'view_insurance_companies' },
-  { permission_name: 'create_insurance_company' },
-  { permission_name: 'edit_insurance_company' },
-  { permission_name: 'delete_insurance_company' },
-  { permission_name: 'view_policies' },
-  { permission_name: 'create_policy' },
-  { permission_name: 'edit_policy' },
-  { permission_name: 'delete_policy' }
-];
-
-// Role-Permission mappings
-const rolePermissions = {
-  'Admin': permissions.map(p => p.permission_name), // All permissions
-  'User': [ 'access_dashboard' ],
-  'Vendor_manager': [
-    'view_companies', 'create_company', 'edit_company', 'delete_company',
-    'view_consumers', 'create_consumer', 'edit_consumer', 'delete_consumer',
-    'access_dashboard', 'access_reports', 'upload_company_documents'
-  ],
-  'User_manager': [
-    'view_users', 'create_user', 'edit_user', 'delete_user',
-    'view_roles', 'assign_roles', 'access_dashboard'
-  ],
-  'Company': [
-    'access_dashboard',
-    'view_companies', 'edit_company',
-    'upload_company_documents'
-  ],
-  'Consumer': [
-    'access_dashboard',
-    'view_consumers', 'edit_consumer'
-  ],
-  'Insurance_manager': [
-    'access_dashboard',
-    'view_insurance_companies',
-    'create_insurance_company',
-    'edit_insurance_company',
-    'delete_insurance_company',
-    'view_policies',
-    'create_policy',
-    'edit_policy',
-    'delete_policy',
-    'access_reports'
-  ],
-  'Compliance_manager': [
-    'access_dashboard',
-    'view_companies',
-    'view_consumers',
-    'view_insurance_companies',
-    'view_policies',
-    'access_reports'
-  ],
-  'DSC_manager': [
-    'access_dashboard',
-    'view_users',
-    'edit_user',
-    'access_reports'
-  ]
-};
 
 // Handle LifePolicy table setup
 async function setupLifePolicyTable(sequelize) {
@@ -233,332 +153,132 @@ async function setupConsumerTable(sequelize) {
 }
 
 /**
- * Sets up the database structure and required directories
- * @returns {Promise<boolean>} Success status
+ * Drops permission tables if they exist
+ * @returns {Promise<void>}
+ */
+async function dropPermissionTables() {
+  try {
+    console.log('🔄 Dropping permission tables if they exist...');
+    
+    // Drop the tables if they exist
+    await sequelize.query('DROP TABLE IF EXISTS RolePermissions');
+    console.log('✅ RolePermissions table dropped (if existed)');
+    
+    await sequelize.query('DROP TABLE IF EXISTS Permissions');
+    console.log('✅ Permissions table dropped (if existed)');
+    
+    console.log('✅ Permission tables cleanup completed');
+  } catch (error) {
+    console.error('❌ Error dropping permission tables:', error);
+  }
+}
+
+/**
+ * Sets up the database with all required tables
+ * @returns {Promise<boolean>}
  */
 async function setupDatabase() {
   try {
-    logToFile('Starting database setup...');
-    console.log('Starting database setup...');
+    logToFile('Setting up database...');
+    console.log('Setting up database...');
+
+    // Drop permission tables first (these are the only ones we want to remove)
+    await dropPermissionTables();
+
+    // Sync tables in correct order (minimal logging) - use alter: true to preserve existing data
+    console.log('🔄 Syncing database tables...');
     
-    await sequelize.authenticate();
-    logToFile('Database connection established');
-    console.log('Database connection established');
-
-    // Create uploads directories if needed
-    const uploadDir = path.join(__dirname, '../uploads/company_documents');
-    const policyDir = path.join(__dirname, '../uploads/policies');
-    const dscDir = path.join(__dirname, '../uploads/dsc');
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-    if (!fs.existsSync(policyDir)) fs.mkdirSync(policyDir, { recursive: true });
-    if (!fs.existsSync(dscDir)) fs.mkdirSync(dscDir, { recursive: true });
-
-    // Disable foreign key checks temporarily
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0;');
-
-    // Clean up redundant indexes and foreign keys on all tables
     try {
-      // Get all table names in the current database
-      const [tables] = await sequelize.query(`
-        SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();
-      `);
-      for (const tableRow of tables) {
-        const tableName = tableRow.TABLE_NAME;
-        // Drop foreign key constraints if they exist
-        const [fkConstraints] = await sequelize.query(`
-          SELECT CONSTRAINT_NAME
-          FROM information_schema.KEY_COLUMN_USAGE
-          WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = '${tableName}'
-            AND REFERENCED_TABLE_NAME IS NOT NULL;
-        `);
-        for (const row of fkConstraints) {
-          try {
-            await sequelize.query(`ALTER TABLE \`${tableName}\` DROP FOREIGN KEY \`${row.CONSTRAINT_NAME}\`;`);
-            logToFile(`Dropped foreign key constraint: ${row.CONSTRAINT_NAME} on table ${tableName}`);
-            console.log(`Dropped foreign key constraint: ${row.CONSTRAINT_NAME} on table ${tableName}`);
-          } catch (err) {
-            logToFile(`Warning: Could not drop foreign key ${row.CONSTRAINT_NAME} on table ${tableName}: ${err.message}`);
-            console.log(`Warning: Could not drop foreign key ${row.CONSTRAINT_NAME} on table ${tableName}: ${err.message}`);
-          }
-        }
-        // Drop redundant indexes if they exist
-        const [indexes] = await sequelize.query(`SHOW INDEX FROM \`${tableName}\`;`);
-        // Skip dropping PRIMARY index
-        for (const idx of indexes) {
-          if (idx.Key_name !== 'PRIMARY') {
-            try {
-              await sequelize.query(`ALTER TABLE \`${tableName}\` DROP INDEX \`${idx.Key_name}\`;`);
-              logToFile(`Dropped index: ${idx.Key_name} on table ${tableName}`);
-              console.log(`Dropped index: ${idx.Key_name} on table ${tableName}`);
-            } catch (err) {
-              logToFile(`Warning: Could not drop index ${idx.Key_name} on table ${tableName}: ${err.message}`);
-              console.log(`Warning: Could not drop index ${idx.Key_name} on table ${tableName}: ${err.message}`);
-            }
-          }
-        }
-      }
-    } catch (cleanupError) {
-      logToFile(`Error during global table cleanup: ${cleanupError.message}`);
-      console.log(`Error during global table cleanup: ${cleanupError.message}`);
-    }
-
-    try {
-      // Sync tables in correct order
       await Role.sync({ alter: true });
-      logToFile('Roles table synced');
-      await Permission.sync({ alter: true });
-      logToFile('Permissions table synced');
-      await RolePermission.sync({ alter: true });
-      logToFile('RolePermissions table synced');
-      await User.sync({ alter: true });
-      logToFile('Users table synced');
-      await UserRole.sync({ alter: true });
-      logToFile('UserRoles table synced');
-
-      await Consumer.sync({ alter: true });
-      logToFile('Consumers table synced');
-
-      await Company.sync({ alter: true });
-      logToFile('Companies table synced');
-      await InsuranceCompany.sync({ alter: true });
-      logToFile('InsuranceCompanies table synced');
-      
-      // Sync policy tables with error handling
-      try {
-        await EmployeeCompensationPolicy.sync({ alter: true });
-        logToFile('EmployeeCompensationPolicies table synced');
-      } catch (error) {
-        logToFile('Warning: EmployeeCompensationPolicy sync failed: ' + error.message);
-        console.log('Warning: EmployeeCompensationPolicy sync failed:', error.message);
-      }
-
-      try {
-        await VehiclePolicy.sync({ alter: true });
-        logToFile('VehiclePolicies table synced');
-      } catch (error) {
-        logToFile('Warning: VehiclePolicy sync failed: ' + error.message);
-        console.log('Warning: VehiclePolicy sync failed:', error.message);
-      }
-
-      try {
-        await HealthPolicy.sync({ alter: true });
-        logToFile('HealthPolicies table synced');
-      } catch (error) {
-        logToFile('Warning: HealthPolicy sync failed: ' + error.message);
-        console.log('Warning: HealthPolicy sync failed:', error.message);
-      }
-
-      try {
-        await FirePolicy.sync({ alter: true });
-        logToFile('FirePolicies table synced');
-      } catch (error) {
-        logToFile('Warning: FirePolicy sync failed: ' + error.message);
-        console.log('Warning: FirePolicy sync failed:', error.message);
-      }
-
-      // LifePolicy will be handled separately with special constraints
-      logToFile('LifePolicies table will be handled separately');
-      
-      try {
-        await DSC.sync({ alter: true });
-        logToFile('DSCs table synced');
-      } catch (error) {
-        logToFile('Warning: DSC sync failed: ' + error.message);
-        console.log('Warning: DSC sync failed:', error.message);
-      }
-
-      // Sync ReminderLog table
-      try {
-        const ReminderLog = require('../models/reminderLogModel');
-        await ReminderLog.sync({ alter: true });
-        logToFile('ReminderLogs table synced');
-      } catch (error) {
-        logToFile('Warning: ReminderLog sync failed: ' + error.message);
-        console.log('Warning: ReminderLog sync failed:', error.message);
-      }
-
-      // Sync DSCLog table
-      try {
-        const DSCLog = require('../models/dscLogModel');
-        await DSCLog.sync({ alter: true });
-        logToFile('DSCLogs table synced');
-        console.log('DSCLogs table synced');
-      } catch (error) {
-        logToFile('Warning: DSCLog sync failed: ' + error.message);
-        console.log('Warning: DSCLog sync failed:', error.message);
-      }
-
-      // Sync UserRoleWorkLog table
-      try {
-        await UserRoleWorkLog.sync({ alter: true });
-        logToFile('UserRoleWorkLogs table synced');
-        console.log('UserRoleWorkLogs table synced');
-      } catch (error) {
-        logToFile('Warning: UserRoleWorkLog sync failed: ' + error.message);
-        console.log('Warning: UserRoleWorkLog sync failed:', error.message);
-      }
-
-      // Special handling for LifePolicy - try to sync without constraints first
-      try {
-        // First, try to sync the basic table structure
-        await LifePolicy.sync({ 
-          alter: true,
-          logging: false
-        });
-        logToFile('LifePolicy basic table structure synced');
-        console.log('LifePolicy basic table structure synced');
-        
-        // Then try to add constraints one by one
-        try {
-          await sequelize.query(`
-            ALTER TABLE LifePolicies
-            ADD CONSTRAINT fk_insurance_company
-            FOREIGN KEY (insurance_company_id)
-            REFERENCES InsuranceCompanies(id)
-            ON DELETE NO ACTION
-            ON UPDATE CASCADE
-          `);
-          logToFile('LifePolicy insurance company constraint added');
-        } catch (err) {
-          logToFile('Warning: Could not add insurance company constraint: ' + err.message);
-          console.log('Warning: Could not add insurance company constraint:', err.message);
-        }
-
-        try {
-          await sequelize.query(`
-            ALTER TABLE LifePolicies
-            ADD CONSTRAINT fk_company
-            FOREIGN KEY (company_id)
-            REFERENCES Companies(company_id)
-            ON DELETE NO ACTION
-            ON UPDATE CASCADE
-          `);
-          logToFile('LifePolicy company constraint added');
-        } catch (err) {
-          logToFile('Warning: Could not add company constraint: ' + err.message);
-          console.log('Warning: Could not add company constraint:', err.message);
-        }
-
-        try {
-          await sequelize.query(`
-            ALTER TABLE LifePolicies
-            ADD CONSTRAINT fk_consumer
-            FOREIGN KEY (consumer_id)
-            REFERENCES Consumers(consumer_id)
-            ON DELETE NO ACTION
-            ON UPDATE CASCADE
-          `);
-          logToFile('LifePolicy consumer constraint added');
-        } catch (err) {
-          logToFile('Warning: Could not add consumer constraint: ' + err.message);
-          console.log('Warning: Could not add consumer constraint:', err.message);
-        }
-
-        // Add indexes if they don't exist
-        try {
-          await sequelize.query(`
-            ALTER TABLE LifePolicies
-            ADD UNIQUE INDEX idx_policy_number (current_policy_number)
-          `);
-          logToFile('LifePolicy policy number index added');
-        } catch (err) {
-          logToFile('Warning: Could not add policy number index: ' + err.message);
-          console.log('Warning: Could not add policy number index:', err.message);
-        }
-
-        try {
-          await sequelize.query(`
-            ALTER TABLE LifePolicies
-            ADD INDEX idx_policy_dates (policy_start_date, issue_date)
-          `);
-          logToFile('LifePolicy policy dates index added');
-        } catch (err) {
-          logToFile('Warning: Could not add policy dates index: ' + err.message);
-          console.log('Warning: Could not add policy dates index:', err.message);
-        }
-        
-        logToFile('LifePolicy table setup completed');
-        console.log('LifePolicy table setup completed');
-      } catch (error) {
-        logToFile('Error syncing LifePolicy: ' + error.message);
-        console.error('Error syncing LifePolicy:', error.message);
-        // Continue with setup even if LifePolicy fails
-      }
-
-    } finally {
-      // Re-enable foreign key checks
-      await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');
+      console.log('✅ Role table synced');
+    } catch (error) {
+      console.log('⚠️  Role table sync warning:', error.message);
     }
-    
-    logToFile('All tables synced successfully');
-    console.log('All tables synced');
 
+    try {
+      await User.sync({ alter: true });
+      console.log('✅ User table synced');
+    } catch (error) {
+      console.log('⚠️  User table sync warning:', error.message);
+    }
+
+    try {
+          // Skip UserRole sync if table already exists to preserve existing data
+    try {
+      await UserRole.sync({ alter: true });
+      console.log('✅ UserRole table synced');
+    } catch (error) {
+      if (error.message.includes('already exists')) {
+        console.log('✅ UserRole table already exists - preserving existing data');
+      } else {
+        throw error;
+      }
+    }
+    } catch (error) {
+      console.log('⚠️  UserRole table sync warning:', error.message);
+    }
+
+    // Sync other tables with error handling
+    const otherTables = [
+      { model: Company, name: 'Company' },
+      { model: Consumer, name: 'Consumer' },
+      { model: InsuranceCompany, name: 'InsuranceCompany' },
+      { model: EmployeeCompensationPolicy, name: 'EmployeeCompensationPolicy' },
+      { model: VehiclePolicy, name: 'VehiclePolicy' },
+      { model: HealthPolicy, name: 'HealthPolicy' },
+      { model: FirePolicy, name: 'FirePolicy' },
+      { model: LifePolicy, name: 'LifePolicy' },
+      { model: DSC, name: 'DSC' },
+      { model: ReminderLog, name: 'ReminderLog' },
+      { model: DSCLog, name: 'DSCLog' },
+      { model: UserRoleWorkLog, name: 'UserRoleWorkLog' },
+      { model: FactoryQuotation, name: 'FactoryQuotation' },
+      { model: PlanManagement, name: 'PlanManagement' },
+      { model: StabilityManagement, name: 'StabilityManagement' }
+    ];
+
+    for (const table of otherTables) {
+      try {
+        await table.model.sync({ alter: true });
+        console.log(`✅ ${table.name} table synced`);
+      } catch (error) {
+        console.log(`⚠️  ${table.name} table sync warning:`, error.message);
+      }
+    }
+
+    logToFile('Database setup completed');
+    console.log('✅ Database setup completed');
     return true;
   } catch (error) {
-    const errorMessage = `Error during database setup: ${error.message}`;
+    const errorMessage = `Database setup error: ${error.message}`;
     logToFile(errorMessage);
     console.error(errorMessage);
-    if (error.message && error.message.includes('Foreign key constraint is incorrectly formed')) {
-      console.error('Please check your foreign key definitions in the FirePolicies or related models.');
-    }
     return false;
   }
 }
 
 /**
- * Sets up roles and permissions in the database
- * @returns {Promise<boolean>} Success status
+ * Sets up roles in the database
+ * @returns {Promise<boolean>}
  */
 async function setupRolesAndPermissions() {
   try {
-    logToFile('Setting up roles and permissions...');
-    console.log('Setting up roles and permissions...');
-    
-    // Update existing roles to capitalized format
-    const existingRoles = await Role.findAll();
-    for (const role of existingRoles) {
-      const capitalizedRole = role.role_name.charAt(0).toUpperCase() + role.role_name.slice(1);
-      if (capitalizedRole !== role.role_name) {
-        await role.update({ role_name: capitalizedRole });
-        logToFile(`Updated role name from ${role.role_name} to ${capitalizedRole}`);
-        console.log(`Updated role name from ${role.role_name} to ${capitalizedRole}`);
-      }
-    }
-    
+    logToFile('Setting up roles...');
+    console.log('Setting up roles...');
+
     // Create roles
     for (const role of roles) {
-      await Role.findOrCreate({ where: { role_name: role.role_name }, defaults: role });
+      await Role.findOrCreate({
+        where: { role_name: role.role_name },
+        defaults: role
+      });
     }
     logToFile('Roles setup completed');
     console.log('Roles setup completed');
 
-    // Create permissions
-    for (const permission of permissions) {
-      await Permission.findOrCreate({ 
-        where: { permission_name: permission.permission_name }, 
-        defaults: permission 
-      });
-    }
-    logToFile('Permissions setup completed');
-    console.log('Permissions setup completed');
-
-    // Assign permissions to roles
-    for (const [roleName, permissionNames] of Object.entries(rolePermissions)) {
-      const role = await Role.findOne({ where: { role_name: roleName } });
-      const perms = await Permission.findAll({ where: { permission_name: permissionNames } });
-      
-      for (const perm of perms) {
-        await RolePermission.findOrCreate({ 
-          where: { role_id: role.id, permission_id: perm.id } 
-        });
-      }
-    }
-    logToFile('Role-permission assignments completed');
-    console.log('Role-permission assignments completed');
     return true;
   } catch (error) {
-    const errorMessage = `Error setting up roles and permissions: ${error.message}`;
+    const errorMessage = `Error setting up roles: ${error.message}`;
     logToFile(errorMessage);
     console.error(errorMessage);
     return false;
@@ -714,6 +434,162 @@ async function setupAdminUser() {
 }
 
 /**
+ * Sets up plan manager users
+ * @returns {Promise<boolean>} Success status
+ */
+async function setupPlanManagers() {
+  try {
+    logToFile('Setting up plan managers...');
+    console.log('Setting up plan managers...');
+    
+    const planManagerRole = await Role.findOne({ where: { role_name: 'Plan_manager' } });
+    if (!planManagerRole) {
+      throw new Error('Plan_manager role not found');
+    }
+
+    const planManagers = [
+      {
+        username: 'Green Arc',
+        email: 'greenarc@radheconsultancy.co.in',
+        password: 'GreenArc@123'
+      },
+      {
+        username: 'Little Star',
+        email: 'littlestar@radheconsultancy.co.in',
+        password: 'LittleStar@123'
+      }
+    ];
+
+    for (const manager of planManagers) {
+      const [user, created] = await User.findOrCreate({
+        where: { email: manager.email },
+        defaults: {
+          username: manager.username,
+          password: manager.password,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      });
+
+      if (!created) {
+        // Update existing user
+        await user.update({
+          password: manager.password,
+          updated_at: new Date()
+        });
+      }
+
+      // Check if user already has plan manager role
+      const existingUserRole = await UserRole.findOne({
+        where: {
+          user_id: user.user_id,
+          role_id: planManagerRole.id
+        }
+      });
+
+      if (!existingUserRole) {
+        // Assign plan manager role
+        await user.addRole(planManagerRole, { 
+          through: { 
+            is_primary: true,
+            assigned_by: 1 // Admin user ID
+          } 
+        });
+        logToFile(`Plan manager role assigned to ${manager.username}`);
+        console.log(`Plan manager role assigned to ${manager.username}`);
+      }
+    }
+
+    logToFile('Plan managers setup completed');
+    console.log('Plan managers setup completed');
+    return true;
+  } catch (error) {
+    const errorMessage = `Error setting up plan managers: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
+    return false;
+  }
+}
+
+/**
+ * Sets up stability manager users
+ * @returns {Promise<boolean>} Success status
+ */
+async function setupStabilityManagers() {
+  try {
+    logToFile('Setting up stability managers...');
+    console.log('Setting up stability managers...');
+    
+    const stabilityManagerRole = await Role.findOne({ where: { role_name: 'Stability_manager' } });
+    if (!stabilityManagerRole) {
+      throw new Error('Stability_manager role not found');
+    }
+
+    const stabilityManagers = [
+      {
+        username: 'Jayeshbhai A Kataria',
+        email: 'jayeshbhai@radheconsultancy.co.in',
+        password: 'Jayeshbhai@123'
+      },
+      {
+        username: 'Samir G. Davda',
+        email: 'samir@radheconsultancy.co.in',
+        password: 'Samir@123'
+      }
+    ];
+
+    for (const manager of stabilityManagers) {
+      const [user, created] = await User.findOrCreate({
+        where: { email: manager.email },
+        defaults: {
+          username: manager.username,
+          password: manager.password,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      });
+
+      if (!created) {
+        // Update existing user
+        await user.update({
+          password: manager.password,
+          updated_at: new Date()
+        });
+      }
+
+      // Check if user already has stability manager role
+      const existingUserRole = await UserRole.findOne({
+        where: {
+          user_id: user.user_id,
+          role_id: stabilityManagerRole.id
+        }
+      });
+
+      if (!existingUserRole) {
+        // Assign stability manager role
+        await user.addRole(stabilityManagerRole, { 
+          through: { 
+            is_primary: true,
+            assigned_by: 1 // Admin user ID
+          } 
+        });
+        logToFile(`Stability manager role assigned to ${manager.username}`);
+        console.log(`Stability manager role assigned to ${manager.username}`);
+      }
+    }
+
+    logToFile('Stability managers setup completed');
+    console.log('Stability managers setup completed');
+    return true;
+  } catch (error) {
+    const errorMessage = `Error setting up stability managers: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
+    return false;
+  }
+}
+
+/**
  * Runs all setup functions in sequence
  * @returns {Promise<void>}
  */
@@ -740,10 +616,22 @@ async function setupAll() {
       throw new Error('User migration failed');
     }
 
-    // Finally setup admin user
+    // Setup admin user
     const adminSetup = await setupAdminUser();
     if (!adminSetup) {
       throw new Error('Admin user setup failed');
+    }
+
+    // Setup plan managers
+    const planManagersSetup = await setupPlanManagers();
+    if (!planManagersSetup) {
+      throw new Error('Plan managers setup failed');
+    }
+
+    // Setup stability managers
+    const stabilityManagersSetup = await setupStabilityManagers();
+    if (!stabilityManagersSetup) {
+      throw new Error('Stability managers setup failed');
     }
 
     const successMessage = 'All setup completed successfully';

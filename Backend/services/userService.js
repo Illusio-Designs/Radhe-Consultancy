@@ -1,4 +1,4 @@
-const { User, Role, RolePermission } = require("../models");
+const { User, Role, UserRole } = require("../models");
 const { processAndSaveImage, deleteFile } = require("../utils/helperFunctions");
 const path = require("path");
 const bcrypt = require("bcryptjs");
@@ -28,7 +28,6 @@ class UserService {
       include: [
         {
           model: Role,
-          as: "roles",
           through: { attributes: ["is_primary", "assigned_at"] },
         },
       ],
@@ -41,14 +40,10 @@ class UserService {
       const { transaction } = options;
       // Try with roles include
       const userWithRoles = await User.findByPk(userId, {
-        include: [
-          {
-            model: Role,
-            as: "roles",
-            through: { attributes: ["is_primary", "assigned_at"] },
-          },
-        ],
-        transaction,
+        include: [{
+          model: Role,
+          through: { attributes: ['is_primary', 'assigned_at', 'assigned_by'] }
+        }]
       });
       if (userWithRoles) {
         console.log(`[UserService] getUserById: User with roles found for userId=${userId}`);
@@ -286,44 +281,6 @@ class UserService {
       console.error("Error updating profile image:", error);
       throw error;
     }
-  }
-
-  // Get user permissions
-  async getUserPermissions(userId) {
-    const user = await User.findByPk(userId, {
-      include: [
-        {
-          model: Role,
-          as: "roles",
-          include: [
-            {
-              model: RolePermission,
-            },
-          ],
-        },
-      ],
-    });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Collect all permissions from all user roles
-    const allPermissions = [];
-    user.roles.forEach((role) => {
-      if (role.RolePermissions) {
-        allPermissions.push(...role.RolePermissions);
-      }
-    });
-
-    // Remove duplicates based on permission_id
-    const uniquePermissions = allPermissions.filter(
-      (permission, index, self) =>
-        index ===
-        self.findIndex((p) => p.permission_id === permission.permission_id)
-    );
-
-    return uniquePermissions;
   }
 
   // Verify Reset Token

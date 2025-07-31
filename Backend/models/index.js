@@ -3,8 +3,6 @@ const sequelize = require("../config/db");
 // Import models
 const User = require("./userModel");
 const Role = require("./roleModel");
-const Permission = require("./permissionModel");
-const RolePermission = require("./rolePermissionModel");
 const UserRole = require("./userRoleModel");
 const Company = require("./companyModel");
 const Consumer = require("./consumerModel");
@@ -18,202 +16,29 @@ const DSC = require("./dscModel");
 const ReminderLog = require("./reminderLogModel");
 const DSCLog = require("./dscLogModel");
 const UserRoleWorkLog = require("./userRoleWorkLogModel");
+const FactoryQuotation = require("./factoryQuotationModel");
+const PlanManagement = require("./planManagementModel");
+const StabilityManagement = require('./stabilityManagementModel');
 
 // Define associations
-// Many-to-many relationship between User and Role through UserRole
-User.belongsToMany(Role, {
-  through: UserRole,
-  foreignKey: "user_id",
-  otherKey: "role_id",
-  as: "roles",
-});
+User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
+Role.belongsToMany(User, { through: UserRole, foreignKey: 'role_id' });
 
-Role.belongsToMany(User, {
-  through: UserRole,
-  foreignKey: "role_id",
-  otherKey: "user_id",
-  as: "users",
-});
+// Plan Management Associations
+PlanManagement.belongsTo(FactoryQuotation, { foreignKey: 'factory_quotation_id', as: 'factoryQuotation' });
+PlanManagement.belongsTo(User, { foreignKey: 'plan_manager_id', as: 'planManager' });
+PlanManagement.belongsTo(User, { foreignKey: 'reviewed_by', as: 'reviewer' });
+FactoryQuotation.hasOne(PlanManagement, { foreignKey: 'factory_quotation_id', as: 'planManagement' });
 
-// UserRole associations
-UserRole.belongsTo(User, { foreignKey: "user_id" });
-UserRole.belongsTo(Role, { foreignKey: "role_id" });
-
-// Many-to-many relationship between Role and Permission
-Role.belongsToMany(Permission, {
-  through: RolePermission,
-  foreignKey: "role_id",
-  otherKey: "permission_id",
-});
-
-Permission.belongsToMany(Role, {
-  through: RolePermission,
-  foreignKey: "permission_id",
-  otherKey: "role_id",
-});
-
-// Company and Consumer associations
-User.hasOne(Company, { foreignKey: "user_id" });
-Company.belongsTo(User, { foreignKey: "user_id" });
-
-User.hasOne(Consumer, { foreignKey: "user_id" });
-Consumer.belongsTo(User, { foreignKey: "user_id" });
-
-// Insurance Company and Policy associations
-InsuranceCompany.hasMany(EmployeeCompensationPolicy, {
-  foreignKey: "insurance_company_id",
-  as: "employeeCompensationPolicies",
-});
-InsuranceCompany.hasMany(VehiclePolicy, {
-  foreignKey: "insurance_company_id",
-  as: "vehiclePolicies",
-});
-InsuranceCompany.hasMany(HealthPolicy, {
-  foreignKey: "insurance_company_id",
-  as: "healthPolicies",
-});
-InsuranceCompany.hasMany(FirePolicy, {
-  foreignKey: "insurance_company_id",
-  as: "firePolicies",
-});
-InsuranceCompany.hasMany(LifePolicy, {
-  foreignKey: "insurance_company_id",
-  as: "lifePolicies",
-});
-EmployeeCompensationPolicy.belongsTo(InsuranceCompany, {
-  foreignKey: "insurance_company_id",
-  as: "provider",
-});
-VehiclePolicy.belongsTo(InsuranceCompany, {
-  foreignKey: "insurance_company_id",
-  as: "provider",
-});
-HealthPolicy.belongsTo(InsuranceCompany, {
-  foreignKey: "insurance_company_id",
-  as: "provider",
-});
-
-// Company and Policy associations
-Company.hasMany(EmployeeCompensationPolicy, {
-  foreignKey: "company_id",
-  as: "employeePolicies",
-});
-Company.hasMany(VehiclePolicy, {
-  foreignKey: "company_id",
-  as: "vehiclePoliciesByCompany",
-});
-Company.hasMany(HealthPolicy, {
-  foreignKey: "company_id",
-  as: "healthPoliciesByCompany",
-});
-Company.hasMany(FirePolicy, {
-  foreignKey: "company_id",
-  as: "firePoliciesByCompany",
-});
-Company.hasMany(LifePolicy, {
-  foreignKey: "company_id",
-  as: "lifePoliciesByCompany",
-});
-EmployeeCompensationPolicy.belongsTo(Company, {
-  foreignKey: "company_id",
-  as: "policyHolder",
-});
-VehiclePolicy.belongsTo(Company, {
-  foreignKey: "company_id",
-  as: "companyPolicyHolder",
-});
-HealthPolicy.belongsTo(Company, {
-  foreignKey: "company_id",
-  as: "companyPolicyHolder",
-});
-
-// Consumer and Policy associations
-Consumer.hasMany(VehiclePolicy, {
-  foreignKey: "consumer_id",
-  as: "vehiclePoliciesByConsumer",
-});
-Consumer.hasMany(HealthPolicy, {
-  foreignKey: "consumer_id",
-  as: "healthPoliciesByConsumer",
-});
-Consumer.hasMany(FirePolicy, {
-  foreignKey: "consumer_id",
-  as: "firePoliciesByConsumer",
-});
-Consumer.hasMany(LifePolicy, {
-  foreignKey: "consumer_id",
-  as: "lifePoliciesByConsumer",
-});
-VehiclePolicy.belongsTo(Consumer, {
-  foreignKey: "consumer_id",
-  as: "consumerPolicyHolder",
-});
-HealthPolicy.belongsTo(Consumer, {
-  foreignKey: "consumer_id",
-  as: "consumerPolicyHolder",
-});
-
-// Add the belongsTo associations for FirePolicy
-FirePolicy.belongsTo(InsuranceCompany, {
-  foreignKey: "insurance_company_id",
-  as: "provider",
-});
-FirePolicy.belongsTo(Company, {
-  foreignKey: "company_id",
-  as: "companyPolicyHolder",
-});
-FirePolicy.belongsTo(Consumer, {
-  foreignKey: "consumer_id",
-  as: "consumerPolicyHolder",
-});
-
-// Add the belongsTo associations for LifePolicy
-LifePolicy.belongsTo(Company, {
-  foreignKey: "company_id",
-  as: "companyPolicyHolder",
-});
-
-LifePolicy.belongsTo(Consumer, {
-  foreignKey: "consumer_id",
-  as: "consumerPolicyHolder",
-});
-
-LifePolicy.belongsTo(InsuranceCompany, {
-  foreignKey: "insurance_company_id",
-  as: "provider",
-});
-
-// Add DSC associations
-Company.hasMany(DSC, {
-  foreignKey: "company_id",
-  as: "dscs",
-});
-Consumer.hasMany(DSC, {
-  foreignKey: "consumer_id",
-  as: "dscs",
-});
-DSC.belongsTo(Company, {
-  foreignKey: "company_id",
-  as: "company",
-});
-DSC.belongsTo(Consumer, {
-  foreignKey: "consumer_id",
-  as: "consumer",
-});
-
-DSCLog.belongsTo(User, { foreignKey: 'performed_by', as: 'user' });
-
-// UserRoleWorkLog associations
-UserRoleWorkLog.belongsTo(User, { foreignKey: 'user_id', as: 'actor' });
-UserRoleWorkLog.belongsTo(User, { foreignKey: 'target_user_id', as: 'targetUser' });
-UserRoleWorkLog.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
+// Stability Management Associations
+StabilityManagement.belongsTo(FactoryQuotation, { foreignKey: 'factory_quotation_id', as: 'factoryQuotation' });
+StabilityManagement.belongsTo(User, { foreignKey: 'stability_manager_id', as: 'stabilityManager' });
+StabilityManagement.belongsTo(User, { foreignKey: 'reviewed_by', as: 'reviewer' });
+FactoryQuotation.hasOne(StabilityManagement, { foreignKey: 'factory_quotation_id', as: 'stabilityManagement' });
 
 module.exports = {
-  sequelize,
   User,
   Role,
-  Permission,
-  RolePermission,
   UserRole,
   Company,
   Consumer,
@@ -227,4 +52,7 @@ module.exports = {
   ReminderLog,
   DSCLog,
   UserRoleWorkLog,
+  FactoryQuotation,
+  PlanManagement,
+  StabilityManagement
 };

@@ -234,9 +234,9 @@ const Sidebar = ({ onCollapse }) => {
         toggle: () => handleDropdownToggle("compliance"),
         items: [
           {
-            path: "/dashboard/compliance/factory-act",
+            path: "/dashboard/compliance/factory-quotation",
             icon: <Factory />,
-            label: "Factory Act License",
+            label: "Factory Quotation",
           },
           {
             path: "/dashboard/compliance/labour-inspection",
@@ -269,6 +269,34 @@ const Sidebar = ({ onCollapse }) => {
             label: "User Role Work Log",
           },
         ],
+      },
+    ];
+  } else if (isRole("plan_manager")) {
+    // Plan managers see only Dashboard and Plan Management
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <LayoutDashboard />,
+        label: "Dashboard",
+      },
+      {
+        path: "/dashboard/compliance/plan-management",
+        icon: <ClipboardList />,
+        label: "Plan Management",
+      },
+    ];
+  } else if (isRole("stability_manager")) {
+    // Stability managers see only Dashboard and Stability Management
+    menuItems = [
+      {
+        path: "/dashboard",
+        icon: <LayoutDashboard />,
+        label: "Dashboard",
+      },
+      {
+        path: "/dashboard/compliance/stability-management",
+        icon: <ClipboardList />,
+        label: "Stability Management",
       },
     ];
   } else {
@@ -309,7 +337,7 @@ const Sidebar = ({ onCollapse }) => {
         toggle: () => handleDropdownToggle("vendors"),
         items: [
           {
-            path: "/dashboard/companies",
+            path: "/dashboard/companies",   
             icon: <Building2 />,
             label: "Companies",
           },
@@ -371,9 +399,9 @@ const Sidebar = ({ onCollapse }) => {
         toggle: () => handleDropdownToggle("compliance"),
         items: [
           {
-            path: "/dashboard/compliance/factory-act",
+            path: "/dashboard/compliance/factory-quotation",
             icon: <Factory />,
-            label: "Factory Act License",
+            label: "Factory Quotation",
           },
           {
             path: "/dashboard/compliance/labour-inspection",
@@ -398,6 +426,13 @@ const Sidebar = ({ onCollapse }) => {
     }
     // Only admin sees DSC Logs (already handled above in the admin block)
   }
+
+  // Filter menu items based on user role
+  const filteredMenuItems = userRoles.includes("plan_manager") 
+    ? menuItems.filter(item => ["Dashboard", "Plan Management"].includes(item.label))
+    : userRoles.includes("stability_manager")
+    ? menuItems.filter(item => ["Dashboard", "Stability Management"].includes(item.label))
+    : menuItems;
 
   const isActive = (path) => {
     const active = location.pathname.startsWith(path);
@@ -520,7 +555,7 @@ const Sidebar = ({ onCollapse }) => {
           {/* Navigation */}
           <div className="sidebar-nav">
             <nav className="mt-8">
-              {menuItems.map((item, index) => renderMenuItem(item, index))}
+              {filteredMenuItems.map((item, index) => renderMenuItem(item, index))}
             </nav>
           </div>
         </div>

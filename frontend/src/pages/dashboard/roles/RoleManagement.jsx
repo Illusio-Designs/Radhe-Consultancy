@@ -13,7 +13,6 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
   const [formData, setFormData] = useState({
     role_name: "",
     description: "",
-    permissions: [],
   });
 
   const handleSubmit = async (e) => {
@@ -41,7 +40,6 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
       setFormData({
         role_name: role.role_name || "",
         description: role.description || "",
-        permissions: role.permissions || [],
       });
     }
   }, [role]);
