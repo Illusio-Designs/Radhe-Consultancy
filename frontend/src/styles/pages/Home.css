@@ -32,7 +32,7 @@
   position: relative;
   width: 100%;
   flex-shrink: 0;
-  background-color: #000000CF;
+  background-color: #1F4F9CCF;
 }
 
 .home-container .slide.active {
@@ -568,7 +568,7 @@
 }
 
 .lawyer-content {
-  background-color: #000000CF;
+  background-color: #1F4F9CCF;
   padding: 5% 10%;
   display: flex;
   justify-content: space-around;
