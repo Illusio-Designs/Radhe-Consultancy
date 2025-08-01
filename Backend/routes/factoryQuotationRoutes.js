@@ -31,6 +31,12 @@ router.put('/:id', factoryQuotationController.updateQuotation);
 // Update quotation status
 router.put('/:id/status', factoryQuotationController.updateStatus);
 
+// Generate PDF for a quotation
+router.post('/:id/generate-pdf', factoryQuotationController.generatePDF);
+
+// Download PDF for a quotation
+router.get('/:id/download-pdf', factoryQuotationController.downloadPDF);
+
 // Delete a quotation
 router.delete('/:id', factoryQuotationController.deleteQuotation);
 

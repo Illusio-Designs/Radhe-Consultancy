@@ -1,15 +1,6 @@
 // This file is now FactoryQuotation.jsx
 import React, { useState, useEffect } from "react";
-import {
-  BiPlus,
-  BiEdit,
-  BiErrorCircle,
-  BiUser,
-  BiCheck,
-  BiX,
-  BiUpload,
-  BiFile,
-} from "react-icons/bi";
+import { BiPlus, BiEdit, BiErrorCircle, BiFile } from "react-icons/bi";
 import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -348,6 +339,17 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
         console.log("\n[Factory Quotation] Creating new quotation");
         response = await factoryQuotationAPI.createQuotation(formData);
         toast.success("Factory quotation created successfully!");
+      }
+
+      // Generate PDF automatically after creation/update
+      if (response && response.data && response.data.id) {
+        try {
+          await factoryQuotationAPI.generatePDF(response.data.id);
+          toast.info("PDF generated successfully!");
+        } catch (pdfError) {
+          console.error("Error generating PDF:", pdfError);
+          toast.warning("Quotation saved but PDF generation failed. You can generate it manually.");
+        }
       }
 
       onQuotationUpdated();
@@ -941,6 +943,14 @@ function FactoryQuotation({ searchQuery = "" }) {
           >
             <BiEdit />
           </ActionButton>
+          <ActionButton
+            onClick={() => handleDownloadQuotation(quotation)}
+            variant="secondary"
+            size="small"
+            title="Download PDF"
+          >
+            <BiFile />
+          </ActionButton>
         </div>
       ),
     },
@@ -966,6 +976,29 @@ function FactoryQuotation({ searchQuery = "" }) {
     { value: "application", label: "Application" },
     { value: "renewal", label: "Renewal" },
   ];
+
+  const handleDownloadQuotation = async (quotation) => {
+    try {
+      // Always generate a new PDF
+      toast.info('Generating PDF...');
+      await factoryQuotationAPI.generatePDF(quotation.id);
+      
+      // Download the PDF
+      const blob = await factoryQuotationAPI.downloadPDF(quotation.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `factory_quotation_${quotation.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Factory quotation downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading quotation:', error);
+      toast.error('Failed to download factory quotation. Please try again.');
+    }
+  };
 
   return (
     <div className="compliance-container">

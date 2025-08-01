@@ -198,23 +198,23 @@ async function setupDatabase() {
     try {
       await User.sync({ alter: true });
       console.log('✅ User table synced');
-    } catch (error) {
+      } catch (error) {
       console.log('⚠️  User table sync warning:', error.message);
-    }
+      }
 
-    try {
+      try {
           // Skip UserRole sync if table already exists to preserve existing data
     try {
       await UserRole.sync({ alter: true });
       console.log('✅ UserRole table synced');
-    } catch (error) {
+      } catch (error) {
       if (error.message.includes('already exists')) {
         console.log('✅ UserRole table already exists - preserving existing data');
       } else {
         throw error;
       }
     }
-    } catch (error) {
+      } catch (error) {
       console.log('⚠️  UserRole table sync warning:', error.message);
     }
 
@@ -265,7 +265,7 @@ async function setupRolesAndPermissions() {
   try {
     logToFile('Setting up roles...');
     console.log('Setting up roles...');
-
+    
     // Create roles
     for (const role of roles) {
       await Role.findOrCreate({

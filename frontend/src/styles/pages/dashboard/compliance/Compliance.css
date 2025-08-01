@@ -111,8 +111,39 @@
 
 .insurance-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   align-items: center;
+}
+
+.insurance-actions .action-button {
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insurance-actions .action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.insurance-actions .action-button[title="Download PDF"] {
+  background-color: #dc3545;
+  color: white;
+}
+
+.insurance-actions .action-button[title="Download PDF"]:hover {
+  background-color: #c82333;
+}
+
+.insurance-actions .action-button[title="Download PDF"]:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Status badge colors */

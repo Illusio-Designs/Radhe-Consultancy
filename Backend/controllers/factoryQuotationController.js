@@ -6,6 +6,7 @@ const {
   getHorsePowerOptions, 
   getNoOfWorkersOptions 
 } = require('../utils/factoryQuotationCalculator');
+const FactoryQuotationPDFGenerator = require('../utils/pdfGenerator');
 
 // Get calculation options
 exports.getCalculationOptions = async (req, res) => {
@@ -248,6 +249,99 @@ exports.deleteQuotation = async (req, res) => {
     res.json({ success: true, message: 'Quotation deleted' });
   } catch (error) {
     console.error('Error deleting factory quotation:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Generate PDF for a quotation
+exports.generatePDF = async (req, res) => {
+  try {
+    const quotationId = req.params.id;
+    
+    // Get the quotation with all details
+    const quotation = await FactoryQuotation.findByPk(quotationId);
+    
+    if (!quotation) {
+      return res.status(404).json({ success: false, message: 'Quotation not found' });
+    }
+
+    console.log('Backend: Generating PDF for quotation:', {
+      id: quotation.id,
+      companyName: quotation.companyName,
+      horsePower: quotation.horsePower,
+      noOfWorkers: quotation.noOfWorkers,
+      calculatedAmount: quotation.calculatedAmount,
+      planCharge: quotation.planCharge,
+      stabilityCertificateAmount: quotation.stabilityCertificateAmount,
+      administrationCharge: quotation.administrationCharge,
+      consultancyFees: quotation.consultancyFees,
+      totalAmount: quotation.totalAmount,
+      year: quotation.year,
+      status: quotation.status,
+      createdAt: quotation.createdAt
+    });
+
+    // Generate PDF
+    const pdfGenerator = new FactoryQuotationPDFGenerator();
+    const pdfResult = await pdfGenerator.generateFactoryQuotationPDF(quotation);
+
+    // Update quotation with PDF path
+    await FactoryQuotation.update(
+      { pdfPath: pdfResult.relativePath },
+      { where: { id: quotationId } }
+    );
+
+    res.json({
+      success: true,
+      message: 'PDF generated successfully',
+      data: {
+        filename: pdfResult.filename,
+        downloadUrl: `/api/factory-quotations/${quotationId}/download-pdf`
+      }
+    });
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Download PDF for a quotation
+exports.downloadPDF = async (req, res) => {
+  try {
+    const quotationId = req.params.id;
+    
+    // Get the quotation
+    const quotation = await FactoryQuotation.findByPk(quotationId);
+    
+    if (!quotation) {
+      return res.status(404).json({ success: false, message: 'Quotation not found' });
+    }
+
+    if (!quotation.pdfPath) {
+      return res.status(404).json({ success: false, message: 'PDF not found. Please generate PDF first.' });
+    }
+
+    const path = require('path');
+    const fs = require('fs');
+    
+    // Construct full file path
+    const filePath = path.join(__dirname, '..', quotation.pdfPath);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'PDF file not found on server' });
+    }
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="factory_quotation_${quotationId}.pdf"`);
+    
+    // Stream the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+    
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 }; 

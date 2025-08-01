@@ -31,10 +31,18 @@ import {
   Key,
   FileKey,
   FileCheck,
-  FileX
+  FileX,
+  Factory,
+  ClipboardList,
+  TrendingUp,
+  Weight,
+  Zap
 } from 'lucide-react';
 import Loader from "../../../components/common/Loader/Loader";
+import PieChart from "../../../components/charts/PieChart";
+import BarChart from "../../../components/charts/BarChart";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
+import "../../../styles/components/charts/Charts.css";
 
 const InsuranceTypeCard = ({ icon, label, stats, color }) => (
   <div
@@ -319,41 +327,449 @@ const roleIconMap = {
 };
 
 const UserRoleStatsCard = ({ stats }) => (
-  <div
-    className="insurance-type-card user-role-stats-card"
-    style={{ borderTop: `4px solid #007bff` }}
-  >
-    <div className="insurance-type-header">
-      <span className="insurance-type-icon" style={{ color: "#007bff" }}>
-        <Users />
-      </span>
-      <span className="insurance-type-label">User Role Statistics</span>
+  <div className="stats-card">
+    <div className="stats-card-header">
+      <Users className="stats-card-icon" />
+      <h3>User Role Distribution</h3>
     </div>
-    <div className="user-role-stats-grid">
-      {Object.entries(stats).map(([role, count]) => {
-        const { icon, color } = roleIconMap[role] || {
-          icon: <User />,
-          color: "#6c757d",
-        };
-        return (
-          <div
-            key={role}
-            className="user-role-stat-item"
-            style={{ borderLeft: `4px solid ${color}` }}
-          >
-            <span className="user-role-icon" style={{ color }}>
-              {icon}
-            </span>
-            <span className="user-role-label">
-              {role.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-            </span>
-            <span className="user-role-count">{count}</span>
+    <div className="stats-card-content">
+      {Object.entries(stats).map(([role, count]) => (
+        <div key={role} className="role-stat">
+          <span className="role-name">{role}</span>
+          <span className="role-count">{count}</span>
           </div>
-        );
-      })}
+      ))}
     </div>
   </div>
 );
+
+// Factory Quotation Chart Component
+const FactoryQuotationChart = ({ stats }) => {
+  // If no stats or no status_stats, show empty chart with message
+  if (!stats || !stats.status_stats || Object.keys(stats.status_stats).length === 0) {
+    const emptyData = {
+      labels: ['No Data'],
+      datasets: [{
+        data: [1],
+        backgroundColor: ['#6c757d'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    };
+
+    return (
+      <PieChart
+        data={emptyData}
+        title="Factory Quotation Status Distribution"
+        height={350}
+        width={400}
+      />
+    );
+  }
+
+  const statusData = {
+    labels: Object.keys(stats.status_stats).map(status => 
+      status.charAt(0).toUpperCase() + status.slice(1)
+    ),
+    datasets: [{
+      data: Object.values(stats.status_stats),
+      backgroundColor: [
+        '#007bff', // Blue for pending
+        '#28a745', // Green for approved
+        '#ffc107', // Yellow for plan
+        '#17a2b8', // Cyan for stability
+        '#6f42c1', // Purple for application
+        '#fd7e14', // Orange for renewal
+        '#dc3545', // Red for rejected
+        '#6c757d'  // Gray for others
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  return (
+    <PieChart
+      data={statusData}
+      title="Factory Quotation Status Distribution"
+      height={350}
+      width={400}
+    />
+  );
+};
+
+// Plan Management Chart Component
+const PlanManagementChart = ({ stats }) => {
+  // If no stats or no status_stats, show empty chart with message
+  if (!stats || !stats.status_stats || Object.keys(stats.status_stats).length === 0) {
+    const emptyData = {
+      labels: ['No Data'],
+      datasets: [{
+        data: [1],
+        backgroundColor: ['#6c757d'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    };
+
+    return (
+      <PieChart
+        data={emptyData}
+        title="Plan Management Status Distribution"
+        height={350}
+        width={400}
+      />
+    );
+  }
+
+  const statusData = {
+    labels: Object.keys(stats.status_stats).map(status => 
+      status.charAt(0).toUpperCase() + status.slice(1)
+    ),
+    datasets: [{
+      data: Object.values(stats.status_stats),
+      backgroundColor: [
+        '#ffc107', // Yellow for plan
+        '#17a2b8', // Cyan for submit
+        '#28a745', // Green for approved
+        '#dc3545'  // Red for reject
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  return (
+    <PieChart
+      data={statusData}
+      title="Plan Management Status Distribution"
+      height={350}
+      width={400}
+    />
+  );
+};
+
+// Stability Management Chart Component
+const StabilityManagementChart = ({ stats }) => {
+  // If no stats or no status_stats, show empty chart with message
+  if (!stats || !stats.status_stats || Object.keys(stats.status_stats).length === 0) {
+    const emptyData = {
+      labels: ['No Data'],
+      datasets: [{
+        data: [1],
+        backgroundColor: ['#6c757d'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    };
+
+    return (
+      <PieChart
+        data={emptyData}
+        title="Stability Management Status Distribution"
+        height={350}
+        width={400}
+      />
+    );
+  }
+
+  const statusData = {
+    labels: Object.keys(stats.status_stats).map(status => 
+      status.charAt(0).toUpperCase() + status.slice(1)
+    ),
+    datasets: [{
+      data: Object.values(stats.status_stats),
+      backgroundColor: [
+        '#ffc107', // Yellow for stability
+        '#17a2b8', // Cyan for submit
+        '#28a745', // Green for approved
+        '#dc3545'  // Red for reject
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  return (
+    <PieChart
+      data={statusData}
+      title="Stability Management Status Distribution"
+      height={350}
+      width={400}
+    />
+  );
+};
+
+// Plan Manager Status Cards Component
+const PlanManagerStatusCards = ({ stats }) => {
+  if (!stats) return null;
+
+  const statusStats = stats.status_stats || {};
+  const totalPlans = stats.total || 0;
+  const recentPlans = stats.recent || 0;
+  const percentRecent = stats.percent_recent || 0;
+
+  // Create chart data for plan manager
+  const chartData = {
+    labels: Object.keys(statusStats).map(status => 
+      status.charAt(0).toUpperCase() + status.slice(1)
+    ),
+    datasets: [{
+      data: Object.values(statusStats),
+      backgroundColor: [
+        '#ffc107', // Yellow for plan
+        '#17a2b8', // Cyan for submit
+        '#28a745', // Green for approved
+        '#dc3545'  // Red for reject
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  return (
+    <div className="status-cards-section">
+      <h2 className="section-title">Plan Management Overview</h2>
+      
+      {/* Status Cards */}
+      <div className="status-cards-grid">
+        <div className="status-card" style={{ borderTop: '4px solid #007bff' }}>
+          <div className="status-card-header">
+            <ClipboardList className="status-card-icon" style={{ color: '#007bff' }} />
+            <span className="status-card-label">Total Plans</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{totalPlans}</div>
+          </div>
+        </div>
+        
+        <div className="status-card" style={{ borderTop: '4px solid #28a745' }}>
+          <div className="status-card-header">
+            <TrendingUp className="status-card-icon" style={{ color: '#28a745' }} />
+            <span className="status-card-label">Recent Plans (30d)</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{recentPlans}</div>
+            <div className="status-card-percentage">
+              <span className="percentage-value">{percentRecent}%</span>
+              <span className="percentage-label">of total</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #ffc107' }}>
+          <div className="status-card-header">
+            <Clock className="status-card-icon" style={{ color: '#ffc107' }} />
+            <span className="status-card-label">Assigned (Plan)</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.plan || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #17a2b8' }}>
+          <div className="status-card-header">
+            <FileCheck className="status-card-icon" style={{ color: '#17a2b8' }} />
+            <span className="status-card-label">Submitted</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.submit || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #28a745' }}>
+          <div className="status-card-header">
+            <CheckCircle2 className="status-card-icon" style={{ color: '#28a745' }} />
+            <span className="status-card-label">Approved</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.Approved || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #dc3545' }}>
+          <div className="status-card-header">
+            <XCircle className="status-card-icon" style={{ color: '#dc3545' }} />
+            <span className="status-card-label">Rejected</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.Reject || 0}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart Section */}
+      <div className="charts-section">
+        <h3 className="charts-section-title">Status Distribution</h3>
+        <div className="charts-grid">
+          <PieChart
+            data={chartData}
+            title="My Plan Status Distribution"
+            height={350}
+            width={400}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Stability Manager Status Cards Component
+const StabilityManagerStatusCards = ({ stats }) => {
+  if (!stats) return null;
+
+  const statusStats = stats.status_stats || {};
+  const loadTypeStats = stats.load_type_stats || {};
+  const totalStability = stats.total || 0;
+  const recentStability = stats.recent || 0;
+  const percentRecent = stats.percent_recent || 0;
+
+  // Create chart data for stability manager
+  const statusChartData = {
+    labels: Object.keys(statusStats).map(status => 
+      status.charAt(0).toUpperCase() + status.slice(1)
+    ),
+    datasets: [{
+      data: Object.values(statusStats),
+      backgroundColor: [
+        '#ffc107', // Yellow for stability
+        '#17a2b8', // Cyan for submit
+        '#28a745', // Green for approved
+        '#dc3545'  // Red for reject
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  // Create chart data for load type
+  const loadTypeChartData = {
+    labels: Object.keys(loadTypeStats).map(loadType => 
+      loadType.replace('_', ' ').charAt(0).toUpperCase() + loadType.replace('_', ' ').slice(1)
+    ),
+    datasets: [{
+      data: Object.values(loadTypeStats),
+      backgroundColor: [
+        '#6f42c1', // Purple for with load
+        '#fd7e14'  // Orange for without load
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+
+  return (
+    <div className="status-cards-section">
+      <h2 className="section-title">Stability Management Overview</h2>
+      
+      {/* Status Cards */}
+      <div className="status-cards-grid">
+        <div className="status-card" style={{ borderTop: '4px solid #007bff' }}>
+          <div className="status-card-header">
+            <ClipboardList className="status-card-icon" style={{ color: '#007bff' }} />
+            <span className="status-card-label">Total Stability Records</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{totalStability}</div>
+          </div>
+        </div>
+        
+        <div className="status-card" style={{ borderTop: '4px solid #28a745' }}>
+          <div className="status-card-header">
+            <TrendingUp className="status-card-icon" style={{ color: '#28a745' }} />
+            <span className="status-card-label">Recent Records (30d)</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{recentStability}</div>
+            <div className="status-card-percentage">
+              <span className="percentage-value">{percentRecent}%</span>
+              <span className="percentage-label">of total</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #ffc107' }}>
+          <div className="status-card-header">
+            <Clock className="status-card-icon" style={{ color: '#ffc107' }} />
+            <span className="status-card-label">Assigned (Stability)</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.stability || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #17a2b8' }}>
+          <div className="status-card-header">
+            <FileCheck className="status-card-icon" style={{ color: '#17a2b8' }} />
+            <span className="status-card-label">Submitted</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.submit || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #28a745' }}>
+          <div className="status-card-header">
+            <CheckCircle2 className="status-card-icon" style={{ color: '#28a745' }} />
+            <span className="status-card-label">Approved</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.Approved || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #dc3545' }}>
+          <div className="status-card-header">
+            <XCircle className="status-card-icon" style={{ color: '#dc3545' }} />
+            <span className="status-card-label">Rejected</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{statusStats.Reject || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #6f42c1' }}>
+          <div className="status-card-header">
+            <Weight className="status-card-icon" style={{ color: '#6f42c1' }} />
+            <span className="status-card-label">With Load</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{loadTypeStats.with_load || 0}</div>
+          </div>
+        </div>
+
+        <div className="status-card" style={{ borderTop: '4px solid #fd7e14' }}>
+          <div className="status-card-header">
+            <Zap className="status-card-icon" style={{ color: '#fd7e14' }} />
+            <span className="status-card-label">Without Load</span>
+          </div>
+          <div className="status-card-content">
+            <div className="status-card-count">{loadTypeStats.without_load || 0}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="charts-section">
+        <h3 className="charts-section-title">Status Distribution</h3>
+        <div className="charts-grid">
+          <PieChart
+            data={statusChartData}
+            title="My Stability Status Distribution"
+            height={350}
+            width={400}
+          />
+          <PieChart
+            data={loadTypeChartData}
+            title="Load Type Distribution"
+            height={350}
+            width={400}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DashboardHeader = ({
   title,
@@ -418,6 +834,12 @@ const CombinedDashboard = () => {
       life: { total: 0, recent: 0, percent: 0 },
     },
     user_role_stats: {},
+    // New statistics for compliance management
+    factory_quotation_stats: {},
+    plan_management_stats: {},
+    stability_management_stats: {},
+    plan_manager_stats: {},
+    stability_manager_stats: {}
   });
   const [lastUpdated, setLastUpdated] = useState(
     new Date().toLocaleTimeString()
@@ -432,19 +854,46 @@ const CombinedDashboard = () => {
     try {
       setIsLoading(true);
       let response;
-      if (user && userRoles.includes("company") && (user.profile?.company_id || user.company?.company_id)) {
+      
+      // Fetch role-specific statistics
+      if (user && userRoles.includes("plan_manager")) {
+        response = await adminDashboardAPI.getPlanManagerStats();
+        if (response.success) {
+          setStats(prev => ({ ...prev, plan_manager_stats: response.data }));
+        }
+      } else if (user && userRoles.includes("stability_manager")) {
+        response = await adminDashboardAPI.getStabilityManagerStats();
+        if (response.success) {
+          setStats(prev => ({ ...prev, stability_manager_stats: response.data }));
+        }
+      } else if (user && userRoles.includes("company") && (user.profile?.company_id || user.company?.company_id)) {
         const companyId = user.profile?.company_id || user.company?.company_id;
         response = await adminDashboardAPI.getCompanyStats(companyId);
+        if (response.success) {
+          setStats(prev => ({ ...prev, ...response.data }));
+        }
       } else if (user && userRoles.includes("consumer") && (user.profile?.consumer_id || user.consumer?.consumer_id)) {
         const consumerId = user.profile?.consumer_id || user.consumer?.consumer_id;
         response = await adminDashboardAPI.getConsumerStats(consumerId);
+        if (response.success) {
+          setStats(prev => ({ ...prev, ...response.data }));
+        }
       } else {
+        // Admin or other roles - fetch all statistics from main endpoint
         response = await adminDashboardAPI.getCompanyStatistics();
+        if (response.success) {
+          setStats(prev => ({ 
+            ...prev, 
+            ...response.data,
+            // Extract compliance management stats from the main response
+            factory_quotation_stats: response.data.factory_quotation_stats || {},
+            plan_management_stats: response.data.plan_management_stats || {},
+            stability_management_stats: response.data.stability_management_stats || {}
+          }));
+        }
       }
-      if (response.success) {
-        setStats(response.data);
+      
         setLastUpdated(new Date().toLocaleTimeString());
-      }
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
     } finally {
@@ -506,6 +955,9 @@ const CombinedDashboard = () => {
   const showConsumer = userRoles.includes('consumer');
   const showVendorManager = userRoles.includes('vendor_manager');
   const showUserManager = userRoles.includes('user_manager');
+  const showPlanManager = userRoles.includes('plan_manager');
+  const showStabilityManager = userRoles.includes('stability_manager');
+  const showComplianceManager = userRoles.includes('compliance_manager');
 
   // If only company or only consumer role, show nothing
   const onlyCompanyOrConsumer =
@@ -524,6 +976,28 @@ const CombinedDashboard = () => {
         onFilterChange={handleFilterChange}
       />
       <div className="dashboard-content">
+        {/* Role-specific dashboards */}
+        {showPlanManager && (
+          <PlanManagerStatusCards stats={stats.plan_manager_stats} />
+        )}
+        
+        {showStabilityManager && (
+          <StabilityManagerStatusCards stats={stats.stability_manager_stats} />
+        )}
+
+        {/* Admin/Compliance Manager Charts */}
+        {(showAdmin || showComplianceManager) && (
+          <div className="charts-section">
+            <h2 className="charts-section-title">Compliance Management Analytics</h2>
+            <div className="charts-grid">
+              <FactoryQuotationChart stats={stats.factory_quotation_stats} />
+              <PlanManagementChart stats={stats.plan_management_stats} />
+              <StabilityManagementChart stats={stats.stability_management_stats} />
+            </div>
+          </div>
+        )}
+
+        {/* Regular dashboard grid */}
         <div className="dashboard-grid">
           {((isCompany || isConsumer) && !showAdmin && !showUserManager && !showVendorManager) ? (
             <>

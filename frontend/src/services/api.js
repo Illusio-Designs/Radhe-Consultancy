@@ -215,7 +215,7 @@ export const userAPI = {
   // Get all users
   getAllUsers: async () => {
     const response = await api.get('/users');
-    return response.data;
+      return response.data;
   },
 
   // Get users by role
@@ -227,7 +227,7 @@ export const userAPI = {
   // Get user by ID
   getUserById: async (id) => {
     const response = await api.get(`/users/${id}`);
-    return response.data;
+      return response.data;
   },
 
   createUser: async (userData) => {
@@ -384,39 +384,39 @@ export const userAPI = {
 export const roleAPI = {
   getAllRoles: async () => {
     const response = await api.get('/roles');
-    return response.data;
+      return response.data;
   },
   getRoleById: async (id) => {
-    const response = await api.get(`/roles/${id}`);
-    return response.data;
+      const response = await api.get(`/roles/${id}`);
+      return response.data;
   },
   createRole: async (roleData) => {
     const response = await api.post('/roles', roleData);
-    return response.data;
+      return response.data;
   },
   updateRole: async (id, roleData) => {
-    const response = await api.put(`/roles/${id}`, roleData);
-    return response.data;
+      const response = await api.put(`/roles/${id}`, roleData);
+      return response.data;
   },
   deleteRole: async (id) => {
-    const response = await api.delete(`/roles/${id}`);
-    return response.data;
+      const response = await api.delete(`/roles/${id}`);
+      return response.data;
   },
   assignRoleToUser: async (userId, roleId, isPrimary = false) => {
     const response = await api.post('/roles/assign', { userId, roleId, isPrimary });
-    return response.data;
+      return response.data;
   },
   removeRoleFromUser: async (userId, roleId) => {
     const response = await api.delete(`/roles/assign/${userId}/${roleId}`);
-    return response.data;
+      return response.data;
   },
   getUserRoles: async (userId) => {
     const response = await api.get(`/roles/user/${userId}`);
-    return response.data;
+      return response.data;
   },
   setPrimaryRole: async (userId, roleId) => {
     const response = await api.put(`/roles/user/${userId}/primary/${roleId}`);
-    return response.data;
+      return response.data;
   }
 };
 
@@ -764,31 +764,58 @@ export const adminDashboardAPI = {
     try {
       console.log("API Service: Fetching company statistics");
       const response = await api.get("/admin-dashboard/statistics");
-      console.log("API Service: Raw response:", response);
-      console.log("API Service: Response data:", response.data);
+      console.log("API Service: Company stats fetched successfully");
       return response.data;
     } catch (error) {
-      console.error("API Service: Error fetching company statistics:", error);
-      if (error.response) {
-        console.error("API Service: Error response:", error.response.data);
-        console.error("API Service: Error status:", error.response.status);
-      }
+      console.error("API Service: Error fetching company stats:", error);
       throw error;
     }
   },
+
   getCompanyStats: async (companyId) => {
     try {
+      console.log("API Service: Fetching company-specific statistics");
       const response = await api.get(`/admin-dashboard/statistics/company/${companyId}`);
+      console.log("API Service: Company-specific stats fetched successfully");
       return response.data;
     } catch (error) {
+      console.error("API Service: Error fetching company-specific stats:", error);
       throw error;
     }
   },
+
   getConsumerStats: async (consumerId) => {
     try {
+      console.log("API Service: Fetching consumer-specific statistics");
       const response = await api.get(`/admin-dashboard/statistics/consumer/${consumerId}`);
+      console.log("API Service: Consumer-specific stats fetched successfully");
       return response.data;
     } catch (error) {
+      console.error("API Service: Error fetching consumer-specific stats:", error);
+      throw error;
+    }
+  },
+
+  getPlanManagerStats: async () => {
+    try {
+      console.log("API Service: Fetching plan manager statistics");
+      const response = await api.get("/admin-dashboard/statistics/plan-manager");
+      console.log("API Service: Plan manager stats fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching plan manager stats:", error);
+      throw error;
+    }
+  },
+
+  getStabilityManagerStats: async () => {
+    try {
+      console.log("API Service: Fetching stability manager statistics");
+      const response = await api.get("/admin-dashboard/statistics/stability-manager");
+      console.log("API Service: Stability manager stats fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching stability manager stats:", error);
       throw error;
     }
   },
@@ -1743,6 +1770,18 @@ export const factoryQuotationAPI = {
   // Update status
   updateStatus: async (id, statusData) => {
     const response = await api.put(`/factory-quotations/${id}/status`, statusData);
+    return response.data;
+  },
+  // Generate PDF for quotation
+  generatePDF: async (id) => {
+    const response = await api.post(`/factory-quotations/${id}/generate-pdf`);
+    return response.data;
+  },
+  // Download PDF for quotation
+  downloadPDF: async (id) => {
+    const response = await api.get(`/factory-quotations/${id}/download-pdf`, {
+      responseType: 'blob'
+    });
     return response.data;
   },
   // Assign plan manager

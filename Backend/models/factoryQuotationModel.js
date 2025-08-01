@@ -94,6 +94,11 @@ const FactoryQuotation = sequelize.define('FactoryQuotation', {
     type: DataTypes.INTEGER, // User ID
     allowNull: true,
   },
+  pdfPath: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Path to the generated PDF file'
+  },
 }, {
   tableName: 'FactoryQuotations',
   timestamps: true,
