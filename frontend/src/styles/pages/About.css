@@ -1,5 +1,5 @@
 .about-container .hero-section {
-  background-image: url('../../assets/insurance.png');
+  background-image: url('../../assets/Heroabout.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -13,7 +13,7 @@
 }
 
 .about-container .hero-content {
-  background-color: #1F4F9CCF;
+  background-color: #000000CF;
   padding: 20% 40.3%;
   overflow: hidden;
 }

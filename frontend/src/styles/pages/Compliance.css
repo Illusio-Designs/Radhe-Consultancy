@@ -1,5 +1,5 @@
 .compliance .hero-section {
-    background-image: url('../../assets/compliance.png');
+    background-image: url('../../assets/HeroCL.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -13,7 +13,7 @@
   }
 
  .compliance .hero-content{
-    background-color: #1F4F9CCF;
+    background-color: #000000CF;
     padding: 16.9% 32%;
     overflow: hidden;
   }

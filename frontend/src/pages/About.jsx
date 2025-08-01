@@ -7,7 +7,7 @@ import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
 import '../styles/pages/About.css';
-import aboutImage from '../assets/business-people-busy-discussing-financial-matter-meeting.png';
+import aboutImage from '../assets/business-people-busy-discussing-financial-matter-meeting.jpg';
 import avatar1 from '../assets/Ellipse 2603.png';
 import avatar2 from '../assets/Ellipse 2606.png';
 import group from '../assets/Group 9.png';

@@ -1,5 +1,5 @@
 .contactpage-container .contactpage-hero-section {
-  background-image: url('../../assets/insurance.png');
+  background-image: url('../../assets/Herocontact.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -13,7 +13,7 @@
 }
 
 .contactpage-container .hero-content {
-  background-color: #1F4F9CCF;
+  background-color: #000000CF;
   padding: 20.1% 38.1%;
   overflow: hidden;
 }

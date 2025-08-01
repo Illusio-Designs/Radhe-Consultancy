@@ -17,7 +17,11 @@ import img8 from "../assets/about1-right-bottom.png.png";
 import img9 from "../assets/process-1.jpg.png";
 import img10 from "../assets/process-1-shape.png.png";
 import img11 from "../assets/hero-1-title-1.png.png";
-import img12 from "../assets/hero_1_2.png.png";
+import img12 from "../assets/hero_1_2.jpg";
+// Import additional images for slider
+import sliderImg1 from "../assets/business-people-busy-discussing-financial-matter-meeting.jpg";
+import sliderImg2 from "../assets/businessman-pointing-screen-showing-project-details-colleague.jpg";
+import sliderImg3 from "../assets/close-up-smiley-women-working.jpg";
 import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "../styles/pages/Home.css"
 
@@ -45,7 +49,7 @@ const Home = () => {
       clientCount: "2k+",
       reviews: "35k+",
       rating: 5,
-      image: img12
+      image: sliderImg1
     },
     {
       subtitle: "Expert Legal Solutions",
@@ -53,7 +57,7 @@ const Home = () => {
       clientCount: "2k+",
       reviews: "35k+",
       rating: 5,
-      image: img12
+      image: sliderImg2
     },
     {
       subtitle: "Legal Excellence",
@@ -61,7 +65,7 @@ const Home = () => {
       clientCount: "12k+",
       reviews: "35k+",
       rating: 5,
-      image: img12
+      image: sliderImg3
     }
   ];
 

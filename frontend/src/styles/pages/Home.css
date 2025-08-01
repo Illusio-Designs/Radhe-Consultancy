@@ -1,5 +1,5 @@
 .home-container .hero-section {
-  background-image: url("../../assets/insurance.png");
+  background-image: url("../../assets/Hero bg.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -32,7 +32,7 @@
   position: relative;
   width: 100%;
   flex-shrink: 0;
-  background-color: #1f4f9ccf;
+  background-color: #000000CF;
 }
 
 .home-container .slide.active {
@@ -132,7 +132,7 @@
 }
 
 .home-container .hero-image img {
-  width: 350px;
+  width: 310px;
   height: 400px;
   border: 1px solid #ffffff;
   border-top-right-radius: 70px;
@@ -568,7 +568,7 @@
 }
 
 .lawyer-content {
-  background-color: #1f4f9ccf;
+  background-color: #000000CF;
   padding: 5% 10%;
   display: flex;
   justify-content: space-around;
