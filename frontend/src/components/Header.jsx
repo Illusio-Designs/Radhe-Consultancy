@@ -105,13 +105,13 @@ const Header = () => {
 
       {/* Main Navbar */}
       <div className="navbar">
-        <div className="logo" onClick={() => window.location.href = '/home'}>
+        <div className="logo" onClick={() => window.location.href = '/'}>
           <img src={img} alt="Radhe Consultancy" />
         </div>
 
         <nav className={`nav-links ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-          <div className={`nav-item ${activePage === '/home' ? 'active' : ''}`} onClick={handleLinkClick}>
-            <a href="/home">Home</a>
+          <div className={`nav-item ${activePage === '/' ? 'active' : ''}`} onClick={handleLinkClick}>
+            <a href="/">Home</a>
           </div>
           <div className={`nav-item ${activePage === '/about' ? 'active' : ''}`} onClick={handleLinkClick}>
             <a href="/about">About Us</a>

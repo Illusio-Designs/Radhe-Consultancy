@@ -2,7 +2,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import PublicLayout from "../layouts/PublicLayout";
 import AuthLayout from "../layouts/AuthLayout";
-import ComingSoon from "../pages/ComingSoon";
 import Login from "../pages/dashboard/auth/Login";
 import Register from "../pages/dashboard/auth/Register";
 import ForgotPassword from "../pages/dashboard/auth/ForgotPassword";
@@ -47,10 +46,6 @@ const router = createBrowserRouter(
       children: [
         {
           index: true,
-          element: <ComingSoon />,
-        },
-        {
-          path: "/home",
           element: <Home />,
         },
         {

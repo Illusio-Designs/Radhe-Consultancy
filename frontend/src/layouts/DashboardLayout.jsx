@@ -32,7 +32,7 @@ import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
 import PlanManagement from "../pages/dashboard/compliance/PlanManagement";
 import StabilityManagement from "../pages/dashboard/compliance/StabilityManagement";
 import DSC from "../pages/dashboard/dsc/DSC";
-import DSCLogs from "../pages/dashboard/logs/DSCLogs";
+// import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
 import RenewalList from "../pages/dashboard/renewals/RenewalList";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
