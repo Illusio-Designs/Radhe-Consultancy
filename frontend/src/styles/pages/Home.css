@@ -269,6 +269,9 @@
   margin-top: 1%;
   width: 21%;
   height: 97.3%;
+  border-top-left-radius: 50px;
+    border-bottom-left-radius: 70px;
+    border-bottom-right-radius: 70px;
 }
 
 .img-right {
@@ -281,6 +284,22 @@
 .img-right img {
   width: 100%;
   object-fit: cover;
+}
+
+.img-right .img2 {
+  width: 100%;
+  object-fit: cover;
+  border-top-left-radius: 60px;
+  border-top-right-radius: 60px;
+  border-bottom-right-radius: 60px;
+}
+
+.img-right .img3 {
+  width: 100%;
+  object-fit: cover;
+  border-top-right-radius: 60px;
+  border-bottom-left-radius: 60px;
+  border-bottom-right-radius: 60px;
 }
 
 .trusted-right {
@@ -303,7 +322,7 @@
 .about-description {
   font-size: 14px;
   color: #868686;
-  margin-bottom: 80px;
+  margin-bottom: 35px;
   line-height: 1.6;
 }
 
@@ -466,7 +485,7 @@
 .services-section .service-card.dark {
   max-width: 350px;
   background-color: #1f4f9c;
-  box-shadow: 0px 0px 12.8px 6px #00000040;
+  box-shadow: 0px 0px 12.8px 6px #CED7E4;
   color: white;
   transform: scale(1.2);
   display: flex;
@@ -576,7 +595,7 @@
 }
 
 .lawyer-left {
-  width: 50%;
+  width: 100%;
 }
 
 .lawyer-left h1 {
@@ -602,29 +621,6 @@
   font-weight: 500;
   padding: 10px 30px;
   font-family: "Poppins", sans-serif;
-  cursor: pointer;
-}
-.lawyer-right {
-  display: flex;
-  gap: 20px;
-  width: 50%;
-}
-
-.lawyer-image {
-  position: relative;
-  overflow: hidden;
-  width: 50%;
-}
-
-.lawyer-image:hover {
-  transform: scale(1.05);
-  transition: transform 0.3s ease;
-}
-
-.lawyer-image img {
-  display: block;
-  width: 100%;
-  height: auto;
   cursor: pointer;
 }
 
@@ -673,13 +669,13 @@
 .why {
   display: flex;
   gap: 40px;
-  padding: 40px;
+  padding: 80px 40px 40px;
   margin: 0 0 2rem 0;
   justify-content: center;
 }
 
 .why-left {
-  width: 45%;
+  width: 50%;
 }
 
 .video-thumbnail {
@@ -729,7 +725,7 @@
 .img10 {
   position: absolute;
   top: 12%;
-  right: -22%;
+  right: -16%;
 }
 
 .why-badge {

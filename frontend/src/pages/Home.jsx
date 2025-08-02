@@ -6,15 +6,15 @@ import Testimonial from '../components/Testimonial';
 import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
-import img from "../assets/about-1-left.jpg.png";
-import img2 from "../assets/about-1-right.jpg.png";
-import img3 from "../assets/about-1-right-2.jpg.png";
+import img from "../assets/about-1-left.jpg";
+import img2 from "../assets/about-1-right.jpg";
+import img3 from "../assets/about-1-right-2.jpg";
 import img4 from "../assets/Container.png";
 import img5 from "../assets/Container1.png";
 import img6 from "../assets/about1-left-shape.png.png";
 import img7 from "../assets/about1-right-top.png.png";
 import img8 from "../assets/about1-right-bottom.png.png";
-import img9 from "../assets/process-1.jpg.png";
+import img9 from "../assets/process-1.jpg";
 import img10 from "../assets/process-1-shape.png.png";
 import img11 from "../assets/hero-1-title-1.png.png";
 import img12 from "../assets/hero_1_2.jpg";
@@ -157,14 +157,6 @@ const Home = () => {
                     <div className="hero-text">
                       <h4 className="subtitle">{slide.subtitle}</h4>
                       <h1 className="title">{slide.title}</h1>
-                      <div className="client-review">
-                        <div className="review-stats">
-                          <span><img src={img11} alt="Law Scale" className="img11" /> We have {slide.clientCount} Happy Client</span>
-                          <div className="stars">
-                            {"★".repeat(slide.rating)} <span><strong>4.5/5</strong>({slide.reviews} Reviews)</span>
-                          </div>
-                        </div>
-                      </div>
                       <button className="contact-btn" onClick={handleContactClick}>Contact Us →</button>
                     </div>
                     <div className="hero-image">
@@ -318,38 +310,8 @@ const Home = () => {
         <div className="lawyer-content">
          <div className="lawyer-left">
          <p>Our Attorneys</p>
-         <h1>Dedicated <br /> Lawyers, <br />Proven Results</h1>
+         <h1>Dedicated Lawyers, Proven Results</h1>
          <button className="lawyer-btn">More Attorney →</button>
-         </div>
-         <div className="lawyer-right">
-         <div className="lawyer-image">
-         <img src={img4} alt="Lawyer" />
-         <div className="overlay">   
-              <div className="overlay-text">
-                <h1>Sarah Rahman</h1>
-                <p>Attorney</p>
-                <div className="icon">
-                <FaFacebook className="social-icon" />
-                <FaInstagram className="social-icon" />
-                <FaTwitter className="social-icon" />
-                </div>
-              </div>
-            </div>
-         </div>
-         <div className="lawyer-image">
-         <img src={img5} alt="Lawyer" />
-         <div className="overlay">   
-         <div className="overlay-text">
-                <h1>Smith Miller</h1>
-                <p>Attorney</p>
-                <div className="icon">
-                <FaFacebook className="social-icon" />
-                <FaInstagram className="social-icon" />
-                <FaTwitter className="social-icon" />
-                </div>
-              </div>
-            </div>
-         </div>
          </div>
         </div>
       </div>

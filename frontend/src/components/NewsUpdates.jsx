@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'; // Added useState and useEffect imports
 import '../styles/components/NewsUpdates.css';
-import img from '../assets/blog-s-1-3-425x325.jpg.png';
-import img2 from '../assets/blog-s-1-4-425x325.jpg.png';
-import img3 from '../assets/blog-s-1-5-425x325.jpg.png';
+import img from '../assets/blog-s-1-3-425x325.jpg';
+import img2 from '../assets/blog-s-1-4-425x325.jpg';
+import img3 from '../assets/blog-s-1-5-425x325.jpg';
 import left from "../assets/blog-1-shape-left.png.png";
 import right from "../assets/blog-1-shape-right.png.png";
 

@@ -1,12 +1,13 @@
 import React from 'react';
 import "../styles/components/Casestudy.css";
-import gallery1 from "../../src/assets/gallery-1-1.jpg.png";
-import gallery2 from "../../src/assets/gallery-1-2.jpg.png";
-import gallery3 from "../../src/assets/gallery-1-3.jpg.png";
-import gallery4 from "../../src/assets/gallery-1-4.jpg.png";
-import gallery5 from "../../src/assets/gallery-1-5.jpg.png";
-import gallery6 from "../../src/assets/gallery-1-6.jpg.png";
-import gallery7 from "../../src/assets/gallery-1-7.jpg.png";
+import gallery1 from "../../src/assets/gallery-1-1.jpg";
+import gallery2 from "../../src/assets/gallery-1-2.jpg";
+import gallery3 from "../../src/assets/gallery-1-3.jpg";
+import gallery4 from "../../src/assets/gallery-1-4.jpg";
+import gallery5 from "../../src/assets/gallery-1-5.jpg";
+import gallery6 from "../../src/assets/gallery-1-6.jpg";
+import gallery7 from "../../src/assets/gallery-1-7.jpg";
+import gallery8 from "../../src/assets/gallery-1-8.jpg";
 import { FaEye } from 'react-icons/fa';
 
 const Casestudy = () => {
@@ -18,7 +19,7 @@ const Casestudy = () => {
     { src: gallery5, title: 'Advice Session', subtitle: 'Child Support' },
     { src: gallery6, title: 'First Meeting', subtitle: 'Paternity Cases' },
     { src: gallery7, title: 'Introductory Discussion', subtitle: 'Civil Unions' },
-    { src: gallery1, title: 'Case Consultation', subtitle: 'Marriage Contracts' },
+    { src: gallery8, title: 'Case Consultation', subtitle: 'Marriage Contracts' },
     // Add more images as needed
   ];
 
