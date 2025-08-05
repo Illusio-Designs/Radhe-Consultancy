@@ -67,7 +67,7 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <p>Copyright <span>Radhe Consultancy</span> All Rights Reserved</p>
-        <p>Design & Develop with ❤️ by - Pixelvline Design Studio & <a href="https://illusiodesigns.agency/" target="_blank" rel="noopener noreferrer">Illusio Designs</a></p>
+        <p>Design & Develop with ❤️ by - <a href="https://illusiodesigns.agency/" target="_blank" rel="noopener noreferrer">Illusio Designs</a></p>
       </div>
     </div>
   );
