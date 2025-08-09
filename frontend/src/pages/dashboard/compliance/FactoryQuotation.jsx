@@ -1,14 +1,18 @@
 // This file is now FactoryQuotation.jsx
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiErrorCircle, BiFile } from "react-icons/bi";
-import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI } from "../../../services/api";
+import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload } from "react-icons/bi";
+import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI, applicationManagementAPI, companyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
+import PhoneInput from 'react-phone-number-input';
+import flags from 'react-phone-number-input/flags';
+import 'react-phone-number-input/style.css';
 import "../../../styles/pages/dashboard/compliance/Compliance.css";
+import "../../../styles/pages/dashboard/companies/Vendor.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -182,6 +186,762 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
             Assign
           </Button>
         </div>
+      </div>
+    </Modal>
+  );
+};
+
+
+
+// Application Approval Modal
+const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplication }) => {
+  const [applicationDate, setApplicationDate] = useState(currentApplication?.application_date || '');
+  const [expiryDate, setExpiryDate] = useState(currentApplication?.expiry_date || '');
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(selectedFiles);
+  };
+
+  const handleApprove = async () => {
+    if (!applicationDate) {
+      toast.error('Please select an application date');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onApprove(files, applicationDate, expiryDate);
+      toast.success('Application approved successfully');
+    } catch (error) {
+      toast.error('Failed to approve application');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Approve Application">
+      <div className="application-approval-modal">
+        <div className="form-group">
+          <label>Application Date (Required):</label>
+          <input
+            type="date"
+            value={applicationDate}
+            onChange={(e) => setApplicationDate(e.target.value)}
+            className="form-control"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Expiry Date (Optional):</label>
+          <input
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            className="form-control"
+          />
+          <small className="text-gray-500">
+            Leave empty if no specific expiry date
+          </small>
+        </div>
+
+        <div className="form-group">
+          <label>Upload Files (Optional):</label>
+          <input
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            className="form-control"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+          />
+          <small className="text-gray-500">
+            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
+          </small>
+        </div>
+
+        {files.length > 0 && (
+          <div className="selected-files">
+            <h4>Selected Files:</h4>
+            {files.map((file, index) => (
+              <div key={index} className="file-item">
+                <BiFile /> {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="modal-actions">
+          <Button onClick={onClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleApprove} variant="contained" disabled={loading}>
+            {loading ? 'Approving...' : 'Approve'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Application Reject Modal
+const ApplicationRejectModal = ({ isOpen, onClose, onReject }) => {
+  const [remarks, setRemarks] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleReject = async () => {
+    if (!remarks.trim()) {
+      toast.error('Please enter remarks for rejection');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onReject(remarks);
+      toast.success('Application rejected successfully');
+    } catch (error) {
+      toast.error('Failed to reject application');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Reject Application">
+      <div className="application-reject-modal">
+        <div className="form-group">
+          <label>Remarks (Required):</label>
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            className="form-control"
+            rows="4"
+            placeholder="Enter rejection remarks..."
+            required
+          />
+        </div>
+
+        <div className="modal-actions">
+          <Button onClick={onClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleReject} variant="contained" disabled={loading}>
+            {loading ? 'Rejecting...' : 'Reject'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Renewal Modal for Vendor Creation - Same as Company Registration
+const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
+  const [formData, setFormData] = useState({
+    company_name: '',
+    company_code: '',
+    owner_name: '',
+    owner_address: '',
+    designation: '',
+    company_address: '',
+    contact_number: '',
+    company_email: '',
+    gst_number: '',
+    pan_number: '',
+    firm_type: '',
+    nature_of_work: '',
+    factory_license_number: '',
+    labour_license_number: '',
+    type_of_company: '',
+    company_website: ''
+  });
+
+  const [files, setFiles] = useState({
+    gst_document: null,
+    pan_document: null
+  });
+
+  const [fileNames, setFileNames] = useState({
+    gst_document: '',
+    pan_document: ''
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (quotation && isOpen) {
+      // Pre-fill form data from factory quotation
+      setFormData({
+        company_name: quotation.companyName || '',
+        company_code: '',
+        owner_name: quotation.companyName || '', // Using company name as owner name
+        owner_address: quotation.companyAddress || '',
+        designation: '',
+        company_address: quotation.companyAddress || '',
+        contact_number: quotation.phone || '',
+        company_email: quotation.email || '',
+        gst_number: '',
+        pan_number: '',
+        firm_type: '',
+        nature_of_work: '',
+        factory_license_number: '',
+        labour_license_number: '',
+        type_of_company: '',
+        company_website: ''
+      });
+    }
+  }, [quotation, isOpen]);
+
+  const validateGST = (gst) => {
+    // Remove any spaces and convert to uppercase
+    gst = gst.replace(/\s/g, "").toUpperCase();
+    console.log('Validating GST:', gst);
+
+    // Check length
+    if (gst.length !== 15) {
+      console.log('GST length invalid:', gst.length);
+      return false;
+    }
+
+    // Check state code (first 2 digits)
+    const stateCode = gst.substring(0, 2);
+    if (!/^\d{2}$/.test(stateCode)) {
+      console.log('Invalid state code:', stateCode);
+      return false;
+    }
+
+    // Check PAN number (next 10 characters)
+    const panNumber = gst.substring(2, 12);
+    if (!/^[A-Z]{5}\d{4}[A-Z]{1}$/.test(panNumber)) {
+      console.log('Invalid PAN number:', panNumber);
+      return false;
+    }
+
+    // Check entity number (13th character)
+    const entityNumber = gst.charAt(12);
+    if (!/^[0-9A-Z]$/.test(entityNumber)) {
+      console.log('Invalid entity number:', entityNumber);
+      return false;
+    }
+
+    // Check check digit (14th character)
+    const checkDigit = gst.charAt(13);
+    if (!/^[0-9A-Z]$/.test(checkDigit)) {
+      console.log('Invalid check digit:', checkDigit);
+      return false;
+    }
+
+    // Check last character (must be alphanumeric)
+    const lastChar = gst.charAt(14);
+    if (!/^[0-9A-Z]$/.test(lastChar)) {
+      console.log('Invalid last character:', lastChar);
+      return false;
+    }
+
+    console.log('GST validation successful');
+    return true;
+  };
+
+  const handleGSTChange = (e) => {
+    let value = e.target.value;
+    
+    // Remove any non-alphanumeric characters
+    value = value.replace(/[^0-9A-Za-z]/g, '');
+    
+    // Convert to uppercase
+    value = value.toUpperCase();
+    
+    // Limit to 15 characters
+    if (value.length > 15) {
+      value = value.substring(0, 15);
+    }
+    
+    // Auto-extract PAN from GST (positions 3-12)
+    if (value.length >= 12) {
+      const panNumber = value.substring(2, 12);
+      setFormData(prev => ({
+        ...prev,
+        gst_number: value,
+        pan_number: panNumber
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        gst_number: value
+      }));
+    }
+  };
+
+  const handleFileChange = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+        console.log(`[Renewal] File selected for ${type}:`, {
+            name: file.name,
+            type: file.type,
+            size: file.size
+        });
+        setFiles(prev => ({
+            ...prev,
+            [type]: file
+        }));
+        setFileNames(prev => ({
+            ...prev,
+            [type]: file.name
+        }));
+    }
+  };
+
+  const handlePhoneChange = (value) => {
+    console.log('Phone number changed:', value);
+    setFormData((prev) => ({
+      ...prev,
+      contact_number: value || '',
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('[RenewalForm] Starting form submission');
+    console.log('[RenewalForm] Form data:', formData);
+
+    // Validate required fields
+    const requiredFields = [
+      'company_name',
+      'owner_name',
+      'company_address',
+      'contact_number',
+      'company_email',
+      'gst_number',
+      'pan_number',
+      'firm_type',
+      'nature_of_work',
+      'type_of_company'
+    ];
+
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // Validate GST number format
+    if (!validateGST(formData.gst_number)) {
+      toast.error('Invalid GST number format. Please enter a valid 15-character GST number.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // First, check if company already exists with this GST number
+      let existingCompany = null;
+      try {
+        const companiesResponse = await companyAPI.getAllCompanies();
+        if (companiesResponse.success && companiesResponse.data) {
+          existingCompany = companiesResponse.data.find(
+            company => company.gst_number === formData.gst_number
+          );
+          if (existingCompany) {
+            console.log('Found existing company with GST:', existingCompany.gst_number);
+          }
+        }
+      } catch (error) {
+        console.log('Error checking existing companies:', error);
+        // Continue with creating new company if we can't check existing ones
+      }
+
+      let companyResponse;
+
+      if (existingCompany) {
+        // Company exists, update it instead of creating new one
+        console.log('Company with GST number already exists, updating...');
+        
+        // Create FormData for update
+        const updateData = new FormData();
+        
+        // Append all form fields
+        Object.keys(formData).forEach(key => {
+          if (key !== 'gst_document' && key !== 'pan_document') {
+            const value = formData[key] || '';
+            updateData.append(key, value);
+            console.log(`Appending ${key}:`, value);
+          }
+        });
+
+        // Handle file uploads for update
+        if (files.gst_document instanceof File) {
+          console.log('Appending GST document for update:', {
+            name: files.gst_document.name,
+            type: files.gst_document.type,
+            size: files.gst_document.size
+          });
+          updateData.append('gst_document', files.gst_document);
+        }
+
+        if (files.pan_document instanceof File) {
+          console.log('Appending PAN document for update:', {
+            name: files.pan_document.name,
+            type: files.pan_document.type,
+            size: files.pan_document.size
+          });
+          updateData.append('pan_document', files.pan_document);
+        }
+
+        companyResponse = await companyAPI.updateCompany(existingCompany.id, updateData);
+        console.log('Company updated:', companyResponse);
+      } else {
+        // Company doesn't exist, create new one
+        console.log('Creating new company...');
+        
+        // Create FormData for new company
+        const submitData = new FormData();
+
+        // Append all form fields
+        Object.keys(formData).forEach(key => {
+          if (key !== 'gst_document' && key !== 'pan_document') {
+            const value = formData[key] || '';
+            submitData.append(key, value);
+            console.log(`Appending ${key}:`, value);
+          }
+        });
+
+        // Handle file uploads
+        if (files.gst_document instanceof File) {
+          console.log('Appending GST document:', {
+            name: files.gst_document.name,
+            type: files.gst_document.type,
+            size: files.gst_document.size
+          });
+          submitData.append('gst_document', files.gst_document);
+        }
+
+        if (files.pan_document instanceof File) {
+          console.log('Appending PAN document:', {
+            name: files.pan_document.name,
+            type: files.pan_document.type,
+            size: files.pan_document.size
+          });
+          submitData.append('pan_document', files.pan_document);
+        }
+
+        companyResponse = await companyAPI.createCompany(submitData);
+        console.log('Company/Vendor created:', companyResponse);
+      }
+
+      if (companyResponse.success) {
+        console.log('Form submission successful');
+        
+        // Update factory quotation status to renewal and link company
+        const companyId = existingCompany ? existingCompany.id : companyResponse.data.company_id;
+        await factoryQuotationAPI.updateStatus(quotation.id, { 
+          status: 'renewal',
+          company_id: companyId,
+          renewal_date: new Date().toISOString()
+        });
+        
+        const message = existingCompany 
+          ? 'Renewal created successfully! Existing company has been updated.'
+          : 'Renewal created successfully! New company/Vendor account has been created.';
+        
+        toast.success(message);
+        onRenewalCreated();
+        onClose();
+      } else {
+        throw new Error(companyResponse.message || 'Failed to save company');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      
+      // Handle specific error cases
+      if (error.message && error.message.includes('GST number already exists')) {
+        toast.error('A company with this GST number already exists. Please use a different GST number or contact support.');
+      } else if (error.message && error.message !== 'An error occurred') {
+        toast.error(error.message);
+      } else {
+        toast.error('An error occurred while creating the renewal. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "gst_number") {
+      handleGSTChange(e);
+    } else if (name === "contact_number") {
+      // Ensure contact number is properly formatted
+      const formattedNumber = value.replace(/\D/g, ''); // Remove non-digit characters
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedNumber,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Create Renewal - Company Registration">
+      <div className="renewal-modal">
+
+
+        <form onSubmit={handleSubmit} className="vendor-management-form">
+          <div className="vendor-management-form-grid">
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="company_name"
+                value={formData.company_name}
+                onChange={handleChange}
+                placeholder="Company Name"
+                required
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="company_code"
+                value={formData.company_code}
+                onChange={handleChange}
+                placeholder="Company Code (e.g., COMP0001)"
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="owner_name"
+                value={formData.owner_name}
+                onChange={handleChange}
+                placeholder="Owner Name"
+                required
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <textarea
+                name="owner_address"
+                value={formData.owner_address}
+                onChange={handleChange}
+                placeholder="Owner Address"
+                required
+                className="vendor-management-form-input"
+                rows="3"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="designation"
+                value={formData.designation}
+                onChange={handleChange}
+                placeholder="Designation"
+                required
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <textarea
+                name="company_address"
+                value={formData.company_address}
+                onChange={handleChange}
+                placeholder="Company Address"
+                required
+                className="vendor-management-form-input"
+                rows="3"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <PhoneInput
+                international
+                defaultCountry="IN"
+                value={formData.contact_number}
+                onChange={handlePhoneChange}
+                placeholder="Enter phone number"
+                required
+                className="vendor-management-form-input phone-input-custom"
+                flags={flags}
+                countrySelectProps={{
+                  className: "phone-input-country-select"
+                }}
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="email"
+                name="company_email"
+                value={formData.company_email}
+                onChange={handleChange}
+                placeholder="Email"
+                required
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="gst_number"
+                value={formData.gst_number}
+                onChange={handleChange}
+                placeholder="GST Number (15 digits)"
+                required
+                className="vendor-management-form-input"
+                maxLength={15}
+              />
+            </div>
+
+            <div className="vendor-management-form-group file-upload-group">
+              <label className="file-upload-label">
+                <span>GST Certificate</span>
+                <div className="file-upload-container">
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange(e, 'gst_document')}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="file-upload-input"
+                  />
+                  <div className="file-upload-button">
+                    <BiUpload /> {fileNames.gst_document || 'Upload GST Certificate'}
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="pan_number"
+                value={formData.pan_number}
+                onChange={handleChange}
+                placeholder="PAN Number"
+                required
+                className="vendor-management-form-input"
+                readOnly
+              />
+            </div>
+
+            <div className="vendor-management-form-group file-upload-group">
+              <label className="file-upload-label">
+                <span>PAN Card</span>
+                <div className="file-upload-container">
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange(e, 'pan_document')}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="file-upload-input"
+                  />
+                  <div className="file-upload-button">
+                    <BiUpload /> {fileNames.pan_document || 'Upload PAN Card'}
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="vendor-management-form-group">
+              <select
+                name="firm_type"
+                value={formData.firm_type}
+                onChange={handleChange}
+                required
+                className="vendor-management-form-input"
+              >
+                <option value="">Select Firm Type</option>
+                <option value="Proprietorship">Proprietorship</option>
+                <option value="Partnership">Partnership</option>
+                <option value="LLP">LLP</option>
+                <option value="Private Limited">Private Limited</option>
+                <option value="Limited">Limited</option>
+                <option value="Trust">Trust</option>
+              </select>
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="nature_of_work"
+                value={formData.nature_of_work}
+                onChange={handleChange}
+                placeholder="Nature of Work"
+                required
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="factory_license_number"
+                value={formData.factory_license_number}
+                onChange={handleChange}
+                placeholder="Factory License Number"
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="text"
+                name="labour_license_number"
+                value={formData.labour_license_number}
+                onChange={handleChange}
+                placeholder="Labour License Number"
+                className="vendor-management-form-input"
+              />
+            </div>
+
+            <div className="vendor-management-form-group">
+              <select
+                name="type_of_company"
+                value={formData.type_of_company}
+                onChange={handleChange}
+                required
+                className="vendor-management-form-input"
+              >
+                <option value="">Select Type of Company</option>
+                <option value="Industries">Industries</option>
+                <option value="Contractor">Contractor</option>
+                <option value="School">School</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Service">Service</option>
+              </select>
+            </div>
+
+            <div className="vendor-management-form-group">
+              <input
+                type="url"
+                name="company_website"
+                value={formData.company_website}
+                onChange={handleChange}
+                placeholder="Company Website (Optional)"
+                className="vendor-management-form-input"
+              />
+            </div>
+          </div>
+
+          <div className="vendor-management-form-actions">
+            <Button type="button" variant="outlined" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" disabled={loading}>
+              {loading ? 'Creating...' : 'Create'}
+            </Button>
+          </div>
+        </form>
       </div>
     </Modal>
   );
@@ -602,6 +1362,12 @@ function FactoryQuotation({ searchQuery = "" }) {
   const [editingQuotation, setEditingQuotation] = useState(null);
   const [showPlanManagerModal, setShowPlanManagerModal] = useState(false);
   const [showStabilityManagerModal, setShowStabilityManagerModal] = useState(false);
+  const [showStabilityModal, setShowStabilityModal] = useState(false);
+  const [showStabilityRejectModal, setShowStabilityRejectModal] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showApplicationRejectModal, setShowApplicationRejectModal] = useState(false);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
+
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
@@ -739,6 +1505,25 @@ function FactoryQuotation({ searchQuery = "" }) {
         return;
       }
 
+      if (newStatus === 'application') {
+        // Application status is handled automatically in the backend
+        // No need to show manual selection modal
+        const response = await factoryQuotationAPI.updateStatus(quotationId, { status: newStatus });
+        if (response.success) {
+          toast.success(`Status updated to ${newStatus} successfully`);
+          await fetchQuotations();
+        }
+        return;
+      }
+
+      if (newStatus === 'renewal') {
+        // Show renewal modal
+        const quotation = quotations.find(q => q.id === quotationId);
+        setSelectedQuotation(quotation);
+        setShowRenewalModal(true);
+        return;
+      }
+
       const response = await factoryQuotationAPI.updateStatus(quotationId, { status: newStatus });
       if (response.success) {
         toast.success(`Status updated to ${newStatus} successfully`);
@@ -781,6 +1566,142 @@ function FactoryQuotation({ searchQuery = "" }) {
     } catch (error) {
       toast.error('Failed to assign stability manager');
     }
+  };
+
+  // Handle stability status change
+  const handleStabilityStatusChange = async (stabilityId, newStatus, stabilityDate) => {
+    try {
+      const updateData = { status: newStatus };
+      
+      if (newStatus === 'Approved' && stabilityDate) {
+        updateData.stability_date = stabilityDate;
+      }
+
+      const response = await stabilityManagementAPI.updateStabilityStatus(stabilityId, updateData);
+      if (response.success) {
+        toast.success('Stability status updated successfully');
+        await fetchQuotations();
+      }
+    } catch (error) {
+      toast.error('Failed to update stability status');
+    }
+  };
+
+  // Handle stability file upload
+  const handleStabilityFileUpload = async (stabilityId, files, stabilityDate) => {
+    try {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+
+      // First update status with date
+      await stabilityManagementAPI.updateStabilityStatus(stabilityId, {
+        status: 'Approved',
+        stability_date: stabilityDate
+      });
+
+      // Then upload files
+      const response = await stabilityManagementAPI.uploadStabilityFiles(stabilityId, formData);
+      if (response.success) {
+        toast.success('Files uploaded and stability approved successfully');
+        await fetchQuotations();
+      }
+    } catch (error) {
+      toast.error('Failed to upload stability files');
+    }
+  };
+
+
+
+  // Handle application status change
+  const handleApplicationStatusChange = async (applicationId, newStatus, applicationDate, expiryDate, remarks) => {
+    try {
+      const updateData = { status: newStatus };
+      
+      if (newStatus === 'Approved' && applicationDate) {
+        updateData.application_date = applicationDate;
+        if (expiryDate) {
+          updateData.expiry_date = expiryDate;
+        }
+      }
+      
+      if (newStatus === 'Reject' && remarks) {
+        updateData.remarks = remarks;
+      }
+
+      const response = await applicationManagementAPI.updateApplicationStatus(applicationId, updateData);
+      if (response.success) {
+        toast.success('Application status updated successfully');
+        await fetchQuotations();
+      }
+    } catch (error) {
+      toast.error('Failed to update application status');
+    }
+  };
+
+  // Handle application file upload
+  const handleApplicationFileUpload = async (applicationId, files, applicationDate, expiryDate) => {
+    try {
+      // First update status with dates
+      await applicationManagementAPI.updateApplicationStatus(applicationId, {
+        status: 'Approved',
+        application_date: applicationDate,
+        expiry_date: expiryDate
+      });
+
+      // Then upload files if any were selected
+      if (files && files.length > 0) {
+        const formData = new FormData();
+        files.forEach(file => {
+          formData.append('files', file);
+        });
+
+        const response = await applicationManagementAPI.uploadApplicationFiles(applicationId, formData);
+        if (response.success) {
+          toast.success('Files uploaded and application approved successfully');
+          await fetchQuotations();
+        }
+      } else {
+        // No files selected, just approve the application
+        toast.success('Application approved successfully');
+        await fetchQuotations();
+      }
+    } catch (error) {
+      console.error('Error in application file upload:', error);
+      toast.error('Failed to process application approval');
+    }
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'maked':
+        return 'status-badge-maked';
+      case 'approved':
+      case 'Approved':
+        return 'status-badge-approved';
+      case 'plan':
+        return 'status-badge-plan';
+      case 'stability':
+        return 'status-badge-stability';
+      case 'application':
+        return 'status-badge-application';
+      case 'renewal':
+        return 'status-badge-renewal';
+      case 'submit':
+        return 'status-badge-submit';
+      case 'reject':
+      case 'Reject':
+        return 'status-badge-reject';
+      default:
+        return 'status-badge-maked';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
   };
 
   const columns = [
@@ -931,6 +1852,63 @@ function FactoryQuotation({ searchQuery = "" }) {
       },
     },
     {
+      key: "applicationStatus",
+      label: "Application Status",
+      sortable: true,
+      render: (_, quotation) => {
+        const applicationRecord = quotation.applicationManagement;
+        if (!applicationRecord) {
+          return <span className="status-badge status-badge-not-assigned">Not Assigned</span>;
+        }
+        
+        // If user is compliance manager, show interactive dropdown
+        if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
+          return (
+            <div className="application-status-container">
+              <select
+                value={applicationRecord.status}
+                onChange={(e) => {
+                  const newStatus = e.target.value;
+                  if (newStatus === 'Approved') {
+                    // Show modal for dates and files
+                    setSelectedQuotation(quotation);
+                    setShowApplicationModal(true);
+                  } else if (newStatus === 'Reject') {
+                    // Show reject modal
+                    setSelectedQuotation(quotation);
+                    setShowApplicationRejectModal(true);
+                  } else {
+                    // Direct status update
+                    handleApplicationStatusChange(applicationRecord.id, newStatus);
+                  }
+                }}
+                className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
+              >
+                <option value="application">Application</option>
+                <option value="submit">Submit</option>
+                <option value="Approved">Approved</option>
+                <option value="Reject">Reject</option>
+              </select>
+              
+              {/* Dates removed as requested */}
+              
+
+            </div>
+          );
+        }
+        
+        // For other users, show read-only status
+        return (
+          <div>
+            <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
+              {applicationRecord.status}
+            </span>
+            {/* Dates removed as requested */}
+          </div>
+        );
+      },
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (_, quotation) => (
@@ -951,6 +1929,9 @@ function FactoryQuotation({ searchQuery = "" }) {
           >
             <BiFile />
           </ActionButton>
+
+          
+
         </div>
       ),
     },
@@ -958,6 +1939,9 @@ function FactoryQuotation({ searchQuery = "" }) {
 
   const filteredQuotations = React.useMemo(() => {
     let filtered = quotations;
+    
+    // Filter out renewal records (they will be managed in separate page)
+    filtered = filtered.filter((q) => q.status !== 'renewal');
     
     // Apply status filtering
     if (statusFilter && statusFilter !== "all") {
@@ -968,13 +1952,12 @@ function FactoryQuotation({ searchQuery = "" }) {
   }, [quotations, statusFilter]);
 
   const statusOptions = [
-    { value: "all", label: "All" },
+    { value: "all", label: "All Status" },
     { value: "maked", label: "Maked" },
     { value: "approved", label: "Approved" },
     { value: "plan", label: "Plan" },
     { value: "stability", label: "Stability" },
     { value: "application", label: "Application" },
-    { value: "renewal", label: "Renewal" },
   ];
 
   const handleDownloadQuotation = async (quotation) => {
@@ -1067,6 +2050,33 @@ function FactoryQuotation({ searchQuery = "" }) {
         onSelect={handleStabilityManagerSelect}
         quotation={selectedQuotation}
       />
+
+      {/* Application Modals */}
+      <ApplicationApprovalModal
+        isOpen={showApplicationModal}
+        onClose={() => setShowApplicationModal(false)}
+        onApprove={(files, applicationDate, expiryDate) => 
+          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate, expiryDate)
+        }
+        currentApplication={selectedQuotation?.applicationManagement}
+      />
+      
+      <ApplicationRejectModal
+        isOpen={showApplicationRejectModal}
+        onClose={() => setShowApplicationRejectModal(false)}
+        onReject={(remarks) => 
+          handleApplicationStatusChange(selectedQuotation?.applicationManagement?.id, 'Reject', null, null, remarks)
+        }
+      />
+
+      {/* Renewal Modal */}
+      <RenewalModal
+        isOpen={showRenewalModal}
+        onClose={() => setShowRenewalModal(false)}
+        quotation={selectedQuotation}
+        onRenewalCreated={handleQuotationUpdated}
+      />
+
     </div>
   );
 }

@@ -59,7 +59,7 @@ const getAllStabilityManagement = async (req, res) => {
 
     const stabilityRecords = await StabilityManagement.findAll({
       where: whereClause,
-      attributes: ['id', 'factory_quotation_id', 'stability_manager_id', 'status', 'load_type', 'remarks', 'files', 'submitted_at', 'reviewed_at', 'reviewed_by', 'created_at', 'updated_at'],
+      attributes: ['id', 'factory_quotation_id', 'stability_manager_id', 'status', 'load_type', 'stability_date', 'renewal_date', 'remarks', 'files', 'submitted_at', 'reviewed_at', 'reviewed_by', 'created_at', 'updated_at'],
       include: [
         {
           model: FactoryQuotation,
@@ -231,7 +231,7 @@ const createStabilityManagement = async (req, res) => {
 const updateStabilityStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, remarks } = req.body;
+    const { status, remarks, stability_date } = req.body;
     const { user } = req;
 
     // Validate status
@@ -242,21 +242,8 @@ const updateStabilityStatus = async (req, res) => {
       });
     }
 
-    // Validate remarks for rejection
-    if (status === 'Reject' && !remarks) {
-      return res.status(400).json({
-        success: false,
-        message: 'Remarks are required for rejection'
-      });
-    }
-
-    const stabilityManagement = await StabilityManagement.findOne({
-      where: { 
-        id,
-        stability_manager_id: user.user_id
-      }
-    });
-
+    // Find the stability management record
+    const stabilityManagement = await StabilityManagement.findByPk(id);
     if (!stabilityManagement) {
       return res.status(404).json({
         success: false,
@@ -264,32 +251,56 @@ const updateStabilityStatus = async (req, res) => {
       });
     }
 
-    // Update stability management
-    const updateData = {
-      status
-    };
+    // Check if user is the assigned stability manager or admin
+    const isAdmin = user.roles.includes('Admin');
+    const isAssignedManager = stabilityManagement.stability_manager_id === user.user_id;
 
-    // Set submitted_at when status changes to submit
-    if (status === 'submit') {
-      updateData.submitted_at = new Date();
+    if (!isAdmin && !isAssignedManager) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to update this stability management record'
+      });
     }
 
-    // Set reviewed_at when status changes to Approved or Reject
-    if (status === 'Approved' || status === 'Reject') {
+    // Update the record
+    const updateData = { status };
+    
+    if (status === 'submit') {
+      updateData.submitted_at = new Date();
+    } else if (['Approved', 'Reject'].includes(status)) {
       updateData.reviewed_at = new Date();
       updateData.reviewed_by = user.user_id;
     }
 
-    // Add remarks for rejection
-    if (status === 'Reject' && remarks) {
+    if (remarks) {
       updateData.remarks = remarks;
+    }
+
+    // Handle stability date when status is Approved
+    if (status === 'Approved' && stability_date) {
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(stability_date)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid date format. Use YYYY-MM-DD'
+        });
+      }
+
+      // Calculate renewal date (5 years after stability date)
+      const stabilityDate = new Date(stability_date);
+      const renewalDate = new Date(stabilityDate);
+      renewalDate.setFullYear(renewalDate.getFullYear() + 5);
+
+      updateData.stability_date = stability_date;
+      updateData.renewal_date = renewalDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
     }
 
     await stabilityManagement.update(updateData);
 
     res.json({
       success: true,
-      message: `Stability status updated to ${status} successfully`,
+      message: 'Stability status updated successfully',
       data: stabilityManagement
     });
   } catch (error) {
@@ -297,6 +308,79 @@ const updateStabilityStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update stability status',
+      error: error.message
+    });
+  }
+};
+
+// Update stability dates (Stability Manager only)
+const updateStabilityDates = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stability_date } = req.body;
+    const { user } = req;
+
+    // Validate stability date
+    if (!stability_date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Stability date is required'
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(stability_date)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Use YYYY-MM-DD'
+      });
+    }
+
+    // Find the stability management record
+    const stabilityManagement = await StabilityManagement.findByPk(id);
+    if (!stabilityManagement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Stability management record not found'
+      });
+    }
+
+    // Check if user is the assigned stability manager or admin
+    const isAdmin = user.roles.includes('Admin');
+    const isAssignedManager = stabilityManagement.stability_manager_id === user.user_id;
+
+    if (!isAdmin && !isAssignedManager) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to update this stability management record'
+      });
+    }
+
+    // Calculate renewal date (5 years after stability date)
+    const stabilityDate = new Date(stability_date);
+    const renewalDate = new Date(stabilityDate);
+    renewalDate.setFullYear(renewalDate.getFullYear() + 5);
+
+    // Update the record
+    await stabilityManagement.update({
+      stability_date: stability_date,
+      renewal_date: renewalDate.toISOString().split('T')[0] // Format as YYYY-MM-DD
+    });
+
+    res.json({
+      success: true,
+      message: 'Stability dates updated successfully',
+      data: {
+        ...stabilityManagement.toJSON(),
+        renewal_date: renewalDate.toISOString().split('T')[0]
+      }
+    });
+  } catch (error) {
+    console.error('Error updating stability dates:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update stability dates',
       error: error.message
     });
   }
@@ -495,6 +579,7 @@ module.exports = {
   getStabilityManagementByQuotationId,
   createStabilityManagement,
   updateStabilityStatus,
+  updateStabilityDates,
   uploadStabilityFiles,
   getStabilityFiles,
   deleteStabilityFile

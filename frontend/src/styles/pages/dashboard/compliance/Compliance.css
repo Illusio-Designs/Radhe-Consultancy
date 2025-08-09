@@ -431,3 +431,37 @@
     flex-direction: column;
   }
 }
+
+/* Application Action Buttons */
+.insurance-actions .action-button[title="Submit Application"] {
+  background-color: #3b82f6;
+  color: white;
+  border: 1px solid #3b82f6;
+}
+
+.insurance-actions .action-button[title="Submit Application"]:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.insurance-actions .action-button[title="Approve Application"] {
+  background-color: #10b981;
+  color: white;
+  border: 1px solid #10b981;
+}
+
+.insurance-actions .action-button[title="Approve Application"]:hover {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.insurance-actions .action-button[title="Reject Application"] {
+  background-color: #ef4444;
+  color: white;
+  border: 1px solid #ef4444;
+}
+
+.insurance-actions .action-button[title="Reject Application"]:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}

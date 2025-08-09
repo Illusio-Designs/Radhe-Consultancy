@@ -467,6 +467,7 @@ export const companyAPI = {
         transformRequest: [(data) => data], // Prevent axios from transforming FormData
         maxContentLength: 10 * 1024 * 1024, // 10MB
         maxBodyLength: 10 * 1024 * 1024, // 10MB
+        timeout: 60000, // 60 seconds timeout for file uploads
       });
 
       console.log("[API] Company creation response:", response.data);
@@ -514,6 +515,7 @@ export const companyAPI = {
         transformRequest: [(data) => data], // Prevent axios from transforming FormData
         maxContentLength: 10 * 1024 * 1024, // 10MB
         maxBodyLength: 10 * 1024 * 1024, // 10MB
+        timeout: 60000, // 60 seconds timeout for file uploads
       });
 
       console.log("[API] Company update response:", response.data);
@@ -1879,6 +1881,12 @@ export const stabilityManagementAPI = {
     return response.data;
   },
 
+  // Update stability dates (Stability Manager only)
+  updateStabilityDates: async (id, data) => {
+    const response = await api.put(`/stability-management/${id}/dates`, data);
+    return response.data;
+  },
+
   // Upload files for stability (Stability Manager only)
   uploadStabilityFiles: async (id, formData) => {
     const response = await api.put(`/stability-management/${id}/upload-files`, formData, {
@@ -1887,6 +1895,110 @@ export const stabilityManagementAPI = {
       },
     });
     return response.data;
+  },
+};
+
+export const applicationManagementAPI = {
+  // Get compliance managers (users with Compliance_manager role)
+  getComplianceManagers: async () => {
+    const response = await api.get('/application-management/managers');
+    return response.data;
+  },
+
+  // Get all application management records
+  getAllApplicationManagement: async () => {
+    const response = await api.get('/application-management');
+    return response.data;
+  },
+
+  // Get application management by factory quotation ID
+  getApplicationManagementByQuotationId: async (quotationId) => {
+    const response = await api.get(`/application-management/quotation/${quotationId}`);
+    return response.data;
+  },
+
+  // Create application management (assign to compliance manager)
+  createApplicationManagement: async (data) => {
+    const response = await api.post('/application-management', data);
+    return response.data;
+  },
+
+  // Update application status (Compliance Manager only)
+  updateApplicationStatus: async (id, data) => {
+    const response = await api.put(`/application-management/${id}/status`, data);
+    return response.data;
+  },
+
+  // Upload files for application (Compliance Manager only)
+  uploadApplicationFiles: async (id, formData) => {
+    const response = await api.put(`/application-management/${id}/upload-files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
+
+
+// Vendor API using VendorService
+export const vendorAPI = {
+  // Create new vendor
+  createVendor: async (vendorData) => {
+    try {
+      console.log("[API] Creating vendor:", vendorData);
+      const response = await api.post('/vendors', vendorData);
+      console.log("[API] Vendor creation response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("[API] Error creating vendor:", error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get all vendors
+  getAllVendors: async () => {
+    try {
+      const response = await api.get('/vendors');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      throw error;
+    }
+  },
+
+  // Get vendor by ID
+  getVendorById: async (vendorId) => {
+    try {
+      const response = await api.get(`/vendors/${vendorId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching vendor:', error);
+      throw error;
+    }
+  },
+
+  // Update vendor
+  updateVendor: async (vendorId, vendorData) => {
+    try {
+      const response = await api.put(`/vendors/${vendorId}`, vendorData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating vendor:', error);
+      throw error;
+    }
+  },
+
+  // Delete vendor
+  deleteVendor: async (vendorId) => {
+    try {
+      const response = await api.delete(`/vendors/${vendorId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting vendor:', error);
+      throw error;
+    }
   },
 };
 

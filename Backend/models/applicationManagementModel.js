@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const StabilityManagement = sequelize.define('StabilityManagement', {
+const ApplicationManagement = sequelize.define('ApplicationManagement', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -15,7 +15,7 @@ const StabilityManagement = sequelize.define('StabilityManagement', {
       key: 'id'
     }
   },
-  stability_manager_id: {
+  compliance_manager_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
@@ -24,23 +24,19 @@ const StabilityManagement = sequelize.define('StabilityManagement', {
     }
   },
   status: {
-    type: DataTypes.ENUM('stability', 'submit', 'Approved', 'Reject'),
+    type: DataTypes.ENUM('application', 'submit', 'Approved', 'Reject'),
     allowNull: false,
-    defaultValue: 'stability'
+    defaultValue: 'application'
   },
-  load_type: {
-    type: DataTypes.ENUM('with_load', 'without_load'),
-    allowNull: false
-  },
-  stability_date: {
+  application_date: {
     type: DataTypes.DATEONLY,
     allowNull: true,
-    comment: 'Date when stability certificate is issued'
+    comment: 'Date when application is submitted'
   },
-  renewal_date: {
+  expiry_date: {
     type: DataTypes.DATEONLY,
     allowNull: true,
-    comment: 'Renewal date (5 years after stability date)'
+    comment: 'Manual expiry date set by compliance manager'
   },
   remarks: {
     type: DataTypes.TEXT,
@@ -68,9 +64,9 @@ const StabilityManagement = sequelize.define('StabilityManagement', {
     }
   }
 }, {
-  tableName: 'stability_management',
+  tableName: 'application_management',
   timestamps: true,
   underscored: true
 });
 
-module.exports = StabilityManagement; 
+module.exports = ApplicationManagement; 

@@ -99,6 +99,16 @@ const FactoryQuotation = sequelize.define('FactoryQuotation', {
     allowNull: true,
     comment: 'Path to the generated PDF file'
   },
+  renewal_date: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Date when the quotation was renewed'
+  },
+  company_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'ID of the company created during renewal'
+  },
 }, {
   tableName: 'FactoryQuotations',
   timestamps: true,

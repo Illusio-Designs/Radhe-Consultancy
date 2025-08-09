@@ -6,6 +6,7 @@ const sequelize = require('../config/db');
 const FactoryQuotation = require('../models/factoryQuotationModel');
 const PlanManagement = require('../models/planManagementModel');
 const StabilityManagement = require('../models/stabilityManagementModel');
+const ApplicationManagement = require('../models/applicationManagementModel');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -234,7 +235,8 @@ async function setupDatabase() {
       { model: UserRoleWorkLog, name: 'UserRoleWorkLog' },
       { model: FactoryQuotation, name: 'FactoryQuotation' },
       { model: PlanManagement, name: 'PlanManagement' },
-      { model: StabilityManagement, name: 'StabilityManagement' }
+      { model: StabilityManagement, name: 'StabilityManagement' },
+      { model: ApplicationManagement, name: 'ApplicationManagement' }
     ];
 
     for (const table of otherTables) {

@@ -22,6 +22,7 @@ const userRoleWorkLogRoutes = require('./userRoleWorkLogRoutes');
 const factoryQuotationRoutes = require('./factoryQuotationRoutes');
 const planManagementRoutes = require('./planManagementRoutes');
 const stabilityManagementRoutes = require('./stabilityManagementRoutes');
+const applicationManagementRoutes = require('./applicationManagementRoutes');
 
 const routes = {
   auth: {
@@ -99,6 +100,10 @@ const routes = {
   stabilityManagement: {
     path: '/stability-management',
     router: stabilityManagementRoutes
+  },
+  applicationManagement: {
+    path: '/application-management',
+    router: applicationManagementRoutes
   }
 };
 

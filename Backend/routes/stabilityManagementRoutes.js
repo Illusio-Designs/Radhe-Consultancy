@@ -23,6 +23,9 @@ router.post('/', checkUserRole(['Admin', 'Compliance_manager']), stabilityManage
 // Update stability status - Stability Manager only
 router.put('/:id/status', checkUserRole(['Stability_manager']), stabilityManagementController.updateStabilityStatus);
 
+// Update stability dates - Stability Manager only
+router.put('/:id/dates', checkUserRole(['Stability_manager']), stabilityManagementController.updateStabilityDates);
+
 // Upload files for stability - Stability Manager only
 router.put('/:id/upload-files', checkUserRole(['Stability_manager']), uploadStabilityFiles, stabilityManagementController.uploadStabilityFiles);
 

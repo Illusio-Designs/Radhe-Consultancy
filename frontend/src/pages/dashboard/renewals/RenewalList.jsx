@@ -15,6 +15,7 @@ const typeOptions = [
   { value: "fire", label: "Fire" },
   { value: "vehicles", label: "Vehicles" },
   { value: "dsc", label: "DSC" },
+  { value: "factory_act", label: "Factory ACT" },
 ];
 const periodOptions = [
   { value: "week", label: "Week" },
@@ -121,13 +122,13 @@ const RenewalList = () => {
       key: "renewal_date",
       label: "Renewal Date",
       sortable: true,
-      render: (_, item) => formatDate(item?.policy_end_date || item?.expiry_date),
+      render: (_, item) => formatDate(item?.policy_end_date || item?.expiry_date || item?.renewal_date),
     },
     {
       key: "days_left",
       label: "Days Left",
       sortable: true,
-      render: (_, item) => renderDaysLeft(item?.policy_end_date || item?.expiry_date),
+      render: (_, item) => renderDaysLeft(item?.policy_end_date || item?.expiry_date || item?.renewal_date),
     },
   ];
 

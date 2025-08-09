@@ -46,6 +46,7 @@ const phoneInputCustomStyles = {
 const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
   const [formData, setFormData] = useState({
     company_name: '',
+    company_code: '',
     owner_name: '',
     owner_address: '',
     designation: '',
@@ -78,6 +79,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     if (company) {
       setFormData({
         company_name: company.company_name || '',
+        company_code: company.company_code || '',
         owner_name: company.owner_name || '',
         owner_address: company.owner_address || '',
         designation: company.designation || '',
@@ -350,6 +352,17 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="Company Name"
               required
+              className="vendor-management-form-input"
+            />
+          </div>
+
+          <div className="vendor-management-form-group">
+            <input
+              type="text"
+              name="company_code"
+              value={formData.company_code}
+              onChange={handleChange}
+              placeholder="Company Code (e.g., COMP0001)"
               className="vendor-management-form-input"
             />
           </div>
@@ -703,6 +716,7 @@ function CompanyList({ searchQuery = "" }) {
       },
     },
     { key: "company_name", label: "Company Name", sortable: true },
+    { key: "company_code", label: "Company Code", sortable: true },
     { key: "owner_name", label: "Owner Name", sortable: true },
     { key: "contact_number", label: "Contact Number", sortable: true },
     { key: "company_email", label: "Email", sortable: true },

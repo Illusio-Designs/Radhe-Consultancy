@@ -172,10 +172,47 @@ const stabilityStorage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        const timestamp = Date.now();
-        const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filename = `${timestamp}_${originalName}`;
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `stability-${uniqueSuffix}${ext}`;
         console.log('[Multer] Generated filename for stability document:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
+        cb(null, filename);
+    }
+});
+
+// Configure storage for application documents
+const applicationStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        // Use the main application directory without subdirectories
+        const uploadDir = getUploadDir('application');
+        try {
+            console.log('[Multer] Setting destination for application document:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                uploadDir: uploadDir
+            });
+            if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating application directory:', uploadDir);
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            console.log('[Multer] Using application directory:', uploadDir);
+            cb(null, uploadDir);
+        } catch (error) {
+            console.error('[Multer] Error in application destination function:', error);
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `application-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename for application document:', {
             originalname: file.originalname,
             filename: filename,
             fieldname: file.fieldname,
@@ -607,6 +644,49 @@ const uploadStabilityFilesWithLogging = (req, res, next) => {
     });
 };
 
+// Create multer upload instance for application documents
+const uploadApplicationFiles = multer({
+    storage: applicationStorage,
+    fileFilter,
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files per upload
+    }
+}).array('files', 10);
+
+// Add logging for application file upload
+const uploadApplicationFilesWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting application file upload process');
+    console.log('[Multer] Request body:', req.body);
+    console.log('[Multer] Request files:', req.files);
+
+    uploadApplicationFiles(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error uploading application files:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log uploaded files
+        if (req.files && req.files.length > 0) {
+            console.log('[Multer] Application files uploaded successfully:', req.files.map(file => ({
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                filename: file.filename,
+                mimetype: file.mimetype,
+                size: file.size,
+                path: file.path
+            })));
+        } else {
+            console.log('[Multer] No application files uploaded - this is allowed');
+        }
+
+        next();
+    });
+};
+
 // Export the multer instances
 module.exports = {
     uploadCompanyDocuments: uploadCompanyDocumentsWithLogging,
@@ -617,5 +697,6 @@ module.exports = {
     uploadFirePolicyDocument,
     uploadLifePolicyDocument,
     uploadPlanFiles: uploadPlanFilesWithLogging,
-    uploadStabilityFiles: uploadStabilityFilesWithLogging
+    uploadStabilityFiles: uploadStabilityFilesWithLogging,
+    uploadApplicationFiles: uploadApplicationFilesWithLogging
 }; 

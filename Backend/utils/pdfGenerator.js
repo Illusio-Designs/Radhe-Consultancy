@@ -6,7 +6,7 @@ class FactoryQuotationPDFGenerator {
   constructor() {
     this.doc = new PDFDocument({
       size: 'A4',
-      margin: 50
+      margin: 30
     });
   }
 
@@ -118,78 +118,271 @@ class FactoryQuotationPDFGenerator {
   }
 
   generatePDFContent(quotationData) {
-    console.log('🔄 Generating PDF with updated content (no terms/calculation breakdown)');
+    console.log('🔄 Generating PDF with professional letterhead design');
     
-    // Header
-    this.doc
-      .fontSize(24)
-      .font('Helvetica-Bold')
-      .text('FACTORY QUOTATION', { align: 'center' })
-      .moveDown(0.5);
+    // A4 dimensions: 595.28 x 841.89 points
+    const pageWidth = 595.28;
+    const pageHeight = 841.89;
+    const margin = 30;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Header Section with Logo
+    this.drawLetterheadHeader();
+    
+    // Main content starts after header
+    let currentY = 140;
+    
+    // Company Details and Quotation Details Section
+    currentY = this.drawDetailsSection(quotationData, currentY);
+    
+    // Itemized Table Section
+    currentY = this.drawItemizedTable(quotationData, currentY);
+    
+    // Total Amount Section
+    currentY = this.drawTotalSection(quotationData, currentY);
+    
+    // Footer
+    this.drawFooter(currentY);
+  }
 
-    // Company Logo/Header Section
+  drawLetterheadHeader() {
+    const pageWidth = 595.28;
+    const margin = 30;
+    
+    // Draw header background
     this.doc
-      .fontSize(16)
+      .rect(margin, margin, pageWidth - (margin * 2), 100)
+      .fill('#f8f9fa')
+      .stroke('#dee2e6');
+    
+    // Try to add logo if exists
+    const logoPath = path.join(__dirname, '../assest/@RADHE ADVISORY LOGO (1).png');
+    if (fs.existsSync(logoPath)) {
+      try {
+                 this.doc.image(logoPath, margin + 15, margin + 15, {
+           width: 100,
+           height: 70
+         });
+      } catch (error) {
+        console.log('Could not load logo, using text instead');
+      }
+    }
+    
+    // Company name and details (right side of header) - moved further right to avoid overlap
+    this.doc
+      .fontSize(22)
       .font('Helvetica-Bold')
-      .text('Radhe Consultancy', { align: 'center' })
-      .fontSize(12)
+      .fill('#2c3e50')
+      .text('RADHE ADVISORY', pageWidth - margin - 250, margin + 20)
+      .fontSize(14)
       .font('Helvetica')
-      .text('Compliance & Licensing Solutions', { align: 'center' })
-      .moveDown(1);
+      .text('LABOUR LAW CONSULTANT', pageWidth - margin - 250, margin + 45)
+      .fontSize(11)
+      .text('Compliance & Licensing Solutions', pageWidth - margin - 250, margin + 62)
+      .fontSize(9)
+      .text('Email: info@radheadvisory.com', pageWidth - margin - 250, margin + 78)
+      .text('Phone: +91-XXXXXXXXXX', pageWidth - margin - 250, margin + 90);
+    
+    // Reset fill color
+    this.doc.fill('#000000');
+  }
 
-    // Quotation Details
+  drawDetailsSection(quotationData, startY) {
+    const pageWidth = 595.28;
+    const margin = 30;
+    const contentWidth = pageWidth - (margin * 2);
+    const sectionHeight = 80;
+    
+    // Draw section background
+    this.doc
+      .rect(margin, startY, contentWidth, sectionHeight)
+      .fill('#ffffff')
+      .stroke('#dee2e6');
+    
+    // Section title
     this.doc
       .fontSize(14)
       .font('Helvetica-Bold')
-      .text('Quotation Details')
-      .moveDown(0.5);
+      .fill('#2c3e50')
+      .text('QUOTATION DETAILS', margin + 10, startY + 10);
+    
+    // Left column - Company Details
+    this.doc
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('Company Details:', margin + 10, startY + 30)
+      .fontSize(10)
+      .font('Helvetica')
+      .text(`Name: ${quotationData.companyName || 'N/A'}`, margin + 10, startY + 45)
+      .text(`Address: ${quotationData.companyAddress || 'N/A'}`, margin + 10, startY + 58)
+      .text(`Phone: ${quotationData.phone || 'N/A'}`, margin + 10, startY + 71);
+    
+    // Right column - Quotation Details
+    const rightColX = margin + (contentWidth / 2);
+    this.doc
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('Quotation Details:', rightColX, startY + 30)
+      .fontSize(10)
+      .font('Helvetica')
+      .text(`Quotation No.: FQ-${quotationData.id.toString().padStart(6, '0')}`, rightColX, startY + 45)
+      .text(`Date: ${new Date(quotationData.createdAt || quotationData.created_at).toLocaleDateString('en-GB')}`, rightColX, startY + 58)
+      .text(`Status: ${quotationData.status.toUpperCase()}`, rightColX, startY + 71);
+    
+    // Reset fill color
+    this.doc.fill('#000000');
+    
+    return startY + sectionHeight + 20;
+  }
 
-    // Create a table-like structure for quotation details
-    const details = [
-      ['Quotation ID:', `FQ-${quotationData.id.toString().padStart(6, '0')}`],
-      ['Date:', new Date(quotationData.createdAt || quotationData.created_at).toLocaleDateString('en-GB')],
-      ['Status:', quotationData.status.toUpperCase()],
-      ['Company Name:', quotationData.companyName || 'N/A'],
-      ['Phone:', quotationData.phone || 'N/A'],
-      ['Email:', quotationData.email || 'N/A'],
-      ['Address:', quotationData.companyAddress || 'N/A']
-    ];
-
-    this.drawTable(details, 50, this.doc.y);
-    this.doc.moveDown(2);
-
-    // Technical Specifications
+  drawItemizedTable(quotationData, startY) {
+    const pageWidth = 595.28;
+    const margin = 30;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Table header
     this.doc
       .fontSize(14)
       .font('Helvetica-Bold')
-      .text('Technical Specifications')
-      .moveDown(0.5);
-
-    const additionalCharges = (quotationData.planCharge || 0) + 
-                             (quotationData.stabilityCertificateAmount || 0) + 
-                             (quotationData.administrationCharge || 0) + 
-                             (quotationData.consultancyFees || 0);
-
-    // Calculate base amount as horsePower × noOfWorkers × years
+      .fill('#2c3e50')
+      .text('SERVICE BREAKDOWN', margin, startY);
+    
+    const tableStartY = startY + 20;
+    const rowHeight = 30; // Increased row height for better spacing
+    const colWidths = [35, 180, 130, 90, 100]; // Adjusted column widths to prevent overlap
+    
+    // Draw table header
+    this.doc
+      .rect(margin, tableStartY, colWidths[0], rowHeight)
+      .rect(margin + colWidths[0], tableStartY, colWidths[1], rowHeight)
+      .rect(margin + colWidths[0] + colWidths[1], tableStartY, colWidths[2], rowHeight)
+      .rect(margin + colWidths[0] + colWidths[1] + colWidths[2], tableStartY, colWidths[3], rowHeight)
+      .rect(margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], tableStartY, colWidths[4], rowHeight)
+      .fill('#e9ecef')
+      .stroke('#dee2e6');
+    
+    // Header text
+    this.doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fill('#495057')
+      .text('SP No.', margin + 3, tableStartY + 10)
+      .text('Particular', margin + colWidths[0] + 3, tableStartY + 10)
+      .text('Work Details', margin + colWidths[0] + colWidths[1] + 3, tableStartY + 10)
+      .text('Years', margin + colWidths[0] + colWidths[1] + colWidths[2] + 3, tableStartY + 10)
+      .text('Amount', margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 3, tableStartY + 10);
+    
+    // Calculate amounts
     const baseAmount = (quotationData.calculatedAmount || 0) * (quotationData.year || 1);
-
-    const technicalSpecs = [
-      ['Horse Power:', `${quotationData.horsePower} HP`],
-      ['Number of Workers:', quotationData.noOfWorkers || quotationData.numberOfWorkers || 'N/A'],
-      ['Years:', quotationData.year],
-      ['Load Type:', quotationData.stabilityCertificateType || 'N/A'],
-      ['Base Amount:', `₹${baseAmount.toLocaleString()}`],
-      ['Additional Charges:', `₹${additionalCharges.toLocaleString()}`],
-      ['Total Amount:', `₹${(quotationData.totalAmount || 0).toLocaleString()}`]
+    const planCharge = quotationData.planCharge || 0;
+    const stabilityCharge = quotationData.stabilityCertificateAmount || 0;
+    const adminCharge = quotationData.administrationCharge || 0;
+    const consultancyFees = quotationData.consultancyFees || 0;
+    
+    // Calculate total additional charges
+    const totalAdditionalCharges = planCharge + stabilityCharge + adminCharge + consultancyFees;
+    
+    // Table rows - simplified to show main charge and additional charges
+    const rows = [
+      {
+        spNo: '1',
+        particular: 'Factory License Compliance',
+        workDetails: `${quotationData.horsePower} HP, ${quotationData.noOfWorkers || quotationData.numberOfWorkers} Workers`,
+        hoursYears: `${quotationData.year} Year(s)`,
+                 amount: `Rs. ${baseAmount.toLocaleString()}`
+      },
+      {
+        spNo: '2',
+        particular: 'Additional Charges',
+        workDetails: 'Additional Charges',
+        hoursYears: 'Service',
+                 amount: `Rs. ${totalAdditionalCharges.toLocaleString()}`
+      }
     ];
+    
+    // Draw table rows
+    rows.forEach((row, index) => {
+      const rowY = tableStartY + rowHeight + (index * rowHeight);
+      
+      // Draw cell borders
+      this.doc
+        .rect(margin, rowY, colWidths[0], rowHeight)
+        .rect(margin + colWidths[0], rowY, colWidths[1], rowHeight)
+        .rect(margin + colWidths[0] + colWidths[1], rowY, colWidths[2], rowHeight)
+        .rect(margin + colWidths[0] + colWidths[1] + colWidths[2], rowY, colWidths[3], rowHeight)
+        .rect(margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], rowY, colWidths[4], rowHeight)
+        .fill('#ffffff')
+        .stroke('#dee2e6');
+      
+      // Add text with better positioning
+      this.doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fill('#000000')
+        .text(row.spNo, margin + 3, rowY + 10)
+        .text(row.particular, margin + colWidths[0] + 3, rowY + 10, { width: colWidths[1] - 6 })
+        .text(row.workDetails, margin + colWidths[0] + colWidths[1] + 3, rowY + 10, { width: colWidths[2] - 6 })
+        .text(row.hoursYears, margin + colWidths[0] + colWidths[1] + colWidths[2] + 3, rowY + 10, { width: colWidths[3] - 6 })
+        .text(row.amount, margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 3, rowY + 10, { width: colWidths[4] - 6 });
+    });
+    
+    return tableStartY + rowHeight + (rows.length * rowHeight) + 20;
+  }
 
-    this.drawTable(technicalSpecs, 50, this.doc.y);
-    this.doc.moveDown(2);
+  drawTotalSection(quotationData, startY) {
+    const pageWidth = 595.28;
+    const margin = 30;
+    const contentWidth = pageWidth - (margin * 2);
+    const sectionHeight = 70;
+    
+    // Draw total section background
+    this.doc
+      .rect(margin, startY, contentWidth, sectionHeight)
+      .fill('#f8f9fa')
+      .stroke('#dee2e6');
+    
+    // Total amount - more prominent
+    const totalAmount = quotationData.totalAmount || 0;
+    
+    this.doc
+      .fontSize(18)
+      .font('Helvetica-Bold')
+      .fill('#2c3e50')
+      .text('Total Amount:', margin + 15, startY + 20)
+      .fontSize(22)
+             .text(`Rs. ${totalAmount.toLocaleString()}`, margin + 180, startY + 18);
+    
+    // Terms and conditions
+    this.doc
+      .fontSize(10)
+      .font('Helvetica')
+      .fill('#6c757d')
+      .text('Terms: Payment due within 30 days of invoice date', margin + 15, startY + 45)
+      .text('Validity: This quotation is valid for 30 days from the date of issue', margin + 15, startY + 58);
+    
+    // Reset fill color
+    this.doc.fill('#000000');
+    
+    return startY + sectionHeight + 20;
+  }
 
-    // Generated timestamp
+  drawFooter(currentY) {
+    const pageWidth = 595.28;
+    const margin = 30;
+    
+    // Footer line
+    this.doc
+      .moveTo(margin, currentY)
+      .lineTo(pageWidth - margin, currentY)
+      .stroke('#dee2e6');
+    
+    // Footer text
     this.doc
       .fontSize(8)
       .font('Helvetica')
+      .fill('#6c757d')
+      .text('Thank you for choosing RADHE ADVISORY', { align: 'center' })
+      .moveDown(0.5)
       .text(`Generated on: ${new Date().toLocaleString('en-GB')}`, { align: 'center' });
   }
 

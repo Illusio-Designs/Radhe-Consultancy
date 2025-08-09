@@ -1,5 +1,10 @@
 const FactoryQuotation = require('../models/factoryQuotationModel');
 const PlanManagement = require('../models/planManagementModel');
+const StabilityManagement = require('../models/stabilityManagementModel');
+const ApplicationManagement = require('../models/applicationManagementModel');
+const User = require('../models/userModel');
+const Role = require('../models/roleModel');
+const UserRole = require('../models/userRoleModel');
 const { 
   calculateBaseAmount, 
   calculateTotalAmount, 
@@ -90,12 +95,28 @@ exports.getQuotationById = async (req, res) => {
           ]
         },
         {
-          model: require('../models/stabilityManagementModel'),
+          model: StabilityManagement,
           as: 'stabilityManagement',
           include: [
             {
               model: require('../models/userModel'),
               as: 'stabilityManager',
+              attributes: ['user_id', 'username', 'email']
+            },
+            {
+              model: require('../models/userModel'),
+              as: 'reviewer',
+              attributes: ['user_id', 'username', 'email']
+            }
+          ]
+        },
+        {
+          model: ApplicationManagement,
+          as: 'applicationManagement',
+          include: [
+            {
+              model: require('../models/userModel'),
+              as: 'applicationManager',
               attributes: ['user_id', 'username', 'email']
             },
             {
@@ -137,7 +158,7 @@ exports.getAllQuotations = async (req, res) => {
           ]
         },
         {
-          model: require('../models/stabilityManagementModel'),
+          model: StabilityManagement,
           as: 'stabilityManagement',
           include: [
             {
@@ -151,6 +172,27 @@ exports.getAllQuotations = async (req, res) => {
               attributes: ['user_id', 'username', 'email']
             }
           ]
+        },
+        {
+          model: ApplicationManagement,
+          as: 'applicationManagement',
+          include: [
+            {
+              model: require('../models/userModel'),
+              as: 'complianceManager',
+              attributes: ['user_id', 'username', 'email']
+            },
+            {
+              model: require('../models/userModel'),
+              as: 'reviewer',
+              attributes: ['user_id', 'username', 'email']
+            }
+          ]
+        },
+        {
+          model: require('../models/companyModel'),
+          as: 'company',
+          attributes: ['company_id', 'company_name', 'company_code', 'gst_number']
         }
       ],
       order: [['createdAt', 'DESC']] // Order by creation date, newest first
@@ -187,12 +229,28 @@ exports.updateQuotation = async (req, res) => {
           ]
         },
         {
-          model: require('../models/stabilityManagementModel'),
+          model: StabilityManagement,
           as: 'stabilityManagement',
           include: [
             {
               model: require('../models/userModel'),
               as: 'stabilityManager',
+              attributes: ['user_id', 'username', 'email']
+            },
+            {
+              model: require('../models/userModel'),
+              as: 'reviewer',
+              attributes: ['user_id', 'username', 'email']
+            }
+          ]
+        },
+        {
+          model: ApplicationManagement,
+          as: 'applicationManagement',
+          include: [
+            {
+              model: require('../models/userModel'),
+              as: 'complianceManager',
               attributes: ['user_id', 'username', 'email']
             },
             {
@@ -232,8 +290,101 @@ exports.updateStatus = async (req, res) => {
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Quotation not found' });
     }
+
+    // If status is changed to 'application', automatically create application management record
+    if (status === 'application') {
+      try {
+        // Check if application management record already exists
+        const existingApplication = await ApplicationManagement.findOne({
+          where: { factory_quotation_id: quotationId }
+        });
+
+        if (!existingApplication) {
+          // Get the first available compliance manager
+          const complianceManager = await User.findOne({
+            include: [
+              {
+                model: Role,
+                through: UserRole,
+                where: { role_name: 'Compliance_manager' }
+              }
+            ],
+            attributes: ['user_id', 'username', 'email']
+          });
+
+          if (complianceManager) {
+            // Create application management record
+            await ApplicationManagement.create({
+              factory_quotation_id: quotationId,
+              compliance_manager_id: complianceManager.user_id,
+              status: 'application'
+            });
+            console.log('✅ Application management record created automatically for quotation:', quotationId);
+          } else {
+            console.log('⚠️ No compliance manager found for automatic assignment');
+          }
+        } else {
+          console.log('✅ Application management record already exists for quotation:', quotationId);
+        }
+      } catch (appError) {
+        console.error('Error creating application management record:', appError);
+        // Don't fail the status update if application creation fails
+      }
+    }
     
-    const updatedQuotation = await FactoryQuotation.findByPk(quotationId);
+    const updatedQuotation = await FactoryQuotation.findByPk(quotationId, {
+      include: [
+        {
+          model: PlanManagement,
+          as: 'planManagement',
+          include: [
+            {
+              model: require('../models/userModel'),
+              as: 'planManager',
+              attributes: ['user_id', 'username', 'email']
+            },
+            {
+              model: require('../models/userModel'),
+              as: 'reviewer',
+              attributes: ['user_id', 'username', 'email']
+            }
+          ]
+        },
+        {
+          model: StabilityManagement,
+          as: 'stabilityManagement',
+          include: [
+            {
+              model: require('../models/userModel'),
+              as: 'stabilityManager',
+              attributes: ['user_id', 'username', 'email']
+            },
+            {
+              model: require('../models/userModel'),
+              as: 'reviewer',
+              attributes: ['user_id', 'username', 'email']
+            }
+          ]
+        },
+        {
+          model: ApplicationManagement,
+          as: 'applicationManagement',
+          include: [
+            {
+              model: require('../models/userModel'),
+              as: 'complianceManager',
+              attributes: ['user_id', 'username', 'email']
+            },
+            {
+              model: require('../models/userModel'),
+              as: 'reviewer',
+              attributes: ['user_id', 'username', 'email']
+            }
+          ]
+        }
+      ]
+    });
+    
     res.json({ success: true, data: updatedQuotation });
   } catch (error) {
     console.error('Error updating quotation status:', error);

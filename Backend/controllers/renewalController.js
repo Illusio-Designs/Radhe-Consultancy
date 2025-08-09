@@ -1,5 +1,37 @@
-const { EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, Company, Consumer, ReminderLog } = require('../models');
+const { EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, Company, Consumer, ReminderLog, FactoryQuotation } = require('../models');
 const { Op } = require('sequelize');
+
+// Ensure FactoryQuotation is associated to a Company when possible (one-time best-effort association)
+const associateCompanyForFactoryQuotations = async (quotations) => {
+  if (!Array.isArray(quotations) || quotations.length === 0) return quotations;
+
+  for (const quotation of quotations) {
+    try {
+      // Skip if already associated
+      if (quotation.company_id || quotation.company) continue;
+
+      // Try to find a matching company by email first, then by company name
+      let matchedCompany = null;
+      if (quotation.email) {
+        matchedCompany = await Company.findOne({ where: { company_email: quotation.email } });
+      }
+      if (!matchedCompany && quotation.companyName) {
+        matchedCompany = await Company.findOne({ where: { company_name: quotation.companyName } });
+      }
+
+      // If found, persist the association and reflect it on the instance for the response
+      if (matchedCompany) {
+        await quotation.update({ company_id: matchedCompany.id });
+        quotation.setDataValue('company', matchedCompany);
+      }
+    } catch (err) {
+      // Non-fatal: log and continue; we don't want to block renewal listing
+      console.warn('[RenewalController] Failed to auto-associate FactoryQuotation to Company:', err.message);
+    }
+  }
+
+  return quotations;
+};
 
 // Helper to get date range
 const getDateRange = (days) => {
@@ -40,7 +72,7 @@ const getRenewals = async (req, res) => {
     if (period === 'year') days = 730;
 
     // Fetch all renewals (excluding LifePolicy)
-    const [ecp, fire, health, vehicle, dsc] = await Promise.all([
+    const [ecp, fire, health, vehicle, dsc, factoryActRaw] = await Promise.all([
       EmployeeCompensationPolicy.findAll({
         where: { policy_end_date: { [Op.between]: [now, future] } },
         include: [{ model: Company, as: 'policyHolder' }]
@@ -72,8 +104,20 @@ const getRenewals = async (req, res) => {
           { model: Company, as: 'company' },
           { model: Consumer, as: 'consumer' }
         ]
+      }),
+      FactoryQuotation.findAll({
+        where: { 
+          status: 'renewal',
+          renewal_date: { [Op.between]: [now, future] }
+        },
+        include: [
+          { model: Company, as: 'company' }
+        ]
       })
     ]);
+
+    // Best-effort association of missing companies for factory quotations
+    const factoryAct = await associateCompanyForFactoryQuotations(factoryActRaw);
 
     res.status(200).json({
       success: true,
@@ -82,7 +126,8 @@ const getRenewals = async (req, res) => {
         fire,
         health,
         vehicle,
-        dsc
+        dsc,
+        factory_act: factoryAct
       }
     });
   } catch (error) {
@@ -123,7 +168,7 @@ const getRenewalCounts = async (req, res) => {
 
     // Helper function to get counts for a specific date range
     const getCountsForRange = async (startDate, endDate) => {
-      const [ecp, fire, health, vehicle, dsc] = await Promise.all([
+      const [ecp, fire, health, vehicle, dsc, factoryAct] = await Promise.all([
         EmployeeCompensationPolicy.count({ 
           where: { policy_end_date: { [Op.between]: [startDate, endDate] } } 
         }),
@@ -138,9 +183,15 @@ const getRenewalCounts = async (req, res) => {
         }),
         DSC.count({ 
           where: { expiry_date: { [Op.between]: [startDate, endDate] } } 
+        }),
+        FactoryQuotation.count({ 
+          where: { 
+            status: 'renewal',
+            renewal_date: { [Op.between]: [startDate, endDate] }
+          } 
         })
       ]);
-      return { ecp, fire, health, vehicle, dsc };
+      return { ecp, fire, health, vehicle, dsc, factory_act: factoryAct };
     };
 
     // Calculate counts for each exclusive period
@@ -205,6 +256,11 @@ const getRenewalList = async (req, res) => {
         dateField = 'expiry_date';
         include = [{ model: Company, as: 'company' }, { model: Consumer, as: 'consumer' }];
         break;
+      case 'factory_act':
+        Model = FactoryQuotation;
+        dateField = 'renewal_date';
+        include = [{ model: Company, as: 'company' }];
+        break;
       default:
         return res.status(400).json({
           success: false,
@@ -212,7 +268,7 @@ const getRenewalList = async (req, res) => {
         });
     }
 
-    const policies = await Model.findAll({
+    let policies = await Model.findAll({
       where: {
         [dateField]: {
           [Op.between]: [now, year]
@@ -221,6 +277,11 @@ const getRenewalList = async (req, res) => {
       include,
       order: [[dateField, 'ASC']]
     });
+
+    // If factory_act, attempt auto-association
+    if (Model === FactoryQuotation) {
+      policies = await associateCompanyForFactoryQuotations(policies);
+    }
 
     res.status(200).json({
       success: true,
@@ -452,10 +513,15 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
             { model: Consumer, as: 'consumer' }
           ];
           break;
+        case 'factory_act':
+          Model = FactoryQuotation;
+          dateField = 'renewal_date';
+          include = [{ model: Company, as: 'company' }];
+          break;
         default:
           return [];
       }
-      return await Model.findAll({
+      let items = await Model.findAll({
         where: {
           [dateField]: {
             [Op.between]: [start, end]
@@ -464,11 +530,15 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
         include,
         order: [[dateField, 'ASC']]
       });
+      if (Model === FactoryQuotation) {
+        items = await associateCompanyForFactoryQuotations(items);
+      }
+      return items;
     };
 
     const data = {};
     if (type === 'all') {
-      for (const t of ['ecp', 'health', 'fire', 'vehicles', 'dsc']) {
+      for (const t of ['ecp', 'health', 'fire', 'vehicles', 'dsc', 'factory_act']) {
         data[t] = await fetchType(t, startDate, endDate);
       }
     } else {
@@ -477,7 +547,7 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
 
     const result = [];
     if (type === 'all') {
-      for (const t of ['ecp', 'health', 'fire', 'vehicles', 'dsc']) {
+      for (const t of ['ecp', 'health', 'fire', 'vehicles', 'dsc', 'factory_act']) {
         (data[t] || []).forEach(item => {
           let holderName = null, email = null;
           if (item.policyHolder) {
@@ -495,6 +565,10 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
           } else if (item.consumer) {
             holderName = item.consumer.name || null;
             email = item.consumer.email || null;
+          } else if (item.companyName) {
+            // Fallback for FactoryQuotation which has companyName and email directly
+            holderName = item.companyName || null;
+            email = item.email || null;
           }
 
           result.push({
@@ -503,6 +577,7 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
             email,
             policy_end_date: item.policy_end_date,
             expiry_date: item.expiry_date,
+            renewal_date: item.renewal_date,
             id: item.id
           });
         });
@@ -525,6 +600,10 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
         } else if (item.consumer) {
           holderName = item.consumer.name || null;
           email = item.consumer.email || null;
+        } else if (item.companyName) {
+          // Fallback for FactoryQuotation which has companyName and email directly
+          holderName = item.companyName || null;
+          email = item.email || null;
         }
 
         result.push({
@@ -533,6 +612,7 @@ const getRenewalListByTypeAndPeriod = async (req, res) => {
           email,
           policy_end_date: item.policy_end_date,
           expiry_date: item.expiry_date,
+          renewal_date: item.renewal_date,
           id: item.id
         });
       });

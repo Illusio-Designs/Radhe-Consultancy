@@ -27,16 +27,17 @@ import Vehicle from "../pages/dashboard/insurance/Vehicle";
 import Life from "../pages/dashboard/insurance/Life";
 import Companies from "../pages/dashboard/insurance/Companies";
 import FactoryQuotation from "../pages/dashboard/compliance/FactoryQuotation";
-import LabourInspection from "../pages/dashboard/compliance/LabourInspection";
-import LabourLicense from "../pages/dashboard/compliance/LabourLicense";
+import LabourInspection from "../pages/dashboard/labour/Inspection";
+import LabourLicense from "../pages/dashboard/labour/License";
 import PlanManagement from "../pages/dashboard/compliance/PlanManagement";
 import StabilityManagement from "../pages/dashboard/compliance/StabilityManagement";
 import DSC from "../pages/dashboard/dsc/DSC";
-// import DSCLogs from "../pages/dashboard/logs/DSCLogs";
+import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
 import RenewalList from "../pages/dashboard/renewals/RenewalList";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
-import UserRoleWorkLog from "../pages/dashboard/roles/UserRoleWorkLog";
+import FactoryQuotationRenewal from "../pages/dashboard/compliance/FactoryQuotationRenewal";
+import UserRoleWorkLog from "../pages/dashboard/logs/UserRoleWorkLog";
 
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -76,16 +77,16 @@ function DashboardLayout() {
     const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
     const isRole = (role) => userRoles.includes(role.toLowerCase());
 
-    // Plan Management - only accessible to plan_manager
+    // Plan Management - accessible to plan_manager, admin, and compliance_manager
     if (path === "/dashboard/compliance/plan-management") {
-      if (!isRole("plan_manager")) {
+      if (!isRole("plan_manager") && !isRole("admin") && !isRole("compliance_manager")) {
         return <Navigate to="/dashboard" replace />;
       }
     }
 
-    // Stability Management - only accessible to stability_manager
+    // Stability Management - accessible to stability_manager, admin, and compliance_manager
     if (path === "/dashboard/compliance/stability-management") {
-      if (!isRole("stability_manager")) {
+      if (!isRole("stability_manager") && !isRole("admin") && !isRole("compliance_manager")) {
         return <Navigate to="/dashboard" replace />;
       }
     }
@@ -130,9 +131,9 @@ function DashboardLayout() {
         return <Companies searchQuery={searchQuery} />;
       case "/dashboard/compliance/factory-quotation":
         return <FactoryQuotation />;
-      case "/dashboard/compliance/labour-inspection":
+      case "/dashboard/labour/inspection":
         return <LabourInspection />;
-      case "/dashboard/compliance/labour-license":
+      case "/dashboard/labour/license":
         return <LabourLicense />;
       case "/dashboard/compliance/plan-management":
         return <PlanManagement />;
@@ -148,7 +149,9 @@ function DashboardLayout() {
         return <RenewalList />;
       case "/dashboard/renewals/log":
         return <RenewalLog />;
-      case "/dashboard/roles/user-role-work-log":
+      case "/dashboard/compliance/factory-quotation-renewal":
+        return <FactoryQuotationRenewal />;
+      case "/dashboard/logs/user-role-work-log":
         return <UserRoleWorkLog searchQuery={searchQuery} />;
       default:
         return <CombinedDashboard />;

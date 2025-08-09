@@ -236,15 +236,40 @@ const Sidebar = ({ onCollapse }) => {
           {
             path: "/dashboard/compliance/factory-quotation",
             icon: <Factory />,
-            label: "Factory Quotation",
+            label: "Factory ACT Quotation",
           },
           {
-            path: "/dashboard/compliance/labour-inspection",
+            path: "/dashboard/compliance/factory-quotation-renewal",
+            icon: <RefreshCw />,
+            label: "Factory ACT Renewal",
+          },
+          {
+            path: "/dashboard/compliance/plan-management",
+            icon: <ClipboardList />,
+            label: "Plan Management",
+          },
+          {
+            path: "/dashboard/compliance/stability-management",
+            icon: <ClipboardList />,
+            label: "Stability Management",
+          },
+        ],
+      },
+      {
+        path: "/dashboard/labour",
+        label: "Labour Management",
+        icon: <ClipboardList />,
+        isDropdown: true,
+        isOpen: activeDropdown === "labour",
+        toggle: () => handleDropdownToggle("labour"),
+        items: [
+          {
+            path: "/dashboard/labour/inspection",
             icon: <ClipboardList />,
             label: "Labour Law Inspection",
           },
           {
-            path: "/dashboard/compliance/labour-license",
+            path: "/dashboard/labour/license",
             icon: <BookOpenCheck />,
             label: "Labour License Management",
           },
@@ -264,7 +289,7 @@ const Sidebar = ({ onCollapse }) => {
             label: "DSC Logs",
           },
           {
-            path: "/dashboard/roles/user-role-work-log",
+            path: "/dashboard/logs/user-role-work-log",
             icon: <ClipboardList />,
             label: "User Role Work Log",
           },
@@ -404,12 +429,31 @@ const Sidebar = ({ onCollapse }) => {
             label: "Factory Quotation",
           },
           {
-            path: "/dashboard/compliance/labour-inspection",
+            path: "/dashboard/compliance/plan-management",
+            icon: <ClipboardList />,
+            label: "Plan Management",
+          },
+          {
+            path: "/dashboard/compliance/stability-management",
+            icon: <ClipboardList />,
+            label: "Stability Management",
+          },
+        ],
+      });
+      menuItems.push({
+        label: "Labour Management",
+        icon: <ClipboardList />,
+        isDropdown: true,
+        isOpen: activeDropdown === "labour",
+        toggle: () => handleDropdownToggle("labour"),
+        items: [
+          {
+            path: "/dashboard/labour/inspection",
             icon: <ClipboardList />,
             label: "Labour Law Inspection",
           },
           {
-            path: "/dashboard/compliance/labour-license",
+            path: "/dashboard/labour/license",
             icon: <BookOpenCheck />,
             label: "Labour License Management",
           },

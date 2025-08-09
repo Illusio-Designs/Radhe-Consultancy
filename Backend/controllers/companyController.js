@@ -104,11 +104,27 @@ const companyController = {
         });
       }
 
+      // Validate company code if provided
+      if (formData.company_code && formData.company_code.trim() !== '') {
+        // Check if company code already exists
+        const existingCompanyWithCode = await Company.findOne({
+          where: { company_code: formData.company_code }
+        });
+        if (existingCompanyWithCode) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            error: 'Company code already exists. Please use a different code.'
+          });
+        }
+      }
+
       // Create new company
       let company;
       try {
         company = await Company.create({
           company_name: formData.company_name,
+          company_code: formData.company_code || null,
           owner_name: formData.owner_name,
           owner_address: formData.owner_address,
           designation: formData.designation,
@@ -164,6 +180,7 @@ const companyController = {
       const createdCompany = await Company.findByPk(company.company_id, {
         include: [{
           model: User,
+          as: 'user',
           attributes: ['user_id', 'username', 'email']
         }]
       });
@@ -218,6 +235,7 @@ const companyController = {
       const companies = await Company.findAll({
         include: [{
           model: User,
+          as: 'user',
           include: [{
             model: Role,
             as: 'roles',
@@ -266,6 +284,7 @@ const companyController = {
       const company = await Company.findByPk(req.params.id, {
         include: [{
           model: User,
+          as: 'user',
           include: [{
             model: Role,
             as: 'roles',
@@ -316,9 +335,28 @@ const companyController = {
         const uploadedFiles = req.files || {};
         console.log('[CompanyController] Uploaded files:', uploadedFiles);
 
+        // Handle company code validation if provided
+        if (req.body.company_code && req.body.company_code.trim() !== '') {
+            // Check if the new company code is different from the current one
+            if (req.body.company_code !== company.company_code) {
+                // Check if the new company code already exists
+                const existingCompanyWithCode = await Company.findOne({
+                    where: { company_code: req.body.company_code }
+                });
+                if (existingCompanyWithCode) {
+                    await transaction.rollback();
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Company code already exists. Please use a different code.'
+                    });
+                }
+            }
+        }
+
         // Prepare update data
         const updateData = {
             company_name: req.body.company_name,
+            company_code: req.body.company_code || company.company_code, // Keep existing if not provided
             owner_name: req.body.owner_name,
             owner_address: req.body.owner_address,
             designation: req.body.designation,

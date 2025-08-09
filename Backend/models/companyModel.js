@@ -12,6 +12,12 @@ const Company = sequelize.define('Company', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  company_code: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+    comment: 'Unique company code for identification'
+  },
   owner_name: {
     type: DataTypes.STRING,
     allowNull: false

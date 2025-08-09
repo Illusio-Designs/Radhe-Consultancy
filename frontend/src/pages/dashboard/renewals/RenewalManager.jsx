@@ -11,6 +11,7 @@ const categories = [
 ];
 
 const types = ["ECP", "Health", "Fire", "Vehicle"];
+const complianceTypes = ["Factory ACT"];
 const periods = ["week", "month", "year"];
 
 const RenewalManager = () => {
@@ -41,6 +42,12 @@ const RenewalManager = () => {
     if (!counts) return 0;
     if (selectedCategory === "DSC") {
       return counts[period]?.dsc || 0;
+    }
+    if (selectedCategory === "Compliance & licensing") {
+      return complianceTypes.reduce((sum, type) => {
+        const typeLower = type.toLowerCase().replace(/\s+/g, '_');
+        return sum + (counts[period]?.[typeLower] || 0);
+      }, 0);
     }
     return types.reduce((sum, type) => {
       const typeLower = type.toLowerCase();
@@ -116,9 +123,67 @@ const RenewalManager = () => {
     );
   } else if (selectedCategory === "Compliance & licensing") {
     content = (
-      <div style={{ textAlign: "center", fontSize: 20, color: "#92400e", padding: 40 }}>
-        Pending compliance & licensing work will be displayed here.
-      </div>
+      <>
+        <div style={{ display: "flex", fontWeight: 600, fontSize: 20, marginBottom: 24 }}>
+          <div style={{ flex: 2 }}>Compliance Type</div>
+          <div style={{ flex: 1, textAlign: "center" }}>Week ({getTotalCount("week")})</div>
+          <div style={{ flex: 1, textAlign: "center" }}>Month ({getTotalCount("month")})</div>
+          <div style={{ flex: 1, textAlign: "center" }}>Year ({getTotalCount("year")})</div>
+        </div>
+        {loading ? (
+          <Loader />
+        ) : error ? (
+          <div style={{ color: "red", textAlign: "center" }}>{error}</div>
+        ) : (
+          complianceTypes.map((type, idx) => (
+            <div 
+              key={type} 
+              style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                borderBottom: idx < complianceTypes.length - 1 ? "1px solid #e5e7eb" : "none", 
+                padding: "16px 0",
+                transition: "background-color 0.2s",
+                ":hover": {
+                  backgroundColor: "#f9fafb"
+                }
+              }}
+            >
+              <div style={{ flex: 2, fontWeight: 500, fontSize: 18 }}>{type}</div>
+              <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
+                <span style={{
+                  padding: "4px 8px",
+                  borderRadius: 4,
+                  backgroundColor: (counts?.week?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#fee2e2" : "#f3f4f6",
+                  color: (counts?.week?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#991b1b" : "#6b7280"
+                }}>
+                  {counts?.week?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
+                </span>
+              </div>
+              <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
+                <span style={{
+                  padding: "4px 8px",
+                  borderRadius: 4,
+                  backgroundColor: (counts?.month?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#fef3c7" : "#f3f4f6",
+                  color: (counts?.month?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#92400e" : "#6b7280"
+                }}>
+                  {counts?.month?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
+                </span>
+              </div>
+              <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
+                <span style={{
+                  padding: "4px 8px",
+                  borderRadius: 4,
+                  backgroundColor: (counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#dcfce7" : "#f3f4f6",
+                  color: (counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#166534" : "#6b7280"
+                }}>
+                  {counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </>
     );
   } else if (selectedCategory === "DSC") {
     content = (

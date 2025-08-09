@@ -21,6 +21,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 // File Upload Modal
 const FileUploadModal = ({ onClose, onUpload }) => {
   const [files, setFiles] = useState([]);
+  const [stabilityDate, setStabilityDate] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
@@ -34,9 +35,14 @@ const FileUploadModal = ({ onClose, onUpload }) => {
       return;
     }
 
+    if (!stabilityDate) {
+      toast.error('Please select a stability date');
+      return;
+    }
+
     setLoading(true);
     try {
-      await onUpload(files);
+      await onUpload(files, stabilityDate);
       toast.success('Files uploaded successfully');
     } catch (error) {
       toast.error('Failed to upload files');
@@ -46,8 +52,22 @@ const FileUploadModal = ({ onClose, onUpload }) => {
   };
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Upload Files">
+    <Modal isOpen={true} onClose={onClose} title="Upload Files & Approve Stability">
       <div className="file-upload-modal">
+        <div className="form-group">
+          <label>Stability Date (Required):</label>
+          <input
+            type="date"
+            value={stabilityDate}
+            onChange={(e) => setStabilityDate(e.target.value)}
+            className="form-control"
+            required
+          />
+          <small className="text-gray-500">
+            Renewal date will be automatically calculated (5 years after stability date)
+          </small>
+        </div>
+
         <div className="form-group">
           <label>Select Files:</label>
           <input
@@ -78,7 +98,7 @@ const FileUploadModal = ({ onClose, onUpload }) => {
             Cancel
           </Button>
           <Button onClick={handleUpload} variant="contained" disabled={loading}>
-            {loading ? 'Uploading...' : 'Upload'}
+            {loading ? 'Uploading...' : 'Upload & Approve'}
           </Button>
         </div>
       </div>
@@ -112,7 +132,7 @@ const RejectModal = ({ onClose, onReject }) => {
     <Modal isOpen={true} onClose={onClose} title="Reject Stability">
       <div className="reject-modal">
         <div className="form-group">
-          <label>Rejection Remarks:</label>
+          <label>Remarks (Required):</label>
           <textarea
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
@@ -128,7 +148,59 @@ const RejectModal = ({ onClose, onReject }) => {
             Cancel
           </Button>
           <Button onClick={handleReject} variant="contained" disabled={loading}>
-            Reject
+            {loading ? 'Rejecting...' : 'Reject'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Stability Date Modal
+const StabilityDateModal = ({ onClose, onUpdate, currentDate }) => {
+  const [stabilityDate, setStabilityDate] = useState(currentDate || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleUpdate = async () => {
+    if (!stabilityDate) {
+      toast.error('Please select a stability date');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onUpdate(stabilityDate);
+      toast.success('Stability date updated successfully');
+    } catch (error) {
+      toast.error('Failed to update stability date');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Update Stability Date">
+      <div className="stability-date-modal">
+        <div className="form-group">
+          <label>Stability Date:</label>
+          <input
+            type="date"
+            value={stabilityDate}
+            onChange={(e) => setStabilityDate(e.target.value)}
+            className="form-control"
+            required
+          />
+          <small className="text-gray-500">
+            Renewal date will be automatically calculated (5 years after stability date)
+          </small>
+        </div>
+
+        <div className="modal-actions">
+          <Button onClick={onClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate} variant="contained" disabled={loading}>
+            {loading ? 'Updating...' : 'Update'}
           </Button>
         </div>
       </div>
@@ -142,6 +214,7 @@ function StabilityManagement() {
   const [error, setError] = useState(null);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
   const [selectedStability, setSelectedStability] = useState(null);
   const { user, userRoles } = useAuth();
   const isStabilityManager = userRoles.includes("stability_manager");
@@ -202,7 +275,7 @@ function StabilityManagement() {
     }
   };
 
-  const handleUploadFiles = async (files) => {
+  const handleUploadFiles = async (files, stabilityDate) => {
     if (!selectedStability) return;
     
     try {
@@ -211,6 +284,13 @@ function StabilityManagement() {
         formData.append('files', file);
       });
 
+      // First update the status with stability date
+      await stabilityManagementAPI.updateStabilityStatus(selectedStability.id, {
+        status: 'Approved',
+        stability_date: stabilityDate
+      });
+
+      // Then upload the files
       const response = await stabilityManagementAPI.uploadStabilityFiles(selectedStability.id, formData);
       if (response.success) {
         toast.success('Files uploaded and stability approved successfully');
@@ -239,6 +319,21 @@ function StabilityManagement() {
       }
     } catch (error) {
       toast.error('Failed to reject stability');
+    }
+  };
+
+  const handleUpdateStabilityDates = async (stabilityDate) => {
+    try {
+      await stabilityManagementAPI.updateStabilityDates(selectedStability.id, {
+        stability_date: stabilityDate
+      });
+      
+      setShowDateModal(false);
+      setSelectedStability(null);
+      fetchStabilityManagementRecords();
+    } catch (error) {
+      console.error('Error updating stability dates:', error);
+      throw error;
     }
   };
 
@@ -361,6 +456,46 @@ function StabilityManagement() {
         ) : "-"
       ),
     },
+    {
+      key: "stabilityDate",
+      label: "Stability Date",
+      sortable: true,
+      render: (_, record) => (
+        <div className="flex items-center gap-2">
+          {record.stability_date ? (
+            <div className="flex items-center gap-1">
+              <BiCalendar />
+              {formatDate(record.stability_date)}
+            </div>
+          ) : (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                setSelectedStability(record);
+                setShowDateModal(true);
+              }}
+              icon={<BiEdit />}
+            >
+              Set Date
+            </Button>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "renewalDate",
+      label: "Renewal Date",
+      sortable: true,
+      render: (_, record) => (
+        record.renewal_date ? (
+          <div className="flex items-center gap-1">
+            <BiCalendar />
+            {formatDate(record.renewal_date)}
+          </div>
+        ) : "-"
+      ),
+    },
   ];
 
   const filteredRecords = React.useMemo(() => {
@@ -408,6 +543,17 @@ function StabilityManagement() {
             setSelectedStability(null);
           }}
           onReject={handleRejectStability}
+        />
+      )}
+
+      {showDateModal && (
+        <StabilityDateModal
+          onClose={() => {
+            setShowDateModal(false);
+            setSelectedStability(null);
+          }}
+          onUpdate={handleUpdateStabilityDates}
+          currentDate={selectedStability?.stability_date}
         />
       )}
     </div>
