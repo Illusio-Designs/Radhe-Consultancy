@@ -93,6 +93,8 @@ const securityHeadersMiddleware = (req, res, next) => {
   else if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
+  // Ensure caches and proxies vary on Origin
+  res.header('Vary', 'Origin');
   
   // Add cache control headers
   res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

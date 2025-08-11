@@ -32,7 +32,7 @@ const userRoleWorkLogController = {
       const logs = await UserRoleWorkLog.findAll({
         where,
         include: [
-          { model: User, as: 'actor', attributes: ['user_id', 'username', 'email'] },
+          { model: User, as: 'user', attributes: ['user_id', 'username', 'email'] },
           { model: User, as: 'targetUser', attributes: ['user_id', 'username', 'email'] },
           { model: Role, as: 'role', attributes: ['id', 'role_name'] }
         ],

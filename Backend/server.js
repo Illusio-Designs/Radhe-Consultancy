@@ -33,11 +33,13 @@ app.use(
   })
 );
 
-// Apply security headers middleware
-app.use(securityHeadersMiddleware);
-
-// CORS configuration
+// CORS configuration (must come before other middlewares and routes)
 app.use(cors(corsOptions));
+// Explicitly handle preflight for all routes
+app.options('*', cors(corsOptions));
+
+// Apply security headers middleware (after CORS so headers are not overridden)
+app.use(securityHeadersMiddleware);
 
 // Add cache control headers
 app.use((req, res, next) => {

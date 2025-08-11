@@ -8,7 +8,7 @@
     "start:unix": "NODE_OPTIONS=--no-deprecation node server.js",
     "dev": "set NODE_OPTIONS=--no-deprecation && nodemon",
     "dev:unix": "NODE_OPTIONS=--no-deprecation nodemon",
-    "setup:permissions": "node scripts/setupRolesAndPermissions.js"
+    "setup": "node scripts/serverSetup.js"
   },
   "dependencies": {
     "axios": "^1.9.0",

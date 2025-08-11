@@ -62,7 +62,7 @@ class RoleService {
       throw new Error('User not found');
     }
 
-    return user.Roles;
+    return user.roles;
   }
 
   async setPrimaryRole(userId, roleId) {

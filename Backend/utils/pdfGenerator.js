@@ -368,22 +368,25 @@ class FactoryQuotationPDFGenerator {
 
   drawFooter(currentY) {
     const pageWidth = 595.28;
+    const pageHeight = 841.89;
     const margin = 30;
+    
+    // Calculate footer position - ensure it's at the bottom of the page
+    const footerY = Math.max(currentY + 40, pageHeight - 80); // At least 40px below content, or 80px from bottom
     
     // Footer line
     this.doc
-      .moveTo(margin, currentY)
-      .lineTo(pageWidth - margin, currentY)
+      .moveTo(margin, footerY)
+      .lineTo(pageWidth - margin, footerY)
       .stroke('#dee2e6');
     
-    // Footer text
+    // Footer text - positioned below the line
     this.doc
       .fontSize(8)
       .font('Helvetica')
       .fill('#6c757d')
-      .text('Thank you for choosing RADHE ADVISORY', { align: 'center' })
-      .moveDown(0.5)
-      .text(`Generated on: ${new Date().toLocaleString('en-GB')}`, { align: 'center' });
+      .text('Thank you for choosing RADHE ADVISORY', pageWidth / 2, footerY + 15, { align: 'center' })
+      .text(`Generated on: ${new Date().toLocaleString('en-GB')}`, pageWidth / 2, footerY + 30, { align: 'center' });
   }
 
   drawTable(data, x, y) {

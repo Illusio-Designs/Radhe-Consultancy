@@ -22,6 +22,7 @@ const getAllUsers = async (req, res) => {
 
     let includeOptions = {
       model: Role,
+      as: 'roles',
       attributes: ["role_name"],
       through: { attributes: ["is_primary"] },
     };
@@ -68,6 +69,7 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
+              as: 'roles',
               where: { role_name: "Company" },
               attributes: ["role_name"],
               through: { attributes: ["is_primary"] },
@@ -81,6 +83,7 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
+              as: 'roles',
               where: { role_name: "Consumer" },
               attributes: ["role_name"],
               through: { attributes: ["is_primary"] },
@@ -94,6 +97,7 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
+              as: 'roles',
               where: {
                 role_name: {
                   [Op.notIn]: ["Company", "Consumer"],
@@ -111,6 +115,7 @@ const getAllUsers = async (req, res) => {
           include: [
             {
               model: Role,
+              as: 'roles',
               where: { role_name: "Plan_manager" },
               attributes: ["role_name"],
               through: { attributes: ["is_primary"] },
@@ -133,7 +138,7 @@ const getAllUsers = async (req, res) => {
         id: u.user_id,
         email: u.email,
         username: u.username,
-        roles: u.Roles.map((r) => ({
+        roles: u.roles.map((r) => ({
           name: r.role_name,
           isPrimary: r.UserRole?.is_primary,
         })),
@@ -146,6 +151,7 @@ const getAllUsers = async (req, res) => {
         include: [
           {
             model: Role,
+            as: 'roles',
             attributes: ["role_name"],
             through: { attributes: ["is_primary"] },
           },
@@ -158,7 +164,7 @@ const getAllUsers = async (req, res) => {
           id: u.user_id,
           email: u.email,
           username: u.username,
-          roles: u.Roles.map((r) => ({
+          roles: u.roles.map((r) => ({
             name: r.role_name,
             isPrimary: r.UserRole?.is_primary,
           })),
@@ -213,6 +219,7 @@ const getCompanyUsers = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           where: { role_name: "Company" },
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
@@ -229,7 +236,7 @@ const getCompanyUsers = async (req, res) => {
       users.map((u) => ({
         id: u.user_id,
         email: u.email,
-        roles: u.Roles.map((r) => r.role_name),
+        roles: u.roles.map((r) => r.role_name),
       }))
     );
 
@@ -258,6 +265,7 @@ const getConsumerUsers = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           where: { role_name: "Consumer" },
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
@@ -274,7 +282,7 @@ const getConsumerUsers = async (req, res) => {
       users.map((u) => ({
         id: u.user_id,
         email: u.email,
-        roles: u.Roles.map((r) => r.role_name),
+        roles: u.roles.map((r) => r.role_name),
       }))
     );
 
@@ -292,6 +300,7 @@ const getOtherUsers = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           where: {
             role_name: {
               [Op.notIn]: ["Company", "Consumer"],
@@ -316,6 +325,7 @@ const getUserById = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -328,7 +338,7 @@ const getUserById = async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      user.Roles.find((role) => role.UserRole?.is_primary) || user.Roles[0];
+      user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     res.json({
@@ -338,7 +348,7 @@ const getUserById = async (req, res) => {
       contact_number: user.contact_number,
       imageUrl: user.profile_image,
       role: roleName,
-      roles: user.Roles.map((r) => r.role_name),
+      roles: user.roles.map((r) => r.role_name),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -398,6 +408,7 @@ const updateUser = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           attributes: ["id", "role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -406,8 +417,8 @@ const updateUser = async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      updatedUser.Roles.find((role) => role.UserRole?.is_primary) ||
-      updatedUser.Roles[0];
+      updatedUser.roles.find((role) => role.UserRole?.is_primary) ||
+      updatedUser.roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     // Log the action with role information
@@ -432,7 +443,7 @@ const updateUser = async (req, res) => {
       contact_number: updatedUser.contact_number,
       imageUrl: updatedUser.profile_image,
       role: roleName,
-      roles: updatedUser.Roles.map((r) => r.role_name),
+              roles: updatedUser.roles.map((r) => r.role_name),
     });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -536,6 +547,7 @@ const getCurrentUser = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -548,7 +560,7 @@ const getCurrentUser = async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      user.Roles.find((role) => role.UserRole?.is_primary) || user.Roles[0];
+      user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     // Get role-specific data
@@ -573,7 +585,7 @@ const getCurrentUser = async (req, res) => {
       phone: user.contact_number,
       imageUrl: user.profile_image,
       role: roleName,
-      roles: user.Roles.map((r) => r.role_name),
+      roles: user.roles.map((r) => r.role_name),
       ...additionalData,
     });
   } catch (error) {
@@ -613,6 +625,7 @@ const searchUsers = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },

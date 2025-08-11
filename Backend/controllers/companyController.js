@@ -267,6 +267,7 @@ const companyController = {
             model: User,
             include: [{
               model: Role,
+              as: 'roles',
               attributes: ['role_name']
             }]
           }]

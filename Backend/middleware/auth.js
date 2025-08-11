@@ -18,6 +18,7 @@ const auth = async (req, res, next) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -29,10 +30,10 @@ const auth = async (req, res, next) => {
     }
 
     // Extract roles from the user object
-    const userRoles = user.Roles ? user.Roles.map((role) => role.role_name) : [];
+    const userRoles = user.roles ? user.roles.map((role) => role.role_name) : [];
 
     // Get all roles and determine primary role
-    const allRoles = user.Roles || [];
+    const allRoles = user.roles || [];
     const primaryRole =
       allRoles.find((role) => role.UserRole?.is_primary) || allRoles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";

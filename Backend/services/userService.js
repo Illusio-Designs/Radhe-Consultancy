@@ -28,6 +28,7 @@ class UserService {
       include: [
         {
           model: Role,
+          as: 'roles',
           through: { attributes: ["is_primary", "assigned_at"] },
         },
       ],
@@ -42,6 +43,7 @@ class UserService {
       const userWithRoles = await User.findByPk(userId, {
         include: [{
           model: Role,
+          as: 'roles',
           through: { attributes: ['is_primary', 'assigned_at', 'assigned_by'] }
         }]
       });

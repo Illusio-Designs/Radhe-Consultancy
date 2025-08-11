@@ -33,13 +33,13 @@ class AuthService {
       }
   
       // Get primary role or first role
-      const primaryRole = user.Roles.find(role => role.UserRole.is_primary) || user.Roles[0];
+      const primaryRole = user.roles.find(role => role.UserRole.is_primary) || user.roles[0];
       const token = generateToken(user.user_id, primaryRole.role_name);
       return { 
         user: {
           user_id: user.user_id,
           email: user.email,
-          roles: user.Roles.map(role => ({
+          roles: user.roles.map(role => ({
             id: role.id,
             role_name: role.role_name,
             is_primary: role.UserRole.is_primary
@@ -171,7 +171,7 @@ class AuthService {
       });
     }
 
-    const primaryRole = user.Roles.find(role => role.UserRole.is_primary) || user.Roles[0];
+    const primaryRole = user.roles.find(role => role.UserRole.is_primary) || user.roles[0];
     const token = generateToken(user.user_id, primaryRole.role_name);
     return { user, token };
   }
@@ -207,7 +207,7 @@ class AuthService {
       });
 
       if (existingUser) {
-        const primaryRole = existingUser.Roles.find(role => role.UserRole.is_primary) || existingUser.Roles[0];
+        const primaryRole = existingUser.roles.find(role => role.UserRole.is_primary) || existingUser.roles[0];
         const token = generateToken(existingUser.user_id, primaryRole.role_name);
         return {
           user: existingUser,

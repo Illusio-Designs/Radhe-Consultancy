@@ -109,8 +109,18 @@ NODE_ENV=development
 ## Database
 - MySQL database is used
 - Sequelize ORM for database operations
-- Models are defined in the models directory
-- Migrations are handled through scripts
+- Models are defined in the `models` directory
+- No manual migrations required. The server performs schema sync with `{ alter: true }` during setup.
+
+### Initial setup (one-time or after schema changes)
+```bash
+cd Backend
+npm run setup
+```
+This will:
+- Sync tables and constraints safely with `{ alter: true }`
+- Seed core roles and admin user
+- Migrate legacy role_id to the new `UserRole` join table (if present), then remove the old column
 
 ## Security
 - JWT authentication
