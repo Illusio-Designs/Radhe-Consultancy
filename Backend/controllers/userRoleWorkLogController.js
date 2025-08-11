@@ -29,6 +29,10 @@ const userRoleWorkLogController = {
       const where = {};
       if (user_id) where.user_id = user_id;
       if (role_id) where.role_id = role_id;
+      
+      console.log('[getAllLogs] Query params:', { user_id, role_id });
+      console.log('[getAllLogs] Where clause:', where);
+      
       const logs = await UserRoleWorkLog.findAll({
         where,
         include: [
@@ -38,6 +42,18 @@ const userRoleWorkLogController = {
         ],
         order: [['created_at', 'DESC']]
       });
+      
+      console.log('[getAllLogs] Found logs:', logs.length);
+      if (logs.length > 0) {
+        console.log('[getAllLogs] Sample log:', {
+          id: logs[0].id,
+          user: logs[0].user,
+          targetUser: logs[0].targetUser,
+          role: logs[0].role,
+          role_id: logs[0].role_id
+        });
+      }
+      
       res.json(logs);
     } catch (error) {
       console.error('Error fetching user role work logs:', error);

@@ -108,6 +108,7 @@ const consumerController = {
       const consumers = await Consumer.findAll({
         include: [{
           model: User,
+          as: 'user',
           include: [{
             model: Role,
             as: 'roles',
@@ -134,6 +135,7 @@ const consumerController = {
       const consumer = await Consumer.findByPk(req.params.id, {
         include: [{
           model: User,
+          as: 'user',
           include: [{
             model: Role,
             as: 'roles',
@@ -172,6 +174,7 @@ const consumerController = {
       const consumer = await Consumer.findByPk(req.params.id, {
         include: [{
           model: User,
+          as: 'user',
           attributes: ['user_id', 'username', 'email']
         }]
       });
@@ -215,8 +218,8 @@ const consumerController = {
         }, { transaction });
 
         // Update associated user if it exists
-        if (consumer.User) {
-          await consumer.User.update({
+        if (consumer.user) {
+          await consumer.user.update({
             username: name,
             email: email
           }, { transaction });
@@ -229,6 +232,7 @@ const consumerController = {
         const updatedConsumer = await Consumer.findByPk(req.params.id, {
           include: [{
             model: User,
+            as: 'user',
             attributes: ['user_id', 'username', 'email']
           }]
         });

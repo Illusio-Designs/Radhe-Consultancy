@@ -29,6 +29,10 @@ Role.belongsToMany(User, { through: UserRole, foreignKey: 'role_id', as: 'users'
 Company.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasOne(Company, { foreignKey: 'user_id', as: 'company' });
 
+// Consumer-User Associations
+Consumer.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasOne(Consumer, { foreignKey: 'user_id', as: 'consumer' });
+
 // Plan Management Associations
 PlanManagement.belongsTo(FactoryQuotation, { foreignKey: 'factory_quotation_id', as: 'factoryQuotation' });
 PlanManagement.belongsTo(User, { foreignKey: 'plan_manager_id', as: 'planManager' });
