@@ -1,4 +1,4 @@
-const { DSCLog, User } = require('../models');
+const { DSCLog, User, DSC } = require('../models');
 
 // Get DSC logs
 exports.getDSCLogs = async (req, res) => {
@@ -8,7 +8,18 @@ exports.getDSCLogs = async (req, res) => {
         const logs = await DSCLog.findAll({
             where,
             order: [['createdAt', 'DESC']],
-            include: [{ model: User, as: 'user', attributes: ['user_id', 'username', 'email'] }]
+            include: [
+                { model: User, as: 'user', attributes: ['user_id', 'username', 'email'] },
+                { 
+                    model: DSC, 
+                    as: 'dsc', 
+                    attributes: ['dsc_id', 'certification_name', 'expiry_date', 'status', 'remarks'],
+                    include: [
+                        { model: require('../models').Company, as: 'company', attributes: ['company_id', 'company_name'] },
+                        { model: require('../models').Consumer, as: 'consumer', attributes: ['consumer_id', 'name'] }
+                    ]
+                }
+            ]
         });
         res.json({ success: true, logs });
     } catch (error) {

@@ -36,8 +36,28 @@ const userRoleWorkLogController = {
       const logs = await UserRoleWorkLog.findAll({
         where,
         include: [
-          { model: User, as: 'user', attributes: ['user_id', 'username', 'email'] },
-          { model: User, as: 'targetUser', attributes: ['user_id', 'username', 'email'] },
+          { 
+            model: User, 
+            as: 'user', 
+            attributes: ['user_id', 'username', 'email'],
+            include: [{
+              model: Role,
+              as: 'roles',
+              attributes: ['id', 'role_name'],
+              through: { attributes: ['is_primary'] }
+            }]
+          },
+          { 
+            model: User, 
+            as: 'targetUser', 
+            attributes: ['user_id', 'username', 'email'],
+            include: [{
+              model: Role,
+              as: 'roles',
+              attributes: ['id', 'role_name'],
+              through: { attributes: ['is_primary'] }
+            }]
+          },
           { model: Role, as: 'role', attributes: ['id', 'role_name'] }
         ],
         order: [['created_at', 'DESC']]
