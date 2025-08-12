@@ -122,26 +122,31 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   useEffect(() => {
     if (policy) {
+      console.log('PolicyForm: Received policy data:', policy);
       const formatDate = (dateStr) => (dateStr ? dateStr.slice(0, 10) : "");
-      setFormData({
-        businessType: policy.businessType || "",
-        customerType: policy.customerType || "",
-        insuranceCompanyId: policy.insuranceCompanyId || "",
-        companyId: policy.companyId || "",
-        policyNumber: policy.policyNumber || "",
+      
+      const formDataToSet = {
+        businessType: policy.businessType || policy.business_type || "",
+        customerType: policy.customerType || policy.customer_type || "",
+        insuranceCompanyId: policy.insuranceCompanyId || policy.insurance_company_id || "",
+        companyId: policy.companyId || policy.company_id || "",
+        policyNumber: policy.policyNumber || policy.policy_number || "",
         email: policy.email || "",
-        mobileNumber: policy.mobileNumber || "",
-        policyStartDate: formatDate(policy.policyStartDate),
-        policyEndDate: formatDate(policy.policyEndDate),
-        medicalCover: policy.medicalCover || "",
-        netPremium: policy.netPremium || "",
-        gstNumber: policy.gstNumber || "",
-        panNumber: policy.panNumber || "",
+        mobileNumber: policy.mobileNumber || policy.mobile_number || "",
+        policyStartDate: formatDate(policy.policyStartDate || policy.policy_start_date),
+        policyEndDate: formatDate(policy.policyEndDate || policy.policy_end_date),
+        medicalCover: policy.medicalCover || policy.medical_cover || "",
+        netPremium: policy.netPremium || policy.net_premium || "",
+        gstNumber: policy.gstNumber || policy.gst_number || "",
+        panNumber: policy.panNumber || policy.pan_number || "",
         remarks: policy.remarks || "",
-      });
+      };
+      
+      console.log('PolicyForm: Setting form data:', formDataToSet);
+      setFormData(formDataToSet);
 
       setFileNames({
-        policyDocument: policy.policyDocumentName || "",
+        policyDocument: policy.policyDocumentName || policy.policy_document_name || "",
       });
     }
   }, [policy]);
@@ -970,7 +975,11 @@ function ECP({ searchQuery = "" }) {
   };
 
   const handleEdit = (policy) => {
-    setSelectedPolicy(policy);
+    // Transform the policy data to camelCase for the form
+    const transformedPolicy = toCamelCase(policy);
+    console.log('ECP: Original policy data:', policy);
+    console.log('ECP: Transformed policy data for edit:', transformedPolicy);
+    setSelectedPolicy(transformedPolicy);
     setShowModal(true);
   };
 

@@ -1,4 +1,4 @@
-const { DSC, Company, Consumer, sequelize, DSCLog } = require('../models');
+const { DSC, Company, Consumer, DSCLog } = require('../models');
 const { Op } = require('sequelize');
 
 // Get all DSCs
@@ -320,7 +320,7 @@ exports.searchDSCs = async (req, res) => {
         const dscs = await DSC.findAll({
             where: {
                 [Op.or]: [
-                    sequelize.where(sequelize.fn('LOWER', sequelize.col('DSC.certification_name')), 'LIKE', `%${q.toLowerCase()}%`)
+                    { certification_name: { [Op.iLike]: `%${q}%` } }
                 ]
             },
             include: [
@@ -346,7 +346,7 @@ exports.searchDSCs = async (req, res) => {
                     as: 'company',
                     attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
                     required: true,
-                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('company.company_name')), 'LIKE', `%${q.toLowerCase()}%`)
+                    where: { company_name: { [Op.iLike]: `%${q}%` } }
                 },
                 {
                     model: Consumer,
@@ -370,7 +370,7 @@ exports.searchDSCs = async (req, res) => {
                     as: 'consumer',
                     attributes: ['consumer_id', 'name', 'email', 'phone_number'],
                     required: true,
-                    where: sequelize.where(sequelize.fn('LOWER', sequelize.col('consumer.name')), 'LIKE', `%${q.toLowerCase()}%`)
+                    where: { name: { [Op.iLike]: `%${q}%` } }
                 }
             ],
             order: [['created_at', 'DESC']]

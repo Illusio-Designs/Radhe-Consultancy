@@ -180,7 +180,7 @@ const RenewalManager = () => {
                   {counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
                 </span>
               </div>
-            </div>
+      </div>
           ))
         )}
       </>

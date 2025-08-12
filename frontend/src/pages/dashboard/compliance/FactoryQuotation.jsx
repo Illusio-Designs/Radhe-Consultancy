@@ -1964,9 +1964,14 @@ function FactoryQuotation({ searchQuery = "" }) {
     try {
       // Always generate a new PDF
       toast.info('Generating PDF...');
-      await factoryQuotationAPI.generatePDF(quotation.id);
+      const generateResponse = await factoryQuotationAPI.generatePDF(quotation.id);
+      console.log('PDF generation response:', generateResponse);
+      
+      // Add a small delay to ensure the file is written to disk
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Download the PDF
+      toast.info('Downloading PDF...');
       const blob = await factoryQuotationAPI.downloadPDF(quotation.id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1979,7 +1984,11 @@ function FactoryQuotation({ searchQuery = "" }) {
       toast.success('Factory quotation downloaded successfully!');
     } catch (error) {
       console.error('Error downloading quotation:', error);
-      toast.error('Failed to download factory quotation. Please try again.');
+      if (error.response?.status === 404) {
+        toast.error('PDF not found. Please try generating the PDF again.');
+      } else {
+        toast.error('Failed to download factory quotation. Please try again.');
+      }
     }
   };
 

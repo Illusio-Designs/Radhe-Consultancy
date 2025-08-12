@@ -4,416 +4,436 @@ const path = require('path');
 
 class FactoryQuotationPDFGenerator {
   constructor() {
-    this.doc = new PDFDocument({
-      size: 'A4',
-      margin: 30
-    });
-  }
-
-  // Static method to clean up old PDF files
-  static cleanupOldPDFs(maxAgeHours = 24) {
     try {
-      const uploadsDir = path.join(__dirname, '../uploads');
-      const pdfsDir = path.join(uploadsDir, 'pdfs');
-      
-      if (!fs.existsSync(pdfsDir)) {
-        return;
-      }
-
-      const now = new Date();
-      const maxAgeMs = maxAgeHours * 60 * 60 * 1000; // Convert hours to milliseconds
-      
-      const files = fs.readdirSync(pdfsDir);
-      let cleanedCount = 0;
-
-      files.forEach(file => {
-        if (file.endsWith('.pdf')) {
-          const filePath = path.join(pdfsDir, file);
-          const stats = fs.statSync(filePath);
-          const fileAge = now.getTime() - stats.mtime.getTime();
-
-          if (fileAge > maxAgeMs) {
-            try {
-              fs.unlinkSync(filePath);
-              console.log(`Cleaned up old PDF: ${file}`);
-              cleanedCount++;
-            } catch (error) {
-              console.error(`Error removing old PDF ${file}:`, error);
-            }
-          }
+      this.doc = new PDFDocument({
+        size: 'A4',
+        margins: {
+          top: 50,
+          bottom: 50,
+          left: 40,
+          right: 40
         }
       });
-
-      console.log(`PDF cleanup completed. Removed ${cleanedCount} old files.`);
+      console.log('PDF Generator: PDFDocument created successfully');
     } catch (error) {
-      console.error('Error during PDF cleanup:', error);
+      console.error('PDF Generator: Error creating PDFDocument:', error);
+      throw error;
     }
   }
 
-  generateFactoryQuotationPDF(quotationData) {
-    return new Promise((resolve, reject) => {
+  // Helper method to wrap text to fit within a specified width
+  wrapText(text, maxWidth, fontSize = 10) {
+    if (!text) return [];
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine ? currentLine + ' ' + word : word;
+      const testWidth = this.doc.fontSize(fontSize).widthOfString(testLine);
+      
+      if (testWidth > maxWidth && currentLine !== '') {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
+  }
+
+  // Draw modern header with company information
+  drawModernHeader() {
+    const pageWidth = 595.28;
+    const margin = 40;
+    const headerHeight = 140;
+
+    // Company logo and information (left side)
+    const logoPath = path.join(__dirname, '../assest/@RADHE ADVISORY LOGO (1).png');
+    console.log('PDF Generator: Logo path:', logoPath);
+    console.log('PDF Generator: Logo exists:', fs.existsSync(logoPath));
+    
+    if (fs.existsSync(logoPath)) {
       try {
-        // Clean up old PDF files first
-        FactoryQuotationPDFGenerator.cleanupOldPDFs(24); // Remove files older than 24 hours
-
-        // Create uploads directory if it doesn't exist
-        const uploadsDir = path.join(__dirname, '../uploads');
-        const pdfsDir = path.join(uploadsDir, 'pdfs');
+        // Fixed logo dimensions to prevent stretching
+        const logoWidth = 80;
+        const logoHeight = 60;
+        const logoX = margin;
+        const logoY = margin;
         
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        if (!fs.existsSync(pdfsDir)) {
-          fs.mkdirSync(pdfsDir, { recursive: true });
-        }
+        console.log('PDF Generator: Loading logo with dimensions:', { logoWidth, logoHeight, logoX, logoY });
+        this.doc.image(logoPath, logoX, logoY, {
+          width: logoWidth,
+          height: logoHeight,
+          fit: [logoWidth, logoHeight] // Maintain aspect ratio
+        });
+        console.log('PDF Generator: Logo loaded successfully');
+      } catch (error) {
+        console.error('PDF Generator: Could not load logo:', error);
+        console.log('PDF Generator: Using text instead of logo');
+      }
+    } else {
+      console.log('PDF Generator: Logo file not found, using text instead');
+    }
 
-        // Remove old PDF files for this quotation
-        const oldPdfPattern = `factory_quotation_${quotationData.id}_*.pdf`;
-        const oldPdfFiles = fs.readdirSync(pdfsDir).filter(file => 
-          file.startsWith(`factory_quotation_${quotationData.id}_`)
-        );
-        
-        oldPdfFiles.forEach(oldFile => {
-          const oldFilePath = path.join(pdfsDir, oldFile);
-          try {
-            fs.unlinkSync(oldFilePath);
-            console.log(`Removed old PDF: ${oldFile}`);
-          } catch (error) {
-            console.error(`Error removing old PDF ${oldFile}:`, error);
-          }
+    // Company information below logo with proper spacing
+    const companyInfoX = margin;
+    const companyInfoY = margin + 80;
+    
+    this.doc
+      .fontSize(22)
+      .font('Helvetica-Bold')
+      .fill('#2C3E50')
+      .text('RADHE ADVISORY', companyInfoX, companyInfoY)
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .fill('#34495E')
+      .text('LABOUR LAW CONSULTANT', companyInfoX, companyInfoY + 30)
+      .fontSize(12)
+      .font('Helvetica')
+      .fill('#7F8C8D')
+      .text('Compliance & Licensing Solutions', companyInfoX, companyInfoY + 50)
+      .fontSize(10)
+      .fill('#7F8C8D')
+      .text('Email: radheconsultancy17@yahoo.com', companyInfoX, companyInfoY + 70);
+
+    // Quotation title and details (right side)
+    const rightX = pageWidth - margin - 200;
+    const rightY = margin + 30;
+    
+    this.doc
+      .fontSize(28)
+      .font('Helvetica-Bold')
+      .fill('#2C3E50')
+      .text('QUOTATION', rightX, rightY, { align: 'right' })
+      .fontSize(12)
+      .font('Helvetica')
+      .fill('#7F8C8D')
+      .text(`Quotation No.: ${this.quotationData.id}`, rightX, rightY + 35, { align: 'right' })
+      .text(`Date: ${this.quotationData.date}`, rightX, rightY + 50, { align: 'right' });
+
+    // Reset fill color
+    this.doc.fill('#2C3E50');
+  }
+
+  // Draw company details section
+  drawCompanyDetails(startY) {
+    const pageWidth = 595.28;
+    const margin = 40;
+    const minSectionHeight = 90;
+
+    // Company details box - we'll calculate height dynamically
+    this.doc
+      .rect(margin, startY, pageWidth - (margin * 2), minSectionHeight)
+      .fill('#F8F9FA')
+      .stroke('#E9ECEF', 1);
+
+    // Company details content with proper alignment
+    this.doc
+      .fontSize(13)
+      .font('Helvetica-Bold')
+      .fill('#2C3E50')
+      .text('Company Details:', margin + 15, startY + 15)
+      .fontSize(11)
+      .font('Helvetica-Bold')
+      .fill('#34495E')
+      .text(this.quotationData.companyName, margin + 15, startY + 35);
+    
+    // Handle long addresses with proper wrapping and alignment
+    const addressText = this.quotationData.companyAddress;
+    const maxAddressWidth = pageWidth - (margin * 2) - 30;
+    const addressLines = this.wrapText(addressText, maxAddressWidth, 10);
+    
+    let currentY = startY + 55;
+    addressLines.forEach((line, index) => {
+      this.doc
+        .fontSize(10)
+        .font('Helvetica')
+        .fill('#7F8C8D')
+        .text(line, margin + 15, currentY);
+      currentY += 14;
+    });
+    
+    // Phone number with proper alignment - ensure it's visible
+    const phoneY = currentY + 10;
+    this.doc
+      .fontSize(10)
+      .font('Helvetica')
+      .fill('#7F8C8D')
+      .text(`Phone: ${this.quotationData.phone}`, margin + 15, phoneY);
+
+    // Calculate actual section height needed
+    const actualSectionHeight = Math.max(minSectionHeight, phoneY + 20 - startY);
+    
+    // Redraw the box with correct height if needed
+    if (actualSectionHeight > minSectionHeight) {
+      this.doc
+        .rect(margin, startY, pageWidth - (margin * 2), actualSectionHeight)
+        .fill('#F8F9FA')
+        .stroke('#E9ECEF', 1);
+    }
+
+    return startY + actualSectionHeight + 20;
+  }
+
+  // Draw modern service breakdown table
+  drawModernServiceTable(startY) {
+    const pageWidth = 595.28;
+    const margin = 40;
+    const tableWidth = pageWidth - (margin * 2);
+    const headerHeight = 35;
+    const rowHeight = 30;
+
+    // Table header with proper column alignment
+    this.doc
+      .rect(margin, startY, tableWidth, headerHeight)
+      .fill('#2C3E50')
+      .stroke('#2C3E50', 1);
+
+    // Header text with proper column separation
+    this.doc
+      .fontSize(11)
+      .font('Helvetica-Bold')
+      .fill('#FFFFFF')
+      .text('SP No.', margin + 15, startY + 10)
+      .text('Particular', margin + 80, startY + 10)
+      .text('Work Details', margin + 280, startY + 10)
+      .text('Years', margin + 420, startY + 10)
+      .text('Amount', margin + 490, startY + 10);
+
+    // Table rows
+    let currentY = startY + headerHeight;
+    
+    this.quotationData.items.forEach((item, index) => {
+      // Row background
+      this.doc
+        .rect(margin, currentY, tableWidth, rowHeight)
+        .fill(index % 2 === 0 ? '#FFFFFF' : '#F8F9FA')
+        .stroke('#E9ECEF', 0.5);
+
+      // Row content with proper alignment
+      this.doc
+        .fontSize(10)
+        .font('Helvetica')
+        .fill('#2C3E50');
+
+      // SP No.
+      this.doc.text(`${index + 1}`, margin + 15, currentY + 10);
+      
+      // Particular
+      this.doc.text(item.particular, margin + 80, currentY + 10);
+      
+      // Work Details - handle long text with wrapping and proper alignment
+      const workDetailsLines = this.wrapText(item.workDetails, 140, 10);
+      workDetailsLines.forEach((line, lineIndex) => {
+        this.doc.text(line, margin + 280, currentY + 10 + (lineIndex * 12));
+      });
+      
+      // Years
+      this.doc.text(item.hoursYears, margin + 420, currentY + 10);
+      
+      // Amount - ensure it doesn't break into multiple lines
+      const amountText = `Rs. ${item.amount.toLocaleString()}`;
+      this.doc.text(amountText, margin + 490, currentY + 10);
+
+      currentY += rowHeight;
+    });
+
+    // Additional charges - show only total, not individual items
+    if (this.quotationData.additionalCharges && this.quotationData.additionalCharges.length > 0) {
+      this.doc
+        .rect(margin, currentY, tableWidth, rowHeight)
+        .fill('#F8F9FA')
+        .stroke('#E9ECEF', 0.5);
+
+      // Calculate total additional charges
+      const totalAdditionalCharges = this.quotationData.additionalCharges.reduce((sum, charge) => sum + charge.amount, 0);
+
+      this.doc
+        .fontSize(10)
+        .font('Helvetica')
+        .fill('#2C3E50')
+        .text('', margin + 15, currentY + 10)
+        .text('Additional Charges Total', margin + 80, currentY + 10)
+        .text('', margin + 280, currentY + 10)
+        .text('', margin + 420, currentY + 10)
+        .text(`Rs. ${totalAdditionalCharges.toLocaleString()}`, margin + 490, currentY + 10);
+
+      currentY += rowHeight;
+    }
+
+    return currentY + 20;
+  }
+
+  // Draw modern total section
+  drawModernTotalSection(startY) {
+    const pageWidth = 595.28;
+    const margin = 40;
+    const sectionHeight = 130;
+
+    // Total amount box (right side) - made smaller and more proportionate
+    const totalBoxWidth = 180;
+    const totalBoxX = pageWidth - margin - totalBoxWidth;
+    const totalBoxY = startY;
+
+    this.doc
+      .rect(totalBoxX, totalBoxY, totalBoxWidth, sectionHeight)
+      .fill('#2C3E50')
+      .stroke('#2C3E50', 1);
+
+    // Total amount text
+    this.doc
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .fill('#FFFFFF')
+      .text('TOTAL AMOUNT', totalBoxX + 15, totalBoxY + 20)
+      .fontSize(20)
+      .text(`Rs. ${this.quotationData.totalAmount.toLocaleString()}`, totalBoxX + 15, totalBoxY + 45);
+
+    // Terms and conditions (left side)
+    const termsX = margin;
+    const termsY = startY + 20;
+
+    this.doc
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .fill('#2C3E50')
+      .text('Terms & Conditions:', termsX, termsY)
+      .fontSize(10)
+      .font('Helvetica')
+      .fill('#7F8C8D')
+      .text('• Payment due within 30 days of invoice date', termsX, termsY + 25)
+      .text('• This quotation is valid for 30 days from the date of issue', termsX, termsY + 40)
+      .text('• All prices are subject to change without prior notice', termsX, termsY + 55)
+      .text('• GST will be charged as applicable', termsX, termsY + 70);
+
+    return startY + sectionHeight + 20;
+  }
+
+  // Draw modern footer
+  drawModernFooter(currentY) {
+    const pageWidth = 595.28;
+    const pageHeight = 841.89;
+    const margin = 40;
+
+    // Calculate footer position
+    const footerY = Math.max(currentY + 40, pageHeight - 100);
+
+    // "This is a computer generated quotation" text
+    this.doc
+      .fontSize(10)
+      .font('Helvetica')
+      .fill('#7F8C8D')
+      .text('This is a computer generated quotation', pageWidth / 2, footerY, { align: 'center' });
+
+    // Thank you message - properly centered
+    this.doc
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .fill('#2C3E50')
+      .text('Thank you for choosing RADHE ADVISORY', pageWidth / 2, footerY + 25, { align: 'center' });
+
+    // Divider line
+    this.doc
+      .moveTo(margin, footerY + 45)
+      .lineTo(pageWidth - margin, footerY + 45)
+      .stroke('#E9ECEF', 1);
+
+    // Note: Removed "Generated on" timestamp as requested
+  }
+
+  // Generate the complete PDF
+  async generatePDF(quotationData, outputPath) {
+    try {
+      console.log('PDF Generator: Starting PDF generation for quotation:', quotationData.id);
+      
+      // Store quotation data for use in methods
+      this.quotationData = quotationData;
+      
+      // Create uploads/pdfs directory if it doesn't exist
+      if (!fs.existsSync(outputPath)) {
+        console.log('PDF Generator: Creating uploads/pdfs directory:', outputPath);
+        fs.mkdirSync(outputPath, { recursive: true });
+      }
+
+      // Generate unique filename with timestamp in CAPITAL LETTERS
+      const timestamp = new Date().getTime();
+      const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const filename = `FACTORY_QUOTATION_${quotationData.id}_${timestamp}_${randomString}.pdf`;
+      const filepath = path.join(outputPath, filename);
+      console.log('PDF Generator: Generated filepath:', filepath);
+
+      // Create write stream
+      console.log('PDF Generator: Creating write stream for:', filepath);
+      const writeStream = fs.createWriteStream(filepath);
+      
+      // Handle write stream errors
+      writeStream.on('error', (error) => {
+        console.error('PDF Generator: Write stream error:', error);
+      });
+      
+      // Pipe the document to the write stream
+      this.doc.pipe(writeStream);
+      
+      // Add error handling for the document
+      this.doc.on('error', (error) => {
+        console.error('PDF Generator: Document error:', error);
+        writeStream.destroy();
+      });
+
+      // Draw modern header
+      console.log('PDF Generator: Drawing modern header');
+      this.drawModernHeader();
+
+      // Draw company details
+      console.log('PDF Generator: Drawing company details');
+      const detailsY = 180;
+      const detailsEndY = this.drawCompanyDetails(detailsY);
+
+      // Draw service breakdown table
+      console.log('PDF Generator: Drawing service breakdown table');
+      const tableEndY = this.drawModernServiceTable(detailsEndY);
+
+      // Draw total section
+      console.log('PDF Generator: Drawing total section');
+      const totalEndY = this.drawModernTotalSection(tableEndY);
+
+      // Draw modern footer
+      console.log('PDF Generator: Drawing footer');
+      this.drawModernFooter(totalEndY);
+
+      // Finalize PDF
+      console.log('PDF Generator: Finalizing PDF');
+      this.doc.end();
+
+      return new Promise((resolve, reject) => {
+        writeStream.on('finish', () => {
+          console.log(`✅ Professional PDF generated successfully: ${filepath}`);
+          clearTimeout(timeout);
+          resolve(filepath);
         });
 
-        // Generate unique filename with timestamp
-        const timestamp = new Date().getTime();
-        const filename = `factory_quotation_${quotationData.id}_${timestamp}.pdf`;
-        const filepath = path.join(pdfsDir, filename);
-
-        // Create write stream
-        const stream = fs.createWriteStream(filepath);
-        this.doc.pipe(stream);
-
-        // Generate PDF content
-        this.generatePDFContent(quotationData);
-
-        // Finalize PDF
-        this.doc.end();
-
-        stream.on('finish', () => {
-          console.log(`Generated new PDF: ${filename}`);
-          resolve({
-            filename: filename,
-            filepath: filepath,
-            relativePath: `uploads/pdfs/${filename}`
-          });
-        });
-
-        stream.on('error', (error) => {
+        writeStream.on('error', (error) => {
+          console.error('❌ Error writing PDF file:', error);
+          clearTimeout(timeout);
           reject(error);
         });
 
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
-
-  generatePDFContent(quotationData) {
-    console.log('🔄 Generating PDF with professional letterhead design');
-    
-    // A4 dimensions: 595.28 x 841.89 points
-    const pageWidth = 595.28;
-    const pageHeight = 841.89;
-    const margin = 30;
-    const contentWidth = pageWidth - (margin * 2);
-    
-    // Header Section with Logo
-    this.drawLetterheadHeader();
-    
-    // Main content starts after header
-    let currentY = 140;
-    
-    // Company Details and Quotation Details Section
-    currentY = this.drawDetailsSection(quotationData, currentY);
-    
-    // Itemized Table Section
-    currentY = this.drawItemizedTable(quotationData, currentY);
-    
-    // Total Amount Section
-    currentY = this.drawTotalSection(quotationData, currentY);
-    
-    // Footer
-    this.drawFooter(currentY);
-  }
-
-  drawLetterheadHeader() {
-    const pageWidth = 595.28;
-    const margin = 30;
-    
-    // Draw header background
-    this.doc
-      .rect(margin, margin, pageWidth - (margin * 2), 100)
-      .fill('#f8f9fa')
-      .stroke('#dee2e6');
-    
-    // Try to add logo if exists
-    const logoPath = path.join(__dirname, '../assest/@RADHE ADVISORY LOGO (1).png');
-    if (fs.existsSync(logoPath)) {
-      try {
-                 this.doc.image(logoPath, margin + 15, margin + 15, {
-           width: 100,
-           height: 70
-         });
-      } catch (error) {
-        console.log('Could not load logo, using text instead');
-      }
+        // Add timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          reject(new Error('PDF generation timed out'));
+        }, 30000); // 30 second timeout
+      });
+    } catch (error) {
+      console.error('❌ Error generating PDF:', error);
+      throw error;
     }
-    
-    // Company name and details (right side of header) - moved further right to avoid overlap
-    this.doc
-      .fontSize(22)
-      .font('Helvetica-Bold')
-      .fill('#2c3e50')
-      .text('RADHE ADVISORY', pageWidth - margin - 250, margin + 20)
-      .fontSize(14)
-      .font('Helvetica')
-      .text('LABOUR LAW CONSULTANT', pageWidth - margin - 250, margin + 45)
-      .fontSize(11)
-      .text('Compliance & Licensing Solutions', pageWidth - margin - 250, margin + 62)
-      .fontSize(9)
-      .text('Email: info@radheadvisory.com', pageWidth - margin - 250, margin + 78)
-      .text('Phone: +91-XXXXXXXXXX', pageWidth - margin - 250, margin + 90);
-    
-    // Reset fill color
-    this.doc.fill('#000000');
-  }
-
-  drawDetailsSection(quotationData, startY) {
-    const pageWidth = 595.28;
-    const margin = 30;
-    const contentWidth = pageWidth - (margin * 2);
-    const sectionHeight = 80;
-    
-    // Draw section background
-    this.doc
-      .rect(margin, startY, contentWidth, sectionHeight)
-      .fill('#ffffff')
-      .stroke('#dee2e6');
-    
-    // Section title
-    this.doc
-      .fontSize(14)
-      .font('Helvetica-Bold')
-      .fill('#2c3e50')
-      .text('QUOTATION DETAILS', margin + 10, startY + 10);
-    
-    // Left column - Company Details
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .text('Company Details:', margin + 10, startY + 30)
-      .fontSize(10)
-      .font('Helvetica')
-      .text(`Name: ${quotationData.companyName || 'N/A'}`, margin + 10, startY + 45)
-      .text(`Address: ${quotationData.companyAddress || 'N/A'}`, margin + 10, startY + 58)
-      .text(`Phone: ${quotationData.phone || 'N/A'}`, margin + 10, startY + 71);
-    
-    // Right column - Quotation Details
-    const rightColX = margin + (contentWidth / 2);
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .text('Quotation Details:', rightColX, startY + 30)
-      .fontSize(10)
-      .font('Helvetica')
-      .text(`Quotation No.: FQ-${quotationData.id.toString().padStart(6, '0')}`, rightColX, startY + 45)
-      .text(`Date: ${new Date(quotationData.createdAt || quotationData.created_at).toLocaleDateString('en-GB')}`, rightColX, startY + 58)
-      .text(`Status: ${quotationData.status.toUpperCase()}`, rightColX, startY + 71);
-    
-    // Reset fill color
-    this.doc.fill('#000000');
-    
-    return startY + sectionHeight + 20;
-  }
-
-  drawItemizedTable(quotationData, startY) {
-    const pageWidth = 595.28;
-    const margin = 30;
-    const contentWidth = pageWidth - (margin * 2);
-    
-    // Table header
-    this.doc
-      .fontSize(14)
-      .font('Helvetica-Bold')
-      .fill('#2c3e50')
-      .text('SERVICE BREAKDOWN', margin, startY);
-    
-    const tableStartY = startY + 20;
-    const rowHeight = 30; // Increased row height for better spacing
-    const colWidths = [35, 180, 130, 90, 100]; // Adjusted column widths to prevent overlap
-    
-    // Draw table header
-    this.doc
-      .rect(margin, tableStartY, colWidths[0], rowHeight)
-      .rect(margin + colWidths[0], tableStartY, colWidths[1], rowHeight)
-      .rect(margin + colWidths[0] + colWidths[1], tableStartY, colWidths[2], rowHeight)
-      .rect(margin + colWidths[0] + colWidths[1] + colWidths[2], tableStartY, colWidths[3], rowHeight)
-      .rect(margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], tableStartY, colWidths[4], rowHeight)
-      .fill('#e9ecef')
-      .stroke('#dee2e6');
-    
-    // Header text
-    this.doc
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .fill('#495057')
-      .text('SP No.', margin + 3, tableStartY + 10)
-      .text('Particular', margin + colWidths[0] + 3, tableStartY + 10)
-      .text('Work Details', margin + colWidths[0] + colWidths[1] + 3, tableStartY + 10)
-      .text('Years', margin + colWidths[0] + colWidths[1] + colWidths[2] + 3, tableStartY + 10)
-      .text('Amount', margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 3, tableStartY + 10);
-    
-    // Calculate amounts
-    const baseAmount = (quotationData.calculatedAmount || 0) * (quotationData.year || 1);
-    const planCharge = quotationData.planCharge || 0;
-    const stabilityCharge = quotationData.stabilityCertificateAmount || 0;
-    const adminCharge = quotationData.administrationCharge || 0;
-    const consultancyFees = quotationData.consultancyFees || 0;
-    
-    // Calculate total additional charges
-    const totalAdditionalCharges = planCharge + stabilityCharge + adminCharge + consultancyFees;
-    
-    // Table rows - simplified to show main charge and additional charges
-    const rows = [
-      {
-        spNo: '1',
-        particular: 'Factory License Compliance',
-        workDetails: `${quotationData.horsePower} HP, ${quotationData.noOfWorkers || quotationData.numberOfWorkers} Workers`,
-        hoursYears: `${quotationData.year} Year(s)`,
-                 amount: `Rs. ${baseAmount.toLocaleString()}`
-      },
-      {
-        spNo: '2',
-        particular: 'Additional Charges',
-        workDetails: 'Additional Charges',
-        hoursYears: 'Service',
-                 amount: `Rs. ${totalAdditionalCharges.toLocaleString()}`
-      }
-    ];
-    
-    // Draw table rows
-    rows.forEach((row, index) => {
-      const rowY = tableStartY + rowHeight + (index * rowHeight);
-      
-      // Draw cell borders
-      this.doc
-        .rect(margin, rowY, colWidths[0], rowHeight)
-        .rect(margin + colWidths[0], rowY, colWidths[1], rowHeight)
-        .rect(margin + colWidths[0] + colWidths[1], rowY, colWidths[2], rowHeight)
-        .rect(margin + colWidths[0] + colWidths[1] + colWidths[2], rowY, colWidths[3], rowHeight)
-        .rect(margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], rowY, colWidths[4], rowHeight)
-        .fill('#ffffff')
-        .stroke('#dee2e6');
-      
-      // Add text with better positioning
-      this.doc
-        .fontSize(9)
-        .font('Helvetica')
-        .fill('#000000')
-        .text(row.spNo, margin + 3, rowY + 10)
-        .text(row.particular, margin + colWidths[0] + 3, rowY + 10, { width: colWidths[1] - 6 })
-        .text(row.workDetails, margin + colWidths[0] + colWidths[1] + 3, rowY + 10, { width: colWidths[2] - 6 })
-        .text(row.hoursYears, margin + colWidths[0] + colWidths[1] + colWidths[2] + 3, rowY + 10, { width: colWidths[3] - 6 })
-        .text(row.amount, margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 3, rowY + 10, { width: colWidths[4] - 6 });
-    });
-    
-    return tableStartY + rowHeight + (rows.length * rowHeight) + 20;
-  }
-
-  drawTotalSection(quotationData, startY) {
-    const pageWidth = 595.28;
-    const margin = 30;
-    const contentWidth = pageWidth - (margin * 2);
-    const sectionHeight = 70;
-    
-    // Draw total section background
-    this.doc
-      .rect(margin, startY, contentWidth, sectionHeight)
-      .fill('#f8f9fa')
-      .stroke('#dee2e6');
-    
-    // Total amount - more prominent
-    const totalAmount = quotationData.totalAmount || 0;
-    
-    this.doc
-      .fontSize(18)
-      .font('Helvetica-Bold')
-      .fill('#2c3e50')
-      .text('Total Amount:', margin + 15, startY + 20)
-      .fontSize(22)
-             .text(`Rs. ${totalAmount.toLocaleString()}`, margin + 180, startY + 18);
-    
-    // Terms and conditions
-    this.doc
-      .fontSize(10)
-      .font('Helvetica')
-      .fill('#6c757d')
-      .text('Terms: Payment due within 30 days of invoice date', margin + 15, startY + 45)
-      .text('Validity: This quotation is valid for 30 days from the date of issue', margin + 15, startY + 58);
-    
-    // Reset fill color
-    this.doc.fill('#000000');
-    
-    return startY + sectionHeight + 20;
-  }
-
-  drawFooter(currentY) {
-    const pageWidth = 595.28;
-    const pageHeight = 841.89;
-    const margin = 30;
-    
-    // Calculate footer position - ensure it's at the bottom of the page
-    const footerY = Math.max(currentY + 40, pageHeight - 80); // At least 40px below content, or 80px from bottom
-    
-    // Footer line
-    this.doc
-      .moveTo(margin, footerY)
-      .lineTo(pageWidth - margin, footerY)
-      .stroke('#dee2e6');
-    
-    // Footer text - positioned below the line
-    this.doc
-      .fontSize(8)
-      .font('Helvetica')
-      .fill('#6c757d')
-      .text('Thank you for choosing RADHE ADVISORY', pageWidth / 2, footerY + 15, { align: 'center' })
-      .text(`Generated on: ${new Date().toLocaleString('en-GB')}`, pageWidth / 2, footerY + 30, { align: 'center' });
-  }
-
-  drawTable(data, x, y) {
-    const colWidth = 200;
-    const rowHeight = 20;
-    const fontSize = 10;
-
-    data.forEach((row, index) => {
-      const currentY = y + (index * rowHeight);
-
-      // Draw cell borders
-      this.doc
-        .rect(x, currentY, colWidth, rowHeight)
-        .rect(x + colWidth, currentY, colWidth, rowHeight)
-        .stroke();
-
-      // Add text
-      this.doc
-        .fontSize(fontSize)
-        .font('Helvetica-Bold')
-        .text(row[0], x + 5, currentY + 5, { width: colWidth - 10 })
-        .font('Helvetica')
-        .text(row[1], x + colWidth + 5, currentY + 5, { width: colWidth - 10 });
-    });
-
-    // Update document Y position
-    this.doc.y = y + (data.length * rowHeight) + 10;
   }
 }
 

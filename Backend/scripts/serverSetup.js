@@ -174,6 +174,29 @@ async function dropPermissionTables() {
   }
 }
 
+// Add connection retry logic
+async function ensureDatabaseConnection() {
+  const maxRetries = 3;
+  let retries = 0;
+  
+  while (retries < maxRetries) {
+    try {
+      await sequelize.authenticate();
+      console.log('✅ Database connection verified');
+      return true;
+    } catch (error) {
+      retries++;
+      console.log(`⚠️  Database connection attempt ${retries} failed: ${error.message}`);
+      if (retries < maxRetries) {
+        console.log('🔄 Retrying in 2 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } else {
+        throw new Error(`Failed to connect to database after ${maxRetries} attempts`);
+      }
+    }
+  }
+}
+
 /**
  * Sets up the database with all required tables
  * @returns {Promise<boolean>}
@@ -183,13 +206,17 @@ async function setupDatabase() {
     logToFile('Setting up database...');
     console.log('Setting up database...');
 
+    // Ensure database connection is stable
+    await ensureDatabaseConnection();
+
     // Drop permission tables first (these are the only ones we want to remove)
     await dropPermissionTables();
 
-    // Sync tables in correct order (minimal logging) - use alter: true to preserve existing data
+    // Sync tables in correct order with connection verification
     console.log('🔄 Syncing database tables...');
     
     try {
+      await ensureDatabaseConnection();
       await Role.sync({ alter: true });
       console.log('✅ Role table synced');
     } catch (error) {
@@ -197,29 +224,27 @@ async function setupDatabase() {
     }
 
     try {
+      await ensureDatabaseConnection();
       await User.sync({ alter: true });
       console.log('✅ User table synced');
-      } catch (error) {
+    } catch (error) {
       console.log('⚠️  User table sync warning:', error.message);
-      }
+    }
 
-      try {
-          // Skip UserRole sync if table already exists to preserve existing data
     try {
+      // Skip UserRole sync if table already exists to preserve existing data
+      await ensureDatabaseConnection();
       await UserRole.sync({ alter: true });
       console.log('✅ UserRole table synced');
-      } catch (error) {
+    } catch (error) {
       if (error.message.includes('already exists')) {
         console.log('✅ UserRole table already exists - preserving existing data');
       } else {
-        throw error;
+        console.log('⚠️  UserRole table sync warning:', error.message);
       }
     }
-      } catch (error) {
-      console.log('⚠️  UserRole table sync warning:', error.message);
-    }
 
-    // Sync other tables with error handling
+    // Sync other tables with error handling and connection verification
     const otherTables = [
       { model: Company, name: 'Company' },
       { model: Consumer, name: 'Consumer' },
@@ -241,6 +266,7 @@ async function setupDatabase() {
 
     for (const table of otherTables) {
       try {
+        await ensureDatabaseConnection();
         await table.model.sync({ alter: true });
         console.log(`✅ ${table.name} table synced`);
       } catch (error) {
@@ -389,19 +415,25 @@ async function setupAdminUser() {
     const [adminUser, created] = await User.findOrCreate({
       where: { email: 'Admin@radheconsultancy.co.in' },
       defaults: {
-        username: 'Admin',
-        password: 'Admin@123',
+        username: 'BRIJESH KANERIA',
+        password: await bcrypt.hash('Admin@123', 10),
         created_at: new Date(),
         updated_at: new Date()
       }
     });
 
     if (!created) {
-      // Update existing admin user
+      // Update existing admin user with new name
       await adminUser.update({
-        password: 'Admin@123',
+        username: 'BRIJESH KANERIA',
+        password: await bcrypt.hash('Admin@123', 10),
         updated_at: new Date()
       });
+      logToFile('Updated existing admin user with new name: BRIJESH KANERIA');
+      console.log('Updated existing admin user with new name: BRIJESH KANERIA');
+    } else {
+      logToFile('Created new admin user: BRIJESH KANERIA');
+      console.log('Created new admin user: BRIJESH KANERIA');
     }
 
     // Check if admin user already has admin role
@@ -463,42 +495,57 @@ async function setupPlanManagers() {
     ];
 
     for (const manager of planManagers) {
-      const [user, created] = await User.findOrCreate({
-        where: { email: manager.email },
-        defaults: {
-          username: manager.username,
-          password: manager.password,
-          created_at: new Date(),
-          updated_at: new Date()
-        }
-      });
-
-      if (!created) {
-        // Update existing user
-        await user.update({
-          password: manager.password,
-          updated_at: new Date()
+      try {
+        const [user, created] = await User.findOrCreate({
+          where: { email: manager.email },
+          defaults: {
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            created_at: new Date(),
+            updated_at: new Date()
+          }
         });
-      }
 
-      // Check if user already has plan manager role
-      const existingUserRole = await UserRole.findOne({
-        where: {
-          user_id: user.user_id,
-          role_id: planManagerRole.id
+        if (!created) {
+          // Update existing user
+          await user.update({
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            updated_at: new Date()
+          });
+          logToFile(`Updated existing plan manager: ${manager.username}`);
+          console.log(`Updated existing plan manager: ${manager.username}`);
+        } else {
+          logToFile(`Created new plan manager: ${manager.username}`);
+          console.log(`Created new plan manager: ${manager.username}`);
         }
-      });
 
-      if (!existingUserRole) {
-        // Assign plan manager role
-        await user.addRole(planManagerRole, { 
-          through: { 
-            is_primary: true,
-            assigned_by: 1 // Admin user ID
-          } 
+        // Check if user already has plan manager role
+        const existingUserRole = await UserRole.findOne({
+          where: {
+            user_id: user.user_id,
+            role_id: planManagerRole.id
+          }
         });
-        logToFile(`Plan manager role assigned to ${manager.username}`);
-        console.log(`Plan manager role assigned to ${manager.username}`);
+
+        if (!existingUserRole) {
+          // Assign plan manager role
+          await user.addRole(planManagerRole, { 
+            through: { 
+              is_primary: true,
+              assigned_by: 1 // Admin user ID
+            } 
+          });
+          logToFile(`Plan manager role assigned to ${manager.username}`);
+          console.log(`Plan manager role assigned to ${manager.username}`);
+        } else {
+          logToFile(`Plan manager role already assigned to ${manager.username}`);
+          console.log(`Plan manager role already assigned to ${manager.username}`);
+        }
+      } catch (userError) {
+        logToFile(`Error setting up plan manager ${manager.username}: ${userError.message}`);
+        console.error(`Error setting up plan manager ${manager.username}:`, userError);
+        // Continue with other managers
       }
     }
 
@@ -541,42 +588,57 @@ async function setupStabilityManagers() {
     ];
 
     for (const manager of stabilityManagers) {
-      const [user, created] = await User.findOrCreate({
-        where: { email: manager.email },
-        defaults: {
-          username: manager.username,
-          password: manager.password,
-          created_at: new Date(),
-          updated_at: new Date()
-        }
-      });
-
-      if (!created) {
-        // Update existing user
-        await user.update({
-          password: manager.password,
-          updated_at: new Date()
+      try {
+        const [user, created] = await User.findOrCreate({
+          where: { email: manager.email },
+          defaults: {
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            created_at: new Date(),
+            updated_at: new Date()
+          }
         });
-      }
 
-      // Check if user already has stability manager role
-      const existingUserRole = await UserRole.findOne({
-        where: {
-          user_id: user.user_id,
-          role_id: stabilityManagerRole.id
+        if (!created) {
+          // Update existing user
+          await user.update({
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            updated_at: new Date()
+          });
+          logToFile(`Updated existing stability manager: ${manager.username}`);
+          console.log(`Updated existing stability manager: ${manager.username}`);
+        } else {
+          logToFile(`Created new stability manager: ${manager.username}`);
+          console.log(`Created new stability manager: ${manager.username}`);
         }
-      });
 
-      if (!existingUserRole) {
-        // Assign stability manager role
-        await user.addRole(stabilityManagerRole, { 
-          through: { 
-            is_primary: true,
-            assigned_by: 1 // Admin user ID
-          } 
+        // Check if user already has stability manager role
+        const existingUserRole = await UserRole.findOne({
+          where: {
+            user_id: user.user_id,
+            role_id: stabilityManagerRole.id
+          }
         });
-        logToFile(`Stability manager role assigned to ${manager.username}`);
-        console.log(`Stability manager role assigned to ${manager.username}`);
+
+        if (!existingUserRole) {
+          // Assign stability manager role
+          await user.addRole(stabilityManagerRole, { 
+            through: { 
+              is_primary: true,
+              assigned_by: 1 // Admin user ID
+            } 
+          });
+          logToFile(`Stability manager role assigned to ${manager.username}`);
+          console.log(`Stability manager role assigned to ${manager.username}`);
+        } else {
+          logToFile(`Stability manager role already assigned to ${manager.username}`);
+          console.log(`Stability manager role already assigned to ${manager.username}`);
+        }
+      } catch (userError) {
+        logToFile(`Error setting up stability manager ${manager.username}: ${userError.message}`);
+        console.error(`Error setting up stability manager ${manager.username}:`, userError);
+        // Continue with other managers
       }
     }
 
@@ -585,6 +647,47 @@ async function setupStabilityManagers() {
     return true;
   } catch (error) {
     const errorMessage = `Error setting up stability managers: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
+    return false;
+  }
+}
+
+// Verify that all required roles exist
+async function verifyRequiredRoles() {
+  try {
+    logToFile('Verifying required roles exist...');
+    console.log('Verifying required roles exist...');
+    
+    const requiredRoles = [
+      'Admin',
+      'Plan_manager', 
+      'Stability_manager'
+    ];
+    
+    const missingRoles = [];
+    
+    for (const roleName of requiredRoles) {
+      const role = await Role.findOne({ where: { role_name: roleName } });
+      if (!role) {
+        missingRoles.push(roleName);
+        logToFile(`Missing role: ${roleName}`);
+        console.log(`Missing role: ${roleName}`);
+      } else {
+        logToFile(`Role found: ${roleName} (ID: ${role.id})`);
+        console.log(`Role found: ${roleName} (ID: ${role.id})`);
+      }
+    }
+    
+    if (missingRoles.length > 0) {
+      throw new Error(`Missing required roles: ${missingRoles.join(', ')}`);
+    }
+    
+    logToFile('All required roles verified successfully');
+    console.log('All required roles verified successfully');
+    return true;
+  } catch (error) {
+    const errorMessage = `Error verifying roles: ${error.message}`;
     logToFile(errorMessage);
     console.error(errorMessage);
     return false;
@@ -610,6 +713,12 @@ async function setupAll() {
     const rolesSetup = await setupRolesAndPermissions();
     if (!rolesSetup) {
       throw new Error('Roles and permissions setup failed');
+    }
+
+    // Verify that all required roles exist
+    const rolesVerified = await verifyRequiredRoles();
+    if (!rolesVerified) {
+      throw new Error('Required roles verification failed');
     }
 
     // Migrate existing users to new role system
@@ -657,6 +766,9 @@ module.exports = {
   setupRolesAndPermissions,
   migrateExistingUsers,
   setupAdminUser,
+  setupPlanManagers,
+  setupStabilityManagers,
+  verifyRequiredRoles,
   setupAll
 };
 

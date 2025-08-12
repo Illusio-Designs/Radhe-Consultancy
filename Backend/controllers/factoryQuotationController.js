@@ -5,6 +5,7 @@ const ApplicationManagement = require('../models/applicationManagementModel');
 const User = require('../models/userModel');
 const Role = require('../models/roleModel');
 const UserRole = require('../models/userRoleModel');
+const path = require('path');
 const { 
   calculateBaseAmount, 
   calculateTotalAmount, 
@@ -434,19 +435,69 @@ exports.generatePDF = async (req, res) => {
 
     // Generate PDF
     const pdfGenerator = new FactoryQuotationPDFGenerator();
-    const pdfResult = await pdfGenerator.generateFactoryQuotationPDF(quotation);
+    
+    // Prepare data for the new PDF generator
+    const pdfData = {
+      id: quotation.id,
+      companyName: quotation.companyName,
+      companyAddress: quotation.companyAddress,
+      phone: quotation.phone,
+      date: new Date(quotation.createdAt).toLocaleDateString('en-GB'),
+      totalAmount: quotation.totalAmount,
+      items: [
+        {
+          particular: 'Factory License Compliance',
+          workDetails: `${quotation.horsePower} HP, ${quotation.noOfWorkers || quotation.numberOfWorkers} Workers`,
+          hoursYears: `${quotation.year} Year(s)`,
+          amount: quotation.calculatedAmount * (quotation.year || 1)
+        }
+      ],
+      additionalCharges: [
+        { amount: quotation.planCharge || 0 },
+        { amount: quotation.stabilityCertificateAmount || 0 },
+        { amount: quotation.administrationCharge || 0 },
+        { amount: quotation.consultancyFees || 0 }
+      ]
+    };
+
+    // Generate PDF using new method
+    console.log('Starting PDF generation for quotation:', quotationId);
+    const outputDir = path.join(__dirname, '../uploads/pdfs');
+    console.log('Output directory:', outputDir);
+    console.log('Current __dirname:', __dirname);
+    
+    let pdfPath, filename;
+    try {
+      pdfPath = await pdfGenerator.generatePDF(pdfData, outputDir);
+      console.log('PDF generated successfully at:', pdfPath);
+      
+      // Extract filename from path
+      filename = path.basename(pdfPath);
+    } catch (pdfError) {
+      console.error('PDF generation failed:', pdfError);
+      throw new Error(`PDF generation failed: ${pdfError.message}`);
+    }
+    
+    const relativePath = `uploads/pdfs/${filename}`;
+    console.log('Relative path for database:', relativePath);
 
     // Update quotation with PDF path
-    await FactoryQuotation.update(
-      { pdfPath: pdfResult.relativePath },
+    console.log('Updating database with pdfPath:', relativePath);
+    const updateResult = await FactoryQuotation.update(
+      { pdfPath: relativePath },
       { where: { id: quotationId } }
     );
+    console.log('Database update result:', updateResult);
+    
+    // Verify the update by fetching the quotation again
+    const updatedQuotation = await FactoryQuotation.findByPk(quotationId);
+    console.log('Updated quotation pdfPath:', updatedQuotation?.pdfPath);
 
     res.json({
       success: true,
-      message: 'PDF generated successfully',
+      message: 'Professional PDF generated successfully',
       data: {
-        filename: pdfResult.filename,
+        filename: filename,
         downloadUrl: `/api/factory-quotations/${quotationId}/download-pdf`
       }
     });
@@ -472,16 +523,20 @@ exports.downloadPDF = async (req, res) => {
       return res.status(404).json({ success: false, message: 'PDF not found. Please generate PDF first.' });
     }
 
-    const path = require('path');
     const fs = require('fs');
     
     // Construct full file path
     const filePath = path.join(__dirname, '..', quotation.pdfPath);
+    console.log('Download - quotation.pdfPath:', quotation.pdfPath);
+    console.log('Download - constructed filePath:', filePath);
+    console.log('Download - __dirname:', __dirname);
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
+      console.log('Download - File does not exist at:', filePath);
       return res.status(404).json({ success: false, message: 'PDF file not found on server' });
     }
+    console.log('Download - File exists at:', filePath);
 
     // Set headers for file download
     res.setHeader('Content-Type', 'application/pdf');

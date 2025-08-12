@@ -148,34 +148,62 @@ const startServer = async () => {
       setupDatabase,
       setupRolesAndPermissions,
       setupAdminUser,
+      setupPlanManagers,
+      setupStabilityManagers,
+      verifyRequiredRoles,
     } = require("./scripts/serverSetup");
 
-    console.log("Setting up database and initial data...");
+    // Import account creation functions
+    const {
+      createAllAccounts
+    } = require("./scripts/createAccounts");
+
+    console.log("🚀 Starting complete server setup...");
+    
+    // Step 1: Database Setup
+    console.log("📊 Setting up database structure...");
     const dbSetup = await setupDatabase();
     if (!dbSetup) {
       throw new Error("Database setup failed");
     }
+    console.log("✅ Database structure setup completed");
 
+    // Step 2: Roles and Permissions
+    console.log("🔐 Setting up roles and permissions...");
     const rolesSetup = await setupRolesAndPermissions();
     if (!rolesSetup) {
       throw new Error("Roles and permissions setup failed");
     }
+    console.log("✅ Roles and permissions setup completed");
 
-    const adminSetup = await setupAdminUser();
-    if (!adminSetup) {
-      throw new Error("Admin user setup failed");
+    // Step 3: Verify Required Roles
+    console.log("✅ Verifying required roles exist...");
+    const rolesVerified = await verifyRequiredRoles();
+    if (!rolesVerified) {
+      throw new Error("Required roles verification failed");
+    }
+    console.log("✅ All required roles verified");
+
+    // Step 4: Create All User Accounts
+    console.log("👥 Creating/updating all user accounts...");
+    const accountsCreated = await createAllAccounts();
+    if (!accountsCreated) {
+      console.warn("⚠️  Warning: Account creation failed, but continuing...");
+    } else {
+      console.log("✅ All user accounts created/updated successfully");
     }
 
-    console.log("Database setup completed successfully");
+    console.log("🎉 Complete server setup completed successfully!");
 
     const port = config.server.port;
     app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-      console.log(`Environment: ${config.server.nodeEnv}`);
-      console.log(`Backend URL: ${config.server.backendUrl}`);
+      console.log(`🚀 Server running on port ${port}`);
+      console.log(`🌍 Environment: ${config.server.nodeEnv}`);
+      console.log(`🔗 Backend URL: ${config.server.backendUrl}`);
+      console.log("✨ All systems ready!");
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error("❌ Failed to start server:", error);
     process.exit(1);
   }
 };
