@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
 const bcrypt = require('bcryptjs');
+const sequelize = require('../config/db');
 const Role = require('./roleModel');
 
 const User = sequelize.define('User', {
@@ -82,8 +82,16 @@ User.beforeUpdate(async (user) => {
   if (user.changed('password')) {
     try {
       console.log('Hashing updated password for user:', user.email);
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(user.password, salt);
+      
+      // Check if the password is already hashed (bcrypt hashes start with $2a$)
+      const isAlreadyHashed = user.password && user.password.startsWith('$2a$');
+      
+      if (isAlreadyHashed) {
+        console.log('Password is already hashed, skipping re-hashing');
+        return; // Don't hash again
+      }
+      
+      const hash = await bcrypt.hash(user.password, 10);
       user.password = hash;
       console.log('Updated password hashed successfully');
     } catch (error) {
@@ -126,8 +134,7 @@ User.prototype.validatePassword = async function(password) {
     // If validation fails, try to hash the provided password and compare hashes
     if (!isValid) {
       console.log('Password validation failed, checking hash generation...');
-      const salt = await bcrypt.genSalt(10);
-      const newHash = await bcrypt.hash(password, salt);
+      const newHash = await bcrypt.hash(password, 10);
       console.log('New hash generated:', newHash);
       console.log('Hash comparison:', newHash === this.password);
     }
@@ -135,6 +142,26 @@ User.prototype.validatePassword = async function(password) {
     return isValid;
   } catch (error) {
     console.error('Error validating password:', error);
+    return false;
+  }
+};
+
+// Add method to set pre-hashed password (bypasses beforeUpdate hook)
+User.setHashedPassword = async function(userId, hashedPassword) {
+  try {
+    // Use raw SQL to bypass the beforeUpdate hook completely
+    const [updateResult] = await sequelize.query(
+      'UPDATE Users SET password = ?, updated_at = ? WHERE user_id = ?',
+      {
+        replacements: [hashedPassword, new Date(), userId],
+        type: sequelize.QueryTypes.UPDATE
+      }
+    );
+    
+    console.log('Pre-hashed password set successfully using raw SQL');
+    return true;
+  } catch (error) {
+    console.error('Error setting pre-hashed password:', error);
     return false;
   }
 };

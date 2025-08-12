@@ -178,15 +178,14 @@ async function createAllAccounts() {
         await assignRoleToUser(adminResult.user, 'Admin');
       } else if (adminResult.action === 'exists') {
         console.log(`ℹ️  Admin account already exists, checking role assignment...`);
-        // Check if role is already assigned
+        // Check if role is already assigned using a simpler approach
         const existingRole = await UserRole.findOne({
-          where: { user_id: adminResult.user.user_id },
-          include: [{ model: Role, where: { role_name: 'Admin' } }]
+          where: { user_id: adminResult.user.user_id }
         });
-        if (!existingRole) {
-          await assignRoleToUser(adminResult.user, 'Admin');
-        } else {
+        if (existingRole) {
           console.log(`ℹ️  Admin role already assigned to ${adminResult.user.username}`);
+        } else {
+          await assignRoleToUser(adminResult.user, 'Admin');
         }
       }
     }
@@ -200,15 +199,14 @@ async function createAllAccounts() {
           await assignRoleToUser(result.user, 'Plan_manager');
         } else if (result.action === 'exists') {
           console.log(`ℹ️  Plan manager account already exists, checking role assignment...`);
-          // Check if role is already assigned
+          // Check if role is already assigned using a simpler approach
           const existingRole = await UserRole.findOne({
-            where: { user_id: result.user.user_id },
-            include: [{ model: Role, where: { role_name: 'Plan_manager' } }]
+            where: { user_id: result.user.user_id }
           });
-          if (!existingRole) {
-            await assignRoleToUser(result.user, 'Plan_manager');
-          } else {
+          if (existingRole) {
             console.log(`ℹ️  Plan_manager role already assigned to ${result.user.username}`);
+          } else {
+            await assignRoleToUser(result.user, 'Plan_manager');
           }
         }
       }
@@ -223,15 +221,14 @@ async function createAllAccounts() {
           await assignRoleToUser(result.user, 'Stability_manager');
         } else if (result.action === 'exists') {
           console.log(`ℹ️  Stability manager account already exists, checking role assignment...`);
-          // Check if role is already assigned
+          // Check if role is already assigned using a simpler approach
           const existingRole = await UserRole.findOne({
-            where: { user_id: result.user.user_id },
-            include: [{ model: Role, where: { role_name: 'Stability_manager' } }]
+            where: { user_id: result.user.user_id }
           });
-          if (!existingRole) {
-            await assignRoleToUser(result.user, 'Stability_manager');
-          } else {
+          if (existingRole) {
             console.log(`ℹ️  Stability_manager role already assigned to ${result.user.username}`);
+          } else {
+            await assignRoleToUser(result.user, 'Stability_manager');
           }
         }
       }
