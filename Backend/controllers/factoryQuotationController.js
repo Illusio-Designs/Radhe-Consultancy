@@ -442,37 +442,49 @@ exports.generatePDF = async (req, res) => {
       companyName: quotation.companyName,
       companyAddress: quotation.companyAddress,
       phone: quotation.phone,
+      email: quotation.email,
       date: new Date(quotation.createdAt).toLocaleDateString('en-GB'),
-      totalAmount: quotation.totalAmount,
+      calculatedAmount: quotation.calculatedAmount || quotation.totalAmount,
+      // Additional charges
+      planCharge: quotation.planCharge || 0,
+      stabilityCertificateAmount: quotation.stabilityCertificateAmount || 0,
+      administrationCharge: quotation.administrationCharge || 0,
+      consultancyFees: quotation.consultancyFees || 0,
       items: [
         {
-          particular: 'Factory License Compliance',
-          workDetails: `${quotation.horsePower} HP, ${quotation.noOfWorkers || quotation.numberOfWorkers} Workers`,
-          hoursYears: `${quotation.year} Year(s)`,
-          amount: quotation.calculatedAmount * (quotation.year || 1)
+          srNo: '1',
+          particular: 'Factory License',
+          workers: `${quotation.noOfWorkers || quotation.numberOfWorkers || 'N/A'} Workers`,
+          hoursPower: `${quotation.horsePower || 'N/A'} HP`,
+          year: `${quotation.year || 'N/A'} Year(s)`,
+          total: (quotation.calculatedAmount || quotation.totalAmount || 0).toString()
         }
-      ],
-      additionalCharges: [
-        { amount: quotation.planCharge || 0 },
-        { amount: quotation.stabilityCertificateAmount || 0 },
-        { amount: quotation.administrationCharge || 0 },
-        { amount: quotation.consultancyFees || 0 }
       ]
     };
 
     // Generate PDF using new method
     console.log('Starting PDF generation for quotation:', quotationId);
+    console.log('PDF Data being sent:', pdfData);
+    console.log('Additional charges in PDF data:', {
+      planCharge: pdfData.planCharge,
+      stabilityCertificateAmount: pdfData.stabilityCertificateAmount,
+      administrationCharge: pdfData.administrationCharge,
+      consultancyFees: pdfData.consultancyFees
+    });
+    
     const outputDir = path.join(__dirname, '../uploads/pdfs');
     console.log('Output directory:', outputDir);
     console.log('Current __dirname:', __dirname);
     
-    let pdfPath, filename;
+    // Create unique filename for the PDF
+    const timestamp = Date.now();
+    const filename = `factory_quotation_${quotationId}_${timestamp}.pdf`;
+    const outputPath = path.join(outputDir, filename);
+    
+    let pdfPath;
     try {
-      pdfPath = await pdfGenerator.generatePDF(pdfData, outputDir);
+      pdfPath = await pdfGenerator.generateQuotationPDF(pdfData, outputPath);
       console.log('PDF generated successfully at:', pdfPath);
-      
-      // Extract filename from path
-      filename = path.basename(pdfPath);
     } catch (pdfError) {
       console.error('PDF generation failed:', pdfError);
       throw new Error(`PDF generation failed: ${pdfError.message}`);
