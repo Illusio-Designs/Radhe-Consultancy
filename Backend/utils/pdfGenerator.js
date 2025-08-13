@@ -22,6 +22,13 @@ class FactoryQuotationPDFGenerator {
     }
   }
 
+  // Helper method to parse charge values - handle strings, numbers, and null values
+  parseCharge(value) {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
   // Helper method to wrap text to fit within a specified width
   wrapText(text, maxWidth, fontSize = 10) {
     if (!text) return [];
@@ -288,18 +295,11 @@ class FactoryQuotationPDFGenerator {
       consultancyFees: this.quotationData.consultancyFees
     });
 
-    // More robust parsing of charges - handle strings, numbers, and null values
-    const parseCharge = (value) => {
-      if (value === null || value === undefined || value === '') return 0;
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? 0 : parsed;
-    };
-
     const additionalCharges = [
-      parseCharge(this.quotationData.planCharge),
-      parseCharge(this.quotationData.stabilityCertificateAmount),
-      parseCharge(this.quotationData.administrationCharge),
-      parseCharge(this.quotationData.consultancyFees)
+      this.parseCharge(this.quotationData.planCharge),
+      this.parseCharge(this.quotationData.stabilityCertificateAmount),
+      this.parseCharge(this.quotationData.administrationCharge),
+      this.parseCharge(this.quotationData.consultancyFees)
     ].filter(charge => charge > 0);
 
     // Debug: Check if any charges exist even if they're 0
@@ -381,10 +381,10 @@ class FactoryQuotationPDFGenerator {
     // Calculate grand total (Factory License + Additional Charges)
     const factoryLicenseAmount = parseFloat(this.quotationData.calculatedAmount) || 0;
     const additionalCharges = [
-      parseCharge(this.quotationData.planCharge),
-      parseCharge(this.quotationData.stabilityCertificateAmount),
-      parseCharge(this.quotationData.administrationCharge),
-      parseCharge(this.quotationData.consultancyFees)
+      this.parseCharge(this.quotationData.planCharge),
+      this.parseCharge(this.quotationData.stabilityCertificateAmount),
+      this.parseCharge(this.quotationData.administrationCharge),
+      this.parseCharge(this.quotationData.consultancyFees)
     ].filter(charge => charge > 0)
      .reduce((sum, charge) => sum + charge, 0);
     
