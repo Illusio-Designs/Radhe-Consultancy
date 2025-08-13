@@ -30,6 +30,10 @@ router.get('/insurance-companies', auth, firePolicyController.getActiveInsurance
 
 // CRUD endpoints
 router.get('/', auth, firePolicyController.getAllPolicies);
+
+// Statistics endpoint
+router.get('/statistics', auth, firePolicyController.getFireStatistics);
+
 router.get('/:id', auth, firePolicyController.getPolicy);
 
 router.post('/',

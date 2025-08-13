@@ -78,7 +78,6 @@ app.get("/api", (req, res) => {
       roles: "/api/roles",
       companies: "/api/companies",
       consumers: "/api/consumers",
-      adminDashboard: "/api/admin-dashboard",
       employeeCompensation: "/api/employee-compensation",
       insuranceCompanies: "/api/insurance-companies",
     },

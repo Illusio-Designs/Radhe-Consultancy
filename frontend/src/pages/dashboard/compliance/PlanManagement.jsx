@@ -7,6 +7,9 @@ import {
   BiUser,
   BiCalendar,
   BiEdit,
+  BiShield,
+  BiTrendingUp,
+  BiErrorCircle,
 } from "react-icons/bi";
 import { planManagementAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -86,6 +89,92 @@ const FileUploadModal = ({ onClose, onUpload }) => {
   );
 };
 
+// Statistics Cards Component
+const StatisticsCards = ({ statistics, loading }) => {
+  if (loading) {
+    return (
+      <div className="statistics-grid">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="stat-card loading">
+            <div className="stat-icon">
+              <div className="loading-placeholder" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">
+                <div className="loading-placeholder" style={{ width: 60, height: 24, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+              </div>
+              <div className="stat-label">
+                <div className="loading-placeholder" style={{ width: 100, height: 16, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const { total, plan, submit, approved, rejected, recent } = statistics;
+
+  return (
+    <div className="statistics-grid">
+      <div className="stat-card total">
+        <div className="stat-icon">
+          <BiShield />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{total}</div>
+          <div className="stat-label">Total Plans</div>
+        </div>
+      </div>
+      <div className="stat-card plan">
+        <div className="stat-icon">
+          <BiFile />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{plan}</div>
+          <div className="stat-label">In Planning</div>
+        </div>
+      </div>
+      <div className="stat-card submit">
+        <div className="stat-icon">
+          <BiTrendingUp />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{submit}</div>
+          <div className="stat-label">Submitted</div>
+        </div>
+      </div>
+      <div className="stat-card approved">
+        <div className="stat-icon">
+          <BiCheck />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{approved}</div>
+          <div className="stat-label">Approved</div>
+        </div>
+      </div>
+      <div className="stat-card rejected">
+        <div className="stat-icon">
+          <BiErrorCircle />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{rejected}</div>
+          <div className="stat-label">Rejected</div>
+        </div>
+      </div>
+      <div className="stat-card recent">
+        <div className="stat-icon">
+          <BiCalendar />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{recent}</div>
+          <div className="stat-label">Recent (30 days)</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Reject Modal
 const RejectModal = ({ onClose, onReject }) => {
   const [remarks, setRemarks] = useState('');
@@ -139,6 +228,15 @@ const RejectModal = ({ onClose, onReject }) => {
 function PlanManagement() {
   const [planManagementRecords, setPlanManagementRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    plan: 0,
+    submit: 0,
+    approved: 0,
+    rejected: 0,
+    recent: 0
+  });
   const [error, setError] = useState(null);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -148,6 +246,7 @@ function PlanManagement() {
 
   useEffect(() => {
     fetchPlanManagementRecords();
+    fetchPlanStatistics();
   }, []);
 
   const fetchPlanManagementRecords = async () => {
@@ -165,6 +264,38 @@ function PlanManagement() {
       setError("Failed to fetch plan management records");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPlanStatistics = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await planManagementAPI.getStatistics();
+      if (response && response.data) {
+        setStatistics(response.data);
+      } else {
+        console.error("Failed to fetch plan management statistics:", response);
+        setStatistics({
+          total: 0,
+          plan: 0,
+          submit: 0,
+          approved: 0,
+          rejected: 0,
+          recent: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching plan management statistics:", error);
+      setStatistics({
+        total: 0,
+        plan: 0,
+        submit: 0,
+        approved: 0,
+        rejected: 0,
+        recent: 0
+      });
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -356,6 +487,12 @@ function PlanManagement() {
             <BiX className="inline mr-2" /> {error}
           </div>
         )}
+
+        {/* Statistics Cards */}
+        <div className="statistics-section">
+          <h2 className="statistics-title">Plan Management Statistics</h2>
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+        </div>
 
         {loading ? (
           <Loader size="large" color="primary" />

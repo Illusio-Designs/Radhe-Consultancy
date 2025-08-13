@@ -500,6 +500,62 @@ const getPlanFiles = async (req, res) => {
   }
 };
 
+// Get plan management statistics
+const getStatistics = async (req, res) => {
+  try {
+    // Get total plans count
+    const total = await PlanManagement.count();
+
+    // Get count by status
+    const plan = await PlanManagement.count({
+      where: { status: 'plan' }
+    });
+
+    const submit = await PlanManagement.count({
+      where: { status: 'submit' }
+    });
+
+    const approved = await PlanManagement.count({
+      where: { status: 'Approved' }
+    });
+
+    const rejected = await PlanManagement.count({
+      where: { status: 'Reject' }
+    });
+
+    // Get recent plans count (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recent = await PlanManagement.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        total,
+        plan,
+        submit,
+        approved,
+        rejected,
+        recent
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching plan management statistics:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to get plan management statistics',
+      error: error.message 
+    });
+  }
+};
+
 // Delete plan file (Plan Manager only)
 const deletePlanFile = async (req, res) => {
   try {
@@ -580,5 +636,6 @@ module.exports = {
   reviewPlan,
   uploadPlanFiles,
   getPlanFiles,
-  deletePlanFile
+  deletePlanFile,
+  getStatistics
 }; 

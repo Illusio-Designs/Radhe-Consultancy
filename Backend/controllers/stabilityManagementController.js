@@ -3,6 +3,7 @@ const FactoryQuotation = require('../models/factoryQuotationModel');
 const User = require('../models/userModel');
 const Role = require('../models/roleModel');
 const UserRole = require('../models/userRoleModel');
+const { Op } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 
@@ -507,6 +508,73 @@ const getStabilityFiles = async (req, res) => {
   }
 };
 
+// Get stability management statistics
+const getStatistics = async (req, res) => {
+  try {
+    // Get total stability records count
+    const total = await StabilityManagement.count();
+
+    // Get count by status
+    const stability = await StabilityManagement.count({
+      where: { status: 'stability' }
+    });
+
+    const submit = await StabilityManagement.count({
+      where: { status: 'submit' }
+    });
+
+    const approved = await StabilityManagement.count({
+      where: { status: 'Approved' }
+    });
+
+    const rejected = await StabilityManagement.count({
+      where: { status: 'Reject' }
+    });
+
+    // Get count by load type
+    const withLoad = await StabilityManagement.count({
+      where: { load_type: 'with_load' }
+    });
+
+    const withoutLoad = await StabilityManagement.count({
+      where: { load_type: 'without_load' }
+    });
+
+    // Get recent records count (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recent = await StabilityManagement.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        total,
+        stability,
+        submit,
+        approved,
+        rejected,
+        withLoad,
+        withoutLoad,
+        recent
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stability management statistics:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to get stability management statistics',
+      error: error.message 
+    });
+  }
+};
+
 // Delete stability file (Stability Manager only)
 const deleteStabilityFile = async (req, res) => {
   try {
@@ -582,5 +650,6 @@ module.exports = {
   updateStabilityDates,
   uploadStabilityFiles,
   getStabilityFiles,
-  deleteStabilityFile
+  deleteStabilityFile,
+  getStatistics
 }; 

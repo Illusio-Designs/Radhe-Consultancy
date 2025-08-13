@@ -8,7 +8,6 @@ const userRoutes = require('./userRoutes');
 const roleRoutes = require('./roleRoutes');
 const companyRoutes = require('./companyRoutes');
 const consumerRoutes = require('./consumerRoutes');
-const adminDashboardRoutes = require('./adminDashboardRoutes');
 const employeeCompensationRoutes = require('./employeeCompensationRoutes');
 const insuranceCompanyRoutes = require('./insuranceCompanyRoutes');
 const vehiclePolicyRoutes = require('./vehiclePolicyRoutes');
@@ -44,10 +43,6 @@ const routes = {
   consumers: {
     path: '/consumers',
     router: consumerRoutes
-  },
-  adminDashboard: {
-    path: '/admin-dashboard',
-    router: adminDashboardRoutes
   },
   employeeCompensation: {
     path: '/employee-compensation',

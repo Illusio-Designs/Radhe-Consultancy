@@ -5,6 +5,9 @@ import {
   BiTrash,
   BiErrorCircle,
   BiUpload,
+  BiShield,
+  BiTrendingUp,
+  BiCalendar,
 } from "react-icons/bi";
 import {
   employeeCompensationAPI,
@@ -732,6 +735,8 @@ function ECP({ searchQuery = "" }) {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
@@ -747,6 +752,7 @@ function ECP({ searchQuery = "" }) {
 
   useEffect(() => {
     fetchPolicies(1, 10);
+    fetchECPStatistics();
   }, []);
 
   // Handle search when searchQuery changes
@@ -760,6 +766,33 @@ function ECP({ searchQuery = "" }) {
       fetchPolicies(1, pagination.pageSize);
     }
   }, [searchQuery, pagination.pageSize]);
+
+  const fetchECPStatistics = async () => {
+    try {
+      console.log('[ECP] fetchECPStatistics called');
+      setStatsLoading(true);
+      
+      console.log('[ECP] Calling getECPStatistics API...');
+      const response = await employeeCompensationAPI.getECPStatistics();
+      console.log('[ECP] API response received:', response);
+      
+      if (response.success) {
+        console.log('[ECP] Setting statistics:', response.data);
+        setStatistics(response.data);
+      } else {
+        console.log('[ECP] API returned success: false');
+      }
+    } catch (error) {
+      console.error('[ECP] Error fetching ECP statistics:', error);
+      console.error('[ECP] Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   const fetchPolicies = async (page = 1, pageSize = 10) => {
     try {
@@ -967,6 +1000,7 @@ function ECP({ searchQuery = "" }) {
         await employeeCompensationAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
         await fetchPolicies(pagination.currentPage, pagination.pageSize);
+        await fetchECPStatistics();
       } catch (err) {
         setError("Failed to delete policy");
         toast.error("Failed to delete policy");
@@ -990,6 +1024,7 @@ function ECP({ searchQuery = "" }) {
 
   const handlePolicyUpdated = async () => {
     await fetchPolicies(pagination.currentPage, pagination.pageSize);
+    await fetchECPStatistics();
     handleModalClose();
   };
 
@@ -1001,6 +1036,76 @@ function ECP({ searchQuery = "" }) {
   const handlePageSizeChange = async (newPageSize) => {
     console.log("ECP: Page size changed to:", newPageSize);
     await fetchPolicies(1, newPageSize);
+  };
+
+  // Statistics Cards Component
+  const StatisticsCards = () => {
+    if (statsLoading) {
+      return (
+        <div className="statistics-grid">
+          <div className="stat-card loading">
+            <Loader size="small" />
+          </div>
+          <div className="stat-card loading">
+            <Loader size="small" />
+          </div>
+          <div className="stat-card loading">
+            <Loader size="small" />
+          </div>
+        </div>
+      );
+    }
+
+    if (!statistics) return null;
+
+    // Get ECP statistics from the response
+    const totalPolicies = statistics.total_policies || 0;
+    const activePolicies = statistics.active_policies || 0;
+    const recentPolicies = statistics.recent_policies || 0;
+
+    const activePercentage = statistics.percent_active || 0;
+    const recentPercentage = statistics.percent_recent || 0;
+
+    return (
+      <div className="statistics-section">
+        <div className="statistics-grid">
+          {/* Total Policies Card */}
+          <div className="stat-card total">
+            <div className="stat-icon">
+              <BiShield />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{totalPolicies}</h3>
+              <p className="stat-label">Total Policies</p>
+            </div>
+          </div>
+
+          {/* Active Policies Card */}
+          <div className="stat-card active">
+            <div className="stat-icon">
+              <BiTrendingUp />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{activePolicies}</h3>
+              <p className="stat-label">Active Policies</p>
+              <p className="stat-percentage">{activePercentage}% of total</p>
+            </div>
+          </div>
+
+          {/* Recent Policies Card */}
+          <div className="stat-card recent">
+            <div className="stat-icon">
+              <BiCalendar />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{recentPolicies}</h3>
+              <p className="stat-label">Recent Policies (30 days)</p>
+              <p className="stat-percentage">{recentPercentage}% of total</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const columns = [
@@ -1074,6 +1179,9 @@ function ECP({ searchQuery = "" }) {
             Add Policy
           </Button>
         </div>
+
+        {/* ECP Statistics */}
+        <StatisticsCards />
         {error && (
           <div className="insurance-error">
             <BiErrorCircle className="inline mr-2" /> {error}

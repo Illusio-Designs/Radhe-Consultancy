@@ -2,13 +2,11 @@ const express = require('express');
 const router = express.Router();
 const consumerController = require('../controllers/consumerController');
 const { auth, checkRole } = require('../middleware/auth');
-const { uploadProfileImage } = require('../config/multerConfig');
 
 // Create a new consumer (admin and vendor manager only)
 router.post('/', 
   auth, 
   checkRole(['admin', 'vendor_manager']),
-  uploadProfileImage,
   consumerController.createConsumer
 );
 
@@ -17,6 +15,13 @@ router.get('/',
   auth, 
   checkRole(['admin', 'vendor_manager', 'user_manager']), 
   consumerController.getAllConsumers
+);
+
+// Get consumer statistics (admin, vendor manager, and user manager)
+router.get('/statistics', 
+  auth, 
+  checkRole(['admin', 'vendor_manager', 'user_manager']), 
+  consumerController.getConsumerStatistics
 );
 
 // Search consumers (must be before /:id route)
@@ -33,7 +38,6 @@ router.get('/:id',
 router.put('/:id', 
   auth, 
   checkRole(['admin', 'vendor_manager', 'consumer']),
-  uploadProfileImage,
   consumerController.updateConsumer
 );
 

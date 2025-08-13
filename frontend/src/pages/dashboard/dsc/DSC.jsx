@@ -5,6 +5,9 @@ import {
   BiTrash,
   BiErrorCircle,
   BiUpload,
+  BiShield,
+  BiTrendingUp,
+  BiCalendar,
 } from "react-icons/bi";
 import { dscAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -365,6 +368,73 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
   );
 };
 
+// --- StatisticsCards Component ---
+const StatisticsCards = ({ statistics, loading }) => {
+  if (loading) {
+    return (
+      <div className="statistics-section">
+        <div className="statistics-grid">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="stat-card">
+              <div className="stat-icon">
+                <div className="loading-placeholder" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
+              </div>
+              <div className="stat-content">
+                <div className="stat-number">
+                  <div className="loading-placeholder" style={{ width: 60, height: 24, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+                </div>
+                <div className="stat-label">
+                  <div className="loading-placeholder" style={{ width: 100, height: 16, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const { totalDSCs, inDSCs, outDSCs } = statistics;
+  const inPercentage = totalDSCs > 0 ? Math.round((inDSCs / totalDSCs) * 100) : 0;
+  const outPercentage = totalDSCs > 0 ? Math.round((outDSCs / totalDSCs) * 100) : 0;
+
+  return (
+    <div className="statistics-section">
+      <div className="statistics-grid">
+        <div className="stat-card total">
+          <div className="stat-icon">
+            <BiShield />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{totalDSCs}</div>
+            <div className="stat-label">All DSCs</div>
+          </div>
+        </div>
+        <div className="stat-card active">
+          <div className="stat-icon">
+            <BiTrendingUp />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{inDSCs}</div>
+            <div className="stat-label">In DSCs</div>
+            <div className="stat-percentage">{inPercentage}%</div>
+          </div>
+        </div>
+        <div className="stat-card recent">
+          <div className="stat-icon">
+            <BiCalendar />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{outDSCs}</div>
+            <div className="stat-label">Out DSCs</div>
+            <div className="stat-percentage">{outPercentage}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function DSC({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedDSC, setSelectedDSC] = useState(null);
@@ -372,6 +442,12 @@ function DSC({ searchQuery = "" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [statistics, setStatistics] = useState({
+    totalDSCs: 0,
+    inDSCs: 0,
+    outDSCs: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
   const { user, userRoles } = useAuth();
   const isCompany = userRoles.includes("company");
   const isConsumer = userRoles.includes("consumer");
@@ -417,6 +493,7 @@ function DSC({ searchQuery = "" }) {
     } else {
       fetchData();
     }
+    fetchDSCStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, isCompany, isConsumer, companyId, consumerId]);
 
@@ -462,6 +539,18 @@ function DSC({ searchQuery = "" }) {
     }
   };
 
+  const fetchDSCStatistics = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await dscAPI.getDSCStatistics();
+      setStatistics(response);
+    } catch (err) {
+      console.error('[DSC] Error fetching DSC statistics:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const handleSearchDSCs = async (query) => {
     try {
       console.log("Searching DSCs with query:", query);
@@ -501,6 +590,7 @@ function DSC({ searchQuery = "" }) {
         await dscAPI.deleteDSC(dscId);
         toast.success("DSC deleted successfully!");
         await fetchDSCs();
+        await fetchDSCStatistics();
       } catch (err) {
         const errorMessage = "Failed to delete DSC";
         setError(errorMessage);
@@ -524,6 +614,7 @@ function DSC({ searchQuery = "" }) {
   const handleDSCUpdated = async () => {
     console.log("DSC updated, refreshing list");
     await fetchDSCs();
+    await fetchDSCStatistics();
     handleModalClose();
   };
 
@@ -684,7 +775,9 @@ function DSC({ searchQuery = "" }) {
             </div>
           </div>
         </div>
-
+        
+        <StatisticsCards statistics={statistics} loading={statsLoading} />
+        
         {error && (
           <div className="dsc-error">
             <BiErrorCircle className="inline mr-2" /> {error}

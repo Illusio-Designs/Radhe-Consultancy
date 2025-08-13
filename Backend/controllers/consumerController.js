@@ -1,17 +1,86 @@
 const { Consumer, User, Role, sequelize } = require('../models');
 const userService = require('../services/userService');
 const { Op } = require('sequelize');
-const path = require('path');
-const fs = require('fs').promises;
-const fsSync = require('fs');
 
 const consumerController = {
+  // Get consumer statistics
+  async getConsumerStatistics(req, res) {
+    try {
+      console.log('[ConsumerController] Getting consumer statistics');
+      
+      // Get total consumers count
+      const totalConsumers = await Consumer.count();
+      console.log('[ConsumerController] Total consumers:', totalConsumers);
+
+      // Get active consumers count (all consumers are considered active)
+      const activeConsumers = totalConsumers;
+      
+      // Get consumers created in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentConsumers = await Consumer.count({
+        where: {
+          created_at: {
+            [Op.gte]: thirtyDaysAgo
+          }
+        }
+      });
+      console.log('[ConsumerController] Recent consumers:', recentConsumers);
+
+      // Calculate percentages
+      const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
+      const activePercentage = percent(activeConsumers, totalConsumers);
+      const recentPercentage = percent(recentConsumers, totalConsumers);
+
+      // Get consumers by month for the last 6 months
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      
+      const monthlyStats = await Consumer.findAll({
+        attributes: [
+          [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%Y-%m'), 'month'],
+          [sequelize.fn('COUNT', sequelize.col('consumer_id')), 'count']
+        ],
+        where: {
+          created_at: {
+            [Op.gte]: sixMonthsAgo
+          }
+        },
+        group: [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%Y-%m')],
+        order: [[sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%Y-%m'), 'ASC']],
+        raw: true
+      });
+
+      const responseData = {
+        total_consumers: totalConsumers,
+        active_consumers: activeConsumers,
+        recent_consumers: recentConsumers,
+        percent_active: activePercentage,
+        percent_recent: recentPercentage,
+        monthly_stats: monthlyStats
+      };
+
+      console.log('[ConsumerController] Consumer statistics:', responseData);
+      
+      res.status(200).json({
+        success: true,
+        data: responseData
+      });
+    } catch (error) {
+      console.error('[ConsumerController] Error getting consumer statistics:', error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get consumer statistics: ${error.message}`
+      });
+    }
+  },
+
   // Create a new consumer
   async createConsumer(req, res) {
     try {
       console.log('[ConsumerController] Creating consumer:', {
-        body: req.body,
-        file: req.file
+        body: req.body
       });
 
       const formData = req.body;
@@ -51,20 +120,12 @@ const consumerController = {
         });
       }
 
-      // Handle profile image upload
-      let profile_image = null;
-      if (req.file) {
-        profile_image = req.file.filename;
-        console.log('[ConsumerController] Profile image saved:', profile_image);
-      }
-
       // Create consumer
       const consumer = await Consumer.create({
         name: formData.name,
         email: formData.email,
         phone_number: formData.phone_number,
         contact_address: formData.contact_address,
-        profile_image,
         user_id: user.user_id
       });
 
@@ -167,8 +228,7 @@ const consumerController = {
     try {
       console.log('[ConsumerController] Updating consumer:', {
         id: req.params.id,
-        body: req.body,
-        file: req.file
+        body: req.body
       });
 
       const consumer = await Consumer.findByPk(req.params.id, {

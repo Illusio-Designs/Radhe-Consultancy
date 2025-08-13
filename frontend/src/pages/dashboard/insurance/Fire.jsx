@@ -5,6 +5,9 @@ import {
   BiTrash,
   BiErrorCircle,
   BiUpload,
+  BiShield,
+  BiTrendingUp,
+  BiCalendar,
 } from "react-icons/bi";
 import { firePolicyAPI, insuranceCompanyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -728,12 +731,86 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   );
 };
 
+// --- StatisticsCards Component ---
+const StatisticsCards = ({ statistics, loading }) => {
+  if (loading) {
+    return (
+      <div className="statistics-section">
+        <div className="statistics-grid">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="stat-card">
+              <div className="stat-icon">
+                <div className="loading-placeholder" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
+              </div>
+              <div className="stat-content">
+                <div className="stat-number">
+                  <div className="loading-placeholder" style={{ width: 60, height: 24, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+                </div>
+                <div className="stat-label">
+                  <div className="loading-placeholder" style={{ width: 100, height: 16, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const { totalPolicies, activePolicies, recentPolicies } = statistics;
+  const activePercentage = totalPolicies > 0 ? Math.round((activePolicies / totalPolicies) * 100) : 0;
+  const recentPercentage = totalPolicies > 0 ? Math.round((recentPolicies / totalPolicies) * 100) : 0;
+
+  return (
+    <div className="statistics-section">
+      <div className="statistics-grid">
+        <div className="stat-card total">
+          <div className="stat-icon">
+            <BiShield />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{totalPolicies}</div>
+            <div className="stat-label">Total Policies</div>
+          </div>
+        </div>
+        <div className="stat-card active">
+          <div className="stat-icon">
+            <BiTrendingUp />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{activePolicies}</div>
+            <div className="stat-label">Active Policies</div>
+            <div className="stat-percentage">{activePercentage}%</div>
+          </div>
+        </div>
+        <div className="stat-card recent">
+          <div className="stat-icon">
+            <BiCalendar />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{recentPolicies}</div>
+            <div className="stat-label">Recent Policies</div>
+            <div className="stat-percentage">{recentPercentage}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function Fire({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statistics, setStatistics] = useState({
+    totalPolicies: 0,
+    activePolicies: 0,
+    recentPolicies: 0,
+    monthlyStats: []
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
   const { user, userRoles } = useAuth();
   const isCompany = userRoles.includes("company");
   const isConsumer = userRoles.includes("consumer");
@@ -742,6 +819,7 @@ function Fire({ searchQuery = "" }) {
 
   useEffect(() => {
     fetchPolicies();
+    fetchFireStatistics();
   }, []);
 
   // Handle search when searchQuery changes
@@ -778,6 +856,18 @@ function Fire({ searchQuery = "" }) {
       setPolicies([]);
     } finally {
       setTimeout(() => setLoading(false), 1000);
+    }
+  };
+
+  const fetchFireStatistics = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await firePolicyAPI.getFireStatistics();
+      setStatistics(response);
+    } catch (err) {
+      console.error('[Fire] Error fetching fire policy statistics:', err);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -857,6 +947,7 @@ function Fire({ searchQuery = "" }) {
         await firePolicyAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
         await fetchPolicies();
+        await fetchFireStatistics();
       } catch (err) {
         setError("Failed to delete policy");
         toast.error("Failed to delete policy");
@@ -876,6 +967,7 @@ function Fire({ searchQuery = "" }) {
 
   const handlePolicyUpdated = async () => {
     await fetchPolicies();
+    await fetchFireStatistics();
     handleModalClose();
   };
 
@@ -950,6 +1042,9 @@ function Fire({ searchQuery = "" }) {
               Add Policy
             </Button>
           </div>
+          
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+          
           {error && (
             <div className="insurance-error">
               <BiErrorCircle className="inline mr-2" /> {error}

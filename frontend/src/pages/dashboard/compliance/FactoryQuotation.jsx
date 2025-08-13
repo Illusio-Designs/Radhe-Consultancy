@@ -1,6 +1,6 @@
 // This file is now FactoryQuotation.jsx
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload } from "react-icons/bi";
+import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload, BiShield, BiTrendingUp, BiCalendar } from "react-icons/bi";
 import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI, applicationManagementAPI, companyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -1354,6 +1354,118 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
   );
 };
 
+// --- StatisticsCards Component ---
+const StatisticsCards = ({ statistics, loading }) => {
+  if (loading) {
+    return (
+      <div className="statistics-section">
+        <div className="statistics-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="stat-card">
+              <div className="stat-icon">
+                <div className="loading-placeholder" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
+              </div>
+              <div className="stat-content">
+                <div className="stat-number">
+                  <div className="loading-placeholder" style={{ width: 60, height: 24, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+                </div>
+                <div className="stat-label">
+                  <div className="loading-placeholder" style={{ width: 100, height: 16, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const { total, pending, approved, rejected, plan, stability, application, renewal } = statistics;
+
+  return (
+    <div className="statistics-section">
+      <div className="statistics-grid">
+        <div className="stat-card total">
+          <div className="stat-icon">
+            <BiShield />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{total}</div>
+            <div className="stat-label">Total Quotations</div>
+          </div>
+        </div>
+        <div className="stat-card active">
+          <div className="stat-icon">
+            <BiTrendingUp />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{pending}</div>
+            <div className="stat-label">Pending</div>
+          </div>
+        </div>
+        <div className="stat-card recent">
+          <div className="stat-icon">
+            <BiCalendar />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{approved}</div>
+            <div className="stat-label">Approved</div>
+          </div>
+        </div>
+        <div className="stat-card rejected">
+          <div className="stat-icon">
+            <BiErrorCircle />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{rejected}</div>
+            <div className="stat-label">Rejected</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Additional Status Cards */}
+      <div className="statistics-grid" style={{ marginTop: '1rem' }}>
+        <div className="stat-card plan">
+          <div className="stat-icon">
+            <BiFile />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{plan}</div>
+            <div className="stat-label">Plan</div>
+          </div>
+        </div>
+        <div className="stat-card stability">
+          <div className="stat-icon">
+            <BiShield />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{stability}</div>
+            <div className="stat-label">Stability</div>
+          </div>
+        </div>
+        <div className="stat-card application">
+          <div className="stat-icon">
+            <BiEdit />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{application}</div>
+            <div className="stat-label">Application</div>
+          </div>
+        </div>
+        <div className="stat-card renewal">
+          <div className="stat-icon">
+            <BiCalendar />
+          </div>
+          <div className="stat-content">
+            <div className="stat-number">{renewal}</div>
+            <div className="stat-label">Renewal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function FactoryQuotation({ searchQuery = "" }) {
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1367,6 +1479,17 @@ function FactoryQuotation({ searchQuery = "" }) {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showApplicationRejectModal, setShowApplicationRejectModal] = useState(false);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    plan: 0,
+    stability: 0,
+    application: 0,
+    renewal: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -1410,6 +1533,7 @@ function FactoryQuotation({ searchQuery = "" }) {
     } else {
       fetchData();
     }
+    fetchFactoryQuotationStatistics();
   }, [searchQuery]);
 
   const handleSearchQuotations = async (query) => {
@@ -1468,6 +1592,43 @@ function FactoryQuotation({ searchQuery = "" }) {
     }
   };
 
+  const fetchFactoryQuotationStatistics = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await factoryQuotationAPI.getStatistics();
+      if (response && response.data) {
+        setStatistics(response.data);
+      } else {
+        console.error("Failed to fetch factory quotation statistics:", response);
+        setStatistics({
+          total: 0,
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+          plan: 0,
+          stability: 0,
+          application: 0,
+          renewal: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching factory quotation statistics:", error);
+      setStatistics({
+        total: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        plan: 0,
+        stability: 0,
+        application: 0,
+        renewal: 0
+      });
+    } finally {
+      setTimeout(() => {
+        setStatsLoading(false);
+      }, 1000);
+    }
+  };
 
 
   const handleEdit = (quotation) => {
@@ -2018,13 +2179,15 @@ function FactoryQuotation({ searchQuery = "" }) {
               />
             </div>
           </div>
-      </div>
-
-      {error && (
-        <div className="compliance-error">
-          <BiErrorCircle className="inline mr-2" /> {error}
         </div>
-      )}
+        
+        <StatisticsCards statistics={statistics} loading={statsLoading} />
+        
+        {error && (
+          <div className="compliance-error">
+            <BiErrorCircle className="inline mr-2" /> {error}
+          </div>
+        )}
 
       {loading ? (
         <Loader size="large" color="primary" />

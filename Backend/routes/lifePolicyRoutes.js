@@ -84,6 +84,10 @@ const logRequest = (req, res, next) => {
 router.get('/companies', auth, lifePolicyController.getActiveCompanies);
 router.get('/consumers', auth, lifePolicyController.getActiveConsumers);
 router.get('/', auth, lifePolicyController.getAllPolicies);
+
+// Statistics endpoint
+router.get('/statistics', auth, lifePolicyController.getLifeStatistics);
+
 router.get('/search', auth, lifePolicyController.searchPolicies);
 router.get('/:id', auth, lifePolicyController.getPolicy);
 

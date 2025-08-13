@@ -65,6 +65,7 @@ const validateFileType = (req, res, next) => {
 
 // Routes
 router.get('/companies', auth, employeeCompensationController.getActiveCompanies);
+router.get('/statistics', auth, employeeCompensationController.getECPStatistics);
 router.get('/', auth, employeeCompensationController.getAllPolicies);
 router.get('/search', auth, employeeCompensationController.searchPolicies);
 router.get('/:id', auth, employeeCompensationController.getPolicy);

@@ -55,6 +55,10 @@ router.get('/companies', auth, healthPolicyController.getActiveCompanies);
 router.get('/consumers', auth, healthPolicyController.getActiveConsumers);
 router.get('/insurance-companies', auth, healthPolicyController.getActiveInsuranceCompanies);
 router.get('/', auth, healthPolicyController.getAllPolicies);
+
+// Statistics endpoint
+router.get('/statistics', auth, healthPolicyController.getHealthStatistics);
+
 router.get('/search', auth, healthPolicyController.searchPolicies);
 router.get('/:id', auth, healthPolicyController.getPolicy);
 

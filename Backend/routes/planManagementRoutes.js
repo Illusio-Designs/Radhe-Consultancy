@@ -38,4 +38,7 @@ router.get('/:id/files', checkUserRole(['Plan_manager']), planManagementControll
 // Delete plan file - Plan Manager only
 router.delete('/:id/files/:filename', checkUserRole(['Plan_manager']), planManagementController.deletePlanFile);
 
+// Get statistics
+router.get('/statistics', auth, planManagementController.getStatistics);
+
 module.exports = router; 

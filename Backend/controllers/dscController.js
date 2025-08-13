@@ -390,3 +390,36 @@ exports.searchDSCs = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+exports.getDSCStatistics = async (req, res) => {
+  try {
+    // Get total DSCs count
+    const totalDSCs = await DSC.count();
+
+    // Get IN status DSCs count
+    const inDSCs = await DSC.count({
+      where: {
+        status: 'in'
+      }
+    });
+
+    // Get OUT status DSCs count
+    const outDSCs = await DSC.count({
+      where: {
+        status: 'out'
+      }
+    });
+
+    res.json({
+      totalDSCs,
+      inDSCs,
+      outDSCs
+    });
+  } catch (error) {
+    console.error('Error fetching DSC statistics:', error);
+    res.status(500).json({ 
+      message: 'Failed to get DSC statistics',
+      error: error.message 
+    });
+  }
+};

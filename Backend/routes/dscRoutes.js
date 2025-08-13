@@ -18,6 +18,10 @@ router.get('/search', dscController.searchDSCs);
 
 // DSC routes
 router.get('/', dscController.getAllDSCs);
+
+// Statistics endpoint
+router.get('/statistics', dscController.getDSCStatistics);
+
 router.get('/:id', dscController.getDSCById);
 router.post('/', dscController.createDSC);
 router.put('/:id', dscController.updateDSC);

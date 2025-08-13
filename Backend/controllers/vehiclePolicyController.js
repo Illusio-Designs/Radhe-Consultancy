@@ -476,3 +476,61 @@ exports.searchPolicies = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }; 
+
+exports.getVehicleStatistics = async (req, res) => {
+  try {
+    // Get total policies count
+    const totalPolicies = await VehiclePolicy.count();
+
+    // Get active policies count (policies with end date in future)
+    const activePolicies = await VehiclePolicy.count({
+      where: {
+        policy_end_date: {
+          [Op.gte]: new Date()
+        }
+      }
+    });
+
+    // Get recent policies count (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentPolicies = await VehiclePolicy.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+
+    // Get monthly statistics for the current year
+    const currentYear = new Date().getFullYear();
+    const monthlyStats = await VehiclePolicy.findAll({
+      attributes: [
+        [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%M'), 'month'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: {
+        created_at: {
+          [Op.gte]: new Date(currentYear, 0, 1),
+          [Op.lt]: new Date(currentYear + 1, 0, 1)
+        }
+      },
+      group: [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%M')],
+      order: [[sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%m'), 'ASC']]
+    });
+
+    res.json({
+      totalPolicies,
+      activePolicies,
+      recentPolicies,
+      monthlyStats
+    });
+  } catch (error) {
+    console.error('Error fetching vehicle policy statistics:', error);
+    res.status(500).json({ 
+      message: 'Failed to get vehicle policy statistics',
+      error: error.message 
+    });
+  }
+}; 

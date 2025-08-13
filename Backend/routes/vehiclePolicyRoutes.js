@@ -52,6 +52,10 @@ const logRequest = (req, res, next) => {
 router.get('/companies', auth, vehiclePolicyController.getActiveCompanies);
 router.get('/consumers', auth, vehiclePolicyController.getActiveConsumers);
 router.get('/', auth, vehiclePolicyController.getAllPolicies);
+
+// Statistics endpoint
+router.get('/statistics', auth, vehiclePolicyController.getVehicleStatistics);
+
 router.get('/search', auth, vehiclePolicyController.searchPolicies);
 router.get('/:id', auth, vehiclePolicyController.getPolicy);
 

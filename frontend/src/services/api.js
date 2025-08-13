@@ -442,6 +442,16 @@ export const companyAPI = {
     }
   },
 
+  getCompanyStatistics: async () => {
+    try {
+      const response = await api.get("/companies/statistics");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching company statistics:", error);
+      throw error;
+    }
+  },
+
   createCompany: async (formData) => {
     try {
       console.log("[API] Creating company:", {
@@ -553,6 +563,18 @@ export const companyAPI = {
 
 // Consumer API
 export const consumerAPI = {
+  getConsumerStatistics: async () => {
+    try {
+      console.log("API Service: Fetching consumer statistics");
+      const response = await api.get("/consumers/statistics");
+      console.log("API Service: Consumer statistics fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching consumer statistics:", error);
+      throw error;
+    }
+  },
+
   getAllConsumers: async () => {
     try {
       console.log("API Service: Fetching all consumers");
@@ -760,69 +782,6 @@ export const adminAPI = {
   },
 };
 
-// Admin Dashboard API
-export const adminDashboardAPI = {
-  getCompanyStatistics: async () => {
-    try {
-      console.log("API Service: Fetching company statistics");
-      const response = await api.get("/admin-dashboard/statistics");
-      console.log("API Service: Company stats fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching company stats:", error);
-      throw error;
-    }
-  },
-
-  getCompanyStats: async (companyId) => {
-    try {
-      console.log("API Service: Fetching company-specific statistics");
-      const response = await api.get(`/admin-dashboard/statistics/company/${companyId}`);
-      console.log("API Service: Company-specific stats fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching company-specific stats:", error);
-      throw error;
-    }
-  },
-
-  getConsumerStats: async (consumerId) => {
-    try {
-      console.log("API Service: Fetching consumer-specific statistics");
-      const response = await api.get(`/admin-dashboard/statistics/consumer/${consumerId}`);
-      console.log("API Service: Consumer-specific stats fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching consumer-specific stats:", error);
-      throw error;
-    }
-  },
-
-  getPlanManagerStats: async () => {
-    try {
-      console.log("API Service: Fetching plan manager statistics");
-      const response = await api.get("/admin-dashboard/statistics/plan-manager");
-      console.log("API Service: Plan manager stats fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching plan manager stats:", error);
-      throw error;
-    }
-  },
-
-  getStabilityManagerStats: async () => {
-    try {
-      console.log("API Service: Fetching stability manager statistics");
-      const response = await api.get("/admin-dashboard/statistics/stability-manager");
-      console.log("API Service: Stability manager stats fetched successfully");
-      return response.data;
-    } catch (error) {
-      console.error("API Service: Error fetching stability manager stats:", error);
-      throw error;
-    }
-  },
-};
-
 // Employee Compensation API
 export const employeeCompensationAPI = {
   getAllPolicies: async (params = {}) => {
@@ -845,6 +804,18 @@ export const employeeCompensationAPI = {
       return response.data;
     } catch (error) {
       console.error("API Service: Error fetching active companies:", error);
+      throw error;
+    }
+  },
+
+  getECPStatistics: async () => {
+    try {
+      console.log("API Service: Fetching ECP statistics");
+      const response = await api.get("/employee-compensation/statistics");
+      console.log("API Service: ECP statistics fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching ECP statistics:", error);
       throw error;
     }
   },
@@ -1136,6 +1107,14 @@ export const vehiclePolicyAPI = {
       throw error;
     }
   },
+  getVehicleStatistics: async () => {
+    try {
+      const response = await api.get("/vehicle-policies/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 // Health Policy API
@@ -1239,6 +1218,14 @@ export const healthPolicyAPI = {
       throw error;
     }
   },
+  getHealthStatistics: async () => {
+    try {
+      const response = await api.get("/health-policies/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 // Fire Policy API
@@ -1342,6 +1329,14 @@ export const firePolicyAPI = {
       throw error;
     }
   },
+  getFireStatistics: async () => {
+    try {
+      const response = await api.get("/fire-policies/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 // Life Policy API
@@ -1501,6 +1496,14 @@ export const lifePolicyAPI = {
       throw error;
     }
   },
+  getLifeStatistics: async () => {
+    try {
+      const response = await api.get("/life-policies/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 // DSC API
@@ -1646,6 +1649,14 @@ export const dscAPI = {
       throw error;
     }
   },
+  getDSCStatistics: async () => {
+    try {
+      const response = await api.get("/dsc/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 // Renewal API
@@ -1794,6 +1805,15 @@ export const factoryQuotationAPI = {
     });
     return response.data;
   },
+  // Get statistics
+  getStatistics: async () => {
+    try {
+      const response = await api.get("/factory-quotations/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 export const planManagementAPI = {
@@ -1848,6 +1868,17 @@ export const planManagementAPI = {
     });
     return response.data;
   },
+
+  // Get statistics
+  getStatistics: async () => {
+    try {
+      const response = await api.get("/plan-management/statistics");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching plan management statistics:", error);
+      throw error;
+    }
+  },
 };
 
 export const stabilityManagementAPI = {
@@ -1895,6 +1926,17 @@ export const stabilityManagementAPI = {
       },
     });
     return response.data;
+  },
+
+  // Get statistics
+  getStatistics: async () => {
+    try {
+      const response = await api.get("/stability-management/statistics");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching stability management statistics:", error);
+      throw error;
+    }
   },
 };
 

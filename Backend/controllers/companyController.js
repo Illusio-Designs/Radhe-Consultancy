@@ -616,8 +616,54 @@ const companyController = {
         success: false,
         error: error.message
       });
+          }
+    },
+
+    // Get company statistics for CompanyList page
+    async getCompanyStatistics(req, res) {
+      try {
+        console.log('[CompanyController] getCompanyStatistics called');
+        
+        // Get total companies count
+        const totalCompanies = await Company.count();
+        
+        // Get active companies (assuming all are active for now)
+        const activeCompanies = totalCompanies;
+        
+        // Get recent companies (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentCompanies = await Company.count({
+          where: {
+            created_at: {
+              [Op.gte]: thirtyDaysAgo
+            }
+          }
+        });
+        
+        // Format the statistics - only essential data
+        const statistics = {
+          total_companies: totalCompanies,
+          active_companies: activeCompanies,
+          recent_companies: recentCompanies
+        };
+        
+        console.log('[CompanyController] Company statistics retrieved successfully');
+        res.json({
+          success: true,
+          data: statistics
+        });
+        
+      } catch (error) {
+        console.error('[CompanyController] Error getting company statistics:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Failed to get company statistics',
+          error: error.message
+        });
+      }
     }
-  }
-};
+  };
 
 module.exports = companyController; 

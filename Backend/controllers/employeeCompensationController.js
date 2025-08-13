@@ -386,6 +386,79 @@ exports.deletePolicy = async (req, res) => {
   }
 };
 
+// Get ECP statistics
+exports.getECPStatistics = async (req, res) => {
+  try {
+    console.log('[EmployeeCompensationController] Getting ECP statistics');
+    
+    // Get total policies count
+    const totalPolicies = await EmployeeCompensationPolicy.count();
+    console.log('[EmployeeCompensationController] Total policies:', totalPolicies);
+
+    // Get active policies count (all policies are considered active)
+    const activePolicies = totalPolicies;
+    
+    // Get policies created in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentPolicies = await EmployeeCompensationPolicy.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+    console.log('[EmployeeCompensationController] Recent policies:', recentPolicies);
+
+    // Calculate percentages
+    const percent = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
+    const activePercentage = percent(activePolicies, totalPolicies);
+    const recentPercentage = percent(recentPolicies, totalPolicies);
+
+    // Get policies by month for the last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const monthlyStats = await EmployeeCompensationPolicy.findAll({
+      attributes: [
+        [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%Y-%m'), 'month'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: {
+        created_at: {
+          [Op.gte]: sixMonthsAgo
+        }
+      },
+      group: [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%Y-%m')],
+      order: [[sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%Y-%m'), 'ASC']],
+      raw: true
+    });
+
+    const responseData = {
+      total_policies: totalPolicies,
+      active_policies: activePolicies,
+      recent_policies: recentPolicies,
+      percent_active: activePercentage,
+      percent_recent: recentPercentage,
+      monthly_stats: monthlyStats
+    };
+
+    console.log('[EmployeeCompensationController] ECP statistics:', responseData);
+    
+    res.status(200).json({
+      success: true,
+      data: responseData
+    });
+  } catch (error) {
+    console.error('[EmployeeCompensationController] Error getting ECP statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: `Failed to get ECP statistics: ${error.message}`
+    });
+  }
+};
+
 // Search policies
 exports.searchPolicies = async (req, res) => {
   try {

@@ -551,3 +551,60 @@ exports.downloadPDF = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 }; 
+
+exports.getStatistics = async (req, res) => {
+  try {
+    // Get total quotations count
+    const total = await FactoryQuotation.count();
+
+    // Get count by status
+    const pending = await FactoryQuotation.count({
+      where: { status: 'maked' }
+    });
+
+    const approved = await FactoryQuotation.count({
+      where: { status: 'approved' }
+    });
+
+    const rejected = await FactoryQuotation.count({
+      where: { status: 'reject' }
+    });
+
+    const plan = await FactoryQuotation.count({
+      where: { status: 'plan' }
+    });
+
+    const stability = await FactoryQuotation.count({
+      where: { status: 'stability' }
+    });
+
+    const application = await FactoryQuotation.count({
+      where: { status: 'application' }
+    });
+
+    const renewal = await FactoryQuotation.count({
+      where: { status: 'renewal' }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        total,
+        pending,
+        approved,
+        rejected,
+        plan,
+        stability,
+        application,
+        renewal
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching factory quotation statistics:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to get factory quotation statistics',
+      error: error.message 
+    });
+  }
+}; 

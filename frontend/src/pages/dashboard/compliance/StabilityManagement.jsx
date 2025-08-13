@@ -7,6 +7,10 @@ import {
   BiUser,
   BiCalendar,
   BiEdit,
+  BiShield,
+  BiTrendingUp,
+  BiErrorCircle,
+  BiAnchor,
 } from "react-icons/bi";
 import { stabilityManagementAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -156,6 +160,110 @@ const RejectModal = ({ onClose, onReject }) => {
   );
 };
 
+// Statistics Cards Component
+const StatisticsCards = ({ statistics, loading }) => {
+  if (loading) {
+    return (
+      <div className="statistics-grid">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div key={i} className="stat-card loading">
+            <div className="stat-icon">
+              <div className="loading-placeholder" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">
+                <div className="loading-placeholder" style={{ width: 60, height: 24, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+              </div>
+              <div className="stat-label">
+                <div className="loading-placeholder" style={{ width: 100, height: 16, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const { total, stability, submit, approved, rejected, withLoad, withoutLoad, recent } = statistics;
+
+  return (
+    <div className="statistics-grid">
+      <div className="stat-card total">
+        <div className="stat-icon">
+          <BiShield />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{total}</div>
+          <div className="stat-label">Total Records</div>
+        </div>
+      </div>
+      <div className="stat-card stability">
+        <div className="stat-icon">
+          <BiFile />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{stability}</div>
+          <div className="stat-label">In Progress</div>
+        </div>
+      </div>
+      <div className="stat-card submit">
+        <div className="stat-icon">
+          <BiTrendingUp />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{submit}</div>
+          <div className="stat-label">Submitted</div>
+        </div>
+      </div>
+      <div className="stat-card approved">
+        <div className="stat-icon">
+          <BiCheck />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{approved}</div>
+          <div className="stat-label">Approved</div>
+        </div>
+      </div>
+      <div className="stat-card rejected">
+        <div className="stat-icon">
+          <BiErrorCircle />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{rejected}</div>
+          <div className="stat-label">Rejected</div>
+        </div>
+      </div>
+      <div className="stat-card withLoad">
+        <div className="stat-icon">
+          <BiAnchor />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{withLoad}</div>
+          <div className="stat-label">With Load</div>
+        </div>
+      </div>
+      <div className="stat-card withoutLoad">
+        <div className="stat-icon">
+          <BiShield />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{withoutLoad}</div>
+          <div className="stat-label">Without Load</div>
+        </div>
+      </div>
+      <div className="stat-card recent">
+        <div className="stat-icon">
+          <BiCalendar />
+        </div>
+        <div className="stat-content">
+          <div className="stat-number">{recent}</div>
+          <div className="stat-label">Recent (30 days)</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Stability Date Modal
 const StabilityDateModal = ({ onClose, onUpdate, currentDate }) => {
   const [stabilityDate, setStabilityDate] = useState(currentDate || '');
@@ -211,6 +319,17 @@ const StabilityDateModal = ({ onClose, onUpdate, currentDate }) => {
 function StabilityManagement() {
   const [stabilityManagementRecords, setStabilityManagementRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    stability: 0,
+    submit: 0,
+    approved: 0,
+    rejected: 0,
+    withLoad: 0,
+    withoutLoad: 0,
+    recent: 0
+  });
   const [error, setError] = useState(null);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -221,6 +340,7 @@ function StabilityManagement() {
 
   useEffect(() => {
     fetchStabilityManagementRecords();
+    fetchStabilityStatistics();
   }, []);
 
   const fetchStabilityManagementRecords = async () => {
@@ -240,6 +360,42 @@ function StabilityManagement() {
       setError("Failed to fetch stability management records");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStabilityStatistics = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await stabilityManagementAPI.getStatistics();
+      if (response && response.data) {
+        setStatistics(response.data);
+      } else {
+        console.error("Failed to fetch stability management statistics:", response);
+        setStatistics({
+          total: 0,
+          stability: 0,
+          submit: 0,
+          approved: 0,
+          rejected: 0,
+          withLoad: 0,
+          withoutLoad: 0,
+          recent: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching stability management statistics:", error);
+      setStatistics({
+        total: 0,
+        stability: 0,
+        submit: 0,
+        approved: 0,
+        rejected: 0,
+        withLoad: 0,
+        withoutLoad: 0,
+        recent: 0
+      });
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -514,6 +670,12 @@ function StabilityManagement() {
             <BiX className="inline mr-2" /> {error}
           </div>
         )}
+
+        {/* Statistics Cards */}
+        <div className="statistics-section">
+          <h2 className="statistics-title">Stability Management Statistics</h2>
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+        </div>
 
         {loading ? (
           <Loader size="large" color="primary" />

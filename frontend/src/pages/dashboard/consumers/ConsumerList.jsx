@@ -4,7 +4,9 @@ import {
   BiEdit,
   BiTrash,
   BiErrorCircle,
-  BiUpload,
+  BiUser,
+  BiTrendingUp,
+  BiCalendar,
 } from "react-icons/bi";
 import { consumerAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -17,6 +19,7 @@ import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
 import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
   const [formData, setFormData] = useState({
@@ -24,10 +27,8 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
     email: consumer?.email || "",
     phone_number: consumer?.phone_number || "",
     contact_address: consumer?.contact_address || "",
-    profile_image: consumer?.profile_image || "",
   });
 
-  const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -39,13 +40,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
         email: consumer.email || "",
         phone_number: consumer.phone_number || "",
         contact_address: consumer.contact_address || "",
-        profile_image: consumer.profile_image || "",
       });
-      // Set filename if profile image exists
-      if (consumer.profile_image) {
-        const imageName = consumer.profile_image.split("/").pop();
-        setFileName(imageName);
-      }
     }
   }, [consumer]);
 
@@ -71,7 +66,45 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       );
 
       if (missingFields.length > 0) {
-        setError(`Missing required fields: ${missingFields.join(", ")}`);
+        toast.error(`Missing required fields: ${missingFields.join(", ")}`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast.error("Please enter a valid email address", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        return;
+      }
+
+      // Validate phone number (should have at least 10 digits)
+      const phoneDigits = formData.phone_number.replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        toast.error("Please enter a valid phone number with at least 10 digits", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         return;
       }
 
@@ -84,15 +117,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
       formDataToSend.append("phone_number", formData.phone_number);
       formDataToSend.append("contact_address", formData.contact_address);
 
-      // Append profile image if it exists and is a File
-      if (formData.profile_image instanceof File) {
-        console.log("[ConsumerList] Appending profile image:", {
-          name: formData.profile_image.name,
-          type: formData.profile_image.type,
-          size: formData.profile_image.size,
-        });
-        formDataToSend.append("profile_image", formData.profile_image);
-      }
+
 
       console.log("[ConsumerList] Sending data to API");
 
@@ -102,10 +127,26 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
           consumer.consumer_id,
           formDataToSend
         );
-        setSuccess("Consumer updated successfully!");
+        toast.success("Consumer updated successfully!", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
         response = await consumerAPI.createConsumer(formDataToSend);
-        setSuccess("Consumer created successfully!");
+        toast.success("Consumer created successfully!", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       }
 
       console.log("[ConsumerList] API Response:", response);
@@ -119,9 +160,8 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
         email: "",
         phone_number: "",
         contact_address: "",
-        profile_image: null,
       });
-      setFileName("");
+      setSuccess("");
     } catch (error) {
       console.error("[ConsumerList] Error during submission:", error);
       if (error.message && error.message !== "An error occurred") {
@@ -140,27 +180,10 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError("File size exceeds 5 MB limit.");
-        return;
-      }
 
-      setFileName(file.name);
-      setFormData((prev) => ({
-        ...prev,
-        profile_image: file,
-      }));
-    }
-  };
 
   return (
     <>
-      {/* Removed inline error display */}
-      {success && <div className="vendor-management-success">{success}</div>}
-
       <form onSubmit={handleSubmit} className="vendor-management-form">
         <div className="vendor-management-form-grid">
           <div className="vendor-management-form-group">
@@ -217,33 +240,22 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
             />
           </div>
 
-          <div className="vendor-management-form-group file-upload-group">
-            <label className="file-upload-label">
-              <span>Profile Image</span>
-              <div className="file-upload-container">
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="file-upload-input"
-                />
-                <div className="file-upload-button">
-                  <BiUpload /> {fileName || "Upload Profile Image"}
-                </div>
-              </div>
-              <small className="file-upload-helper">
-                Max file size: 5MB. Supported formats: JPG, PNG, GIF
-              </small>
-            </label>
-          </div>
+
         </div>
 
         <div className="vendor-management-form-actions">
-          <Button type="button" variant="outlined" onClick={onClose}>
+          <Button type="button" variant="outlined" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button type="submit" variant="contained" disabled={loading}>
-            {consumer ? "Update" : "Create"}
+            {loading ? (
+              <>
+                <Loader size="small" color="white" />
+                {consumer ? "Updating..." : "Creating..."}
+              </>
+            ) : (
+              consumer ? "Update" : "Create"
+            )}
           </Button>
         </div>
       </form>
@@ -258,6 +270,8 @@ function ConsumerList({ searchQuery = "" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState("");
+  const [statistics, setStatistics] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== "") {
@@ -265,23 +279,24 @@ function ConsumerList({ searchQuery = "" }) {
     } else {
       fetchConsumers();
     }
+    fetchConsumerStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   const fetchConsumers = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const response = await consumerAPI.getAllConsumers();
 
       // Check if response is an array directly
       if (Array.isArray(response)) {
         setConsumers(response);
-        setError(null);
       }
       // Check if response has data property and it's an array
       else if (response && response.data && Array.isArray(response.data)) {
         setConsumers(response.data);
-        setError(null);
       }
       // Check if response has data property and it's an object with data array
       else if (
@@ -291,15 +306,14 @@ function ConsumerList({ searchQuery = "" }) {
         Array.isArray(response.data.data)
       ) {
         setConsumers(response.data.data);
-        setError(null);
       } else {
         console.error("Invalid response format:", response);
         setError("Invalid data format received from server");
         setConsumers([]);
       }
     } catch (err) {
-      setError("Failed to fetch consumers");
-      console.error(err);
+      console.error("Fetch error:", err);
+      setError("Failed to fetch consumers. Please try again.");
       setConsumers([]);
     } finally {
       setTimeout(() => {
@@ -311,13 +325,18 @@ function ConsumerList({ searchQuery = "" }) {
   const handleSearchConsumers = async (query) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      if (!query.trim()) {
+        await fetchConsumers();
+        return;
+      }
+      
       const response = await consumerAPI.searchConsumers({ q: query });
       if (Array.isArray(response)) {
         setConsumers(response);
-        setError(null);
       } else if (response && response.data && Array.isArray(response.data)) {
         setConsumers(response.data);
-        setError(null);
       } else if (
         response &&
         response.data &&
@@ -325,13 +344,17 @@ function ConsumerList({ searchQuery = "" }) {
         Array.isArray(response.data.data)
       ) {
         setConsumers(response.data.data);
-        setError(null);
       } else {
         setError("Invalid data format received from server");
         setConsumers([]);
       }
+      
+      if (response && Array.isArray(response) && response.length === 0) {
+        setError(`No consumers found matching "${query}"`);
+      }
     } catch (err) {
-      setError("Failed to search consumers");
+      console.error("Search error:", err);
+      setError("Failed to search consumers. Please try again.");
       setConsumers([]);
     } finally {
       setTimeout(() => {
@@ -341,15 +364,38 @@ function ConsumerList({ searchQuery = "" }) {
   };
 
   const handleDelete = async (consumerId) => {
-    if (window.confirm("Are you sure you want to delete this consumer?")) {
+    const consumerName = consumers.find(c => c.consumer_id === consumerId)?.name || 'this consumer';
+    
+    if (window.confirm(`Are you sure you want to delete ${consumerName}? This action cannot be undone.`)) {
       try {
+        setLoading(true);
         await consumerAPI.deleteConsumer(consumerId);
+        toast.success('Consumer deleted successfully!', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         await fetchConsumers();
-        toast.success("Consumer deleted successfully!");
+        await fetchConsumerStatistics();
       } catch (err) {
-        setError("Failed to delete consumer");
+        const errorMessage = "Failed to delete consumer";
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         console.error(err);
-        toast.error("An error occurred. Please try again.");
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -364,10 +410,46 @@ function ConsumerList({ searchQuery = "" }) {
     setShowModal(false);
   };
 
+  const fetchConsumerStatistics = async () => {
+    try {
+      console.log('[ConsumerList] fetchConsumerStatistics called');
+      setStatsLoading(true);
+      
+      console.log('[ConsumerList] Calling getConsumerStatistics API...');
+      const response = await consumerAPI.getConsumerStatistics();
+      console.log('[ConsumerList] API response received:', response);
+      
+      if (response.success) {
+        console.log('[ConsumerList] Setting statistics:', response.data);
+        setStatistics(response.data);
+      } else {
+        console.log('[ConsumerList] API returned success: false');
+      }
+    } catch (error) {
+      console.error('[ConsumerList] Error fetching consumer statistics:', error);
+      console.error('[ConsumerList] Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const handleConsumerUpdated = async () => {
     await fetchConsumers();
+    await fetchConsumerStatistics();
     handleModalClose();
-    toast.success("Consumer updated successfully!");
+    toast.success("Consumer updated successfully!", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
   };
 
   const columns = [
@@ -381,9 +463,11 @@ function ConsumerList({ searchQuery = "" }) {
         return serialNumber;
       },
     },
+
     { key: "name", label: "Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     { key: "phone_number", label: "Phone Number", sortable: true },
+    { key: "contact_address", label: "Contact Address", sortable: true },
     {
       key: "actions",
       label: "Actions",
@@ -396,10 +480,87 @@ function ConsumerList({ searchQuery = "" }) {
           >
             <BiEdit />
           </ActionButton>
+          <ActionButton
+            onClick={() => handleDelete(consumer.consumer_id)}
+            variant="danger"
+            size="small"
+          >
+            <BiTrash />
+          </ActionButton>
         </div>
       ),
     },
   ];
+
+  // Statistics Cards Component
+  const StatisticsCards = () => {
+    if (statsLoading) {
+      return (
+        <div className="statistics-grid">
+          <div className="stat-card loading">
+            <Loader size="small" />
+          </div>
+          <div className="stat-card loading">
+            <Loader size="small" />
+          </div>
+          <div className="stat-card loading">
+            <Loader size="small" />
+          </div>
+        </div>
+      );
+    }
+
+    if (!statistics) return null;
+
+    // Get consumer statistics from the response
+    const totalConsumers = statistics.total_consumers || 0;
+    const activeConsumers = statistics.active_consumers || 0;
+    const recentConsumers = statistics.recent_consumers || 0;
+
+    const activePercentage = statistics.percent_active || 0;
+    const recentPercentage = statistics.percent_recent || 0;
+
+    return (
+      <div className="statistics-section">
+        <div className="statistics-grid">
+          {/* Total Consumers Card */}
+          <div className="stat-card total">
+            <div className="stat-icon">
+              <BiUser />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{totalConsumers}</h3>
+              <p className="stat-label">Total Consumers</p>
+            </div>
+          </div>
+
+          {/* Active Consumers Card */}
+          <div className="stat-card active">
+            <div className="stat-icon">
+              <BiTrendingUp />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{activeConsumers}</h3>
+              <p className="stat-label">Active Consumers</p>
+              <p className="stat-percentage">{activePercentage}% of total</p>
+            </div>
+          </div>
+
+          {/* Recent Consumers Card */}
+          <div className="stat-card recent">
+            <div className="stat-icon">
+              <BiCalendar />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{recentConsumers}</h3>
+              <p className="stat-label">Recent Consumers (30 days)</p>
+              <p className="stat-percentage">{recentPercentage}% of total</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="vendor-management">
@@ -415,13 +576,14 @@ function ConsumerList({ searchQuery = "" }) {
           </Button>
         </div>
 
+        {/* Consumer Statistics */}
+        <StatisticsCards />
+
         {error && (
           <div className="vendor-management-error">
             <BiErrorCircle className="inline mr-2" /> {error}
           </div>
         )}
-
-        {success && <div className="vendor-management-success">{success}</div>}
 
         {loading ? (
           <Loader size="large" color="primary" />

@@ -36,6 +36,9 @@ router.get('/search', auth, (req, res, next) => {
   next();
 }, companyController.searchCompanies);
 
+// Get company statistics (must be before /:id route)
+router.get('/statistics', auth, companyController.getCompanyStatistics);
+
 // Get company by ID
 router.get('/:id', auth, companyController.getCompanyById);
 

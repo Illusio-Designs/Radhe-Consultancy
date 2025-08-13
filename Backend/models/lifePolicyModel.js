@@ -62,6 +62,11 @@ const LifePolicy = sequelize.define('LifePolicy', {
     type: DataTypes.DATE,
     allowNull: false
   },
+  policy_end_date: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Calculated as policy_start_date + ppt years'
+  },
   current_policy_number: {
     type: DataTypes.STRING,
     allowNull: false
@@ -73,6 +78,10 @@ const LifePolicy = sequelize.define('LifePolicy', {
   remarks: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'expired', 'cancelled'),
+    defaultValue: 'active'
   }
 }, {
   tableName: 'LifePolicies',

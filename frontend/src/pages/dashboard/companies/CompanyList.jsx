@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiUpload } from "react-icons/bi";
+import { BiPlus, BiEdit, BiTrash, BiErrorCircle, BiUpload, BiBuilding, BiTrendingUp, BiCalendar } from "react-icons/bi";
 import { companyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -592,6 +592,8 @@ function CompanyList({ searchQuery = "" }) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== "") {
@@ -599,6 +601,7 @@ function CompanyList({ searchQuery = "" }) {
     } else {
       fetchCompanies();
     }
+    fetchCompanyStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
@@ -701,7 +704,35 @@ function CompanyList({ searchQuery = "" }) {
   const handleCompanyUpdated = async () => {
     console.log('Company updated, refreshing list');
     await fetchCompanies();
+    await fetchCompanyStatistics();
     handleModalClose();
+  };
+
+  const fetchCompanyStatistics = async () => {
+    try {
+      console.log('[CompanyList] fetchCompanyStatistics called');
+      setStatsLoading(true);
+      
+      console.log('[CompanyList] Calling getCompanyStatistics API...');
+      const response = await companyAPI.getCompanyStatistics();
+      console.log('[CompanyList] API response received:', response);
+      
+      if (response.success) {
+        console.log('[CompanyList] Setting statistics:', response.data);
+        setStatistics(response.data);
+      } else {
+        console.log('[CompanyList] API returned success: false');
+      }
+    } catch (error) {
+      console.error('[CompanyList] Error fetching company statistics:', error);
+      console.error('[CompanyList] Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    } finally {
+      setStatsLoading(false);
+    }
   };
 
   const columns = [
@@ -739,6 +770,79 @@ function CompanyList({ searchQuery = "" }) {
     },
   ];
 
+  // Statistics Cards Component
+  const StatisticsCards = () => {
+      if (statsLoading) {
+    return (
+      <div className="statistics-grid">
+        <div className="stat-card loading">
+          <Loader size="small" />
+        </div>
+        <div className="stat-card loading">
+          <Loader size="small" />
+        </div>
+        <div className="stat-card loading">
+          <Loader size="small" />
+        </div>
+      </div>
+    );
+  }
+
+    if (!statistics) return null;
+
+    // Calculate percentages
+    const totalCompanies = statistics.total_companies || 0;
+    const activeCompanies = statistics.active_companies || 0;
+    const recentCompanies = statistics.recent_companies || 0;
+
+    const activePercentage = totalCompanies > 0 ? Math.round((activeCompanies / totalCompanies) * 100) : 0;
+    const recentPercentage = totalCompanies > 0 ? Math.round((recentCompanies / totalCompanies) * 100) : 0;
+
+    return (
+      <div className="statistics-section">
+        
+        <div className="statistics-grid">
+          {/* Total Companies Card */}
+          <div className="stat-card total">
+            <div className="stat-icon">
+              <BiBuilding />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{totalCompanies}</h3>
+              <p className="stat-label">Total Companies</p>
+            </div>
+          </div>
+
+          {/* Active Companies Card */}
+          <div className="stat-card active">
+            <div className="stat-icon">
+              <BiTrendingUp />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{activeCompanies}</h3>
+              <p className="stat-label">Active Companies</p>
+              <p className="stat-percentage">{activePercentage}% of total</p>
+            </div>
+          </div>
+
+
+
+          {/* Recent Companies Card */}
+          <div className="stat-card recent">
+            <div className="stat-icon">
+              <BiCalendar />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-number">{recentCompanies}</h3>
+              <p className="stat-label">Recent Companies (30 days)</p>
+              <p className="stat-percentage">{recentPercentage}% of total</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="vendor-management">
       <div className="vendor-management-content">
@@ -752,6 +856,9 @@ function CompanyList({ searchQuery = "" }) {
             Add Company
           </Button>
         </div>
+
+        {/* Company Statistics */}
+        <StatisticsCards />
 
         {error && (
           <div className="vendor-management-error">

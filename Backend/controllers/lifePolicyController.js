@@ -10,6 +10,17 @@ const { Op } = require('sequelize');
 const sequelize = require('../config/db');
 const { UserRoleWorkLog } = require('../models');
 
+// Helper function to calculate policy end date based on start date and term
+const calculatePolicyEndDate = (policyStartDate, ppt) => {
+  if (!policyStartDate || !ppt) return null;
+  
+  const startDate = new Date(policyStartDate);
+  const endDate = new Date(startDate);
+  endDate.setFullYear(startDate.getFullYear() + parseInt(ppt));
+  
+  return endDate;
+};
+
 exports.logFormData = (req, res, next) => {
   console.log('=== Multer Processed FormData ===');
   console.log('Request Body:', req.body);
@@ -136,6 +147,11 @@ exports.createPolicy = async (req, res) => {
       remarks: req.body.remarks || null
     };
 
+    // Calculate policy end date based on start date and term
+    if (req.body.policy_start_date && req.body.ppt) {
+      policyData.policy_end_date = calculatePolicyEndDate(req.body.policy_start_date, req.body.ppt);
+    }
+
     // Convert string 'null' or '' or undefined to actual null for company_id and consumer_id
     if (policyData.company_id === '' || policyData.company_id === 'null' || policyData.company_id === undefined) policyData.company_id = null;
     if (policyData.consumer_id === '' || policyData.consumer_id === 'null' || policyData.consumer_id === undefined) policyData.consumer_id = null;
@@ -250,6 +266,13 @@ exports.updatePolicy = async (req, res) => {
       ...req.body,
       remarks: req.body.remarks || policy.remarks
     };
+
+    // Calculate policy end date if start date or term is being updated
+    if (req.body.policy_start_date || req.body.ppt) {
+      const startDate = req.body.policy_start_date || policy.policy_start_date;
+      const ppt = req.body.ppt || policy.ppt;
+      updateData.policy_end_date = calculatePolicyEndDate(startDate, ppt);
+    }
 
     await policy.update(updateData);
     
@@ -471,5 +494,63 @@ exports.searchPolicies = async (req, res) => {
   } catch (error) {
     console.error('Error searching life policies:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}; 
+
+exports.getLifeStatistics = async (req, res) => {
+  try {
+    // Get total policies count
+    const totalPolicies = await LifePolicy.count();
+
+    // Get active policies count (policies with end date in future)
+    const activePolicies = await LifePolicy.count({
+      where: {
+        policy_end_date: {
+          [Op.gte]: new Date()
+        }
+      }
+    });
+
+    // Get recent policies count (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentPolicies = await LifePolicy.count({
+      where: {
+        created_at: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+
+    // Get monthly statistics for the current year
+    const currentYear = new Date().getFullYear();
+    const monthlyStats = await LifePolicy.findAll({
+      attributes: [
+        [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%M'), 'month'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: {
+        created_at: {
+          [Op.gte]: new Date(currentYear, 0, 1),
+          [Op.lt]: new Date(currentYear + 1, 0, 1)
+        }
+      },
+      group: [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%M')],
+      order: [[sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%m'), 'ASC']]
+    });
+
+    res.json({
+      totalPolicies,
+      activePolicies,
+      recentPolicies,
+      monthlyStats
+    });
+  } catch (error) {
+    console.error('Error fetching life policy statistics:', error);
+    res.status(500).json({ 
+      message: 'Failed to get life policy statistics',
+      error: error.message 
+    });
   }
 }; 

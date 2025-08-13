@@ -35,4 +35,7 @@ router.get('/:id/files', checkUserRole(['Stability_manager']), stabilityManageme
 // Delete stability file - Stability Manager only
 router.delete('/:id/files/:filename', checkUserRole(['Stability_manager']), stabilityManagementController.deleteStabilityFile);
 
+// Get statistics
+router.get('/statistics', auth, stabilityManagementController.getStatistics);
+
 module.exports = router; 
