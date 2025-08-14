@@ -217,5 +217,6 @@ module.exports = {
   createConfig,
   updateConfig,
   deleteConfig,
-  getDefaultServiceTypes
+  getDefaultServiceTypes,
+  getLogs
 };

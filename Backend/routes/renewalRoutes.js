@@ -13,4 +13,7 @@ router.delete('/configs/:id', auth, renewalConfigController.deleteConfig);
 // Get default service types for easy configuration
 router.get('/service-types', auth, renewalConfigController.getDefaultServiceTypes);
 
+// Get renewal logs
+router.get('/logs', auth, renewalConfigController.getLogs);
+
 module.exports = router; 
