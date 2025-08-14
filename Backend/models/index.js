@@ -20,6 +20,7 @@ const FactoryQuotation = require("./factoryQuotationModel");
 const PlanManagement = require("./planManagementModel");
 const StabilityManagement = require('./stabilityManagementModel');
 const ApplicationManagement = require('./applicationManagementModel');
+const RenewalConfig = require('./renewalConfigModel')(sequelize, require('sequelize').DataTypes);
 
 // Define associations
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id', as: 'roles' });
@@ -133,5 +134,6 @@ module.exports = {
   PlanManagement,
   StabilityManagement,
   ApplicationManagement,
+  RenewalConfig,
   sequelize
 };

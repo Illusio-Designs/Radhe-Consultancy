@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const renewalController = require('../controllers/renewalController');
+const { auth } = require('../middleware/auth');
+const renewalConfigController = require('../controllers/renewalConfigController');
 
-// Specific routes first
-router.get('/counts', renewalController.getRenewalCounts);
-router.get('/list/:type', renewalController.getRenewalList);
-router.post('/remind', renewalController.sendRenewalReminder);
-router.get('/log', renewalController.getRenewalLog);
-router.get('/list/:type/:period', renewalController.getRenewalListByTypeAndPeriod);
+// Renewal Configuration Routes
+router.get('/configs', auth, renewalConfigController.getAllConfigs);
+router.get('/configs/:serviceType', auth, renewalConfigController.getConfigByService);
+router.post('/configs', auth, renewalConfigController.createConfig);
+router.put('/configs/:id', auth, renewalConfigController.updateConfig);
+router.delete('/configs/:id', auth, renewalConfigController.deleteConfig);
 
-// Parameterized route last
-router.get('/:period', renewalController.getRenewals); // period: week, month, year
+// Get default service types for easy configuration
+router.get('/service-types', auth, renewalConfigController.getDefaultServiceTypes);
 
 module.exports = router; 

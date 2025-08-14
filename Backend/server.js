@@ -150,6 +150,7 @@ const startServer = async () => {
       setupPlanManagers,
       setupStabilityManagers,
       verifyRequiredRoles,
+      setupRenewalSystem,
     } = require("./scripts/serverSetup");
 
     // Import account creation functions
@@ -191,6 +192,11 @@ const startServer = async () => {
     } else {
       console.log("✅ All user accounts created/updated successfully");
     }
+
+    // Step 5: Setup Renewal Management System
+    console.log("🔧 Setting up Renewal Management System...");
+    await setupRenewalSystem();
+    console.log("✅ Renewal Management System setup completed");
 
     console.log("🎉 Complete server setup completed successfully!");
 

@@ -26,6 +26,7 @@ import {
   Clock,
   RefreshCw,
   Home,
+  Settings,
 } from "lucide-react";
 import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
@@ -86,6 +87,11 @@ const Sidebar = ({ onCollapse }) => {
             path: "/dashboard/renewals/log",
             icon: <Clock />,
             label: "Reminder Log",
+          },
+          {
+            path: "/dashboard/renewals/settings",
+            icon: <Settings />,
+            label: "Renewal Settings",
           },
         ],
       },

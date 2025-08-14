@@ -1661,64 +1661,71 @@ export const dscAPI = {
 
 // Renewal API
 export const renewalAPI = {
-  getCounts: async () => {
+  // Get all renewal configurations
+  getRenewalConfigs: async () => {
     try {
-      const response = await api.get("/renewals/counts");
+      const response = await api.get("/renewals/configs");
       return response.data;
     } catch (error) {
-      console.error("Error fetching renewal counts:", error);
+      console.error("Error fetching renewal configs:", error);
       throw error;
     }
   },
-  getList: async (type) => {
+
+  // Get configuration by service type
+  getRenewalConfigByService: async (serviceType) => {
     try {
-      const response = await api.get(`/renewals/list/${type}`);
+      const response = await api.get(`/renewals/configs/${serviceType}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching renewal list:", error);
+      console.error("Error fetching renewal config:", error);
       throw error;
     }
   },
-  getRenewals: async (period) => {
+
+  // Create new renewal configuration
+  createRenewalConfig: async (configData) => {
     try {
-      const response = await api.get(`/renewals/${period}`); // period: week, month, year
+      const response = await api.post("/renewals/configs", configData);
       return response.data;
     } catch (error) {
-      console.error("Error fetching renewals:", error);
+      console.error("Error creating renewal config:", error);
       throw error;
     }
   },
-  sendReminder: async (payload) => {
+
+  // Update renewal configuration
+  updateRenewalConfig: async (id, configData) => {
     try {
-      const response = await api.post("/renewals/remind", payload);
+      const response = await api.put(`/renewals/configs/${id}`, configData);
       return response.data;
     } catch (error) {
-      console.error("Error sending reminder:", error);
+      console.error("Error updating renewal config:", error);
       throw error;
     }
   },
-  getLog: async () => {
+
+  // Delete renewal configuration
+  deleteRenewalConfig: async (id) => {
     try {
-      const response = await api.get("/renewals/log");
+      const response = await api.delete(`/renewals/configs/${id}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching renewal log:", error);
+      console.error("Error deleting renewal config:", error);
       throw error;
     }
   },
-  getListByTypeAndPeriod: async (type, period) => {
+
+  // Get default service types
+  getDefaultServiceTypes: async () => {
     try {
-      const response = await api.get(`/renewals/list/${type}/${period}`);
-      console.log(
-        "API Service: getListByTypeAndPeriod raw response.data:",
-        response.data
-      ); // Debug log
+      const response = await api.get("/renewals/service-types");
       return response.data;
     } catch (error) {
-      console.error("Error fetching renewal list by type and period:", error);
+      console.error("Error fetching default service types:", error);
       throw error;
     }
-  },
+  }
 };
 
 export const userRoleWorkLogAPI = {

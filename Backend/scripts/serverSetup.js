@@ -653,6 +653,178 @@ async function setupStabilityManagers() {
   }
 }
 
+// Renewal Management System setup function
+async function setupRenewalSystem() {
+  try {
+    console.log('🔧 Setting up Renewal Management System...');
+    
+    // Check if RenewalConfig table exists and create it
+    const [configResults] = await sequelize.query(`
+      SELECT COUNT(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = DATABASE() 
+      AND table_name = 'renewal_configs'
+    `);
+    
+    if (configResults[0].count === 0) {
+      console.log('📋 Creating renewal_configs table...');
+      await sequelize.query(`
+        CREATE TABLE renewal_configs (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          service_type VARCHAR(100) NOT NULL,
+          service_name VARCHAR(255) NOT NULL,
+          reminder_times INT NOT NULL,
+          reminder_days INT NOT NULL,
+          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+          created_by INT NOT NULL,
+          updated_by INT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY unique_service_type (service_type),
+          INDEX idx_is_active (is_active)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+      console.log('✅ renewal_configs table created successfully');
+    } else {
+      console.log('📋 renewal_configs table already exists, checking structure...');
+      
+      // Check if table has correct structure, if not, drop and recreate
+      try {
+        const [columns] = await sequelize.query(`
+          SELECT COLUMN_NAME 
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_NAME = 'renewal_configs' 
+          AND TABLE_SCHEMA = DATABASE()
+        `);
+        
+        const columnNames = columns.map(col => col.COLUMN_NAME);
+        const requiredColumns = ['id', 'service_type', 'service_name', 'reminder_times', 'reminder_days', 'is_active', 'created_by', 'updated_by', 'created_at', 'updated_at'];
+        
+        const missingColumns = requiredColumns.filter(col => !columnNames.includes(col));
+        
+        if (missingColumns.length > 0 || columnNames.includes('serviceType')) {
+          console.log('📋 Table structure incorrect, dropping and recreating...');
+          await sequelize.query('DROP TABLE IF EXISTS renewal_configs');
+          
+          await sequelize.query(`
+            CREATE TABLE renewal_configs (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              service_type VARCHAR(100) NOT NULL,
+              service_name VARCHAR(255) NOT NULL,
+              reminder_times INT NOT NULL,
+              reminder_days INT NOT NULL,
+              is_active BOOLEAN NOT NULL DEFAULT TRUE,
+              created_by INT NOT NULL,
+              updated_by INT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              UNIQUE KEY unique_service_type (service_type),
+              INDEX idx_is_active (is_active)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+          `);
+          console.log('✅ renewal_configs table recreated with correct structure');
+        } else {
+          console.log('✅ renewal_configs table structure is correct');
+        }
+      } catch (error) {
+        console.log('⚠️ Error checking table structure:', error.message);
+      }
+    }
+    
+    // Check if ReminderLogs table exists and enhance it
+    const [results] = await sequelize.query(`
+      SELECT COUNT(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = DATABASE() 
+      AND table_name = 'ReminderLogs'
+    `);
+    
+    if (results[0].count === 0) {
+      console.log('📋 Creating ReminderLogs table...');
+      await sequelize.query(`
+        CREATE TABLE ReminderLogs (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          policy_id INT NOT NULL,
+          policy_type VARCHAR(50) NOT NULL,
+          client_name VARCHAR(255),
+          client_email VARCHAR(255),
+          reminder_type ENUM('email', 'sms', 'whatsapp') DEFAULT 'email',
+          reminder_day INT NOT NULL DEFAULT 0,
+          expiry_date DATETIME,
+          sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          status ENUM('sent', 'delivered', 'failed', 'opened', 'clicked') DEFAULT 'sent',
+          email_subject VARCHAR(500),
+          response_data JSON,
+          error_message TEXT,
+          days_until_expiry INT,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_policy (policy_id, policy_type),
+          INDEX idx_sent_at (sent_at),
+          INDEX idx_status (status),
+          INDEX idx_reminder_type (reminder_type)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+      console.log('✅ ReminderLogs table created successfully');
+    } else {
+      console.log('📋 Enhancing existing ReminderLogs table...');
+      
+      // Add new columns if they don't exist
+      const columns = [
+        { name: 'client_name', sql: 'ADD COLUMN client_name VARCHAR(255)' },
+        { name: 'client_email', sql: 'ADD COLUMN client_email VARCHAR(255)' },
+        { name: 'reminder_type', sql: 'ADD COLUMN reminder_type ENUM(\'email\', \'sms\', \'whatsapp\') DEFAULT \'email\'' },
+        { name: 'reminder_day', sql: 'ADD COLUMN reminder_day INT NOT NULL DEFAULT 0' },
+        { name: 'expiry_date', sql: 'ADD COLUMN expiry_date DATETIME' },
+        { name: 'status', sql: 'ADD COLUMN status ENUM(\'sent\', \'delivered\', \'failed\', \'opened\', \'clicked\') DEFAULT \'sent\'' },
+        { name: 'email_subject', sql: 'ADD COLUMN email_subject VARCHAR(500)' },
+        { name: 'response_data', sql: 'ADD COLUMN response_data JSON' },
+        { name: 'error_message', sql: 'ADD COLUMN error_message TEXT' },
+        { name: 'createdAt', sql: 'ADD COLUMN createdAt DATETIME DEFAULT CURRENT_TIMESTAMP' },
+        { name: 'updatedAt', sql: 'ADD COLUMN updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP' }
+      ];
+      
+      for (const column of columns) {
+        try {
+          await sequelize.query(`ALTER TABLE ReminderLogs ${column.sql}`);
+          console.log(`✅ Added column: ${column.name}`);
+        } catch (error) {
+          if (error.message.includes('Duplicate column name')) {
+            console.log(`⏭️ Column ${column.name} already exists`);
+          } else {
+            console.log(`⚠️ Error adding column ${column.name}:`, error.message);
+          }
+        }
+      }
+      
+      // Add indexes if they don't exist
+      const indexes = [
+        { name: 'idx_policy', sql: 'ADD INDEX idx_policy (policy_id, policy_type)' },
+        { name: 'idx_sent_at', sql: 'ADD INDEX idx_sent_at (sent_at)' },
+        { name: 'idx_status', sql: 'ADD INDEX idx_status (status)' },
+        { name: 'idx_reminder_type', sql: 'ADD INDEX idx_reminder_type (reminder_type)' }
+      ];
+      
+      for (const index of indexes) {
+        try {
+          await sequelize.query(`ALTER TABLE ReminderLogs ${index.sql}`);
+          console.log(`✅ Added index: ${index.name}`);
+        } catch (error) {
+          if (error.message.includes('Duplicate key name')) {
+            console.log(`⏭️ Index ${index.name} already exists`);
+          } else {
+            console.log(`⚠️ Error adding index ${index.name}:`, error.message);
+          }
+        }
+      }
+    }
+    
+    console.log('✅ Renewal Management System setup completed!');
+  } catch (error) {
+    console.error('❌ Error setting up Renewal Management System:', error);
+  }
+}
+
 // Verify that all required roles exist
 async function verifyRequiredRoles() {
   try {
@@ -745,6 +917,9 @@ async function setupAll() {
       throw new Error('Stability managers setup failed');
     }
 
+    // Add this section for Renewal Management System setup
+    await setupRenewalSystem();
+
     const successMessage = 'All setup completed successfully';
     logToFile(successMessage);
     console.log(successMessage);
@@ -769,8 +944,11 @@ module.exports = {
   setupPlanManagers,
   setupStabilityManagers,
   verifyRequiredRoles,
+  setupRenewalSystem,
   setupAll
 };
+
+
 
 // Run setup if this file is run directly
 if (require.main === module) {

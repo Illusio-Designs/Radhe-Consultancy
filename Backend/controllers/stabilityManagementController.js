@@ -570,7 +570,7 @@ const getStatistics = async (req, res) => {
     res.status(500).json({ 
       success: false,
       message: 'Failed to get stability management statistics',
-      error: error.message 
+      error: error.message
     });
   }
 };

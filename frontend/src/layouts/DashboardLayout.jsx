@@ -36,6 +36,7 @@ import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
 import RenewalList from "../pages/dashboard/renewals/RenewalList";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
+import RenewalSettings from "../pages/dashboard/renewals/RenewalSettings";
 import FactoryQuotationRenewal from "../pages/dashboard/compliance/FactoryQuotationRenewal";
 import UserRoleWorkLog from "../pages/dashboard/logs/UserRoleWorkLog";
 
@@ -149,6 +150,8 @@ function DashboardLayout() {
         return <RenewalList />;
       case "/dashboard/renewals/log":
         return <RenewalLog />;
+      case "/dashboard/renewals/settings":
+        return <RenewalSettings />;
       case "/dashboard/compliance/factory-quotation-renewal":
         return <FactoryQuotationRenewal />;
       case "/dashboard/logs/user-role-work-log":

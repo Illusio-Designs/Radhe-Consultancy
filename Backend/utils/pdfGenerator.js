@@ -171,11 +171,11 @@ class FactoryQuotationPDFGenerator {
 
       // Draw company and quotation details in two-column box
     drawCompanyAndQuotationDetails(startY) {
-      const pageWidth = 595.28;
+    const pageWidth = 595.28;
       const margin = 20;
       const boxWidth = pageWidth - (margin * 2);
       const columnWidth = (boxWidth - 20) / 2;
-      
+
       // We'll calculate the actual height needed based on content
       let boxHeight = 120; // Default minimum height
 
@@ -267,9 +267,9 @@ class FactoryQuotationPDFGenerator {
 
     let currentX = margin + 5;
     headers.forEach((header, index) => {
-      this.doc
+    this.doc
         .fontSize(10)
-        .font('Helvetica-Bold')
+      .font('Helvetica-Bold')
         .fill('#000000')
         .text(header, currentX, startY + 8);
       currentX += columnWidths[index];
@@ -434,7 +434,7 @@ class FactoryQuotationPDFGenerator {
     const pageWidth = 595.28;
     const pageHeight = 841.89;
     const margin = 20;
-    
+
     // Calculate footer position (bottom of page with margin)
     const footerY = pageHeight - margin - 30;
 

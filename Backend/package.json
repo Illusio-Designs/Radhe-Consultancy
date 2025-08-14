@@ -9,6 +9,9 @@
     "dev": "set NODE_OPTIONS=--no-deprecation && nodemon",
     "dev:unix": "NODE_OPTIONS=--no-deprecation nodemon",
     "setup": "node scripts/serverSetup.js",
+    "setup:renewal": "node scripts/setupRenewalOnly.js",
+    "test:renewal": "node scripts/quickRenewalTest.js",
+    "send:reminders": "node scripts/sendRenewalReminders.js",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo"
   },
