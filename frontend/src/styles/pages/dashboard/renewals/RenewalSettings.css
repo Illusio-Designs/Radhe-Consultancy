@@ -38,6 +38,16 @@
   margin-bottom: 2rem;
 }
 
+.statistics-section {
+  margin-bottom: 2rem;
+}
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
 .stat-card {
   background: white;
   border-radius: 12px;
@@ -114,6 +124,41 @@
 
 .stat-percentage.negative {
   color: #dc2626;
+}
+
+/* Specific Stat Card Variants */
+.stat-card.total .stat-icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.stat-card.active .stat-icon {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.stat-card.recent .stat-icon {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stat-card.loading-placeholder .stat-icon {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+/* Loading Placeholder Animation */
+.loading-placeholder {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 
 /* Error Message */
