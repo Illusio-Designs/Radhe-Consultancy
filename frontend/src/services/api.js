@@ -1725,6 +1725,17 @@ export const renewalAPI = {
       console.error("Error fetching default service types:", error);
       throw error;
     }
+  },
+
+  // Get renewal logs
+  getRenewalLogs: async () => {
+    try {
+      const response = await api.get("/renewals/logs");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching renewal logs:", error);
+      throw error;
+    }
   }
 };
 
