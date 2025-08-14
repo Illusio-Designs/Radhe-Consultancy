@@ -188,6 +188,29 @@ const getDefaultServiceTypes = async (req, res) => {
   }
 };
 
+// Get renewal logs
+const getLogs = async (req, res) => {
+  try {
+    const { ReminderLog } = require('../models');
+    
+    const logs = await ReminderLog.findAll({
+      order: [['sent_at', 'DESC']],
+      limit: 100 // Limit to last 100 logs
+    });
+    
+    res.json({
+      success: true,
+      data: logs
+    });
+  } catch (error) {
+    console.error('Error fetching renewal logs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch renewal logs'
+    });
+  }
+};
+
 module.exports = {
   getAllConfigs,
   getConfigByService,
