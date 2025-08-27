@@ -1,6 +1,5 @@
-const { RenewalConfig } = require('../models');
+const { RenewalConfig, ReminderLog } = require('../models');
 const { Op } = require('sequelize');
-const { RenewalLog } = require('../models');
 
 // Get all renewal configurations
 const getAllConfigs = async (req, res) => {
@@ -195,7 +194,7 @@ const getDefaultServiceTypes = async (req, res) => {
 // Get renewal logs
 const getLogs = async (req, res) => {
   try {
-    const logs = await RenewalLog.findAll({
+    const logs = await ReminderLog.findAll({
       order: [['createdAt', 'DESC']]
     });
     
@@ -245,16 +244,16 @@ const searchRenewals = async (req, res) => {
     });
 
     // Search in logs
-    const logs = await RenewalLog.findAll({
+    const logs = await ReminderLog.findAll({
       where: {
         [Op.or]: [
           {
-            serviceType: {
+            policy_type: {
               [Op.like]: `%${searchQuery}%`
             }
           },
           {
-            serviceName: {
+            client_name: {
               [Op.like]: `%${searchQuery}%`
             }
           },
@@ -284,6 +283,86 @@ const searchRenewals = async (req, res) => {
   }
 };
 
+// Get renewal counts for different periods
+const getCounts = async (req, res) => {
+  try {
+    // This is a placeholder implementation
+    // You can enhance this to actually count renewals from your database
+    const counts = {
+      week: {
+        vehicle: 0,
+        ecp: 0,
+        health: 0,
+        fire: 0,
+        dsc: 0,
+        factory: 0,
+        labour_inspection: 0,
+        labour_license: 0
+      },
+      month: {
+        vehicle: 0,
+        ecp: 0,
+        health: 0,
+        fire: 0,
+        dsc: 0,
+        factory: 0,
+        labour_inspection: 0,
+        labour_license: 0
+      },
+      year: {
+        vehicle: 0,
+        ecp: 0,
+        health: 0,
+        fire: 0,
+        dsc: 0,
+        factory: 0,
+        labour_inspection: 0,
+        labour_license: 0
+      }
+    };
+    
+    res.json({
+      success: true,
+      data: counts
+    });
+  } catch (error) {
+    console.error('Error fetching renewal counts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch renewal counts'
+    });
+  }
+};
+
+// Get renewals by type and period
+const getListByTypeAndPeriod = async (req, res) => {
+  try {
+    const { type, period } = req.query;
+    
+    if (!type || !period) {
+      return res.status(400).json({
+        success: false,
+        message: 'Type and period are required'
+      });
+    }
+
+    // This is a placeholder implementation
+    // You can enhance this to actually fetch renewals from your database
+    const renewals = [];
+    
+    res.json({
+      success: true,
+      data: renewals
+    });
+  } catch (error) {
+    console.error('Error fetching renewals by type and period:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch renewals by type and period'
+    });
+  }
+};
+
 module.exports = {
   getAllConfigs,
   getConfigByService,
@@ -292,5 +371,7 @@ module.exports = {
   deleteConfig,
   getDefaultServiceTypes,
   getLogs,
-  searchRenewals
+  searchRenewals,
+  getCounts,
+  getListByTypeAndPeriod
 };

@@ -69,9 +69,9 @@ const PlanManagement = sequelize.define('PlanManagement', {
   }
 }, {
   tableName: 'plan_management',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
+  timestamps: false,
+  createdAt: false,
+  updatedAt: false,
   indexes: [
     {
       fields: ['factory_quotation_id']
@@ -82,7 +82,16 @@ const PlanManagement = sequelize.define('PlanManagement', {
     {
       fields: ['status']
     }
-  ]
+  ],
+  hooks: {
+    beforeCreate: (instance) => {
+      instance.created_at = new Date();
+      instance.updated_at = new Date();
+    },
+    beforeUpdate: (instance) => {
+      instance.updated_at = new Date();
+    }
+  }
 });
 
 module.exports = PlanManagement; 

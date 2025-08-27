@@ -184,6 +184,28 @@ const StatisticsCards = ({ statistics, loading }) => {
     );
   }
 
+  if (!statistics) {
+    return (
+      <div className="statistics-grid">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div key={i} className="stat-card loading">
+            <div className="stat-icon">
+              <div className="loading-placeholder" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">
+                <div className="loading-placeholder" style={{ width: 60, height: 24, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+              </div>
+              <div className="stat-label">
+                <div className="loading-placeholder" style={{ width: 100, height: 16, backgroundColor: '#e5e7eb', borderRadius: 4 }}></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const { total, stability, submit, approved, rejected, withLoad, withoutLoad, recent } = statistics;
 
   return (
@@ -321,10 +343,16 @@ const StabilityManagement = ({ searchQuery = "" }) => {
   const [stabilityRecords, setStabilityRecords] = useState([]);
   const [filteredStabilityRecords, setFilteredStabilityRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [selectedStability, setSelectedStability] = useState(null);
   const [stabilityManagers, setStabilityManagers] = useState([]);
   const [statistics, setStatistics] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const { user } = useAuth();
 
@@ -418,7 +446,7 @@ const StabilityManagement = ({ searchQuery = "" }) => {
 
   const handleStatusChange = async (stabilityId, newStatus) => {
     try {
-      const currentStability = stabilityManagementRecords.find(s => s.id === stabilityId);
+      const currentStability = stabilityRecords.find(s => s.id === stabilityId);
       
       if (newStatus === 'Approved') {
         // Show upload modal for approval
@@ -672,8 +700,8 @@ const StabilityManagement = ({ searchQuery = "" }) => {
   ];
 
   const filteredRecords = React.useMemo(() => {
-    return stabilityManagementRecords;
-  }, [stabilityManagementRecords]);
+    return filteredStabilityRecords;
+  }, [filteredStabilityRecords]);
 
   return (
     <div className="compliance-container">

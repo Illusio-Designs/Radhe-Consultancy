@@ -3,6 +3,7 @@ const FactoryQuotation = require('../models/factoryQuotationModel');
 const User = require('../models/userModel');
 const Role = require('../models/roleModel');
 const { Op } = require('sequelize');
+const sequelize = require('../config/db');
 
 // Get plan managers (users with Plan_manager role)
 const getPlanManagers = async (req, res) => {
@@ -69,7 +70,7 @@ const getAllPlanManagement = async (req, res) => {
           attributes: ['user_id', 'username', 'email']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     console.log('[PlanManagement] Found records:', planRecords.length);
@@ -155,7 +156,7 @@ const searchPlanManagement = async (req, res) => {
           attributes: ['user_id', 'username', 'email']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     res.json({ success: true, data: planRecords });
@@ -222,38 +223,105 @@ const createPlanManagement = async (req, res) => {
     const { factory_quotation_id, plan_manager_id } = req.body;
     const { user } = req;
 
+    console.log('[PlanManagement] Creating plan management:', { factory_quotation_id, plan_manager_id, userId: user.user_id });
+
+    // Validate required fields
+    if (!factory_quotation_id || !plan_manager_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Factory quotation ID and plan manager ID are required'
+      });
+    }
+
     // Check if plan management already exists for this quotation
     const existingPlan = await PlanManagement.findOne({
       where: { factory_quotation_id }
     });
 
     if (existingPlan) {
+      console.log('[PlanManagement] Plan already exists for quotation:', factory_quotation_id);
+      return res.status(400).json({
+        success: false,
+        message: 'Plan management already exists for this quotation',
+        data: existingPlan
+      });
+    }
+
+    // Verify factory quotation exists
+    const factoryQuotation = await FactoryQuotation.findByPk(factory_quotation_id);
+    if (!factoryQuotation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Factory quotation not found'
+      });
+    }
+
+    // Verify plan manager exists and has correct role
+    const planManager = await User.findOne({
+      where: { user_id: plan_manager_id },
+      include: [{
+        model: Role,
+        as: 'roles',
+        where: { role_name: 'Plan_manager' },
+        required: true
+      }]
+    });
+
+    if (!planManager) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plan manager ID or user does not have plan manager role'
+      });
+    }
+
+    // Use transaction to ensure data consistency
+    const result = await sequelize.transaction(async (t) => {
+      // Double-check no plan exists (race condition protection)
+      const doubleCheck = await PlanManagement.findOne({
+        where: { factory_quotation_id },
+        transaction: t
+      });
+
+      if (doubleCheck) {
+        throw new Error('Plan management already exists for this quotation');
+      }
+
+      // Create new plan management record
+      const planManagement = await PlanManagement.create({
+        factory_quotation_id,
+        plan_manager_id,
+        status: 'plan'
+      }, { transaction: t });
+
+      // Update factory quotation status to 'plan'
+      await FactoryQuotation.update(
+        { status: 'plan' },
+        { 
+          where: { id: factory_quotation_id },
+          transaction: t
+        }
+      );
+
+      return planManagement;
+    });
+
+    console.log('[PlanManagement] Plan management created successfully:', result.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Plan management created successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('[PlanManagement] Error creating plan management:', error);
+    
+    if (error.message.includes('already exists')) {
       return res.status(400).json({
         success: false,
         message: 'Plan management already exists for this quotation'
       });
     }
 
-    // Create new plan management record
-    const planManagement = await PlanManagement.create({
-      factory_quotation_id,
-      plan_manager_id,
-      status: 'plan'
-    });
-
-    // Update factory quotation status to 'plan'
-    await FactoryQuotation.update(
-      { status: 'plan' },
-      { where: { id: factory_quotation_id } }
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Plan management created successfully',
-      data: planManagement
-    });
-  } catch (error) {
-    console.error('Error creating plan management:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create plan management',

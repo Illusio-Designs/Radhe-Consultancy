@@ -1712,6 +1712,30 @@ export const renewalAPI = {
   getLogs: async () => {
     const response = await api.get('/renewals/logs');
       return response.data;
+  },
+
+  // Get renewal counts for different periods
+  getCounts: async () => {
+    try {
+      const response = await api.get('/renewals/counts');
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error fetching renewal counts:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
+  },
+
+  // Get renewals by type and period
+  getListByTypeAndPeriod: async (type, period) => {
+    try {
+      const response = await api.get('/renewals/list', { 
+        params: { type, period } 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error fetching renewals by type and period:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
   }
 };
 

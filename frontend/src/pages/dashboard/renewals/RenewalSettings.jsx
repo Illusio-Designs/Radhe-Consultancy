@@ -56,14 +56,14 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
 
       if (config) {
         // Update existing config
-        const response = await renewalAPI.updateRenewalConfig(config.id, formData);
+        const response = await renewalAPI.updateConfig(config.id, formData);
         if (response.success) {
           onConfigUpdated();
           onClose();
         }
       } else {
         // Create new config
-        const response = await renewalAPI.createRenewalConfig(formData);
+        const response = await renewalAPI.createConfig(formData);
         if (response.success) {
           onConfigUpdated();
           onClose();
@@ -245,7 +245,7 @@ const RenewalSettings = () => {
   const fetchRenewalConfigs = async () => {
     try {
       setLoading(true);
-      const response = await renewalAPI.getRenewalConfigs();
+      const response = await renewalAPI.getAllConfigs();
       if (response.success) {
         setConfigs(response.data || []);
         calculateStatistics(response.data || []);
@@ -281,7 +281,7 @@ const RenewalSettings = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this configuration?")) {
       try {
-        const response = await renewalAPI.deleteRenewalConfig(id);
+        const response = await renewalAPI.deleteConfig(id);
         if (response.success) {
           fetchRenewalConfigs();
         }

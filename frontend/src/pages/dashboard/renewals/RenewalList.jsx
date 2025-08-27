@@ -27,12 +27,15 @@ const periodOptions = [
 const RenewalList = ({ searchQuery = "" }) => {
   const [renewals, setRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingRenewal, setEditingRenewal] = useState(null);
   const [statistics, setStatistics] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const { user, userRoles } = useAuth();
 
   // Handle search when searchQuery changes
@@ -49,8 +52,17 @@ const RenewalList = ({ searchQuery = "" }) => {
     try {
       setIsSearching(true);
       const response = await renewalAPI.searchRenewals(query);
-      if (response.success) {
-        setSearchResults(response.data);
+      if (response && response.success && response.data) {
+        // Handle both single data array and nested data structure
+        if (Array.isArray(response.data)) {
+          setSearchResults(response.data);
+        } else if (response.data.logs && Array.isArray(response.data.logs)) {
+          setSearchResults(response.data.logs);
+        } else {
+          setSearchResults([]);
+        }
+      } else {
+        setSearchResults([]);
       }
     } catch (error) {
       console.error('Error searching renewals:', error);
@@ -97,8 +109,13 @@ const RenewalList = ({ searchQuery = "" }) => {
       setError(null);
       try {
         const res = await renewalAPI.getListByTypeAndPeriod(selectedType, selectedPeriod);
-        setRenewals(Array.isArray(res) ? res : []);
+        if (res && res.success && Array.isArray(res.data)) {
+          setRenewals(res.data);
+        } else {
+          setRenewals([]);
+        }
       } catch (err) {
+        console.error("Error fetching renewals:", err);
         setError("Failed to fetch renewals");
         setRenewals([]);
         toast.error("Failed to fetch renewals");
@@ -145,7 +162,7 @@ const RenewalList = ({ searchQuery = "" }) => {
       key: "policy_type",
       label: "Policy Type",
       sortable: true,
-      render: (_, item) => (item && item.type) ? item.type.toUpperCase() : selectedType.toUpperCase(),
+      render: (_, item) => (item && item.type) ? item.type.toUpperCase() : (selectedType || 'all').toUpperCase(),
     },
     {
       key: "holder_details",

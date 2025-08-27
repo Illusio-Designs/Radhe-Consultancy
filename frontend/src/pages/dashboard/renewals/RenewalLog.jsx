@@ -15,7 +15,7 @@ const RenewalLog = () => {
   const fetchRenewalLogs = async () => {
     try {
       setLoading(true);
-      const response = await renewalAPI.getRenewalLogs();
+      const response = await renewalAPI.getLogs();
       if (response.success) {
         setLogs(response.data || []);
       } else {

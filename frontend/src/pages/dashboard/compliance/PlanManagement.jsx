@@ -230,10 +230,13 @@ const PlanManagement = ({ searchQuery = "" }) => {
   const [plans, setPlans] = useState([]);
   const [filteredPlans, setFilteredPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [planManagers, setPlanManagers] = useState([]);
   const [statistics, setStatistics] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const { user } = useAuth();
 
@@ -492,6 +495,25 @@ const PlanManagement = ({ searchQuery = "" }) => {
   const filteredRecords = React.useMemo(() => {
     return filteredPlans;
   }, [filteredPlans]);
+
+  // Add error boundary for unexpected errors
+  if (!plans || !filteredPlans || !statistics) {
+    return (
+      <div className="compliance-container">
+        <div className="compliance-content">
+          <div className="compliance-header">
+            <h1 className="compliance-title">Plan Management</h1>
+            <div className="plan-manager-info">
+              <BiUser /> Welcome, {user?.username || 'Plan Manager'}
+            </div>
+          </div>
+          <div className="compliance-error">
+            <BiErrorCircle className="inline mr-2" /> Loading plan management data...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="compliance-container">

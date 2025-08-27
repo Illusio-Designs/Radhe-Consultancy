@@ -416,17 +416,12 @@ async function setupAdminUser() {
       throw new Error('Admin role not found');
     }
 
-    const [adminUser, created] = await User.findOrCreate({
-      where: { email: 'Admin@radheconsultancy.co.in' },
-      defaults: {
-        username: 'BRIJESH KANERIA',
-        password: await bcrypt.hash('Admin@123', 10),
-        created_at: new Date(),
-        updated_at: new Date()
-      }
+    // Only find existing admin user, don't create new ones
+    const adminUser = await User.findOne({
+      where: { email: 'Admin@radheconsultancy.co.in' }
     });
 
-    if (!created) {
+    if (adminUser) {
       // Update existing admin user with new name
       await adminUser.update({
         username: 'BRIJESH KANERIA',
@@ -436,8 +431,10 @@ async function setupAdminUser() {
       logToFile('Updated existing admin user with new name: BRIJESH KANERIA');
       console.log('Updated existing admin user with new name: BRIJESH KANERIA');
     } else {
-      logToFile('Created new admin user: BRIJESH KANERIA');
-      console.log('Created new admin user: BRIJESH KANERIA');
+      // Skip if admin user doesn't exist - don't create new ones
+      logToFile('Skipping admin user setup - user not found');
+      console.log('⏭️ Skipping admin user setup - user not found');
+      return true;
     }
 
     // Check if admin user already has admin role
@@ -488,40 +485,37 @@ async function setupPlanManagers() {
     const planManagers = [
       {
         username: 'Green Arc',
-        email: 'greenarc@radheconsultancy.co.in',
+        email: 'info2greenarc@gmail.com',
         password: 'GreenArc@123'
       },
       {
         username: 'Little Star',
-        email: 'littlestar@radheconsultancy.co.in',
+        email: 'littlestarcreation700@gmail.com',
         password: 'LittleStar@123'
       }
     ];
 
     for (const manager of planManagers) {
       try {
-        const [user, created] = await User.findOrCreate({
-          where: { email: manager.email },
-          defaults: {
-            username: manager.username,
-            password: await bcrypt.hash(manager.password, 10),
-            created_at: new Date(),
-            updated_at: new Date()
-          }
+        // Only find existing users by username, don't create new ones
+        const user = await User.findOne({
+          where: { username: manager.username }
         });
 
-        if (!created) {
-          // Update existing user
+        if (user) {
+          // Update existing user with new email and password
           await user.update({
-            username: manager.username,
+            email: manager.email,
             password: await bcrypt.hash(manager.password, 10),
             updated_at: new Date()
           });
-          logToFile(`Updated existing plan manager: ${manager.username}`);
-          console.log(`Updated existing plan manager: ${manager.username}`);
+          logToFile(`Updated existing plan manager: ${manager.username} with new email: ${manager.email}`);
+          console.log(`Updated existing plan manager: ${manager.username} with new email: ${manager.email}`);
         } else {
-          logToFile(`Created new plan manager: ${manager.username}`);
-          console.log(`Created new plan manager: ${manager.username}`);
+          // Skip if user doesn't exist - don't create new ones
+          logToFile(`Skipping plan manager ${manager.username} - user not found`);
+          console.log(`⏭️ Skipping plan manager ${manager.username} - user not found`);
+          continue;
         }
 
         // Check if user already has plan manager role
@@ -564,6 +558,8 @@ async function setupPlanManagers() {
   }
 }
 
+
+
 /**
  * Sets up stability manager users
  * @returns {Promise<boolean>} Success status
@@ -581,40 +577,37 @@ async function setupStabilityManagers() {
     const stabilityManagers = [
       {
         username: 'Jayeshbhai A Kataria',
-        email: 'jayeshbhai@radheconsultancy.co.in',
+        email: 'valuerjayeshakatira@gmail.com',
         password: 'Jayeshbhai@123'
       },
       {
         username: 'Samir G. Davda',
-        email: 'samir@radheconsultancy.co.in',
+        email: 'littlestarcreation700@gmail.com',
         password: 'Samir@123'
       }
     ];
 
     for (const manager of stabilityManagers) {
       try {
-        const [user, created] = await User.findOrCreate({
-          where: { email: manager.email },
-          defaults: {
-            username: manager.username,
-            password: await bcrypt.hash(manager.password, 10),
-            created_at: new Date(),
-            updated_at: new Date()
-          }
+        // Only find existing users by username, don't create new ones
+        const user = await User.findOne({
+          where: { username: manager.username }
         });
 
-        if (!created) {
-          // Update existing user
+        if (user) {
+          // Update existing user with new email and password
           await user.update({
-            username: manager.username,
+            email: manager.email,
             password: await bcrypt.hash(manager.password, 10),
             updated_at: new Date()
           });
-          logToFile(`Updated existing stability manager: ${manager.username}`);
-          console.log(`Updated existing stability manager: ${manager.username}`);
+          logToFile(`Updated existing stability manager: ${manager.username} with new email: ${manager.email}`);
+          console.log(`Updated existing stability manager: ${manager.username} with new email: ${manager.email}`);
         } else {
-          logToFile(`Created new stability manager: ${manager.username}`);
-          console.log(`Created new stability manager: ${manager.username}`);
+          // Skip if user doesn't exist - don't create new ones
+          logToFile(`Skipping stability manager ${manager.username} - user not found`);
+          console.log(`⏭️ Skipping stability manager ${manager.username} - user not found`);
+          continue;
         }
 
         // Check if user already has stability manager role
@@ -657,181 +650,7 @@ async function setupStabilityManagers() {
   }
 }
 
-/**
- * Sets up website manager users
- * @returns {Promise<boolean>} Success status
- */
-async function setupWebsiteManagers() {
-  try {
-    logToFile('Setting up website managers...');
-    console.log('Setting up website managers...');
-    
-    const websiteManagerRole = await Role.findOne({ where: { role_name: 'Website_manager' } });
-    if (!websiteManagerRole) {
-      throw new Error('Website_manager role not found');
-    }
 
-    const websiteManagers = [
-      {
-        username: 'Website Manager',
-        email: 'website@radheconsultancy.co.in',
-        password: 'Website@123'
-      }
-    ];
-
-    for (const manager of websiteManagers) {
-      try {
-        const [user, created] = await User.findOrCreate({
-          where: { email: manager.email },
-          defaults: {
-            username: manager.username,
-            password: await bcrypt.hash(manager.password, 10),
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        });
-
-        if (!created) {
-          // Update existing user
-          await user.update({
-            username: manager.username,
-            password: await bcrypt.hash(manager.password, 10),
-            updated_at: new Date()
-          });
-          logToFile(`Updated existing website manager: ${manager.username}`);
-          console.log(`Updated existing website manager: ${manager.username}`);
-        } else {
-          logToFile(`Created new website manager: ${manager.username}`);
-          console.log(`Created new website manager: ${manager.username}`);
-        }
-
-        // Check if user already has website manager role
-        const existingUserRole = await UserRole.findOne({
-          where: {
-            user_id: user.user_id,
-            role_id: websiteManagerRole.id
-          }
-        });
-
-        if (!existingUserRole) {
-          // Assign website manager role
-          await user.addRole(websiteManagerRole, { 
-            through: { 
-              is_primary: true,
-              assigned_by: 1 // Admin user ID
-            } 
-          });
-          logToFile(`Website manager role assigned to ${manager.username}`);
-          console.log(`Website manager role assigned to ${manager.username}`);
-        } else {
-          logToFile(`Website manager role already assigned to ${manager.username}`);
-          console.log(`Website manager role already assigned to ${manager.username}`);
-        }
-      } catch (userError) {
-        logToFile(`Error setting up website manager ${manager.username}: ${userError.message}`);
-        console.error(`Error setting up website manager ${manager.username}:`, userError);
-        // Continue with other managers
-      }
-    }
-
-    logToFile('Website managers setup completed');
-    console.log('Website managers setup completed');
-    return true;
-  } catch (error) {
-    const errorMessage = `Error setting up website managers: ${error.message}`;
-    logToFile(errorMessage);
-    console.error(errorMessage);
-    return false;
-  }
-}
-
-/**
- * Sets up labour law manager users
- * @returns {Promise<boolean>} Success status
- */
-async function setupLabourLawManagers() {
-  try {
-    logToFile('Setting up labour law managers...');
-    console.log('Setting up labour law managers...');
-    
-    const labourLawManagerRole = await Role.findOne({ where: { role_name: 'Labour_law_manager' } });
-    if (!labourLawManagerRole) {
-      throw new Error('Labour_law_manager role not found');
-    }
-
-    const labourLawManagers = [
-      {
-        username: 'Labour Law Manager',
-        email: 'labour@radheconsultancy.co.in',
-        password: 'Labour@123'
-      }
-    ];
-
-    for (const manager of labourLawManagers) {
-      try {
-        const [user, created] = await User.findOrCreate({
-          where: { email: manager.email },
-          defaults: {
-            username: manager.username,
-            password: await bcrypt.hash(manager.password, 10),
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        });
-
-        if (!created) {
-          // Update existing user
-          await user.update({
-            username: manager.username,
-            password: await bcrypt.hash(manager.password, 10),
-            updated_at: new Date()
-          });
-          logToFile(`Updated existing labour law manager: ${manager.username}`);
-          console.log(`Updated existing labour law manager: ${manager.username}`);
-        } else {
-          logToFile(`Created new labour law manager: ${manager.username}`);
-          console.log(`Created new labour law manager: ${manager.username}`);
-        }
-
-        // Check if user already has labour law manager role
-        const existingUserRole = await UserRole.findOne({
-          where: {
-            user_id: user.user_id,
-            role_id: labourLawManagerRole.id
-          }
-        });
-
-        if (!existingUserRole) {
-          // Assign labour law manager role
-          await user.addRole(labourLawManagerRole, { 
-            through: { 
-              is_primary: true,
-              assigned_by: 1 // Admin user ID
-            } 
-          });
-          logToFile(`Labour law manager role assigned to ${manager.username}`);
-          console.log(`Labour law manager role assigned to ${manager.username}`);
-        } else {
-          logToFile(`Labour law manager role already assigned to ${manager.username}`);
-          console.log(`Labour law manager role already assigned to ${manager.username}`);
-        }
-      } catch (userError) {
-        logToFile(`Error setting up labour law manager ${manager.username}: ${userError.message}`);
-        console.error(`Error setting up labour law manager ${manager.username}:`, userError);
-        // Continue with other managers
-      }
-    }
-
-    logToFile('Labour law managers setup completed');
-    console.log('Labour law managers setup completed');
-    return true;
-  } catch (error) {
-    const errorMessage = `Error setting up labour law managers: ${error.message}`;
-    logToFile(errorMessage);
-    console.error(errorMessage);
-    return false;
-  }
-}
 
 // Renewal Management System setup function
 async function setupRenewalSystem() {
@@ -1130,26 +949,20 @@ async function setupAll() {
       throw new Error('Plan managers setup failed');
     }
 
+
+
     // Setup stability managers
     const stabilityManagersSetup = await setupStabilityManagers();
     if (!stabilityManagersSetup) {
       throw new Error('Stability managers setup failed');
     }
 
-    // Setup website managers
-    const websiteManagersSetup = await setupWebsiteManagers();
-    if (!websiteManagersSetup) {
-      throw new Error('Website managers setup failed');
-    }
 
-    // Setup labour law managers
-    const labourLawManagersSetup = await setupLabourLawManagers();
-    if (!labourLawManagersSetup) {
-      throw new Error('Labour law managers setup failed');
-    }
 
     // Add this section for Renewal Management System setup
     await setupRenewalSystem();
+
+
 
     const successMessage = 'All setup completed successfully';
     logToFile(successMessage);
@@ -1174,8 +987,6 @@ module.exports = {
   setupAdminUser,
   setupPlanManagers,
   setupStabilityManagers,
-  setupWebsiteManagers,
-  setupLabourLawManagers,
   verifyRequiredRoles,
   setupRenewalSystem,
   setupAll

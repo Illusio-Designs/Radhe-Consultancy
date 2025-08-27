@@ -8,7 +8,7 @@ const fs = require('fs');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
 const { UserRoleWorkLog } = require('../models');
-const { createSafeUserRoleWorkLog } = require('../utils/loggingUtils');
+
 
 // Use the configured multer instance for employee policy documents
 exports.upload = uploadEmployeePolicyDocument;
@@ -208,14 +208,30 @@ exports.createPolicy = async (req, res) => {
         logDetails
       });
       
-      // Use the safe logging utility
-      await createSafeUserRoleWorkLog({
-        user_id: req.user?.user_id || null,
-        company_id: createdPolicy.company_id,
-        consumer_id: createdPolicy.consumer_id,
-        action: 'created_ecp_policy',
-        details: logDetails
-      }, UserRoleWorkLog);
+      // Log the action
+      try {
+        let targetUserId = null;
+        
+        if (createdPolicy.company_id) {
+          const company = await Company.findByPk(createdPolicy.company_id);
+          if (company) {
+            targetUserId = company.user_id; // Use the company's user_id instead of company_id
+          }
+        }
+        
+        if (targetUserId) {
+          await UserRoleWorkLog.create({
+            user_id: req.user?.user_id || null,
+            target_user_id: targetUserId,
+            role_id: null,
+            action: 'created_ecp_policy',
+            details: JSON.stringify(logDetails)
+          });
+        }
+      } catch (logErr) { 
+        console.error('Log error:', logErr); 
+        // Don't fail the main operation if logging fails
+      }
       
     } catch (logErr) { 
       console.error('Log error:', logErr); 

@@ -20,10 +20,13 @@ const RenewalManager = ({ searchQuery = "" }) => {
   const [renewals, setRenewals] = useState([]);
   const [filteredRenewals, setFilteredRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingRenewal, setEditingRenewal] = useState(null);
   const [statistics, setStatistics] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState("Insurance");
+  const [counts, setCounts] = useState(null);
   const { user } = useAuth();
 
   // Handle search when searchQuery changes
@@ -38,8 +41,17 @@ const RenewalManager = ({ searchQuery = "" }) => {
   const handleSearchRenewals = async (query) => {
     try {
       const response = await renewalAPI.searchRenewals(query);
-      if (response.success) {
-        setFilteredRenewals(response.data);
+      if (response && response.success && response.data) {
+        // Handle both single data array and nested data structure
+        if (Array.isArray(response.data)) {
+          setFilteredRenewals(response.data);
+        } else if (response.data.logs && Array.isArray(response.data.logs)) {
+          setFilteredRenewals(response.data.logs);
+        } else {
+          setFilteredRenewals([]);
+        }
+      } else {
+        setFilteredRenewals([]);
       }
     } catch (error) {
       console.error('Error searching renewals:', error);

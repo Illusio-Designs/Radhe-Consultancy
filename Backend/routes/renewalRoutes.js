@@ -16,6 +16,12 @@ router.get('/service-types', auth, renewalConfigController.getDefaultServiceType
 // Get renewal logs
 router.get('/logs', auth, renewalConfigController.getLogs);
 
+// Get renewal counts
+router.get('/counts', auth, renewalConfigController.getCounts);
+
+// Get renewals by type and period
+router.get('/list', auth, renewalConfigController.getListByTypeAndPeriod);
+
 // Search renewals
 router.get('/search', auth, renewalConfigController.searchRenewals);
 

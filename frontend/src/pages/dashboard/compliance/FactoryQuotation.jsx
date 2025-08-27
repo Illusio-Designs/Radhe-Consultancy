@@ -62,6 +62,9 @@ const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => 
       return;
     }
 
+    // Prevent duplicate submissions
+    if (loading) return;
+
     setLoading(true);
     try {
       const response = await planManagementAPI.createPlanManagement({
@@ -75,7 +78,12 @@ const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => 
         onClose();
       }
     } catch (error) {
-      toast.error('Failed to assign plan manager');
+      console.error('Error assigning plan manager:', error);
+      if (error.message?.includes('already exists')) {
+        toast.error('Plan manager already assigned to this quotation');
+      } else {
+        toast.error('Failed to assign plan manager');
+      }
     } finally {
       setLoading(false);
     }
@@ -1653,6 +1661,18 @@ function FactoryQuotation({ searchQuery = "" }) {
       if (newStatus === 'plan') {
         // Show plan manager selection modal
         const quotation = quotations.find(q => q.id === quotationId);
+        
+        // Check if plan management already exists
+        if (quotation.planManagement) {
+          toast.error('Plan management already exists for this quotation');
+          return;
+        }
+        
+        // Prevent opening modal if already open
+        if (showPlanManagerModal) {
+          return;
+        }
+        
         setSelectedQuotation(quotation);
         setShowPlanManagerModal(true);
         return;
@@ -1661,6 +1681,18 @@ function FactoryQuotation({ searchQuery = "" }) {
       if (newStatus === 'stability') {
         // Show stability manager selection modal
         const quotation = quotations.find(q => q.id === quotationId);
+        
+        // Check if stability management already exists
+        if (quotation.stabilityManagement) {
+          toast.error('Stability management already exists for this quotation');
+          return;
+        }
+        
+        // Prevent opening modal if already open
+        if (showStabilityManagerModal) {
+          return;
+        }
+        
         setSelectedQuotation(quotation);
         setShowStabilityManagerModal(true);
         return;
@@ -1706,9 +1738,18 @@ function FactoryQuotation({ searchQuery = "" }) {
       if (response.success) {
         toast.success('Plan manager assigned successfully');
         await fetchQuotations();
+        // Close modal after successful assignment
+        setShowPlanManagerModal(false);
       }
     } catch (error) {
-      toast.error('Failed to assign plan manager');
+      console.error('Error assigning plan manager:', error);
+      if (error.message?.includes('already exists')) {
+        toast.error('Plan manager already assigned to this quotation');
+        // Close modal if plan already exists
+        setShowPlanManagerModal(false);
+      } else {
+        toast.error('Failed to assign plan manager');
+      }
     }
   };
 
@@ -1723,9 +1764,18 @@ function FactoryQuotation({ searchQuery = "" }) {
       if (response.success) {
         toast.success('Stability manager assigned successfully');
         await fetchQuotations();
+        // Close modal after successful assignment
+        setShowStabilityManagerModal(false);
       }
     } catch (error) {
-      toast.error('Failed to assign stability manager');
+      console.error('Error assigning stability manager:', error);
+      if (error.message?.includes('already exists')) {
+        toast.error('Stability manager already assigned to this quotation');
+        // Close modal if stability management already exists
+        setShowStabilityManagerModal(false);
+      } else {
+        toast.error('Failed to assign stability manager');
+      }
     }
   };
 
