@@ -84,11 +84,6 @@ const Sidebar = ({ onCollapse }) => {
             label: "Renewal List",
           },
           {
-            path: "/dashboard/renewals/log",
-            icon: <Clock />,
-            label: "Reminder Log",
-          },
-          {
             path: "/dashboard/renewals/settings",
             icon: <Settings />,
             label: "Renewal Settings",
@@ -298,6 +293,11 @@ const Sidebar = ({ onCollapse }) => {
             path: "/dashboard/logs/user-role-work-log",
             icon: <ClipboardList />,
             label: "User Role Work Log",
+          },
+          {
+            path: "/dashboard/renewals/log",
+            icon: <Clock />,
+            label: "Reminder Log",
           },
         ],
       },

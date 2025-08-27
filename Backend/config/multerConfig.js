@@ -654,6 +654,38 @@ const uploadApplicationFiles = multer({
     }
 }).array('files', 10);
 
+// Create multer upload instance for consumer creation (no files, just FormData)
+const uploadConsumerData = multer({
+    storage: multer.memoryStorage(), // Use memory storage since we don't need to save files
+    limits: { 
+        fileSize: 1 * 1024 * 1024 // 1MB limit for any potential files
+    }
+}).none(); // .none() means no files are expected
+
+// Add logging for consumer data upload
+const uploadConsumerDataWithLogging = (req, res, next) => {
+    console.log('[Multer] Starting consumer data upload process');
+    console.log('[Multer] Request body before multer:', req.body);
+    console.log('[Multer] Request files:', req.files);
+
+    uploadConsumerData(req, res, (err) => {
+        if (err) {
+            console.error('[Multer] Error processing consumer data:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+
+        // Log processed data
+        console.log('[Multer] Consumer data processed successfully');
+        console.log('[Multer] Request body after multer:', req.body);
+        console.log('[Multer] Request files after multer:', req.files);
+
+        next();
+    });
+};
+
 // Add logging for application file upload
 const uploadApplicationFilesWithLogging = (req, res, next) => {
     console.log('[Multer] Starting application file upload process');
@@ -698,5 +730,6 @@ module.exports = {
     uploadLifePolicyDocument,
     uploadPlanFiles: uploadPlanFilesWithLogging,
     uploadStabilityFiles: uploadStabilityFilesWithLogging,
-    uploadApplicationFiles: uploadApplicationFilesWithLogging
+    uploadApplicationFiles: uploadApplicationFilesWithLogging,
+    uploadConsumerData: uploadConsumerDataWithLogging
 }; 

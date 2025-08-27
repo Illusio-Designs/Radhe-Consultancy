@@ -16,4 +16,7 @@ router.get('/service-types', auth, renewalConfigController.getDefaultServiceType
 // Get renewal logs
 router.get('/logs', auth, renewalConfigController.getLogs);
 
+// Search renewals
+router.get('/search', auth, renewalConfigController.searchRenewals);
+
 module.exports = router; 

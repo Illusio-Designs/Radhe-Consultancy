@@ -320,7 +320,7 @@ exports.searchDSCs = async (req, res) => {
         const dscs = await DSC.findAll({
             where: {
                 [Op.or]: [
-                    { certification_name: { [Op.iLike]: `%${q}%` } }
+                    { certification_name: { [Op.like]: `%${q}%` } }
                 ]
             },
             include: [
@@ -346,7 +346,7 @@ exports.searchDSCs = async (req, res) => {
                     as: 'company',
                     attributes: ['company_id', 'company_name', 'company_email', 'contact_number'],
                     required: true,
-                    where: { company_name: { [Op.iLike]: `%${q}%` } }
+                    where: { company_name: { [Op.like]: `%${q}%` } }
                 },
                 {
                     model: Consumer,
@@ -370,7 +370,7 @@ exports.searchDSCs = async (req, res) => {
                     as: 'consumer',
                     attributes: ['consumer_id', 'name', 'email', 'phone_number'],
                     required: true,
-                    where: { name: { [Op.iLike]: `%${q}%` } }
+                    where: { name: { [Op.like]: `%${q}%` } }
                 }
             ],
             order: [['created_at', 'DESC']]

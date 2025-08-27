@@ -13,6 +13,7 @@ exports.getComplianceManagers = async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           through: UserRole,
           where: { role_name: 'Compliance_manager' }
         }

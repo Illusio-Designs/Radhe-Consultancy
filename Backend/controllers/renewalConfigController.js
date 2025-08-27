@@ -1,4 +1,6 @@
 const { RenewalConfig } = require('../models');
+const { Op } = require('sequelize');
+const { RenewalLog } = require('../models');
 
 // Get all renewal configurations
 const getAllConfigs = async (req, res) => {
@@ -166,24 +168,26 @@ const deleteConfig = async (req, res) => {
 // Get default service types for easy configuration
 const getDefaultServiceTypes = async (req, res) => {
   try {
-    const defaultServices = [
-      { serviceType: 'vehicle', serviceName: 'Vehicle Insurance' },
-      { serviceType: 'ecp', serviceName: 'Employee Compensation Policy' },
-      { serviceType: 'health', serviceName: 'Health Insurance' },
-      { serviceType: 'fire', serviceName: 'Fire Insurance' },
-      { serviceType: 'dsc', serviceName: 'Digital Signature Certificate' },
-      { serviceType: 'factory', serviceName: 'Factory License' }
+    const defaultTypes = [
+      { serviceType: 'vehicle', serviceName: 'Vehicle Insurance', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'ecp', serviceName: 'Employee Compensation Policy', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'health', serviceName: 'Health Insurance', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'fire', serviceName: 'Fire Insurance', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'dsc', serviceName: 'Digital Signature Certificate', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'factory', serviceName: 'Factory Quotation', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'labour_inspection', serviceName: 'Labour Inspection', reminderTimes: 5, reminderDays: 15 },
+      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30 }
     ];
     
     res.json({
       success: true,
-      data: defaultServices
+      data: defaultTypes
     });
   } catch (error) {
-    console.error('Error fetching default service types:', error);
+    console.error('Error getting default service types:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch default service types'
+      message: 'Failed to get default service types'
     });
   }
 };
@@ -191,11 +195,8 @@ const getDefaultServiceTypes = async (req, res) => {
 // Get renewal logs
 const getLogs = async (req, res) => {
   try {
-    const { ReminderLog } = require('../models');
-    
-    const logs = await ReminderLog.findAll({
-      order: [['sent_at', 'DESC']],
-      limit: 100 // Limit to last 100 logs
+    const logs = await RenewalLog.findAll({
+      order: [['createdAt', 'DESC']]
     });
     
     res.json({
@@ -211,6 +212,78 @@ const getLogs = async (req, res) => {
   }
 };
 
+// Search renewal configurations and logs
+const searchRenewals = async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query must be at least 3 characters long'
+      });
+    }
+
+    const searchQuery = query.trim();
+    
+    // Search in configurations
+    const configs = await RenewalConfig.findAll({
+      where: {
+        [Op.or]: [
+          {
+            serviceType: {
+              [Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            serviceName: {
+              [Op.like]: `%${searchQuery}%`
+            }
+          }
+        ]
+      }
+    });
+
+    // Search in logs
+    const logs = await RenewalLog.findAll({
+      where: {
+        [Op.or]: [
+          {
+            serviceType: {
+              [Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            serviceName: {
+              [Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            status: {
+              [Op.like]: `%${searchQuery}%`
+            }
+          }
+        ]
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: {
+        configurations: configs,
+        logs: logs
+      }
+    });
+  } catch (error) {
+    console.error('Error searching renewals:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search renewals'
+    });
+  }
+};
+
 module.exports = {
   getAllConfigs,
   getConfigByService,
@@ -218,5 +291,6 @@ module.exports = {
   updateConfig,
   deleteConfig,
   getDefaultServiceTypes,
-  getLogs
+  getLogs,
+  searchRenewals
 };

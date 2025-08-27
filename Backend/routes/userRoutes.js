@@ -31,6 +31,7 @@ router.get("/me", auth, async (req, res) => {
       include: [
         {
           model: Role,
+          as: 'roles',
           attributes: ["role_name"],
           through: { attributes: ["is_primary"] },
         },
@@ -43,7 +44,7 @@ router.get("/me", auth, async (req, res) => {
 
     // Get primary role or first role
     const primaryRole =
-      user.Roles.find((role) => role.UserRole?.is_primary) || user.Roles[0];
+      user.roles.find((role) => role.UserRole?.is_primary) || user.roles[0];
     const roleName = primaryRole ? primaryRole.role_name : "User";
 
     // Check if user has a company or consumer profile
@@ -74,7 +75,7 @@ router.get("/me", auth, async (req, res) => {
         email: user.email,
         username: user.username,
         role_name: roleName,
-        roles: user.Roles.map((r) => r.role_name),
+        roles: user.roles.map((r) => r.role_name),
         contact_number: user.contact_number,
         imageUrl: user.profile_image,
         profile: companyInfo || consumerInfo,

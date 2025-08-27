@@ -189,19 +189,75 @@ exports.getAllQuotations = async (req, res) => {
               attributes: ['user_id', 'username', 'email']
             }
           ]
-        },
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({ success: true, data: quotations });
+  } catch (error) {
+    console.error('Error fetching quotations:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Search quotations
+exports.searchQuotations = async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query must be at least 3 characters long'
+      });
+    }
+
+    const searchQuery = query.trim();
+    
+    const quotations = await FactoryQuotation.findAll({
+      where: {
+        [require('sequelize').Op.or]: [
+          {
+            '$company.companyName$': {
+              [require('sequelize').Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            status: {
+              [require('sequelize').Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            '$complianceManager.username$': {
+              [require('sequelize').Op.like]: `%${searchQuery}%`
+            }
+          }
+        ]
+      },
+      include: [
         {
           model: require('../models/companyModel'),
           as: 'company',
-          attributes: ['company_id', 'company_name', 'company_code', 'gst_number']
+          attributes: ['company_id', 'company_name', 'company_code']
+        },
+        {
+          model: require('../models/userModel'),
+          as: 'complianceManager',
+          attributes: ['user_id', 'username']
         }
       ],
-      order: [['createdAt', 'DESC']] // Order by creation date, newest first
+      order: [['createdAt', 'DESC']]
     });
+
     res.json({ success: true, data: quotations });
   } catch (error) {
-    console.error('Error fetching factory quotations:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error searching quotations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search quotations',
+      error: error.message
+    });
   }
 };
 
@@ -306,6 +362,7 @@ exports.updateStatus = async (req, res) => {
             include: [
               {
                 model: Role,
+                as: 'roles',
                 through: UserRole,
                 where: { role_name: 'Compliance_manager' }
               }

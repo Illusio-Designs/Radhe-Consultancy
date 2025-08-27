@@ -80,7 +80,9 @@ const consumerController = {
   async createConsumer(req, res) {
     try {
       console.log('[ConsumerController] Creating consumer:', {
-        body: req.body
+        body: req.body,
+        bodyKeys: Object.keys(req.body || {}),
+        bodyValues: Object.values(req.body || {})
       });
 
       const formData = req.body;
@@ -92,8 +94,24 @@ const consumerController = {
         'phone_number',
         'contact_address'
       ];
-      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+      
+      console.log('[ConsumerController] Checking required fields:', requiredFields);
+      console.log('[ConsumerController] Form data values:', {
+        name: formData.name,
+        email: formData.email,
+        phone_number: formData.phone_number,
+        contact_address: formData.contact_address
+      });
+      
+      const missingFields = requiredFields.filter(field => {
+        const value = formData[field];
+        const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+        console.log(`[ConsumerController] Field ${field}: value="${value}", isEmpty=${isEmpty}`);
+        return isEmpty;
+      });
+      
       if (missingFields.length > 0) {
+        console.log('[ConsumerController] Missing fields:', missingFields);
         return res.status(400).json({
           success: false,
           error: `Missing required fields: ${missingFields.join(', ')}`

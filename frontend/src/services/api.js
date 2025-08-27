@@ -1661,81 +1661,57 @@ export const dscAPI = {
 
 // Renewal API
 export const renewalAPI = {
-  // Get all renewal configurations
-  getRenewalConfigs: async () => {
+  // Search renewals
+  searchRenewals: async (query) => {
     try {
-      const response = await api.get("/renewals/configs");
+      const response = await api.get('/renewals/search', { params: { query } });
       return response.data;
     } catch (error) {
-      console.error("Error fetching renewal configs:", error);
-      throw error;
+      console.error('[API] Error searching renewals:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
+  },
+
+  // Get all renewal configurations
+  getAllConfigs: async () => {
+    const response = await api.get('/renewals/configs');
+    return response.data;
   },
 
   // Get configuration by service type
-  getRenewalConfigByService: async (serviceType) => {
-    try {
+  getConfigByService: async (serviceType) => {
       const response = await api.get(`/renewals/configs/${serviceType}`);
       return response.data;
-    } catch (error) {
-      console.error("Error fetching renewal config:", error);
-      throw error;
-    }
   },
 
   // Create new renewal configuration
-  createRenewalConfig: async (configData) => {
-    try {
-      const response = await api.post("/renewals/configs", configData);
+  createConfig: async (data) => {
+    const response = await api.post('/renewals/configs', data);
       return response.data;
-    } catch (error) {
-      console.error("Error creating renewal config:", error);
-      throw error;
-    }
   },
 
   // Update renewal configuration
-  updateRenewalConfig: async (id, configData) => {
-    try {
-      const response = await api.put(`/renewals/configs/${id}`, configData);
+  updateConfig: async (id, data) => {
+    const response = await api.put(`/renewals/configs/${id}`, data);
       return response.data;
-    } catch (error) {
-      console.error("Error updating renewal config:", error);
-      throw error;
-    }
   },
 
   // Delete renewal configuration
-  deleteRenewalConfig: async (id) => {
-    try {
+  deleteConfig: async (id) => {
       const response = await api.delete(`/renewals/configs/${id}`);
       return response.data;
-    } catch (error) {
-      console.error("Error deleting renewal config:", error);
-      throw error;
-    }
   },
 
   // Get default service types
   getDefaultServiceTypes: async () => {
-    try {
-      const response = await api.get("/renewals/service-types");
+    const response = await api.get('/renewals/service-types');
       return response.data;
-    } catch (error) {
-      console.error("Error fetching default service types:", error);
-      throw error;
-    }
   },
 
   // Get renewal logs
-  getRenewalLogs: async () => {
-    try {
-      const response = await api.get("/renewals/logs");
+  getLogs: async () => {
+    const response = await api.get('/renewals/logs');
       return response.data;
-    } catch (error) {
-      console.error("Error fetching renewal logs:", error);
-      throw error;
-    }
   }
 };
 
@@ -1777,6 +1753,16 @@ export const factoryQuotationAPI = {
   getAllQuotations: async () => {
     const response = await api.get('/factory-quotations');
     return response.data;
+  },
+  // Search quotations
+  searchQuotations: async (query) => {
+    try {
+      const response = await api.get('/factory-quotations/search', { params: { query } });
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error searching factory quotations:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
   },
   // Get quotation by ID
   getQuotationById: async (id) => {
@@ -1834,6 +1820,104 @@ export const factoryQuotationAPI = {
   }
 };
 
+// Labour Inspection API
+export const labourInspectionAPI = {
+  // Get all labour inspections with pagination and filters
+  getAllInspections: async (params = {}) => {
+    const response = await api.get('/labour-inspection', { params });
+    return response.data;
+  },
+  // Get inspection by ID
+  getInspectionById: async (id) => {
+    const response = await api.get(`/labour-inspection/${id}`);
+    return response.data;
+  },
+  // Create new inspection
+  createInspection: async (data) => {
+    const response = await api.post('/labour-inspection', data);
+    return response.data;
+  },
+  // Update inspection
+  updateInspection: async (id, data) => {
+    const response = await api.put(`/labour-inspection/${id}`, data);
+    return response.data;
+  },
+  // Delete inspection
+  deleteInspection: async (id) => {
+    const response = await api.delete(`/labour-inspection/${id}`);
+    return response.data;
+  },
+  // Get inspections by company ID
+  getInspectionsByCompany: async (companyId, params = {}) => {
+    const response = await api.get(`/labour-inspection/company/${companyId}`, { params });
+    return response.data;
+  },
+  // Get inspection statistics
+  getStatistics: async () => {
+    const response = await api.get('/labour-inspection/stats/overview');
+    return response.data;
+  },
+  // Search inspections
+  searchInspections: async (query) => {
+    try {
+      const response = await api.get('/labour-inspection/search', { params: { query } });
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error searching labour inspections:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
+  }
+};
+
+// Labour License API
+export const labourLicenseAPI = {
+  // Get all labour licenses with pagination and filters
+  getAllLicenses: async (params = {}) => {
+    const response = await api.get('/labour-license', { params });
+    return response.data;
+  },
+  // Get license by ID
+  getLicenseById: async (id) => {
+    const response = await api.get(`/labour-license/${id}`);
+    return response.data;
+  },
+  // Create new license
+  createLicense: async (data) => {
+    const response = await api.post('/labour-license', data);
+    return response.data;
+  },
+  // Update license
+  updateLicense: async (id, data) => {
+    const response = await api.put(`/labour-license/${id}`, data);
+    return response.data;
+  },
+  // Delete license
+  deleteLicense: async (id) => {
+    const response = await api.delete(`/labour-license/${id}`);
+    return response.data;
+  },
+  // Get licenses by company ID
+  getLicensesByCompany: async (companyId, params = {}) => {
+    const response = await api.get(`/labour-license/company/${companyId}`, { params });
+    return response.data;
+  },
+  // Get license statistics
+  getStatistics: async () => {
+    const response = await api.get('/labour-license/stats/overview');
+    return response.data;
+  },
+  // Search licenses
+  searchLicenses: async (query) => {
+    try {
+      const response = await api.get('/labour-license/search', { params: { query } });
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error searching labour licenses:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
+  }
+};
+
 export const planManagementAPI = {
   // Get plan managers (users with Plan_manager role)
   getPlanManagers: async () => {
@@ -1845,6 +1929,17 @@ export const planManagementAPI = {
   getAllPlanManagement: async () => {
     const response = await api.get('/plan-management');
     return response.data;
+  },
+
+  // Search plan management records
+  searchPlans: async (query) => {
+    try {
+      const response = await api.get('/plan-management/search', { params: { query } });
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error searching plan management:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
   },
 
   // Get plan management by factory quotation ID
@@ -1912,10 +2007,15 @@ export const stabilityManagementAPI = {
     return response.data;
   },
 
-  // Get stability management by factory quotation ID
-  getStabilityManagementByQuotationId: async (quotationId) => {
-    const response = await api.get(`/stability-management/quotation/${quotationId}`);
+  // Search stability management records
+  searchStabilityRecords: async (query) => {
+    try {
+      const response = await api.get('/stability-management/search', { params: { query } });
     return response.data;
+    } catch (error) {
+      console.error('[API] Error searching stability management:', error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
   },
 
   // Create stability management (assign to stability manager)
@@ -1924,19 +2024,19 @@ export const stabilityManagementAPI = {
     return response.data;
   },
 
-  // Update stability status (Stability Manager only)
+  // Update stability status
   updateStabilityStatus: async (id, data) => {
     const response = await api.put(`/stability-management/${id}/status`, data);
     return response.data;
   },
 
-  // Update stability dates (Stability Manager only)
+  // Update stability dates
   updateStabilityDates: async (id, data) => {
     const response = await api.put(`/stability-management/${id}/dates`, data);
     return response.data;
   },
 
-  // Upload files for stability (Stability Manager only)
+  // Upload files for stability
   uploadStabilityFiles: async (id, formData) => {
     const response = await api.put(`/stability-management/${id}/upload-files`, formData, {
       headers: {
@@ -1946,16 +2046,23 @@ export const stabilityManagementAPI = {
     return response.data;
   },
 
+  // Get stability files
+  getStabilityFiles: async (id) => {
+    const response = await api.get(`/stability-management/${id}/files`);
+    return response.data;
+  },
+
+  // Delete stability file
+  deleteStabilityFile: async (id, filename) => {
+    const response = await api.delete(`/stability-management/${id}/files/${filename}`);
+    return response.data;
+  },
+
   // Get statistics
   getStatistics: async () => {
-    try {
-      const response = await api.get("/stability-management/statistics");
+    const response = await api.get('/stability-management/statistics');
       return response.data;
-    } catch (error) {
-      console.error("Error fetching stability management statistics:", error);
-      throw error;
     }
-  },
 };
 
 export const applicationManagementAPI = {

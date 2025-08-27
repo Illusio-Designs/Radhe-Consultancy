@@ -316,27 +316,44 @@ const StabilityDateModal = ({ onClose, onUpdate, currentDate }) => {
   );
 };
 
-function StabilityManagement() {
-  const [stabilityManagementRecords, setStabilityManagementRecords] = useState([]);
+// Main Stability Management Component
+const StabilityManagement = ({ searchQuery = "" }) => {
+  const [stabilityRecords, setStabilityRecords] = useState([]);
+  const [filteredStabilityRecords, setFilteredStabilityRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statistics, setStatistics] = useState({
-    total: 0,
-    stability: 0,
-    submit: 0,
-    approved: 0,
-    rejected: 0,
-    withLoad: 0,
-    withoutLoad: 0,
-    recent: 0
-  });
-  const [error, setError] = useState(null);
-  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showDateModal, setShowDateModal] = useState(false);
-  const [selectedStability, setSelectedStability] = useState(null);
-  const { user, userRoles } = useAuth();
-  const isStabilityManager = userRoles.includes("stability_manager");
+  const [showModal, setShowModal] = useState(false);
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [stabilityManagers, setStabilityManagers] = useState([]);
+  const [statistics, setStatistics] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const { user } = useAuth();
+
+  // Handle search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchStabilityRecords(searchQuery);
+    } else {
+      setFilteredStabilityRecords(stabilityRecords);
+    }
+  }, [searchQuery, stabilityRecords]);
+
+  const handleSearchStabilityRecords = async (query) => {
+    try {
+      const response = await stabilityManagementAPI.searchStabilityRecords(query);
+      if (response.success) {
+        setFilteredStabilityRecords(response.data);
+      }
+    } catch (error) {
+      console.error('Error searching stability records:', error);
+      // Fallback to local search
+      const filtered = stabilityRecords.filter(record => 
+        record.factoryQuotation?.companyName?.toLowerCase().includes(query.toLowerCase()) ||
+        record.status?.toLowerCase().includes(query.toLowerCase()) ||
+        record.stabilityManager?.username?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredStabilityRecords(filtered);
+    }
+  };
 
   useEffect(() => {
     fetchStabilityManagementRecords();
@@ -350,7 +367,7 @@ function StabilityManagement() {
       console.log('Stability management API response:', response);
       if (response.success) {
         console.log('Stability management records:', response.data);
-        setStabilityManagementRecords(response.data);
+        setStabilityRecords(response.data);
         setError(null);
       } else {
         setError("Failed to fetch stability management records");

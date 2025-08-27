@@ -63,6 +63,22 @@ const requiredAccounts = {
       password: 'Samir@123',
       role: 'Stability_manager'
     }
+  ],
+  websiteManagers: [
+    {
+      username: 'Website Manager',
+      email: 'website@radheconsultancy.co.in',
+      password: 'Website@123',
+      role: 'Website_manager'
+    }
+  ],
+  labourLawManagers: [
+    {
+      username: 'Labour Law Manager',
+      email: 'labour@radheconsultancy.co.in',
+      password: 'Labour@123',
+      role: 'Labour_law_manager'
+    }
   ]
 };
 
@@ -233,6 +249,50 @@ async function createAllAccounts() {
         }
       }
     }
+
+    // Process website managers
+    console.log('\n📋 Processing Website Managers...');
+    for (const manager of requiredAccounts.websiteManagers) {
+      const result = await createOrUpdateAccount(manager);
+      if (result.success) {
+        if (result.action === 'created') {
+          await assignRoleToUser(result.user, 'Website_manager');
+        } else if (result.action === 'exists') {
+          console.log(`ℹ️  Website manager account already exists, checking role assignment...`);
+          // Check if role is already assigned using a simpler approach
+          const existingRole = await UserRole.findOne({
+            where: { user_id: result.user.user_id }
+          });
+          if (existingRole) {
+            console.log(`ℹ️  Website_manager role already assigned to ${result.user.username}`);
+          } else {
+            await assignRoleToUser(result.user, 'Website_manager');
+          }
+        }
+      }
+    }
+
+    // Process labour law managers
+    console.log('\n📋 Processing Labour Law Managers...');
+    for (const manager of requiredAccounts.labourLawManagers) {
+      const result = await createOrUpdateAccount(manager);
+      if (result.success) {
+        if (result.action === 'created') {
+          await assignRoleToUser(result.user, 'Labour_law_manager');
+        } else if (result.action === 'exists') {
+          console.log(`ℹ️  Labour law manager account already exists, checking role assignment...`);
+          // Check if role is already assigned using a simpler approach
+          const existingRole = await UserRole.findOne({
+            where: { user_id: result.user.user_id }
+          });
+          if (existingRole) {
+            console.log(`ℹ️  Labour_law_manager role already assigned to ${result.user.username}`);
+          } else {
+            await assignRoleToUser(result.user, 'Labour_law_manager');
+          }
+        }
+      }
+    }
     
     // Display summary
     console.log('\n📊 Account Summary:');
@@ -242,7 +302,9 @@ async function createAllAccounts() {
     const allAccounts = [
       requiredAccounts.admin,
       ...requiredAccounts.planManagers,
-      ...requiredAccounts.stabilityManagers
+      ...requiredAccounts.stabilityManagers,
+      ...requiredAccounts.websiteManagers,
+      ...requiredAccounts.labourLawManagers
     ];
     
     for (const account of allAccounts) {

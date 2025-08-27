@@ -9,7 +9,7 @@ const Consumer = require("./consumerModel");
 const InsuranceCompany = require("./insuranceCompanyModel");
 const EmployeeCompensationPolicy = require("./employeeCompensationPolicyModel");
 const VehiclePolicy = require("./vehiclePolicyModel");
-const HealthPolicy = require("./healthPolicyModel");
+const HealthPolicies = require("./healthPolicyModel");
 const FirePolicy = require("./firePolicyModel");
 const LifePolicy = require("./lifePolicyModel");
 const DSC = require("./dscModel");
@@ -21,6 +21,8 @@ const PlanManagement = require("./planManagementModel");
 const StabilityManagement = require('./stabilityManagementModel');
 const ApplicationManagement = require('./applicationManagementModel');
 const RenewalConfig = require('./renewalConfigModel')(sequelize, require('sequelize').DataTypes);
+const LabourInspection = require('./labourInspectionModel');
+const LabourLicense = require('./labourLicenseModel')(sequelize, require('sequelize').DataTypes);
 
 // Define associations
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id', as: 'roles' });
@@ -71,12 +73,12 @@ Consumer.hasMany(VehiclePolicy, { foreignKey: 'consumer_id', as: 'vehiclePolicie
 InsuranceCompany.hasMany(VehiclePolicy, { foreignKey: 'insurance_company_id', as: 'vehiclePolicies' });
 
 // Health Policy Associations
-HealthPolicy.belongsTo(Company, { foreignKey: 'company_id', as: 'companyPolicyHolder' });
-HealthPolicy.belongsTo(Consumer, { foreignKey: 'consumer_id', as: 'consumerPolicyHolder' });
-HealthPolicy.belongsTo(InsuranceCompany, { foreignKey: 'insurance_company_id', as: 'provider' });
-Company.hasMany(HealthPolicy, { foreignKey: 'company_id', as: 'healthPolicies' });
-Consumer.hasMany(HealthPolicy, { foreignKey: 'consumer_id', as: 'healthPolicies' });
-InsuranceCompany.hasMany(HealthPolicy, { foreignKey: 'insurance_company_id', as: 'healthPolicies' });
+HealthPolicies.belongsTo(Company, { foreignKey: 'company_id', as: 'companyPolicyHolder' });
+HealthPolicies.belongsTo(Consumer, { foreignKey: 'consumer_id', as: 'consumerPolicyHolder' });
+HealthPolicies.belongsTo(InsuranceCompany, { foreignKey: 'insurance_company_id', as: 'provider' });
+Company.hasMany(HealthPolicies, { foreignKey: 'company_id', as: 'healthPolicies' });
+Consumer.hasMany(HealthPolicies, { foreignKey: 'consumer_id', as: 'healthPolicies' });
+InsuranceCompany.hasMany(HealthPolicies, { foreignKey: 'insurance_company_id', as: 'healthPolicies' });
 
 // Fire Policy Associations
 FirePolicy.belongsTo(Company, { foreignKey: 'company_id', as: 'companyPolicyHolder' });
@@ -114,6 +116,18 @@ User.hasMany(UserRoleWorkLog, { foreignKey: 'user_id', as: 'userRoleWorkLogs' })
 User.hasMany(UserRoleWorkLog, { foreignKey: 'target_user_id', as: 'targetUserRoleWorkLogs' });
 Role.hasMany(UserRoleWorkLog, { foreignKey: 'role_id', as: 'userRoleWorkLogs' });
 
+// Labour Inspection Associations
+LabourInspection.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
+LabourInspection.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+LabourInspection.belongsTo(User, { foreignKey: 'updated_by', as: 'updater' });
+Company.hasMany(LabourInspection, { foreignKey: 'company_id', as: 'labourInspections' });
+User.hasMany(LabourInspection, { foreignKey: 'created_by', as: 'createdInspections' });
+User.hasMany(LabourInspection, { foreignKey: 'updated_by', as: 'updatedInspections' });
+
+// Labour License Associations
+LabourLicense.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
+Company.hasMany(LabourLicense, { foreignKey: 'company_id', as: 'labourLicenses' });
+
 module.exports = {
   User,
   Role,
@@ -123,7 +137,7 @@ module.exports = {
   InsuranceCompany,
   EmployeeCompensationPolicy,
   VehiclePolicy,
-  HealthPolicy,
+  HealthPolicies,
   FirePolicy,
   LifePolicy,
   DSC,
@@ -135,5 +149,7 @@ module.exports = {
   StabilityManagement,
   ApplicationManagement,
   RenewalConfig,
+  LabourInspection,
+  LabourLicense,
   sequelize
 };

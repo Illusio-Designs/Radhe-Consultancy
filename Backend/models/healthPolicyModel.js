@@ -103,7 +103,7 @@ const HealthPolicy = sequelize.define('HealthPolicy', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-  modelName: 'HealthPolicy',
+  modelName: 'HealthPolicies',
   indexes: [
     {
       unique: true,

@@ -23,20 +23,61 @@ const periodOptions = [
   { value: "year", label: "Year" },
 ];
 
-const RenewalList = () => {
+// Main Renewal List Component
+const RenewalList = ({ searchQuery = "" }) => {
   const [renewals, setRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
-
+  const [showModal, setShowModal] = useState(false);
+  const [editingRenewal, setEditingRenewal] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { user, userRoles } = useAuth();
+
+  // Handle search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchRenewals(searchQuery);
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
+
+  const handleSearchRenewals = async (query) => {
+    try {
+      setIsSearching(true);
+      const response = await renewalAPI.searchRenewals(query);
+      if (response.success) {
+        setSearchResults(response.data);
+      }
+    } catch (error) {
+      console.error('Error searching renewals:', error);
+      // Fallback to local search
+      const filtered = renewals.filter(renewal => 
+        renewal.serviceName?.toLowerCase().includes(query.toLowerCase()) ||
+        renewal.status?.toLowerCase().includes(query.toLowerCase()) ||
+        renewal.companyName?.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(filtered);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const isCompany = userRoles.includes("company");
   const isConsumer = userRoles.includes("consumer");
   const companyId = user?.profile?.company_id;
   const consumerId = user?.profile?.consumer_id;
 
   const filteredRenewals = React.useMemo(() => {
+    // If searching, use search results
+    if (searchQuery && searchQuery.trim() !== "" && searchResults.length > 0) {
+      return searchResults;
+    }
+    
+    // Otherwise, apply role-based filtering
     if (isCompany) {
       return renewals.filter((r) => r.company_id === companyId);
     }
@@ -44,7 +85,7 @@ const RenewalList = () => {
       return renewals.filter((r) => r.consumer_id === consumerId);
     }
     return renewals;
-  }, [renewals, isCompany, isConsumer, companyId, consumerId]);
+  }, [renewals, isCompany, isConsumer, companyId, consumerId, searchQuery, searchResults]);
 
   // Disable update/edit for company/consumer users
   const canEdit = !(isCompany || isConsumer);

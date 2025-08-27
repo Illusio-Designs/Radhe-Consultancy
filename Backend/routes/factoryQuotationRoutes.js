@@ -22,6 +22,9 @@ router.post('/', factoryQuotationController.createQuotation);
 // Get all quotations
 router.get('/', factoryQuotationController.getAllQuotations);
 
+// Search quotations
+router.get('/search', factoryQuotationController.searchQuotations);
+
 // Get statistics
 router.get('/statistics', factoryQuotationController.getStatistics);
 

@@ -225,24 +225,44 @@ const RejectModal = ({ onClose, onReject }) => {
   );
 };
 
-function PlanManagement() {
-  const [planManagementRecords, setPlanManagementRecords] = useState([]);
+// Main Plan Management Component
+const PlanManagement = ({ searchQuery = "" }) => {
+  const [plans, setPlans] = useState([]);
+  const [filteredPlans, setFilteredPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statistics, setStatistics] = useState({
-    total: 0,
-    plan: 0,
-    submit: 0,
-    approved: 0,
-    rejected: 0,
-    recent: 0
-  });
-  const [error, setError] = useState(null);
-  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const { user, userRoles } = useAuth();
-  const isPlanManager = userRoles.includes("plan_manager");
+  const [showModal, setShowModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [planManagers, setPlanManagers] = useState([]);
+  const [statistics, setStatistics] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const { user } = useAuth();
+
+  // Handle search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchPlans(searchQuery);
+    } else {
+      setFilteredPlans(plans);
+    }
+  }, [searchQuery, plans]);
+
+  const handleSearchPlans = async (query) => {
+    try {
+      const response = await planManagementAPI.searchPlans(query);
+      if (response.success) {
+        setFilteredPlans(response.data);
+      }
+    } catch (error) {
+      console.error('Error searching plans:', error);
+      // Fallback to local search
+      const filtered = plans.filter(plan => 
+        plan.companyName?.toLowerCase().includes(query.toLowerCase()) ||
+        plan.status?.toLowerCase().includes(query.toLowerCase()) ||
+        plan.planManager?.username?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredPlans(filtered);
+    }
+  };
 
   useEffect(() => {
     fetchPlanManagementRecords();
@@ -254,7 +274,8 @@ function PlanManagement() {
     try {
       const response = await planManagementAPI.getAllPlanManagement();
       if (response.success) {
-        setPlanManagementRecords(response.data);
+        setPlans(response.data);
+        setFilteredPlans(response.data); // Initialize filteredPlans
         setError(null);
       } else {
         setError("Failed to fetch plan management records");
@@ -301,15 +322,15 @@ function PlanManagement() {
 
   const handleStatusChange = async (planId, newStatus) => {
     try {
-      const currentPlan = planManagementRecords.find(p => p.id === planId);
+      const currentPlan = plans.find(p => p.id === planId);
       
       if (newStatus === 'Approved') {
         // Show upload modal for approval
-        setSelectedPlan(currentPlan);
-        setShowFileUploadModal(true);
+        setEditingPlan(currentPlan);
+        setShowModal(true);
       } else if (newStatus === 'Reject') {
         // Show reject modal
-        setSelectedPlan(currentPlan);
+        setEditingPlan(currentPlan);
         setShowRejectModal(true);
       } else if (newStatus === 'submit') {
         // Submit plan using the new API
@@ -332,7 +353,7 @@ function PlanManagement() {
   };
 
   const handleUploadFiles = async (files) => {
-    if (!selectedPlan) return;
+    if (!editingPlan) return;
     
     try {
       const formData = new FormData();
@@ -340,12 +361,12 @@ function PlanManagement() {
         formData.append('files', file);
       });
 
-      const response = await planManagementAPI.uploadPlanFiles(selectedPlan.id, formData);
+      const response = await planManagementAPI.uploadPlanFiles(editingPlan.id, formData);
       if (response.success) {
         toast.success('Files uploaded and plan approved successfully');
         await fetchPlanManagementRecords();
-        setShowFileUploadModal(false);
-        setSelectedPlan(null);
+        setShowModal(false);
+        setEditingPlan(null);
       }
     } catch (error) {
       toast.error('Failed to upload files');
@@ -353,10 +374,10 @@ function PlanManagement() {
   };
 
   const handleRejectPlan = async (remarks) => {
-    if (!selectedPlan) return;
+    if (!editingPlan) return;
     
     try {
-      const response = await planManagementAPI.updatePlanStatus(selectedPlan.id, {
+      const response = await planManagementAPI.updatePlanStatus(editingPlan.id, {
         status: 'Reject',
         remarks: remarks
       });
@@ -364,7 +385,7 @@ function PlanManagement() {
         toast.success('Plan rejected successfully');
         await fetchPlanManagementRecords();
         setShowRejectModal(false);
-        setSelectedPlan(null);
+        setEditingPlan(null);
       }
     } catch (error) {
       toast.error('Failed to reject plan');
@@ -469,8 +490,8 @@ function PlanManagement() {
   ];
 
   const filteredRecords = React.useMemo(() => {
-    return planManagementRecords;
-  }, [planManagementRecords]);
+    return filteredPlans;
+  }, [filteredPlans]);
 
   return (
     <div className="compliance-container">
@@ -505,11 +526,11 @@ function PlanManagement() {
         )}
       </div>
 
-      {showFileUploadModal && (
+      {showModal && (
         <FileUploadModal
           onClose={() => {
-            setShowFileUploadModal(false);
-            setSelectedPlan(null);
+            setShowModal(false);
+            setEditingPlan(null);
           }}
           onUpload={handleUploadFiles}
         />
@@ -519,7 +540,7 @@ function PlanManagement() {
         <RejectModal
           onClose={() => {
             setShowRejectModal(false);
-            setSelectedPlan(null);
+            setEditingPlan(null);
           }}
           onReject={handleRejectPlan}
         />

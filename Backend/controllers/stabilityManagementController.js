@@ -24,6 +24,7 @@ const getStabilityManagers = async (req, res) => {
     const stabilityManagers = await User.findAll({
       include: [{
         model: Role,
+        as: 'roles',
         through: UserRole,
         where: { role_name: 'Stability_manager' }
       }],
@@ -96,6 +97,87 @@ const getAllStabilityManagement = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch stability management records',
+      error: error.message
+    });
+  }
+};
+
+// Search stability management records
+const searchStabilityManagement = async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query must be at least 3 characters long'
+      });
+    }
+
+    const searchQuery = query.trim();
+    let whereClause = {};
+    
+    // Role-based filtering
+    if (req.user.roles) {
+      const userRoles = req.user.roles.map(role => role.role_name);
+      const isStabilityManager = userRoles.includes('Stability_manager');
+      const isAdmin = userRoles.includes('Admin');
+      
+      if (!isStabilityManager && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Only Stability Managers and Admins can search stability records.'
+        });
+      }
+      
+      // Stability managers can only see their own records
+      if (isStabilityManager && !isAdmin) {
+        whereClause.stability_manager_id = req.user.user_id;
+      }
+    }
+
+    const stabilityRecords = await StabilityManagement.findAll({
+      where: {
+        ...whereClause,
+        [Op.or]: [
+          {
+            '$factoryQuotation.companyName$': {
+              [Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            status: {
+              [Op.like]: `%${searchQuery}%`
+            }
+          },
+          {
+            '$stabilityManager.username$': {
+              [Op.like]: `%${searchQuery}%`
+            }
+          }
+        ]
+      },
+      include: [
+        {
+          model: FactoryQuotation,
+          as: 'factoryQuotation',
+          attributes: ['id', 'companyName', 'status']
+        },
+        {
+          model: User,
+          as: 'stabilityManager',
+          attributes: ['user_id', 'username', 'email']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({ success: true, data: stabilityRecords });
+  } catch (error) {
+    console.error('Error searching stability management:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search stability management',
       error: error.message
     });
   }
@@ -178,6 +260,7 @@ const createStabilityManagement = async (req, res) => {
       where: { user_id: stability_manager_id },
       include: [{
         model: Role,
+        as: 'roles',
         through: UserRole,
         where: { role_name: 'Stability_manager' }
       }]
@@ -387,26 +470,28 @@ const updateStabilityDates = async (req, res) => {
   }
 };
 
-// Upload files for stability (Stability Manager only)
+// Upload files for stability (Stability Manager and Admin only)
 const uploadStabilityFiles = async (req, res) => {
   try {
     const { id } = req.params;
     const { user } = req;
     const isStabilityManager = user.roles.includes('Stability_manager');
+    const isAdmin = user.roles.includes('Admin');
 
-    if (!isStabilityManager) {
+    if (!isStabilityManager && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: 'Only stability managers can upload files'
+        message: 'Only stability managers and admins can upload files'
       });
     }
 
-    const stabilityManagement = await StabilityManagement.findOne({
-      where: { 
-        id,
-        stability_manager_id: user.user_id
-      }
-    });
+    // Build where clause - admin can upload files for any stability record, stability manager only their own
+    const whereClause = { id };
+    if (isStabilityManager && !isAdmin) {
+      whereClause.stability_manager_id = user.user_id;
+    }
+
+    const stabilityManagement = await StabilityManagement.findOne({ where: whereClause });
 
     if (!stabilityManagement) {
       return res.status(404).json({
@@ -464,26 +549,28 @@ const uploadStabilityFiles = async (req, res) => {
   }
 };
 
-// Get stability files (Stability Manager only)
+// Get stability files (Stability Manager and Admin only)
 const getStabilityFiles = async (req, res) => {
   try {
     const { id } = req.params;
     const { user } = req;
     const isStabilityManager = user.roles.includes('Stability_manager');
+    const isAdmin = user.roles.includes('Admin');
 
-    if (!isStabilityManager) {
+    if (!isStabilityManager && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: 'Only stability managers can view files'
+        message: 'Only stability managers and admins can view files'
       });
     }
 
-    const stabilityManagement = await StabilityManagement.findOne({
-      where: { 
-        id,
-        stability_manager_id: user.user_id
-      }
-    });
+    // Build where clause - admin can view files for any stability record, stability manager only their own
+    const whereClause = { id };
+    if (isStabilityManager && !isAdmin) {
+      whereClause.stability_manager_id = user.user_id;
+    }
+
+    const stabilityManagement = await StabilityManagement.findOne({ where: whereClause });
 
     if (!stabilityManagement) {
       return res.status(404).json({
@@ -575,26 +662,28 @@ const getStatistics = async (req, res) => {
   }
 };
 
-// Delete stability file (Stability Manager only)
+// Delete stability file (Stability Manager and Admin only)
 const deleteStabilityFile = async (req, res) => {
   try {
     const { id, filename } = req.params;
     const { user } = req;
     const isStabilityManager = user.roles.includes('Stability_manager');
+    const isAdmin = user.roles.includes('Admin');
 
-    if (!isStabilityManager) {
+    if (!isStabilityManager && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: 'Only stability managers can delete files'
+        message: 'Only stability managers and admins can delete files'
       });
     }
 
-    const stabilityManagement = await StabilityManagement.findOne({
-      where: { 
-        id,
-        stability_manager_id: user.user_id
-      }
-    });
+    // Build where clause - admin can delete files for any stability record, stability manager only their own
+    const whereClause = { id };
+    if (isStabilityManager && !isAdmin) {
+      whereClause.stability_manager_id = user.user_id;
+    }
+
+    const stabilityManagement = await StabilityManagement.findOne({ where: whereClause });
 
     if (!stabilityManagement) {
       return res.status(404).json({
@@ -644,6 +733,7 @@ const deleteStabilityFile = async (req, res) => {
 module.exports = {
   getStabilityManagers,
   getAllStabilityManagement,
+  searchStabilityManagement,
   getStabilityManagementByQuotationId,
   createStabilityManagement,
   updateStabilityStatus,

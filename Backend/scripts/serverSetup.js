@@ -1,7 +1,7 @@
 // Combined Database Initialization, Seeding, and Admin Setup Script
 // This script handles database setup, roles/permissions setup, and admin user setup
 
-const { User, Role, UserRole, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicy, FirePolicy, LifePolicy, DSC, ReminderLog, DSCLog, UserRoleWorkLog } = require('../models');
+const { User, Role, UserRole, Company, Consumer, InsuranceCompany, EmployeeCompensationPolicy, VehiclePolicy, HealthPolicies, FirePolicy, LifePolicy, DSC, ReminderLog, DSCLog, UserRoleWorkLog, LabourInspection, LabourLicense, RenewalConfig } = require('../models');
 const sequelize = require('../config/db');
 const FactoryQuotation = require('../models/factoryQuotationModel');
 const PlanManagement = require('../models/planManagementModel');
@@ -44,7 +44,9 @@ const roles = [
   { role_name: 'Compliance_manager', description: 'Compliance management access' },
   { role_name: 'DSC_manager', description: 'Digital Signature Certificate management access' },
   { role_name: 'Plan_manager', description: 'Plan management access' },
-  { role_name: 'Stability_manager', description: 'Stability management access' }
+  { role_name: 'Stability_manager', description: 'Stability management access' },
+  { role_name: 'Website_manager', description: 'Website management and content access' },
+  { role_name: 'Labour_law_manager', description: 'Labour law and inspection management access' }
 ];
 
 // Handle LifePolicy table setup
@@ -251,7 +253,7 @@ async function setupDatabase() {
       { model: InsuranceCompany, name: 'InsuranceCompany' },
       { model: EmployeeCompensationPolicy, name: 'EmployeeCompensationPolicy' },
       { model: VehiclePolicy, name: 'VehiclePolicy' },
-      { model: HealthPolicy, name: 'HealthPolicy' },
+      { model: HealthPolicies, name: 'HealthPolicies' },
       { model: FirePolicy, name: 'FirePolicy' },
       { model: LifePolicy, name: 'LifePolicy' },
       { model: DSC, name: 'DSC' },
@@ -261,7 +263,9 @@ async function setupDatabase() {
       { model: FactoryQuotation, name: 'FactoryQuotation' },
       { model: PlanManagement, name: 'PlanManagement' },
       { model: StabilityManagement, name: 'StabilityManagement' },
-      { model: ApplicationManagement, name: 'ApplicationManagement' }
+      { model: ApplicationManagement, name: 'ApplicationManagement' },
+      { model: LabourInspection, name: 'LabourInspection' },
+      { model: LabourLicense, name: 'LabourLicense' }
     ];
 
     for (const table of otherTables) {
@@ -653,6 +657,182 @@ async function setupStabilityManagers() {
   }
 }
 
+/**
+ * Sets up website manager users
+ * @returns {Promise<boolean>} Success status
+ */
+async function setupWebsiteManagers() {
+  try {
+    logToFile('Setting up website managers...');
+    console.log('Setting up website managers...');
+    
+    const websiteManagerRole = await Role.findOne({ where: { role_name: 'Website_manager' } });
+    if (!websiteManagerRole) {
+      throw new Error('Website_manager role not found');
+    }
+
+    const websiteManagers = [
+      {
+        username: 'Website Manager',
+        email: 'website@radheconsultancy.co.in',
+        password: 'Website@123'
+      }
+    ];
+
+    for (const manager of websiteManagers) {
+      try {
+        const [user, created] = await User.findOrCreate({
+          where: { email: manager.email },
+          defaults: {
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            created_at: new Date(),
+            updated_at: new Date()
+          }
+        });
+
+        if (!created) {
+          // Update existing user
+          await user.update({
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            updated_at: new Date()
+          });
+          logToFile(`Updated existing website manager: ${manager.username}`);
+          console.log(`Updated existing website manager: ${manager.username}`);
+        } else {
+          logToFile(`Created new website manager: ${manager.username}`);
+          console.log(`Created new website manager: ${manager.username}`);
+        }
+
+        // Check if user already has website manager role
+        const existingUserRole = await UserRole.findOne({
+          where: {
+            user_id: user.user_id,
+            role_id: websiteManagerRole.id
+          }
+        });
+
+        if (!existingUserRole) {
+          // Assign website manager role
+          await user.addRole(websiteManagerRole, { 
+            through: { 
+              is_primary: true,
+              assigned_by: 1 // Admin user ID
+            } 
+          });
+          logToFile(`Website manager role assigned to ${manager.username}`);
+          console.log(`Website manager role assigned to ${manager.username}`);
+        } else {
+          logToFile(`Website manager role already assigned to ${manager.username}`);
+          console.log(`Website manager role already assigned to ${manager.username}`);
+        }
+      } catch (userError) {
+        logToFile(`Error setting up website manager ${manager.username}: ${userError.message}`);
+        console.error(`Error setting up website manager ${manager.username}:`, userError);
+        // Continue with other managers
+      }
+    }
+
+    logToFile('Website managers setup completed');
+    console.log('Website managers setup completed');
+    return true;
+  } catch (error) {
+    const errorMessage = `Error setting up website managers: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
+    return false;
+  }
+}
+
+/**
+ * Sets up labour law manager users
+ * @returns {Promise<boolean>} Success status
+ */
+async function setupLabourLawManagers() {
+  try {
+    logToFile('Setting up labour law managers...');
+    console.log('Setting up labour law managers...');
+    
+    const labourLawManagerRole = await Role.findOne({ where: { role_name: 'Labour_law_manager' } });
+    if (!labourLawManagerRole) {
+      throw new Error('Labour_law_manager role not found');
+    }
+
+    const labourLawManagers = [
+      {
+        username: 'Labour Law Manager',
+        email: 'labour@radheconsultancy.co.in',
+        password: 'Labour@123'
+      }
+    ];
+
+    for (const manager of labourLawManagers) {
+      try {
+        const [user, created] = await User.findOrCreate({
+          where: { email: manager.email },
+          defaults: {
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            created_at: new Date(),
+            updated_at: new Date()
+          }
+        });
+
+        if (!created) {
+          // Update existing user
+          await user.update({
+            username: manager.username,
+            password: await bcrypt.hash(manager.password, 10),
+            updated_at: new Date()
+          });
+          logToFile(`Updated existing labour law manager: ${manager.username}`);
+          console.log(`Updated existing labour law manager: ${manager.username}`);
+        } else {
+          logToFile(`Created new labour law manager: ${manager.username}`);
+          console.log(`Created new labour law manager: ${manager.username}`);
+        }
+
+        // Check if user already has labour law manager role
+        const existingUserRole = await UserRole.findOne({
+          where: {
+            user_id: user.user_id,
+            role_id: labourLawManagerRole.id
+          }
+        });
+
+        if (!existingUserRole) {
+          // Assign labour law manager role
+          await user.addRole(labourLawManagerRole, { 
+            through: { 
+              is_primary: true,
+              assigned_by: 1 // Admin user ID
+            } 
+          });
+          logToFile(`Labour law manager role assigned to ${manager.username}`);
+          console.log(`Labour law manager role assigned to ${manager.username}`);
+        } else {
+          logToFile(`Labour law manager role already assigned to ${manager.username}`);
+          console.log(`Labour law manager role already assigned to ${manager.username}`);
+        }
+      } catch (userError) {
+        logToFile(`Error setting up labour law manager ${manager.username}: ${userError.message}`);
+        console.error(`Error setting up labour law manager ${manager.username}:`, userError);
+        // Continue with other managers
+      }
+    }
+
+    logToFile('Labour law managers setup completed');
+    console.log('Labour law managers setup completed');
+    return true;
+  } catch (error) {
+    const errorMessage = `Error setting up labour law managers: ${error.message}`;
+    logToFile(errorMessage);
+    console.error(errorMessage);
+    return false;
+  }
+}
+
 // Renewal Management System setup function
 async function setupRenewalSystem() {
   try {
@@ -819,6 +999,43 @@ async function setupRenewalSystem() {
       }
     }
     
+    // Create default renewal configurations if they don't exist
+    console.log('📋 Setting up default renewal configurations...');
+    const defaultConfigs = [
+      { serviceType: 'vehicle', serviceName: 'Vehicle Insurance', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'ecp', serviceName: 'Employee Compensation Policy', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'health', serviceName: 'Health Insurance', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'fire', serviceName: 'Fire Insurance', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'dsc', serviceName: 'Digital Signature Certificate', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'factory', serviceName: 'Factory Quotation', reminderTimes: 3, reminderDays: 30 },
+      { serviceType: 'labour_inspection', serviceName: 'Labour Inspection', reminderTimes: 5, reminderDays: 15 },
+      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30 }
+    ];
+    
+    for (const config of defaultConfigs) {
+      try {
+        const existingConfig = await RenewalConfig.findOne({
+          where: { serviceType: config.serviceType }
+        });
+        
+        if (!existingConfig) {
+          await RenewalConfig.create({
+            serviceType: config.serviceType,
+            serviceName: config.serviceName,
+            reminderTimes: config.reminderTimes,
+            reminderDays: config.reminderDays,
+            createdBy: 1, // Admin user ID
+            isActive: true
+          });
+          console.log(`✅ Created default config for ${config.serviceName}`);
+        } else {
+          console.log(`⏭️ Config for ${config.serviceName} already exists`);
+        }
+      } catch (error) {
+        console.log(`⚠️ Error creating config for ${config.serviceName}:`, error.message);
+      }
+    }
+    
     console.log('✅ Renewal Management System setup completed!');
   } catch (error) {
     console.error('❌ Error setting up Renewal Management System:', error);
@@ -834,7 +1051,9 @@ async function verifyRequiredRoles() {
     const requiredRoles = [
       'Admin',
       'Plan_manager', 
-      'Stability_manager'
+      'Stability_manager',
+      'Website_manager',
+      'Labour_law_manager'
     ];
     
     const missingRoles = [];
@@ -917,6 +1136,18 @@ async function setupAll() {
       throw new Error('Stability managers setup failed');
     }
 
+    // Setup website managers
+    const websiteManagersSetup = await setupWebsiteManagers();
+    if (!websiteManagersSetup) {
+      throw new Error('Website managers setup failed');
+    }
+
+    // Setup labour law managers
+    const labourLawManagersSetup = await setupLabourLawManagers();
+    if (!labourLawManagersSetup) {
+      throw new Error('Labour law managers setup failed');
+    }
+
     // Add this section for Renewal Management System setup
     await setupRenewalSystem();
 
@@ -943,6 +1174,8 @@ module.exports = {
   setupAdminUser,
   setupPlanManagers,
   setupStabilityManagers,
+  setupWebsiteManagers,
+  setupLabourLawManagers,
   verifyRequiredRoles,
   setupRenewalSystem,
   setupAll

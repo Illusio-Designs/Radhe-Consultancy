@@ -8,6 +8,7 @@ const fs = require('fs');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
 const { UserRoleWorkLog } = require('../models');
+const { createSafeUserRoleWorkLog } = require('../utils/loggingUtils');
 
 // Use the configured multer instance for employee policy documents
 exports.upload = uploadEmployeePolicyDocument;
@@ -181,10 +182,14 @@ exports.createPolicy = async (req, res) => {
     // Log the action
     try {
       let companyName = null;
+      
       if (createdPolicy.company_id) {
         const company = await Company.findByPk(createdPolicy.company_id);
-        companyName = company ? company.company_name : null;
+        if (company) {
+          companyName = company.company_name;
+        }
       }
+      
       const logDetails = {
         policy_id: createdPolicy.id,
         policy_number: createdPolicy.policy_number,
@@ -196,19 +201,26 @@ exports.createPolicy = async (req, res) => {
         proposer_name: createdPolicy.proposer_name,
         company_name: companyName
       };
+      
       console.log('[ECP LOG DEBUG]', {
         company_id: createdPolicy.company_id,
         companyName,
         logDetails
       });
-      await UserRoleWorkLog.create({
+      
+      // Use the safe logging utility
+      await createSafeUserRoleWorkLog({
         user_id: req.user?.user_id || null,
-        target_user_id: createdPolicy.company_id || createdPolicy.consumer_id,
-        role_id: null,
+        company_id: createdPolicy.company_id,
+        consumer_id: createdPolicy.consumer_id,
         action: 'created_ecp_policy',
-        details: JSON.stringify(logDetails)
-      });
-    } catch (logErr) { console.error('Log error:', logErr); }
+        details: logDetails
+      }, UserRoleWorkLog);
+      
+    } catch (logErr) { 
+      console.error('Log error:', logErr); 
+      // Don't fail the main operation if logging fails
+    }
 
     res.status(201).json(createdPolicy);
   } catch (error) {
@@ -320,23 +332,37 @@ exports.updatePolicy = async (req, res) => {
 
     // Log the action
     try {
-      await UserRoleWorkLog.create({
-        user_id: req.user?.user_id || null,
-        target_user_id: updatedPolicy.company_id || updatedPolicy.consumer_id,
-        role_id: null,
-        action: 'updated_ecp_policy',
-        details: JSON.stringify({
-          policy_id: updatedPolicy.id,
-          policy_number: updatedPolicy.policy_number,
-          customer_type: updatedPolicy.customer_type,
-          company_id: updatedPolicy.company_id,
-          consumer_id: updatedPolicy.consumer_id,
-          total_employees: updatedPolicy.total_employees,
-          total_wages: updatedPolicy.total_wages,
-          proposer_name: updatedPolicy.proposer_name,
-          changes: req.body
-        })
-      });
+      let targetUserId = null;
+      
+      if (updatedPolicy.company_id) {
+        const company = await Company.findByPk(updatedPolicy.company_id);
+        if (company) {
+          targetUserId = company.user_id; // Use the company's user_id instead of company_id
+        }
+      }
+      
+      // Only create log if we have a valid target_user_id
+      if (targetUserId) {
+        await UserRoleWorkLog.create({
+          user_id: req.user?.user_id || null,
+          target_user_id: targetUserId, // Use the company's user_id
+          role_id: null,
+          action: 'updated_ecp_policy',
+          details: JSON.stringify({
+            policy_id: updatedPolicy.id,
+            policy_number: updatedPolicy.policy_number,
+            customer_type: updatedPolicy.customer_type,
+            company_id: updatedPolicy.company_id,
+            consumer_id: updatedPolicy.consumer_id,
+            total_employees: updatedPolicy.total_employees,
+            total_wages: updatedPolicy.total_wages,
+            proposer_name: updatedPolicy.proposer_name,
+            changes: req.body
+          })
+        });
+      } else {
+        console.warn('[ECP LOG] Skipping log creation - no valid target_user_id found');
+      }
     } catch (logErr) { console.error('Log error:', logErr); }
 
     res.json(updatedPolicy);
@@ -361,22 +387,36 @@ exports.deletePolicy = async (req, res) => {
 
     // Log the action
     try {
-      await UserRoleWorkLog.create({
-        user_id: req.user?.user_id || null,
-        target_user_id: policy.company_id || policy.consumer_id,
-        role_id: null,
-        action: 'cancelled_ecp_policy',
-        details: JSON.stringify({
-          policy_id: policy.id,
-          policy_number: policy.policy_number,
-          customer_type: policy.customer_type,
-          company_id: policy.company_id,
-          consumer_id: policy.consumer_id,
-          total_employees: policy.total_employees,
-          total_wages: policy.total_wages,
-          proposer_name: policy.proposer_name
-        })
-      });
+      let targetUserId = null;
+      
+      if (policy.company_id) {
+        const company = await Company.findByPk(policy.company_id);
+        if (company) {
+          targetUserId = company.user_id; // Use the company's user_id instead of company_id
+        }
+      }
+      
+      // Only create log if we have a valid target_user_id
+      if (targetUserId) {
+        await UserRoleWorkLog.create({
+          user_id: req.user?.user_id || null,
+          target_user_id: targetUserId, // Use the company's user_id
+          role_id: null,
+          action: 'cancelled_ecp_policy',
+          details: JSON.stringify({
+            policy_id: policy.id,
+            policy_number: policy.policy_number,
+            customer_type: policy.customer_type,
+            company_id: policy.company_id,
+            consumer_id: policy.consumer_id,
+            total_employees: policy.total_employees,
+            total_wages: policy.total_wages,
+            proposer_name: policy.proposer_name
+          })
+        });
+      } else {
+        console.warn('[ECP LOG] Skipping log creation - no valid target_user_id found');
+      }
     } catch (logErr) { console.error('Log error:', logErr); }
 
     res.json({ message: 'Policy cancelled successfully' });

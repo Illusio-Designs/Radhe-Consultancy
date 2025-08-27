@@ -131,23 +131,23 @@ function DashboardLayout() {
       case "/dashboard/insurance/companies":
         return <Companies searchQuery={searchQuery} />;
       case "/dashboard/compliance/factory-quotation":
-        return <FactoryQuotation />;
+        return <FactoryQuotation searchQuery={searchQuery} />;
       case "/dashboard/labour/inspection":
-        return <LabourInspection />;
+        return <LabourInspection searchQuery={searchQuery} />;
       case "/dashboard/labour/license":
-        return <LabourLicense />;
+        return <LabourLicense searchQuery={searchQuery} />;
       case "/dashboard/compliance/plan-management":
-        return <PlanManagement />;
+        return <PlanManagement searchQuery={searchQuery} />;
       case "/dashboard/compliance/stability-management":
-        return <StabilityManagement />;
+        return <StabilityManagement searchQuery={searchQuery} />;
       case "/dashboard/dsc":
         return <DSC searchQuery={searchQuery} />;
       case "/dashboard/dsc/logs":
         return <DSCLogs searchQuery={searchQuery} />;
       case "/dashboard/renewals/manager":
-        return <RenewalManager />;
+        return <RenewalManager searchQuery={searchQuery} />;
       case "/dashboard/renewals/list":
-        return <RenewalList />;
+        return <RenewalList searchQuery={searchQuery} />;
       case "/dashboard/renewals/log":
         return <RenewalLog />;
       case "/dashboard/renewals/settings":

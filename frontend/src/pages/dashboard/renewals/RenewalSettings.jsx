@@ -308,7 +308,6 @@ const RenewalSettings = () => {
       render: (_, config) => (
         <div>
           <div className="font-medium">{config.serviceName}</div>
-          <div className="text-sm text-gray-500">{config.serviceType}</div>
         </div>
       ),
     },

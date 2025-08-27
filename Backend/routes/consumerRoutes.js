@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const consumerController = require('../controllers/consumerController');
 const { auth, checkRole } = require('../middleware/auth');
+const { uploadConsumerData } = require('../config/multerConfig');
 
 // Create a new consumer (admin and vendor manager only)
 router.post('/', 
   auth, 
   checkRole(['admin', 'vendor_manager']),
+  uploadConsumerData,
   consumerController.createConsumer
 );
 

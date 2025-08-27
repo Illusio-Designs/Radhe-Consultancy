@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { renewalAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const categories = [
   { label: "Insurance", active: true },
@@ -14,11 +15,43 @@ const types = ["ECP", "Health", "Fire", "Vehicle"];
 const complianceTypes = ["Factory ACT"];
 const periods = ["week", "month", "year"];
 
-const RenewalManager = () => {
-  const [counts, setCounts] = useState(null);
+// Main Renewal Manager Component
+const RenewalManager = ({ searchQuery = "" }) => {
+  const [renewals, setRenewals] = useState([]);
+  const [filteredRenewals, setFilteredRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("Insurance");
+  const [showModal, setShowModal] = useState(false);
+  const [editingRenewal, setEditingRenewal] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const { user } = useAuth();
+
+  // Handle search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.trim() !== "") {
+      handleSearchRenewals(searchQuery);
+    } else {
+      setFilteredRenewals(renewals);
+    }
+  }, [searchQuery, renewals]);
+
+  const handleSearchRenewals = async (query) => {
+    try {
+      const response = await renewalAPI.searchRenewals(query);
+      if (response.success) {
+        setFilteredRenewals(response.data);
+      }
+    } catch (error) {
+      console.error('Error searching renewals:', error);
+      // Fallback to local search
+      const filtered = renewals.filter(renewal => 
+        renewal.serviceName?.toLowerCase().includes(query.toLowerCase()) ||
+        renewal.status?.toLowerCase().includes(query.toLowerCase()) ||
+        renewal.companyName?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredRenewals(filtered);
+    }
+  };
 
   useEffect(() => {
     const fetchCounts = async () => {

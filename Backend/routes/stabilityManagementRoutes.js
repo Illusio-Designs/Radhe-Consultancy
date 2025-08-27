@@ -14,26 +14,29 @@ router.get('/managers', stabilityManagementController.getStabilityManagers);
 // Get all stability management records (Admin can see all, Stability Manager sees only their own)
 router.get('/', stabilityManagementController.getAllStabilityManagement);
 
+// Search stability management records
+router.get('/search', checkUserRole(['Admin', 'Stability_manager']), stabilityManagementController.searchStabilityManagement);
+
 // Get stability management by factory quotation ID
 router.get('/quotation/:quotationId', stabilityManagementController.getStabilityManagementByQuotationId);
 
 // Create stability management (assign to stability manager) - Admin and Compliance Manager only
 router.post('/', checkUserRole(['Admin', 'Compliance_manager']), stabilityManagementController.createStabilityManagement);
 
-// Update stability status - Stability Manager only
-router.put('/:id/status', checkUserRole(['Stability_manager']), stabilityManagementController.updateStabilityStatus);
+// Update stability status - Stability Manager and Admin only
+router.put('/:id/status', checkUserRole(['Stability_manager', 'Admin']), stabilityManagementController.updateStabilityStatus);
 
-// Update stability dates - Stability Manager only
-router.put('/:id/dates', checkUserRole(['Stability_manager']), stabilityManagementController.updateStabilityDates);
+// Update stability dates - Stability Manager and Admin only
+router.put('/:id/dates', checkUserRole(['Stability_manager', 'Admin']), stabilityManagementController.updateStabilityDates);
 
-// Upload files for stability - Stability Manager only
-router.put('/:id/upload-files', checkUserRole(['Stability_manager']), uploadStabilityFiles, stabilityManagementController.uploadStabilityFiles);
+// Upload files for stability - Stability Manager and Admin only
+router.put('/:id/upload-files', checkUserRole(['Stability_manager', 'Admin']), uploadStabilityFiles, stabilityManagementController.uploadStabilityFiles);
 
-// Get stability files - Stability Manager only
-router.get('/:id/files', checkUserRole(['Stability_manager']), stabilityManagementController.getStabilityFiles);
+// Get stability files - Stability Manager and Admin only
+router.get('/:id/files', checkUserRole(['Stability_manager', 'Admin']), stabilityManagementController.getStabilityFiles);
 
-// Delete stability file - Stability Manager only
-router.delete('/:id/files/:filename', checkUserRole(['Stability_manager']), stabilityManagementController.deleteStabilityFile);
+// Delete stability file - Stability Manager and Admin only
+router.delete('/:id/files/:filename', checkUserRole(['Stability_manager', 'Admin']), stabilityManagementController.deleteStabilityFile);
 
 // Get statistics
 router.get('/statistics', auth, stabilityManagementController.getStatistics);

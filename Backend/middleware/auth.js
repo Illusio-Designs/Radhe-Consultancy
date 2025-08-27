@@ -54,6 +54,8 @@ const auth = async (req, res, next) => {
       primaryRole: roleName,
       allRoles: allRoles.map((r) => r.role_name),
       hasRoles: allRoles.length > 0,
+      userRoles: userRoles,
+      reqUserObject: req.user
     });
 
     next();

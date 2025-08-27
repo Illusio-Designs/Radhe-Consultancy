@@ -59,7 +59,10 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     type: DataTypes.DATE,
     allowNull: false,
     validate: {
-      isDate: true
+      isDate: true,
+      notNull: {
+        msg: 'Policy start date is required'
+      }
     }
   },
   policy_end_date: {
@@ -67,8 +70,24 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     allowNull: false,
     validate: {
       isDate: true,
+      notNull: {
+        msg: 'Policy end date is required'
+      },
       isAfterStartDate(value) {
-        if (value <= this.policy_start_date) {
+        // Ensure we have valid dates to compare
+        if (!this.policy_start_date || !value) {
+          return;
+        }
+        
+        const startDate = new Date(this.policy_start_date);
+        const endDate = new Date(value);
+        
+        // Check if dates are valid
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error('Invalid date format provided');
+        }
+        
+        if (endDate <= startDate) {
           throw new Error('Policy end date must be after start date');
         }
       }
@@ -129,7 +148,7 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     defaultValue: 'active'
   }
 }, {
-  tableName: 'EmployeeCompensationPolicies',
+  tableName: 'employee_compensation_policies',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
@@ -150,12 +169,12 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     }
   ],
   hooks: {
-    beforeValidate: (policy) => {
-      // Convert string dates to Date objects if needed
-      if (typeof policy.policy_start_date === 'string') {
+    beforeValidate: (policy, options) => {
+      // Ensure dates are properly parsed
+      if (policy.policy_start_date && typeof policy.policy_start_date === 'string') {
         policy.policy_start_date = new Date(policy.policy_start_date);
       }
-      if (typeof policy.policy_end_date === 'string') {
+      if (policy.policy_end_date && typeof policy.policy_end_date === 'string') {
         policy.policy_end_date = new Date(policy.policy_end_date);
       }
 
