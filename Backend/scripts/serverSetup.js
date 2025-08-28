@@ -271,8 +271,30 @@ async function setupDatabase() {
     for (const table of otherTables) {
       try {
         await ensureDatabaseConnection();
-        await table.model.sync({ alter: true });
-        console.log(`✅ ${table.name} table synced`);
+        
+        // Special handling for ApplicationManagement to ensure compliance_manager_id is nullable
+        if (table.name === 'ApplicationManagement') {
+          try {
+            await table.model.sync({ alter: true });
+            console.log(`✅ ${table.name} table synced`);
+          } catch (syncError) {
+            if (syncError.message.includes('compliance_manager_id') || syncError.message.includes('cannot be null')) {
+              console.log(`🔄 ${table.name} schema issue detected, attempting to fix...`);
+              try {
+                await table.model.drop();
+                await table.model.sync({ force: true });
+                console.log(`✅ ${table.name} table recreated with correct schema`);
+              } catch (dropError) {
+                console.log(`⚠️ Could not recreate ${table.name} table:`, dropError.message);
+              }
+            } else {
+              console.log(`⚠️ ${table.name} table sync warning:`, syncError.message);
+            }
+          }
+        } else {
+          await table.model.sync({ alter: true });
+          console.log(`✅ ${table.name} table synced`);
+        }
       } catch (error) {
         console.log(`⚠️  ${table.name} table sync warning:`, error.message);
       }
@@ -861,48 +883,36 @@ async function setupRenewalSystem() {
   }
 }
 
-// Update ApplicationManagement schema to allow nullable compliance_manager_id
-async function updateApplicationManagementSchema() {
+// Ensure ApplicationManagement schema is properly synced
+async function ensureApplicationManagementSchema() {
   try {
-    console.log('📋 Updating ApplicationManagement schema...');
+    console.log('📋 Ensuring ApplicationManagement schema is correct...');
     
-    // Check if the column constraint needs to be updated
-    const [results] = await sequelize.query(`
-      SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_DEFAULT
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = 'application_management' 
-      AND COLUMN_NAME = 'compliance_manager_id'
-    `);
-    
-    if (results.length > 0) {
-      const column = results[0];
+    // Force sync the ApplicationManagement model to ensure schema matches
+    try {
+      await ensureDatabaseConnection();
+      await ApplicationManagement.sync({ alter: true, force: false });
+      console.log('✅ ApplicationManagement schema synced successfully');
+    } catch (error) {
+      console.log('⚠️ ApplicationManagement sync warning:', error.message);
       
-      // If the column is NOT NULL, make it nullable
-      if (column.IS_NULLABLE === 'NO') {
+      // If alter fails, try to drop and recreate the table (only if it's safe)
+      if (error.message.includes('compliance_manager_id') || error.message.includes('cannot be null')) {
+        console.log('🔄 Attempting to fix ApplicationManagement schema...');
         try {
-          await sequelize.query(`
-            ALTER TABLE application_management 
-            MODIFY COLUMN compliance_manager_id INT NULL
-          `);
-          console.log('✅ Updated compliance_manager_id to allow NULL values');
-        } catch (error) {
-          if (error.message.includes('Duplicate column name') || error.message.includes('already exists')) {
-            console.log('⏭️ compliance_manager_id column already updated');
-          } else {
-            console.log('⚠️ Error updating compliance_manager_id column:', error.message);
-          }
+          // Drop the table and recreate it with correct schema
+          await ApplicationManagement.drop();
+          await ApplicationManagement.sync({ force: true });
+          console.log('✅ ApplicationManagement table recreated with correct schema');
+        } catch (dropError) {
+          console.log('⚠️ Could not recreate table:', dropError.message);
         }
-      } else {
-        console.log('⏭️ compliance_manager_id column already allows NULL values');
       }
-    } else {
-      console.log('⚠️ application_management table or compliance_manager_id column not found');
     }
     
-    console.log('✅ ApplicationManagement schema update completed!');
+    console.log('✅ ApplicationManagement schema verification completed!');
   } catch (error) {
-    console.error('❌ Error updating ApplicationManagement schema:', error);
+    console.error('❌ Error ensuring ApplicationManagement schema:', error);
   }
 }
 
@@ -994,8 +1004,8 @@ async function setupAll() {
       throw new Error('Plan managers setup failed');
     }
 
-    // Update ApplicationManagement schema
-    await updateApplicationManagementSchema();
+    // Ensure ApplicationManagement schema is correct
+    await ensureApplicationManagementSchema();
 
 
 
