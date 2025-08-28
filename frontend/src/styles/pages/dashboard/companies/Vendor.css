@@ -345,6 +345,9 @@
   border-radius: 2px;
   overflow: hidden;
   background-color: transparent !important;
+  /* Ensure Indian flag is always visible */
+  display: block !important;
+  visibility: visible !important;
 }
 
 .phone-input-custom .PhoneInputCountrySelectArrow {
@@ -405,6 +408,62 @@
 .PhoneInputCountryIcon--border {
   box-shadow: none !important;
   background: none !important;
+}
+
+/* Enhanced Indian flag visibility */
+.phone-input-custom .PhoneInputCountry {
+  margin-right: 0.75rem;
+  padding: 0.25rem;
+  min-width: 45px;
+  /* Ensure country selector is always visible */
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Make the Indian flag more prominent */
+.phone-input-custom .PhoneInputCountryIcon[data-country="IN"] {
+  width: 28px !important;
+  height: 22px !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+}
+
+/* Force Indian flag to be visible */
+.phone-input-custom .PhoneInputCountry {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.phone-input-custom .PhoneInputCountryIcon {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Ensure India is selected by default */
+.phone-input-custom .PhoneInputCountrySelect {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Ensure country selector dropdown shows India first */
+.phone-input-custom .PhoneInputCountrySelect {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Form label styling */
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
 }
 
 .PhoneInputCountrySelectArrow {

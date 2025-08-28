@@ -7,6 +7,7 @@ const FactoryQuotation = require('../models/factoryQuotationModel');
 const PlanManagement = require('../models/planManagementModel');
 const StabilityManagement = require('../models/stabilityManagementModel');
 const ApplicationManagement = require('../models/applicationManagementModel');
+const RenewalStatus = require('../models/renewalStatusModel');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -264,6 +265,7 @@ async function setupDatabase() {
       { model: PlanManagement, name: 'PlanManagement' },
       { model: StabilityManagement, name: 'StabilityManagement' },
       { model: ApplicationManagement, name: 'ApplicationManagement' },
+      { model: RenewalStatus, name: 'RenewalStatus' },
       { model: LabourInspection, name: 'LabourInspection' },
       { model: LabourLicense, name: 'LabourLicense' }
     ];
@@ -916,6 +918,39 @@ async function ensureApplicationManagementSchema() {
   }
 }
 
+// Ensure RenewalStatus schema is properly synced
+async function ensureRenewalStatusSchema() {
+  try {
+    console.log('📋 Ensuring RenewalStatus schema is correct...');
+    
+    // Force sync the RenewalStatus model to ensure schema matches
+    try {
+      await ensureDatabaseConnection();
+      await RenewalStatus.sync({ alter: true, force: false });
+      console.log('✅ RenewalStatus schema synced successfully');
+    } catch (error) {
+      console.log('⚠️ RenewalStatus sync warning:', error.message);
+      
+      // If alter fails, try to drop and recreate the table (only if it's safe)
+      if (error.message.includes('created_by') || error.message.includes('cannot be null')) {
+        console.log('🔄 Attempting to fix RenewalStatus schema...');
+        try {
+          // Drop the table and recreate it with correct schema
+          await RenewalStatus.drop();
+          await RenewalStatus.sync({ force: true });
+          console.log('✅ RenewalStatus table recreated with correct schema');
+        } catch (dropError) {
+          console.log('⚠️ Could not recreate table:', dropError.message);
+        }
+      }
+    }
+    
+    console.log('✅ RenewalStatus schema verification completed!');
+  } catch (error) {
+    console.error('❌ Error ensuring RenewalStatus schema:', error);
+  }
+}
+
 // Verify that all required roles exist
 async function verifyRequiredRoles() {
   try {
@@ -1006,6 +1041,9 @@ async function setupAll() {
 
     // Ensure ApplicationManagement schema is correct
     await ensureApplicationManagementSchema();
+    
+    // Ensure RenewalStatus schema is correct
+    await ensureRenewalStatusSchema();
 
 
 

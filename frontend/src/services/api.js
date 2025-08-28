@@ -2131,6 +2131,33 @@ export const applicationManagementAPI = {
   },
 };
 
+// Renewal Status API
+export const renewalStatusAPI = {
+  // Get all renewal status records
+  getAllRenewalStatus: async () => {
+    const response = await api.get('/renewal-status');
+    return response.data;
+  },
+
+  // Create renewal status record
+  createRenewalStatus: async (data) => {
+    const response = await api.post('/renewal-status', data);
+    return response.data;
+  },
+
+  // Update renewal status record
+  updateRenewalStatus: async (id, data) => {
+    const response = await api.put(`/renewal-status/${id}`, data);
+    return response.data;
+  },
+
+  // Delete renewal status record
+  deleteRenewalStatus: async (id) => {
+    const response = await api.delete(`/renewal-status/${id}`);
+    return response.data;
+  },
+};
+
 
 
 // Vendor API using VendorService

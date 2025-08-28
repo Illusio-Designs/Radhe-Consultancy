@@ -22,6 +22,7 @@ const factoryQuotationRoutes = require('./factoryQuotationRoutes');
 const planManagementRoutes = require('./planManagementRoutes');
 const stabilityManagementRoutes = require('./stabilityManagementRoutes');
 const applicationManagementRoutes = require('./applicationManagementRoutes');
+const renewalStatusRoutes = require('./renewalStatusRoutes');
 const labourInspectionRoutes = require('./labourInspectionRoutes');
 const labourLicenseRoutes = require('./labourLicenseRoutes');
 
@@ -101,6 +102,10 @@ const routes = {
   applicationManagement: {
     path: '/application-management',
     router: applicationManagementRoutes
+  },
+  renewalStatus: {
+    path: '/renewal-status',
+    router: renewalStatusRoutes
   },
   labourInspection: {
     path: '/labour-inspection',
