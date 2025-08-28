@@ -861,6 +861,51 @@ async function setupRenewalSystem() {
   }
 }
 
+// Update ApplicationManagement schema to allow nullable compliance_manager_id
+async function updateApplicationManagementSchema() {
+  try {
+    console.log('📋 Updating ApplicationManagement schema...');
+    
+    // Check if the column constraint needs to be updated
+    const [results] = await sequelize.query(`
+      SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_DEFAULT
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'application_management' 
+      AND COLUMN_NAME = 'compliance_manager_id'
+    `);
+    
+    if (results.length > 0) {
+      const column = results[0];
+      
+      // If the column is NOT NULL, make it nullable
+      if (column.IS_NULLABLE === 'NO') {
+        try {
+          await sequelize.query(`
+            ALTER TABLE application_management 
+            MODIFY COLUMN compliance_manager_id INT NULL
+          `);
+          console.log('✅ Updated compliance_manager_id to allow NULL values');
+        } catch (error) {
+          if (error.message.includes('Duplicate column name') || error.message.includes('already exists')) {
+            console.log('⏭️ compliance_manager_id column already updated');
+          } else {
+            console.log('⚠️ Error updating compliance_manager_id column:', error.message);
+          }
+        }
+      } else {
+        console.log('⏭️ compliance_manager_id column already allows NULL values');
+      }
+    } else {
+      console.log('⚠️ application_management table or compliance_manager_id column not found');
+    }
+    
+    console.log('✅ ApplicationManagement schema update completed!');
+  } catch (error) {
+    console.error('❌ Error updating ApplicationManagement schema:', error);
+  }
+}
+
 // Verify that all required roles exist
 async function verifyRequiredRoles() {
   try {
@@ -948,6 +993,9 @@ async function setupAll() {
     if (!planManagersSetup) {
       throw new Error('Plan managers setup failed');
     }
+
+    // Update ApplicationManagement schema
+    await updateApplicationManagementSchema();
 
 
 
