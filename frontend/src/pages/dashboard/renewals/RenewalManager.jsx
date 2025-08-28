@@ -11,7 +11,7 @@ const categories = [
   { label: "Labour" },
 ];
 
-const types = ["ECP", "Health", "Fire", "Vehicle"];
+const types = ["ECP", "Health", "Fire", "Vehicles"];
 const complianceTypes = ["Factory ACT"];
 const periods = ["week", "month", "year"];
 
@@ -71,7 +71,14 @@ const RenewalManager = ({ searchQuery = "" }) => {
       setError(null);
       try {
         const response = await renewalAPI.getCounts();
-        setCounts(response.data);
+        console.log('RenewalManager - API Response:', response);
+        if (response && response.success && response.data) {
+          setCounts(response.data);
+          console.log('RenewalManager - Counts set:', response.data);
+        } else {
+          console.log('RenewalManager - Invalid response format:', response);
+          setCounts(null);
+        }
       } catch (err) {
         setError("Failed to fetch renewal counts");
         console.error("Error fetching counts:", err);
@@ -84,6 +91,7 @@ const RenewalManager = ({ searchQuery = "" }) => {
   }, []);
 
   const getTotalCount = (period) => {
+    console.log('getTotalCount called with period:', period, 'counts:', counts, 'selectedCategory:', selectedCategory);
     if (!counts) return 0;
     if (selectedCategory === "DSC") {
       return counts[period]?.dsc || 0;
@@ -96,6 +104,11 @@ const RenewalManager = ({ searchQuery = "" }) => {
     }
     return types.reduce((sum, type) => {
       const typeLower = type.toLowerCase();
+      // Map frontend types to API keys
+      if (typeLower === 'vehicles') return sum + (counts[period]?.vehicles || 0);
+      if (typeLower === 'fire') return sum + (counts[period]?.fire || 0);
+      if (typeLower === 'ecp') return sum + (counts[period]?.ecp || 0);
+      if (typeLower === 'health') return sum + (counts[period]?.health || 0);
       return sum + (counts[period]?.[typeLower] || 0);
     }, 0);
   };
@@ -135,30 +148,30 @@ const RenewalManager = ({ searchQuery = "" }) => {
                 <span style={{
                   padding: "4px 8px",
                   borderRadius: 4,
-                  backgroundColor: (counts?.week?.[type.toLowerCase()] > 0) ? "#fee2e2" : "#f3f4f6",
-                  color: (counts?.week?.[type.toLowerCase()] > 0) ? "#991b1b" : "#6b7280"
+                  backgroundColor: (counts?.week?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] > 0) ? "#fee2e2" : "#f3f4f6",
+                  color: (counts?.week?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] > 0) ? "#991b1b" : "#6b7280"
                 }}>
-                  {counts?.week?.[type.toLowerCase()] ?? 0}
+                  {counts?.week?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] ?? 0}
                 </span>
               </div>
               <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
                 <span style={{
                   padding: "4px 8px",
                   borderRadius: 4,
-                  backgroundColor: (counts?.month?.[type.toLowerCase()] > 0) ? "#fef3c7" : "#f3f4f6",
-                  color: (counts?.month?.[type.toLowerCase()] > 0) ? "#92400e" : "#6b7280"
+                  backgroundColor: (counts?.month?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] > 0) ? "#fef3c7" : "#f3f4f6",
+                  color: (counts?.month?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] > 0) ? "#92400e" : "#6b7280"
                 }}>
-                  {counts?.month?.[type.toLowerCase()] ?? 0}
+                  {counts?.month?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] ?? 0}
                 </span>
               </div>
               <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
                 <span style={{
                   padding: "4px 8px",
                   borderRadius: 4,
-                  backgroundColor: (counts?.year?.[type.toLowerCase()] > 0) ? "#dcfce7" : "#f3f4f6",
-                  color: (counts?.year?.[type.toLowerCase()] > 0) ? "#166534" : "#6b7280"
+                  backgroundColor: (counts?.year?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] > 0) ? "#dcfce7" : "#f3f4f6",
+                  color: (counts?.year?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] > 0) ? "#166534" : "#6b7280"
                 }}>
-                  {counts?.year?.[type.toLowerCase()] ?? 0}
+                  {counts?.year?.[type.toLowerCase() === 'vehicle' ? 'vehicles' : type.toLowerCase()] ?? 0}
                 </span>
               </div>
             </div>
@@ -199,30 +212,30 @@ const RenewalManager = ({ searchQuery = "" }) => {
                 <span style={{
                   padding: "4px 8px",
                   borderRadius: 4,
-                  backgroundColor: (counts?.week?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#fee2e2" : "#f3f4f6",
-                  color: (counts?.week?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#991b1b" : "#6b7280"
+                  backgroundColor: (counts?.week?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#fee2e2" : "#f3f4f6",
+                  color: (counts?.week?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#991b1b" : "#6b7280"
                 }}>
-                  {counts?.week?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
+                  {counts?.week?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
                 </span>
               </div>
               <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
                 <span style={{
                   padding: "4px 8px",
                   borderRadius: 4,
-                  backgroundColor: (counts?.month?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#fef3c7" : "#f3f4f6",
+                  backgroundColor: (counts?.month?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#fef3c7" : "#f3f4f6",
                   color: (counts?.month?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#92400e" : "#6b7280"
                 }}>
-                  {counts?.month?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
+                  {counts?.month?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
                 </span>
               </div>
               <div style={{ flex: 1, textAlign: "center", fontSize: 18 }}>
                 <span style={{
                   padding: "4px 8px",
                   borderRadius: 4,
-                  backgroundColor: (counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#dcfce7" : "#f3f4f6",
+                  backgroundColor: (counts?.year?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#dcfce7" : "#f3f4f6",
                   color: (counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] > 0) ? "#166534" : "#6b7280"
                 }}>
-                  {counts?.year?.[type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
+                  {counts?.year?.[type.toLowerCase().replace(/\s+/g, '_') === 'factory act' ? 'factory_act' : type.toLowerCase().replace(/\s+/g, '_')] ?? 0}
                 </span>
               </div>
       </div>

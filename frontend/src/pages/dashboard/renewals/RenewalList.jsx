@@ -109,9 +109,12 @@ const RenewalList = ({ searchQuery = "" }) => {
       setError(null);
       try {
         const res = await renewalAPI.getListByTypeAndPeriod(selectedType, selectedPeriod);
+        console.log('RenewalList - API Response:', res);
         if (res && res.success && Array.isArray(res.data)) {
           setRenewals(res.data);
+          console.log('RenewalList - Renewals set:', res.data);
         } else {
+          console.log('RenewalList - Invalid response format:', res);
           setRenewals([]);
         }
       } catch (err) {

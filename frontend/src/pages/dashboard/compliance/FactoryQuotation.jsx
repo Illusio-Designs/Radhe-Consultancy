@@ -154,8 +154,17 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
     }
     setLoading(true);
     try {
-      // Use the existing stabilityCertificateType from the quotation
-      const loadType = quotation.stabilityCertificateType || 'with_load';
+      // Use the existing stabilityCertificateType from the quotation and map to API format
+      let loadType = 'with_load'; // default
+      if (quotation?.stabilityCertificateType === 'with load') {
+        loadType = 'with_load';
+      } else if (quotation?.stabilityCertificateType === 'without load') {
+        loadType = 'without_load';
+      }
+      
+      console.log('Modal - Original stabilityCertificateType:', quotation?.stabilityCertificateType);
+      console.log('Modal - Mapped loadType:', loadType);
+      
       onSelect(selectedStabilityManager, loadType);
       onClose();
     } catch (error) {
@@ -1755,6 +1764,13 @@ function FactoryQuotation({ searchQuery = "" }) {
 
   const handleStabilityManagerSelect = async (stabilityManagerId, loadType) => {
     try {
+      console.log('Selected quotation:', selectedQuotation);
+      console.log('Creating stability management with:', {
+        factory_quotation_id: selectedQuotation.id,
+        stability_manager_id: stabilityManagerId,
+        load_type: loadType
+      });
+      
       const response = await stabilityManagementAPI.createStabilityManagement({
         factory_quotation_id: selectedQuotation.id,
         stability_manager_id: stabilityManagerId,

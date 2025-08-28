@@ -227,11 +227,15 @@ const getStabilityManagementByQuotationId = async (req, res) => {
 // Create stability management (assign to stability manager) - Admin and Compliance Manager only
 const createStabilityManagement = async (req, res) => {
   try {
+    console.log('Received request body:', req.body);
     const { factory_quotation_id, stability_manager_id, load_type } = req.body;
     const { user } = req;
 
+    console.log('Extracted values:', { factory_quotation_id, stability_manager_id, load_type });
+
     // Validate required fields
     if (!factory_quotation_id || !stability_manager_id || !load_type) {
+      console.log('Missing required fields:', { factory_quotation_id, stability_manager_id, load_type });
       return res.status(400).json({
         success: false,
         message: 'Factory quotation ID, stability manager ID, and load type are required'
@@ -240,6 +244,7 @@ const createStabilityManagement = async (req, res) => {
 
     // Validate load type
     if (!['with_load', 'without_load'].includes(load_type)) {
+      console.log('Invalid load_type:', load_type);
       return res.status(400).json({
         success: false,
         message: 'Load type must be either "with_load" or "without_load"'

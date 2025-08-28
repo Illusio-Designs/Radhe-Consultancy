@@ -290,32 +290,32 @@ const getCounts = async (req, res) => {
     // You can enhance this to actually count renewals from your database
     const counts = {
       week: {
-        vehicle: 0,
+        vehicles: 0,  // Changed from vehicle to vehicles
         ecp: 0,
         health: 0,
         fire: 0,
         dsc: 0,
-        factory: 0,
+        factory_act: 0,  // Changed from factory to factory_act
         labour_inspection: 0,
         labour_license: 0
       },
       month: {
-        vehicle: 0,
+        vehicles: 0,  // Changed from vehicle to vehicles
         ecp: 0,
         health: 0,
         fire: 0,
         dsc: 0,
-        factory: 0,
+        factory_act: 0,  // Changed from factory to factory_act
         labour_inspection: 0,
         labour_license: 0
       },
       year: {
-        vehicle: 0,
+        vehicles: 0,  // Changed from vehicle to vehicles
         ecp: 0,
         health: 0,
         fire: 0,
         dsc: 0,
-        factory: 0,
+        factory_act: 0,  // Changed from factory to factory_act
         labour_inspection: 0,
         labour_license: 0
       }
@@ -348,11 +348,72 @@ const getListByTypeAndPeriod = async (req, res) => {
 
     // This is a placeholder implementation
     // You can enhance this to actually fetch renewals from your database
-    const renewals = [];
+    // For now, return sample data to test the frontend
+    let sampleRenewals = [];
+    
+    if (type === 'all') {
+      // Return multiple types when 'all' is selected
+      sampleRenewals = [
+        {
+          id: 1,
+          type: 'ecp',
+          holderName: 'Sample Company Ltd',
+          email: 'sample@company.com',
+          policy_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          company_id: 1,
+          consumer_id: null,
+          status: 'active'
+        },
+        {
+          id: 2,
+          type: 'health',
+          holderName: 'Test Corporation',
+          email: 'test@corp.com',
+          policy_end_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
+          company_id: 2,
+          consumer_id: null,
+          status: 'active'
+        },
+        {
+          id: 3,
+          type: 'vehicles',
+          holderName: 'Auto Company',
+          email: 'auto@company.com',
+          policy_end_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(), // 45 days from now
+          company_id: 3,
+          consumer_id: null,
+          status: 'active'
+        },
+        {
+          id: 4,
+          type: 'fire',
+          holderName: 'Safety Corp',
+          email: 'safety@corp.com',
+          policy_end_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days from now
+          company_id: 4,
+          consumer_id: null,
+          status: 'active'
+        }
+      ];
+    } else {
+      // Return specific type data
+      sampleRenewals = [
+        {
+          id: 1,
+          type: type,
+          holderName: `${type.toUpperCase()} Company`,
+          email: `${type}@company.com`,
+          policy_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          company_id: 1,
+          consumer_id: null,
+          status: 'active'
+        }
+      ];
+    }
     
     res.json({
       success: true,
-      data: renewals
+      data: sampleRenewals
     });
   } catch (error) {
     console.error('Error fetching renewals by type and period:', error);
