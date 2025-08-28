@@ -2084,55 +2084,65 @@ function FactoryQuotation({ searchQuery = "" }) {
       sortable: true,
       render: (_, quotation) => {
         const applicationRecord = quotation.applicationManagement;
-        if (!applicationRecord) {
-          return <span className="status-badge status-badge-not-assigned">Not Assigned</span>;
-        }
         
-        // If user is compliance manager, show interactive dropdown
-        if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
+        // If no application management record exists and quotation status is 'application'
+        if (!applicationRecord && quotation.status === 'application') {
           return (
             <div className="application-status-container">
-              <select
-                value={applicationRecord.status}
-                onChange={(e) => {
-                  const newStatus = e.target.value;
-                  if (newStatus === 'Approved') {
-                    // Show modal for dates and files
-                    setSelectedQuotation(quotation);
-                    setShowApplicationModal(true);
-                  } else if (newStatus === 'Reject') {
-                    // Show reject modal
-                    setSelectedQuotation(quotation);
-                    setShowApplicationRejectModal(true);
-                  } else {
-                    // Direct status update
-                    handleApplicationStatusChange(applicationRecord.id, newStatus);
-                  }
-                }}
-                className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
-              >
-                <option value="application">Application</option>
-                <option value="submit">Submit</option>
-                <option value="Approved">Approved</option>
-                <option value="Reject">Reject</option>
-              </select>
-              
-              {/* Dates removed as requested */}
-              
-
+              <span className="status-badge status-badge-not-assigned">Pending Auto-Assignment</span>
+              <small className="text-gray-500" style={{ display: 'block', marginTop: '4px' }}>
+                Will be automatically assigned when stability is approved
+              </small>
             </div>
           );
         }
         
-        // For other users, show read-only status
-        return (
-          <div>
-            <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
-              {applicationRecord.status}
-            </span>
-            {/* Dates removed as requested */}
-          </div>
-        );
+        // If application management record exists
+        if (applicationRecord) {
+          // If user is compliance manager or admin, show interactive dropdown
+          if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
+            return (
+              <div className="application-status-container">
+                <select
+                  value={applicationRecord.status}
+                  onChange={(e) => {
+                    const newStatus = e.target.value;
+                    if (newStatus === 'Approved') {
+                      // Show modal for dates and files
+                      setSelectedQuotation(quotation);
+                      setShowApplicationModal(true);
+                    } else if (newStatus === 'Reject') {
+                      // Show reject modal
+                      setSelectedQuotation(quotation);
+                      setShowApplicationRejectModal(true);
+                    } else {
+                      // Direct status update
+                      handleApplicationStatusChange(applicationRecord.id, newStatus);
+                    }
+                  }}
+                  className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
+                >
+                  <option value="application">Application</option>
+                  <option value="submit">Submit</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Reject">Reject</option>
+                </select>
+              </div>
+            );
+          }
+          
+          // For other users, show read-only status
+          return (
+            <div>
+              <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
+                {applicationRecord.status}
+              </span>
+            </div>
+          );
+        }
+        
+        // Default case
+        return <span className="status-badge status-badge-not-assigned">Not Assigned</span>;
       },
     },
     {

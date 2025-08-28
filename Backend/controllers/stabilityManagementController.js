@@ -1,5 +1,6 @@
 const StabilityManagement = require('../models/stabilityManagementModel');
 const FactoryQuotation = require('../models/factoryQuotationModel');
+const ApplicationManagement = require('../models/applicationManagementModel');
 const User = require('../models/userModel');
 const Role = require('../models/roleModel');
 const UserRole = require('../models/userRoleModel');
@@ -376,16 +377,47 @@ const updateStabilityStatus = async (req, res) => {
         });
       }
 
-      // Calculate renewal date (5 years after stability date)
+      // Calculate renewal date (5 years after stability date, minus 1 day)
       const stabilityDate = new Date(stability_date);
       const renewalDate = new Date(stabilityDate);
       renewalDate.setFullYear(renewalDate.getFullYear() + 5);
+      renewalDate.setDate(renewalDate.getDate() - 1); // Subtract 1 day
 
       updateData.stability_date = stability_date;
       updateData.renewal_date = renewalDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
     }
 
     await stabilityManagement.update(updateData);
+
+    // If stability is approved, automatically create application management
+    if (status === 'Approved') {
+      try {
+        // Check if application management already exists
+        const existingApplication = await ApplicationManagement.findOne({
+          where: { factory_quotation_id: stabilityManagement.factory_quotation_id }
+        });
+
+        if (!existingApplication) {
+          // Create application management automatically
+          await ApplicationManagement.create({
+            factory_quotation_id: stabilityManagement.factory_quotation_id,
+            compliance_manager_id: null, // No specific compliance manager assigned
+            status: 'application'
+          });
+
+          // Update factory quotation status to 'application'
+          await FactoryQuotation.update(
+            { status: 'application' },
+            { where: { id: stabilityManagement.factory_quotation_id } }
+          );
+
+          console.log('Application management created automatically for quotation:', stabilityManagement.factory_quotation_id);
+        }
+      } catch (error) {
+        console.error('Error creating automatic application management:', error);
+        // Don't fail the stability update if application creation fails
+      }
+    }
 
     res.json({
       success: true,
@@ -446,10 +478,11 @@ const updateStabilityDates = async (req, res) => {
       });
     }
 
-    // Calculate renewal date (5 years after stability date)
+    // Calculate renewal date (5 years after stability date, minus 1 day)
     const stabilityDate = new Date(stability_date);
     const renewalDate = new Date(stabilityDate);
     renewalDate.setFullYear(renewalDate.getFullYear() + 5);
+    renewalDate.setDate(renewalDate.getDate() - 1); // Subtract 1 day
 
     // Update the record
     await stabilityManagement.update({
