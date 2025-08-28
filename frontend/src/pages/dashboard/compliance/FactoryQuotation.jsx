@@ -380,25 +380,25 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
 
   // Populate form data when renewal modal opens
   useEffect(() => {
-    if (showRenewalModal && selectedQuotation) {
+    if (isOpen && quotation) {
       setFormData({
-        company_name: selectedQuotation.companyName || '',
-        company_code: selectedQuotation.companyCode || selectedQuotation.company_code || '',
-        owner_name: selectedQuotation.ownerName || '',
-        owner_address: selectedQuotation.ownerAddress || '',
-        designation: selectedQuotation.designation || '',
-        company_address: selectedQuotation.companyAddress || '',
-        contact_number: selectedQuotation.phone || '+91',
-        company_email: selectedQuotation.email || '',
-        gst_number: selectedQuotation.gstNumber || '',
-        pan_number: selectedQuotation.panNumber || '',
-        firm_type: selectedQuotation.firmType || '',
-        nature_of_work: selectedQuotation.natureOfWork || '',
-        type_of_company: selectedQuotation.typeOfCompany || '',
-        company_website: selectedQuotation.companyWebsite || ''
+        company_name: quotation.companyName || '',
+        company_code: quotation.companyCode || quotation.company_code || '',
+        owner_name: quotation.ownerName || '',
+        owner_address: quotation.ownerAddress || '',
+        designation: quotation.designation || '',
+        company_address: quotation.companyAddress || '',
+        contact_number: quotation.phone || '+91',
+        company_email: quotation.email || '',
+        gst_number: quotation.gstNumber || '',
+        pan_number: quotation.panNumber || '',
+        firm_type: quotation.firmType || '',
+        nature_of_work: quotation.natureOfWork || '',
+        type_of_company: quotation.typeOfCompany || '',
+        company_website: quotation.companyWebsite || ''
       });
     }
-  }, [showRenewalModal, selectedQuotation]);
+  }, [isOpen, quotation]);
 
   const [files, setFiles] = useState({
     gst_document: null,
@@ -412,29 +412,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
 
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (quotation && isOpen) {
-      // Pre-fill form data from factory quotation
-      setFormData({
-        company_name: quotation.companyName || '',
-        company_code: '',
-        owner_name: quotation.companyName || '', // Using company name as owner name
-        owner_address: quotation.companyAddress || '',
-        designation: '',
-        company_address: quotation.companyAddress || '',
-        contact_number: quotation.phone || '+91',
-        company_email: quotation.email || '',
-        gst_number: '',
-        pan_number: '',
-        firm_type: '',
-        nature_of_work: '',
-        factory_license_number: '',
-        labour_license_number: '',
-        type_of_company: '',
-        company_website: ''
-      });
-    }
-  }, [quotation, isOpen]);
+
 
   const validateGST = (gst) => {
     // Remove any spaces and convert to uppercase
@@ -714,9 +692,6 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
           : 'Renewal created successfully! New company/Vendor account has been created.';
         
         toast.success(message);
-        
-        // Refresh quotations to show updated status
-        await fetchQuotations();
         
         onRenewalCreated();
         onClose();
