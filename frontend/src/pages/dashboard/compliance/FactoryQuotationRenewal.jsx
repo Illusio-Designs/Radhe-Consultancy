@@ -3,13 +3,16 @@ import { factoryQuotationAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import { toast } from "react-toastify";
-import { BiErrorCircle } from "react-icons/bi";
+import { BiErrorCircle, BiDownload } from "react-icons/bi";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
 const FactoryQuotationRenewal = () => {
   const [renewals, setRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
 
   useEffect(() => {
     fetchRenewals();
@@ -37,6 +40,11 @@ const FactoryQuotationRenewal = () => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB");
+  };
+
+  const handleDownloadDocuments = (quotation) => {
+    setSelectedQuotation(quotation);
+    setShowDocumentModal(true);
   };
 
   const columns = [
@@ -97,6 +105,23 @@ const FactoryQuotationRenewal = () => {
         return formatDate(renewalDate);
       },
     },
+    {
+      key: "actions",
+      label: "Actions",
+      sortable: false,
+      render: (_, quotation) => (
+        <div className="flex items-center gap-2">
+          <DocumentDownload
+            system="renewal-status"
+            recordId={quotation.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={quotation.upload_option ? `/uploads/renewal_status/${quotation.upload_option}` : null}
+            fileName={quotation.upload_option || 'renewal-document.pdf'}
+          />
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -122,6 +147,17 @@ const FactoryQuotationRenewal = () => {
           />
         )}
       </div>
+
+      {/* Document Download Modal */}
+      {showDocumentModal && selectedQuotation && (
+        <DocumentDownload
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
+          system="renewal-status"
+          recordId={selectedQuotation.id}
+          recordName={selectedQuotation.companyName || selectedQuotation.company?.company_name}
+        />
+      )}
     </div>
   );
 };

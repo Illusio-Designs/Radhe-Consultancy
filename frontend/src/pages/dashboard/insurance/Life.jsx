@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BiPlus,
   BiEdit,
@@ -8,6 +8,7 @@ import {
   BiShield,
   BiTrendingUp,
   BiCalendar,
+  BiDownload,
 } from "react-icons/bi";
 import {
   lifePolicyAPI,
@@ -19,6 +20,8 @@ import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
+import { documentDownloadAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -847,6 +850,7 @@ function Life({ searchQuery = "" }) {
   const isConsumer = userRoles.includes("consumer");
   const companyId = user?.profile?.company_id || user?.company?.company_id;
   const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
 
   useEffect(() => {
     fetchPolicies();
@@ -1003,6 +1007,23 @@ function Life({ searchQuery = "" }) {
     handleModalClose();
   };
 
+  const handleDownloadDocuments = async (policy) => {
+    try {
+      // Get document list
+      const response = await documentDownloadAPI.getDocumentList('life-policies', policy.id);
+      if (response.success && response.data.length > 0) {
+        // Show document selection modal
+        setSelectedPolicy(policy);
+        setShowDocumentModal(true);
+      } else {
+        toast.info('No documents available for download');
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast.error('Failed to fetch documents');
+    }
+  };
+
   const columns = [
     {
       key: "sr_no",
@@ -1055,6 +1076,14 @@ function Life({ searchQuery = "" }) {
           >
             <BiTrash />
           </ActionButton>
+          <DocumentDownload
+            system="life-policies"
+            recordId={policy.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={policy.policy_document_path ? `/uploads/life_policies/${policy.policy_document_path}` : null}
+            fileName={policy.policy_document_path || 'policy-document.pdf'}
+          />
         </div>
       ),
     },
@@ -1101,6 +1130,18 @@ function Life({ searchQuery = "" }) {
             policy={selectedPolicy}
             onClose={handleModalClose}
             onPolicyUpdated={handlePolicyUpdated}
+          />
+        </Modal>
+
+        {/* Document Download Modal */}
+        <Modal
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
+          title="Download Documents"
+        >
+          <DocumentDownload
+            system="life-policies"
+            recordId={selectedPolicy?.id}
           />
         </Modal>
       </div>

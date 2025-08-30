@@ -82,7 +82,7 @@ const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => 
       if (error.message?.includes('already exists')) {
         toast.error('Plan manager already assigned to this quotation');
       } else {
-        toast.error('Failed to assign plan manager');
+      toast.error('Failed to assign plan manager');
       }
     } finally {
       setLoading(false);
@@ -663,11 +663,19 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
         
         // Create renewal status record
         try {
-          await renewalStatusAPI.createRenewalStatus({
-            factory_quotation_id: quotation.id,
-            upload_option: renewalData.upload_option,
-            expiry_date: renewalData.expiry_date
-          });
+          // Create FormData for renewal status with files
+          const renewalFormData = new FormData();
+          renewalFormData.append('factory_quotation_id', quotation.id);
+          renewalFormData.append('expiry_date', renewalData.expiry_date);
+          
+          // Append files if they exist
+          if (renewalData.upload_option && renewalData.upload_option.length > 0) {
+            renewalData.upload_option.forEach(file => {
+              renewalFormData.append('files', file);
+            });
+          }
+          
+          await renewalStatusAPI.createRenewalStatus(renewalFormData);
           console.log('Renewal status record created successfully');
           
           // Update application status to 'renewal' if it exists
@@ -686,7 +694,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
           console.error('Error creating renewal status record:', renewalError);
           // Don't fail the entire process if renewal status creation fails
         }
-
+        
         const message = existingCompany 
           ? 'Renewal created successfully! Existing company has been updated.'
           : 'Renewal created successfully! New company/Vendor account has been created.';
@@ -1827,7 +1835,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         // Close modal if plan already exists
         setShowPlanManagerModal(false);
       } else {
-        toast.error('Failed to assign plan manager');
+      toast.error('Failed to assign plan manager');
       }
     }
   };
@@ -1860,7 +1868,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         // Close modal if stability management already exists
         setShowStabilityManagerModal(false);
       } else {
-        toast.error('Failed to assign stability manager');
+      toast.error('Failed to assign stability manager');
       }
     }
   };
@@ -2166,46 +2174,46 @@ function FactoryQuotation({ searchQuery = "" }) {
         // If application management record exists
         if (applicationRecord) {
           // If user is compliance manager or admin, show interactive dropdown
-          if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
-            return (
-              <div className="application-status-container">
-                <select
-                  value={applicationRecord.status}
-                  onChange={(e) => {
-                    const newStatus = e.target.value;
-                    if (newStatus === 'Approved') {
-                      // Show modal for dates and files
-                      setSelectedQuotation(quotation);
-                      setShowApplicationModal(true);
-                    } else if (newStatus === 'Reject') {
-                      // Show reject modal
-                      setSelectedQuotation(quotation);
-                      setShowApplicationRejectModal(true);
-                    } else {
-                      // Direct status update
-                      handleApplicationStatusChange(applicationRecord.id, newStatus);
-                    }
-                  }}
-                  className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
-                >
-                  <option value="application">Application</option>
-                  <option value="submit">Submit</option>
-                  <option value="Approved">Approved</option>
-                  <option value="renewal">Renewal</option>
-                  <option value="Reject">Reject</option>
-                </select>
-              </div>
-            );
-          }
-          
-          // For other users, show read-only status
+        if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
           return (
-            <div>
-              <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
-                {applicationRecord.status}
-              </span>
+            <div className="application-status-container">
+              <select
+                value={applicationRecord.status}
+                onChange={(e) => {
+                  const newStatus = e.target.value;
+                  if (newStatus === 'Approved') {
+                    // Show modal for dates and files
+                    setSelectedQuotation(quotation);
+                    setShowApplicationModal(true);
+                  } else if (newStatus === 'Reject') {
+                    // Show reject modal
+                    setSelectedQuotation(quotation);
+                    setShowApplicationRejectModal(true);
+                  } else {
+                    // Direct status update
+                    handleApplicationStatusChange(applicationRecord.id, newStatus);
+                  }
+                }}
+                className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
+              >
+                <option value="application">Application</option>
+                <option value="submit">Submit</option>
+                <option value="Approved">Approved</option>
+                  <option value="renewal">Renewal</option>
+                <option value="Reject">Reject</option>
+              </select>
             </div>
           );
+        }
+        
+        // For other users, show read-only status
+        return (
+          <div>
+            <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
+              {applicationRecord.status}
+            </span>
+          </div>
+        );
         }
         
         // Default case

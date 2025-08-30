@@ -2220,4 +2220,21 @@ export const vendorAPI = {
   },
 };
 
+// Document Download API
+export const documentDownloadAPI = {
+  // Download a specific document
+  downloadDocument: async (system, recordId, documentType, filename) => {
+    const response = await api.get(`/documents/${system}/${recordId}/${documentType}/${filename}`, {
+      responseType: 'blob'
+    });
+    return response;
+  },
+
+  // Get list of documents for a record
+  getDocumentList: async (system, recordId) => {
+    const response = await api.get(`/documents/${system}/${recordId}`);
+    return response.data;
+  }
+};
+
 export default api;

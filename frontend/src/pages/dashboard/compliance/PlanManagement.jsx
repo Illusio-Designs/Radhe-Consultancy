@@ -10,6 +10,7 @@ import {
   BiShield,
   BiTrendingUp,
   BiErrorCircle,
+  BiDownload,
 } from "react-icons/bi";
 import { planManagementAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -20,6 +21,7 @@ import "../../../styles/pages/dashboard/compliance/Compliance.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
+import DocumentDownload from "../../../components/common/DocumentDownload";
 
 // File Upload Modal
 const FileUploadModal = ({ onClose, onUpload }) => {
@@ -239,6 +241,7 @@ const PlanManagement = ({ searchQuery = "" }) => {
   const [statsLoading, setStatsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const { user } = useAuth();
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
 
   // Handle search when searchQuery changes
   useEffect(() => {
@@ -490,6 +493,23 @@ const PlanManagement = ({ searchQuery = "" }) => {
         ) : "-"
       ),
     },
+    {
+      key: "actions",
+      label: "Actions",
+      sortable: false,
+      render: (_, record) => (
+        <div className="flex items-center gap-2">
+          <DocumentDownload
+            system="plan-management"
+            recordId={record.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={record.upload_option ? `/uploads/plan_management/${record.upload_option}` : null}
+            fileName={record.upload_option || 'plan-document.pdf'}
+          />
+        </div>
+      ),
+    },
   ];
 
   const filteredRecords = React.useMemo(() => {
@@ -566,6 +586,20 @@ const PlanManagement = ({ searchQuery = "" }) => {
           }}
           onReject={handleRejectPlan}
         />
+      )}
+
+      {/* Document Download Modal */}
+      {showDocumentModal && editingPlan && (
+        <Modal
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
+          title="Download Documents"
+        >
+          <DocumentDownload 
+            system="plan-management" 
+            recordId={editingPlan.id} 
+          />
+        </Modal>
       )}
     </div>
   );

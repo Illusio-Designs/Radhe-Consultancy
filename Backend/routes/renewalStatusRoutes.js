@@ -3,17 +3,24 @@ const router = express.Router();
 const renewalStatusController = require('../controllers/renewalStatusController');
 const { auth } = require('../middleware/auth');
 const checkUserRole = require('../middleware/checkUserRole');
+const { uploadRenewalFiles } = require('../config/multerConfig');
 
-// Get all renewal status records (Admin, Compliance Manager, and own records)
-router.get('/', auth, checkUserRole(['Admin', 'Compliance_manager']), renewalStatusController.getAllRenewalStatus);
+// Create renewal status record
+router.post('/', auth, checkUserRole(['Admin', 'Compliance_manager']), uploadRenewalFiles, renewalStatusController.createRenewalStatus);
 
-// Create renewal status record (Admin, Compliance Manager)
-router.post('/', auth, checkUserRole(['Admin', 'Compliance_manager']), renewalStatusController.createRenewalStatus);
+// Get all renewal status records
+router.get('/', auth, renewalStatusController.getAllRenewalStatus);
 
-// Update renewal status record (Admin, Compliance Manager, or creator)
-router.put('/:id', auth, checkUserRole(['Admin', 'Compliance_manager']), renewalStatusController.updateRenewalStatus);
+// Get renewal status record by ID
+router.get('/:id', auth, renewalStatusController.getRenewalStatusById);
 
-// Delete renewal status record (Admin, Compliance Manager, or creator)
-router.delete('/:id', auth, checkUserRole(['Admin', 'Compliance_manager']), renewalStatusController.deleteRenewalStatus);
+// Update renewal status record
+router.put('/:id', auth, checkUserRole(['Admin', 'Compliance_manager']), uploadRenewalFiles, renewalStatusController.updateRenewalStatus);
+
+// Delete renewal status record
+router.delete('/:id', auth, checkUserRole(['Admin']), renewalStatusController.deleteRenewalStatus);
+
+// Upload renewal documents (for existing records)
+router.post('/:id/upload', auth, checkUserRole(['Admin', 'Compliance_manager']), uploadRenewalFiles, renewalStatusController.uploadRenewalDocuments);
 
 module.exports = router;

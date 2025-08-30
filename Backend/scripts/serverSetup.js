@@ -277,10 +277,28 @@ async function setupDatabase() {
         // Special handling for ApplicationManagement to ensure compliance_manager_id is nullable
         if (table.name === 'ApplicationManagement') {
           try {
+        await table.model.sync({ alter: true });
+        console.log(`✅ ${table.name} table synced`);
+          } catch (syncError) {
+            if (syncError.message.includes('compliance_manager_id') || syncError.message.includes('cannot be null')) {
+              console.log(`🔄 ${table.name} schema issue detected, attempting to fix...`);
+              try {
+                await table.model.drop();
+                await table.model.sync({ force: true });
+                console.log(`✅ ${table.name} table recreated with correct schema`);
+              } catch (dropError) {
+                console.log(`⚠️ Could not recreate ${table.name} table:`, dropError.message);
+              }
+            } else {
+              console.log(`⚠️ ${table.name} table sync warning:`, syncError.message);
+            }
+          }
+        } else if (table.name === 'LabourLicense') {
+          try {
             await table.model.sync({ alter: true });
             console.log(`✅ ${table.name} table synced`);
           } catch (syncError) {
-            if (syncError.message.includes('compliance_manager_id') || syncError.message.includes('cannot be null')) {
+            if (syncError.message.includes('type') || syncError.message.includes('cannot be null')) {
               console.log(`🔄 ${table.name} schema issue detected, attempting to fix...`);
               try {
                 await table.model.drop();

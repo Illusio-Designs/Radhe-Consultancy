@@ -34,6 +34,8 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
       "Insurance_manager",
       "Compliance_manager",
       "DSC_manager",
+      "Labour_manager",
+      "Website_manager",
     ].includes(role.role_name)
   );
 

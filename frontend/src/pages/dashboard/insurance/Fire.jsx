@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BiPlus,
   BiEdit,
@@ -8,6 +8,7 @@ import {
   BiShield,
   BiTrendingUp,
   BiCalendar,
+  BiDownload,
 } from "react-icons/bi";
 import { firePolicyAPI, insuranceCompanyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -23,6 +24,7 @@ import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
 import { useAuth } from "../../../contexts/AuthContext";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
 // --- CreateInsuranceCompanyModal (copied from Vehicle.jsx) ---
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
@@ -816,6 +818,7 @@ function Fire({ searchQuery = "" }) {
   const isConsumer = userRoles.includes("consumer");
   const companyId = user?.profile?.company_id || user?.company?.company_id;
   const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
 
   useEffect(() => {
     fetchPolicies();
@@ -971,6 +974,11 @@ function Fire({ searchQuery = "" }) {
     handleModalClose();
   };
 
+  const handleDownloadDocuments = (policy) => {
+    setSelectedPolicy(policy);
+    setShowDocumentModal(true);
+  };
+
   const columns = [
     {
       key: "sr_no",
@@ -1023,6 +1031,14 @@ function Fire({ searchQuery = "" }) {
           >
             <BiTrash />
           </ActionButton>
+          <DocumentDownload
+            system="fire-policies"
+            recordId={policy.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={policy.policy_document_path ? `/uploads/fire_policies/${policy.policy_document_path}` : null}
+            fileName={policy.policy_document_path || 'policy-document.pdf'}
+          />
         </div>
       ),
     },
@@ -1072,6 +1088,16 @@ function Fire({ searchQuery = "" }) {
           />
         </Modal>
       </div>
+      {/* Document Download Modal */}
+      {showDocumentModal && selectedPolicy && (
+        <DocumentDownload
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
+          system="fire"
+          recordId={selectedPolicy.id}
+          recordName={selectedPolicy.policyNumber || selectedPolicy.clientName}
+        />
+      )}
     </div>
   );
 }

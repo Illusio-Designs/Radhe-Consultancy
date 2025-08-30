@@ -23,6 +23,7 @@ const planManagementRoutes = require('./planManagementRoutes');
 const stabilityManagementRoutes = require('./stabilityManagementRoutes');
 const applicationManagementRoutes = require('./applicationManagementRoutes');
 const renewalStatusRoutes = require('./renewalStatusRoutes');
+const documentDownloadRoutes = require('./documentDownloadRoutes');
 const labourInspectionRoutes = require('./labourInspectionRoutes');
 const labourLicenseRoutes = require('./labourLicenseRoutes');
 
@@ -106,6 +107,10 @@ const routes = {
   renewalStatus: {
     path: '/renewal-status',
     router: renewalStatusRoutes
+  },
+  documentDownload: {
+    path: '/documents',
+    router: documentDownloadRoutes
   },
   labourInspection: {
     path: '/labour-inspection',

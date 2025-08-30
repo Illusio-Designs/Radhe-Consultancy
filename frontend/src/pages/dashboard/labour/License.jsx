@@ -10,7 +10,8 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import "../../../styles/pages/dashboard/labour/Labour.css";
-import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiTrash, BiShield, BiTrendingUp, BiCalendar, BiCheckCircle } from "react-icons/bi";
+import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiTrash, BiShield, BiTrendingUp, BiCalendar, BiCheckCircle, BiDownload } from "react-icons/bi";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
 // Statistics Cards Component
 const StatisticsCards = ({ statistics, loading }) => {
@@ -101,6 +102,7 @@ const LabourLicense = ({ searchQuery = "" }) => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [updatingStatus, setUpdatingStatus] = useState({});
   const [companies, setCompanies] = useState([]);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
   const { user, userRoles } = useAuth();
 
   // Check if user has permission to manage labour licenses
@@ -255,6 +257,11 @@ const LabourLicense = ({ searchQuery = "" }) => {
     }
   };
 
+  const handleDownloadDocuments = (license) => {
+    setSelectedLicense(license);
+    setShowDocumentModal(true);
+  };
+
   const canEdit = userRoles?.includes('admin') || userRoles?.includes('compliance_manager') || userRoles?.includes('labour_law_manager');
   const canDelete = userRoles?.includes('admin');
 
@@ -282,6 +289,16 @@ const LabourLicense = ({ searchQuery = "" }) => {
       label: "License Number",
       sortable: true,
       render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: "type",
+      label: "License Type",
+      sortable: true,
+      render: (value) => (
+        <span className={`license-type-badge ${value?.toLowerCase() === 'central' ? 'type-central' : 'type-state'}`}>
+          {value || 'N/A'}
+        </span>
+      ),
     },
     {
       key: "expiry_date",
@@ -373,6 +390,14 @@ const LabourLicense = ({ searchQuery = "" }) => {
               <BiTrash />
             </ActionButton>
           )}
+          <DocumentDownload
+            system="labour-license"
+            recordId={license.license_id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={license.upload_option ? `/uploads/labour_license/${license.upload_option}` : null}
+            fileName={license.upload_option || 'license-document.pdf'}
+          />
         </div>
       ),
     }
@@ -469,6 +494,17 @@ const LabourLicense = ({ searchQuery = "" }) => {
           }}
         />
       </Modal>
+
+      {/* Document Download Modal */}
+      {showDocumentModal && selectedLicense && (
+        <DocumentDownload
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
+          system="labour-license"
+          recordId={selectedLicense.license_id}
+          recordName={selectedLicense.company?.company_name || selectedLicense.company_name}
+        />
+      )}
     </div>
   );
 };
@@ -478,16 +514,24 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     company_id: '',
     license_number: '',
-    expiry_date: ''
+    expiry_date: '',
+    status: 'Active',
+    type: '',
+    remarks: ''
   });
+
+  const [files, setFiles] = useState([]);
 
   // Initialize form data when editing
   useEffect(() => {
     if (license) {
       setFormData({
-        company_id: license.company_id?.toString() || '',
+        company_id: license.company_id || '',
         license_number: license.license_number || '',
-        expiry_date: license.expiry_date ? new Date(license.expiry_date).toISOString().split('T')[0] : ''
+        expiry_date: license.expiry_date ? new Date(license.expiry_date).toISOString().split('T')[0] : '',
+        status: license.status || 'Active',
+        type: license.type || '',
+        remarks: license.remarks || ''
       });
     }
   }, [license]);
@@ -500,16 +544,38 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(selectedFiles);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validation
-    if (!formData.company_id || !formData.license_number || !formData.expiry_date) {
-      toast.error('Company, License Number, and Expiry Date are required');
+    if (!formData.company_id || !formData.license_number || !formData.expiry_date || !formData.type) {
+      toast.error('Company, license number, expiry date, and license type are required');
       return;
     }
 
-    onSubmit(formData);
+    // Create FormData for file upload
+    const submitData = new FormData();
+    
+    // Append form fields
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== undefined && formData[key] !== '') {
+        submitData.append(key, formData[key]);
+      }
+    });
+
+    // Append files
+    if (files.length > 0) {
+      files.forEach(file => {
+        submitData.append('files', file);
+      });
+    }
+
+    onSubmit(submitData);
   };
 
   return (
@@ -528,12 +594,14 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             <option value="">Select Company</option>
             {companies.map(company => (
               <option key={company.company_id} value={company.company_id}>
-                {company.company_name}
+                {company.company_name} ({company.company_code})
               </option>
             ))}
           </select>
         </div>
-        
+      </div>
+
+      <div className="form-row">
         <div className="form-group">
           <label htmlFor="license_number">License Number *</label>
           <input
@@ -546,6 +614,38 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             className="form-control"
             placeholder="Enter license number"
           />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="status">Status</label>
+          <select
+            id="status"
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="form-control"
+          >
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Expired">Expired</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="type">License Type *</label>
+          <select
+            id="type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            required
+            className="form-control"
+          >
+            <option value="">Select License Type</option>
+            <option value="Central">Central</option>
+            <option value="State">State</option>
+          </select>
         </div>
       </div>
 
@@ -561,6 +661,49 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             required
             className="form-control"
           />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="remarks">Remarks</label>
+          <textarea
+            id="remarks"
+            name="remarks"
+            value={formData.remarks}
+            onChange={handleChange}
+            className="form-control"
+            rows="3"
+            placeholder="Enter any additional remarks..."
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="files">Upload Documents</label>
+          <input
+            type="file"
+            id="files"
+            name="files"
+            onChange={handleFileChange}
+            multiple
+            className="form-control"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+          />
+          <small className="text-gray-500">
+            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each)
+          </small>
+          {files.length > 0 && (
+            <div className="selected-files mt-2">
+              <strong>Selected Files:</strong>
+              {files.map((file, index) => (
+                <div key={index} className="text-sm text-gray-600">
+                  • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
