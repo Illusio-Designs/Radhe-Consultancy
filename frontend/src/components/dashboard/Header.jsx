@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { BiBell, BiUser, BiLogOut, BiKey, BiSearch, BiFullscreen, BiExitFullscreen } from "react-icons/bi";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/components/dashboard/Header.css";
 import SearchBar from "../common/SearchBar/SearchBar";
 
-const Header = ({ isCollapsed, onSearch }) => {
+const Header = ({ isCollapsed, onSearch, onToggleSidebar }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -65,11 +66,23 @@ const Header = ({ isCollapsed, onSearch }) => {
     onSearch?.(searchQuery);
   };
 
+  const handleToggleSidebar = () => {
+    onToggleSidebar?.(!isCollapsed);
+  };
+
   return (
     <header className={`header ${isCollapsed ? "sidebar-collapsed" : ""}`}>
       <div className="header-container">
-        {/* Left - Title */}
+        {/* Left - Title and Toggle */}
         <div className="head">
+          <button
+            className="sidebar-toggle-header"
+            onClick={handleToggleSidebar}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <Menu /> : <X />}
+          </button>
           <h2 className="header-title">Dashboard</h2>
         </div>
 
