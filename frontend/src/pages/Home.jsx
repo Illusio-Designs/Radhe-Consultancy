@@ -31,7 +31,12 @@ const Home = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
+  const [loadedImages, setLoadedImages] = useState(new Set());
   const scrollContainerRef = useRef(null);
+
+  const handleImageLoad = (imageSrc) => {
+    setLoadedImages(prev => new Set([...prev, imageSrc]));
+  };
 
   const handleContactClick = () => {
     window.location.href = '/contact';
@@ -159,9 +164,29 @@ const Home = () => {
                       <h1 className="title">{slide.title}</h1>
                       <button className="contact-btn" onClick={handleContactClick}>Contact Us →</button>
                     </div>
-                    <div className="hero-image">
-                      <img src={slide.image} alt="Legal services illustration" />
-                    </div>
+                                         <div className="hero-image">
+                       {!loadedImages.has(slide.image) && (
+                         <div 
+                           style={{
+                             filter: 'grayscale(100%)',
+                             display: 'flex',
+                             alignItems: 'center',
+                             justifyContent: 'center',
+                             color: '#999',
+                             fontSize: '14px'
+                           }}
+                         >
+                         </div>
+                       )}
+                       <img 
+                         src={slide.image} 
+                         alt="Legal services illustration" 
+                         onLoad={() => handleImageLoad(slide.image)}
+                         style={{
+                           display: loadedImages.has(slide.image) ? 'block' : 'none',
+                         }}
+                       />
+                     </div>
                   </div>
                 </div>
               ))}
@@ -184,19 +209,163 @@ const Home = () => {
         </div>
        
         <div className="trusted-consultancy">
-          <img src={img6} alt="Law Scale" className="img6" />
-          <img src={img7} alt="Law Scale" className="img7" />
-          <img src={img8} alt="Law Scale" className="img8" />
+                     {!loadedImages.has(img6) && (
+             <div 
+               className="img6" 
+               style={{
+                 backgroundColor: '#f0f0f0',
+                 filter: 'grayscale(100%)',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 color: '#999',
+                 fontSize: '12px'
+               }}
+             >
+               
+             </div>
+           )}
+           <img 
+             src={img6} 
+             alt="Law Scale" 
+             className="img6" 
+             onLoad={() => handleImageLoad(img6)}
+             style={{
+               display: loadedImages.has(img6) ? 'block' : 'none'
+             }}
+           />
+           {!loadedImages.has(img7) && (
+             <div 
+               className="img7" 
+               style={{
+                 backgroundColor: '#f0f0f0',
+                 filter: 'grayscale(100%)',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 color: '#999',
+                 fontSize: '12px'
+               }}
+             >
+               
+             </div>
+           )}
+           <img 
+             src={img7} 
+             alt="Law Scale" 
+             className="img7" 
+             onLoad={() => handleImageLoad(img7)}
+             style={{
+               display: loadedImages.has(img7) ? 'block' : 'none'
+             }}
+           />
+           {!loadedImages.has(img8) && (
+             <div 
+               className="img8" 
+               style={{
+                 backgroundColor: '#f0f0f0',
+                 filter: 'grayscale(100%)',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 color: '#999',
+                 fontSize: '12px'
+               }}
+             >
+               
+             </div>
+           )}
+           <img 
+             src={img8} 
+             alt="Law Scale" 
+             className="img8" 
+             onLoad={() => handleImageLoad(img8)}
+             style={{
+               display: loadedImages.has(img8) ? 'block' : 'none'
+             }}
+           />
           <div className="trusted-container">
        <div className="trusted-left">
     <div className="image-group">
-      <div className='img-left'>
-      <img src={img} alt="Law Scale" className="img1" />
-      </div>
-      <div className='img-right'>
-      <img src={img2} alt="Lawyer" className="img2" />
-      <img src={img3} alt="Gavel on Books" className="img3" />
-    </div>
+             <div className='img-left'>
+       {!loadedImages.has(img) && (
+         <div 
+           className="img1" 
+           style={{
+             backgroundColor: '#f0f0f0',
+             filter: 'grayscale(100%)',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             color: '#999',
+             fontSize: '12px'
+           }}
+         >
+           
+         </div>
+       )}
+       <img 
+         src={img} 
+         alt="Law Scale" 
+         className="img1" 
+         onLoad={() => handleImageLoad(img)}
+         style={{
+           display: loadedImages.has(img) ? 'block' : 'none'
+         }}
+       />
+       </div>
+       <div className='img-right'>
+       {!loadedImages.has(img2) && (
+         <div 
+           className="img2" 
+           style={{
+             backgroundColor: '#f0f0f0',
+             filter: 'grayscale(100%)',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             color: '#999',
+             fontSize: '12px'
+           }}
+         >
+           
+         </div>
+       )}
+       <img 
+         src={img2} 
+         alt="Lawyer" 
+         className="img2" 
+         onLoad={() => handleImageLoad(img2)}
+         style={{
+           display: loadedImages.has(img2) ? 'block' : 'none'
+         }}
+       />
+       {!loadedImages.has(img3) && (
+         <div 
+           className="img3" 
+           style={{
+             backgroundColor: '#f0f0f0',
+             filter: 'grayscale(100%)',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             color: '#999',
+             fontSize: '12px'
+           }}
+         >
+           
+         </div>
+       )}
+       <img 
+         src={img3} 
+         alt="Gavel on Books" 
+         className="img3" 
+         onLoad={() => handleImageLoad(img3)}
+         style={{
+           display: loadedImages.has(img3) ? 'block' : 'none'
+         }}
+       />
+     </div>
     </div>
   </div>
   <div className="trusted-right">
@@ -322,7 +491,31 @@ const Home = () => {
       {/* Left Section: Image with Play Button */}
       <div className="why-left">
         <div className="video-thumbnail">
-          <img src={img9} alt="Gavel and Sand Timer" className="video-img" />
+                     {!loadedImages.has(img9) && (
+             <div 
+               className="video-img" 
+               style={{
+                 backgroundColor: '#f0f0f0',
+                 filter: 'grayscale(100%)',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 color: '#999',
+                 fontSize: '14px'
+               }}
+             >
+               
+             </div>
+           )}
+           <img 
+             src={img9} 
+             alt="Gavel and Sand Timer" 
+             className="video-img" 
+             onLoad={() => handleImageLoad(img9)}
+             style={{
+               display: loadedImages.has(img9) ? 'block' : 'none'
+             }}
+           />
           <div className="play-button">
             <div className="circle">
               <div className="triangle"></div>
@@ -333,7 +526,31 @@ const Home = () => {
 
       {/* Right Section: Content */}
       <div className="why-right">
-      <img src={img10} alt="Law Scale" className="img10" />
+             {!loadedImages.has(img10) && (
+         <div 
+           className="img10" 
+           style={{
+             backgroundColor: '#f0f0f0',
+             filter: 'grayscale(100%)',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             color: '#999',
+             fontSize: '12px'
+           }}
+         >
+           
+         </div>
+       )}
+       <img 
+         src={img10} 
+         alt="Law Scale" 
+         className="img10" 
+         onLoad={() => handleImageLoad(img10)}
+         style={{
+           display: loadedImages.has(img10) ? 'block' : 'none'
+         }}
+       />
         <p className="why-subtitle">Why Choose Us?</p>
         <h2 className="why-title">Navigating The Law: Your Assurance Of Peace</h2>
 

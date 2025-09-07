@@ -10,6 +10,7 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import "../../../styles/pages/dashboard/labour/Labour.css";
+import "../../../styles/components/StatCards.css";
 import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiTrash, BiShield, BiTrendingUp, BiCalendar, BiCheckCircle } from "react-icons/bi";
 
 // Statistics Cards Component
@@ -513,17 +514,16 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="company_id">Company *</label>
+    <form onSubmit={handleSubmit} className="insurance-form">
+      <div className="insurance-form-grid">
+        <div className="insurance-form-group">
           <select
             id="company_id"
             name="company_id"
             value={formData.company_id}
             onChange={handleChange}
             required
-            className="form-control"
+            className="insurance-form-input"
           >
             <option value="">Select Company</option>
             {companies.map(company => (
@@ -534,8 +534,7 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
           </select>
         </div>
         
-        <div className="form-group">
-          <label htmlFor="license_number">License Number *</label>
+        <div className="insurance-form-group">
           <input
             type="text"
             id="license_number"
@@ -543,15 +542,12 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             value={formData.license_number}
             onChange={handleChange}
             required
-            className="form-control"
+            className="insurance-form-input"
             placeholder="Enter license number"
           />
         </div>
-      </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="expiry_date">Expiry Date *</label>
+        <div className="insurance-form-group">
           <input
             type="date"
             id="expiry_date"
@@ -559,16 +555,16 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             value={formData.expiry_date}
             onChange={handleChange}
             required
-            className="form-control"
+            className="insurance-form-input"
           />
         </div>
       </div>
 
-      <div className="form-actions">
-        <Button type="button" onClick={onCancel} variant="secondary">
+      <div className="insurance-form-actions">
+        <Button type="button" onClick={onCancel} variant="outlined">
           Cancel
         </Button>
-        <Button type="submit" variant="primary">
+        <Button type="submit" variant="contained">
           {license ? 'Update License' : 'Create License'}
         </Button>
       </div>

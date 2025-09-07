@@ -17,6 +17,7 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import "../../../styles/pages/dashboard/dsc/DSC.css";
+import "../../../styles/components/StatCards.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Select from "react-select";
@@ -251,9 +252,9 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="dsc-form">
-        <div className="dsc-form-grid">
-          <div className="dsc-form-group">
+      <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <Select
               options={combinedOptions}
               value={combinedOptions
@@ -289,73 +290,73 @@ const DSCForm = ({ dsc, onClose, onDSCUpdated }) => {
             />
           </div>
 
-          <div className="dsc-form-group">
+          <div className="insurance-form-group">
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Email"
-              className="dsc-form-input"
+              className="insurance-form-input"
               readOnly
             />
           </div>
 
-          <div className="dsc-form-group">
+          <div className="insurance-form-group">
             <PhoneInput
               international
               defaultCountry="IN"
               value={formData.mobileNumber}
               onChange={handlePhoneChange}
               placeholder="Mobile Number"
-              className="dsc-form-input phone-input-custom"
+              className="insurance-form-input phone-input-custom"
               flags={flags}
               readOnly
             />
           </div>
 
-          <div className="dsc-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="certificationName"
               value={formData.certificationName}
               onChange={handleChange}
               placeholder="Certification Name"
-              className="dsc-form-input"
+              className="insurance-form-input"
             />
           </div>
-          <div className="dsc-form-group">
+          <div className="insurance-form-group">
             <input
               type="date"
               name="expiryDate"
               value={formData.expiryDate}
               onChange={handleChange}
-              className="dsc-form-input"
+              className="insurance-form-input"
             />
           </div>
-          <div className="dsc-form-group">
+          <div className="insurance-form-group">
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="dsc-form-input"
+              className="insurance-form-input"
             >
               <option value="in">In</option>
               <option value="out">Out</option>
             </select>
           </div>
-          <div className="dsc-form-group" style={{ gridColumn: "span 2" }}>
+          <div className="insurance-form-group" style={{ gridColumn: "span 2" }}>
             <textarea
               name="remarks"
               value={formData.remarks}
               onChange={handleChange}
               placeholder="Remarks"
-              className="dsc-form-input"
+              className="insurance-form-input"
               rows={2}
             />
           </div>
         </div>
-        <div className="dsc-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>

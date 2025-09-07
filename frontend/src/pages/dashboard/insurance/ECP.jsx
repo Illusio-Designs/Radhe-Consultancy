@@ -19,6 +19,7 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/insurance/ECP.css";
+import "../../../styles/components/StatCards.css";
 import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";

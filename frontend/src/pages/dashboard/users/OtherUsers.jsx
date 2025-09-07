@@ -123,91 +123,93 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     <>
       {/* Removed inline error display */}
 
-      <form onSubmit={handleSubmit} className="user-management-form">
-        <div className="user-management-form-group">
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, username: e.target.value }))
-            }
-            className="user-management-form-input"
-            placeholder="Enter User Name"
-            required
-          />
-        </div>
-
-        <div className="user-management-form-group">
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            className="user-management-form-input"
-            placeholder="Enter Email"
-            required
-          />
-        </div>
-
-        {!user && (
-          <div className="user-management-form-group">
+      <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <input
-              type="password"
-              name="password"
-              value={formData.password}
+              type="text"
+              name="username"
+              value={formData.username}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, password: e.target.value }))
+                setFormData((prev) => ({ ...prev, username: e.target.value }))
               }
-              className="user-management-form-input"
-              placeholder="Password"
-              required={!user}
+              className="insurance-form-input"
+              placeholder="Enter User Name"
+              required
             />
           </div>
-        )}
 
-        <div className="user-management-form-group">
-          <label className="user-management-form-label">Select Roles:</label>
-          <Select
-            isMulti
-            options={roleOptions}
-            value={selectedValues}
-            onChange={(selected) => {
-              console.log("Selected:", selected);
-              const newRoleIds = selected
-                ? selected.map((opt) => opt.value)
-                : [];
-              console.log("New role_ids:", newRoleIds);
-              setFormData((prev) => ({
-                ...prev,
-                role_ids: newRoleIds,
-              }));
-            }}
-            classNamePrefix="react-select"
-            placeholder="Select roles..."
-            isClearable={true}
-            closeMenuOnSelect={false}
-          />
+          <div className="insurance-form-group">
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, email: e.target.value }))
+              }
+              className="insurance-form-input"
+              placeholder="Enter Email"
+              required
+            />
+          </div>
+
+          {!user && (
+            <div className="insurance-form-group">
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, password: e.target.value }))
+                }
+                className="insurance-form-input"
+                placeholder="Password"
+                required={!user}
+              />
+            </div>
+          )}
+
+          <div className="insurance-form-group">
+            <label className="insurance-form-label">Select Roles:</label>
+            <Select
+              isMulti
+              options={roleOptions}
+              value={selectedValues}
+              onChange={(selected) => {
+                console.log("Selected:", selected);
+                const newRoleIds = selected
+                  ? selected.map((opt) => opt.value)
+                  : [];
+                console.log("New role_ids:", newRoleIds);
+                setFormData((prev) => ({
+                  ...prev,
+                  role_ids: newRoleIds,
+                }));
+              }}
+              classNamePrefix="react-select"
+              placeholder="Select roles..."
+              isClearable={true}
+              closeMenuOnSelect={false}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <select
+              name="status"
+              value={formData.status}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, status: e.target.value }))
+              }
+              className="insurance-form-input"
+              placeholder="Status"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
         </div>
 
-        <div className="user-management-form-group">
-          <select
-            name="status"
-            value={formData.status}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, status: e.target.value }))
-            }
-            className="user-management-form-input"
-            placeholder="Status"
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-
-        <div className="user-management-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>

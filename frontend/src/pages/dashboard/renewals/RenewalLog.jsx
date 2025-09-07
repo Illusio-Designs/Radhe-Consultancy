@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { renewalAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/renewals/RenewalLog.css";
+import "../../../styles/components/StatCards.css";
 
 const RenewalLog = () => {
   const [logs, setLogs] = useState([]);

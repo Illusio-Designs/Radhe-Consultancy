@@ -21,6 +21,7 @@ import flags from "react-phone-number-input/flags";
 import { toast } from "react-toastify";
 import "react-phone-number-input/style.css";
 import "../../../styles/pages/dashboard/insurance/Insurance.css";
+import "../../../styles/components/StatCards.css";
 import { useAuth } from "../../../contexts/AuthContext";
 
 // --- CreateInsuranceCompanyModal (copied from Vehicle.jsx) ---

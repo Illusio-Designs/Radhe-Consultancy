@@ -8,6 +8,7 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import "../../../styles/pages/dashboard/labour/Labour.css";
+import "../../../styles/components/StatCards.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -166,14 +167,14 @@ const LabourInspectionForm = ({ inspection, onClose, onInspectionUpdated }) => {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="compliance-form">
-        <div className="compliance-form-grid">
-          <div className="compliance-form-group">
+    <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <select
               name="company_id"
               value={formData.company_id}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             >
               <option value="">Select Company</option>
@@ -185,35 +186,35 @@ const LabourInspectionForm = ({ inspection, onClose, onInspectionUpdated }) => {
             </select>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="date"
               name="date_of_notice"
               value={formData.date_of_notice}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="officer_name"
               value={formData.officer_name}
               onChange={handleChange}
               placeholder="Officer Name"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
             >
               <option value="pending">Pending</option>
               <option value="running">Running</option>
@@ -221,49 +222,59 @@ const LabourInspectionForm = ({ inspection, onClose, onInspectionUpdated }) => {
             </select>
           </div>
 
-
-
-          <div className="compliance-form-group">
-            <input
-              type="file"
-              name="document_upload"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  setFormData(prev => ({
-                    ...prev,
-                    document_upload: file.name,
-                    document_name: file.name
-                  }));
-                }
-              }}
-              className="compliance-form-input"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
+          <div className="file-upload-group">
+            <label className="file-upload-label">Document Upload</label>
+            <div className="file-upload-container">
+              <input
+                type="file"
+                name="document_upload"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setFormData(prev => ({
+                      ...prev,
+                      document_upload: file.name,
+                      document_name: file.name
+                    }));
+                  }
+                }}
+                className="file-upload-input"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              />
+              <Button
+                type="button"
+                variant="outlined"
+                className="file-upload-button"
+                onClick={() => document.querySelector('input[name="document_upload"]').click()}
+              >
+                <BiUpload className="mr-2" />
+                Choose File
+              </Button>
+            </div>
             <small className="text-gray-600 text-xs mt-1">
               Upload inspection documents (PDF, Word, Images)
             </small>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <textarea
               name="remarks"
               value={formData.remarks}
               onChange={handleChange}
               placeholder="Additional remarks or notes..."
-              className="compliance-form-input"
+              className="insurance-form-input"
               rows="3"
             />
           </div>
         </div>
 
         {error && (
-          <div className="compliance-form-error">
+          <div className="insurance-form-error">
             <BiErrorCircle className="inline mr-2" /> {error}
           </div>
         )}
 
-        <div className="compliance-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>

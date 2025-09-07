@@ -18,6 +18,7 @@ import Button from "../../../components/common/Button/Button";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/compliance/Compliance.css";
+import "../../../styles/components/StatCards.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -57,33 +58,45 @@ const FileUploadModal = ({ onClose, onUpload }) => {
 
   return (
     <Modal isOpen={true} onClose={onClose} title="Upload Files & Approve Stability">
-      <div className="file-upload-modal">
-        <div className="form-group">
-          <label>Stability Date (Required):</label>
-          <input
-            type="date"
-            value={stabilityDate}
-            onChange={(e) => setStabilityDate(e.target.value)}
-            className="form-control"
-            required
-          />
-          <small className="text-gray-500">
-            Renewal date will be automatically calculated (5 years after stability date)
-          </small>
-        </div>
+      <div className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <input
+              type="date"
+              value={stabilityDate}
+              onChange={(e) => setStabilityDate(e.target.value)}
+              className="insurance-form-input"
+              required
+            />
+            <small className="text-gray-500">
+              Renewal date will be automatically calculated (5 years after stability date)
+            </small>
+          </div>
 
-        <div className="form-group">
-          <label>Select Files:</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="form-control"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
-          />
-          <small className="text-gray-500">
-            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
-          </small>
+          <div className="file-upload-group">
+            <label className="file-upload-label">Select Files</label>
+            <div className="file-upload-container">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="file-upload-input"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+              />
+              <Button
+                type="button"
+                variant="outlined"
+                className="file-upload-button"
+                onClick={() => document.querySelector('input[type="file"]').click()}
+              >
+                <BiUpload className="mr-2" />
+                Choose Files
+              </Button>
+            </div>
+            <small className="text-gray-500">
+              Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
+            </small>
+          </div>
         </div>
 
         {files.length > 0 && (
@@ -97,7 +110,7 @@ const FileUploadModal = ({ onClose, onUpload }) => {
           </div>
         )}
 
-        <div className="modal-actions">
+        <div className="insurance-form-actions">
           <Button onClick={onClose} variant="outlined">
             Cancel
           </Button>

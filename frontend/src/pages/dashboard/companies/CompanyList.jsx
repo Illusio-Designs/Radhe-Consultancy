@@ -7,6 +7,7 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
+import "../../../styles/components/StatCards.css";
 import PhoneInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 import 'react-phone-number-input/style.css';
@@ -342,9 +343,9 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
     <>
       {/* Removed inline error display */}
 
-      <form onSubmit={handleSubmit} className="vendor-management-form">
-        <div className="vendor-management-form-grid">
-          <div className="vendor-management-form-group">
+      <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="company_name"
@@ -352,22 +353,22 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="Company Name"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="company_code"
               value={formData.company_code}
               onChange={handleChange}
               placeholder="Company Code (e.g., COMP0001)"
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="owner_name"
@@ -375,23 +376,23 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="Owner Name"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <textarea
               name="owner_address"
               value={formData.owner_address}
               onChange={handleChange}
               placeholder="Owner Address"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
               rows="3"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="designation"
@@ -399,23 +400,23 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="Designation"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <textarea
               name="company_address"
               value={formData.company_address}
               onChange={handleChange}
               placeholder="Company Address"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
               rows="3"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <PhoneInput
               international
               defaultCountry="IN"
@@ -423,7 +424,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handlePhoneChange}
               placeholder="Enter phone number"
               required
-              className="vendor-management-form-input phone-input-custom"
+              className="insurance-form-input phone-input-custom"
               flags={flags}
               countrySelectProps={{
                 className: "phone-input-country-select"
@@ -431,7 +432,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="email"
               name="company_email"
@@ -439,11 +440,11 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="Email"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="gst_number"
@@ -451,12 +452,12 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="GST Number (15 digits)"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
               maxLength={15}
             />
           </div>
 
-          <div className="vendor-management-form-group file-upload-group">
+          <div className="insurance-form-group file-upload-group">
             <label className="file-upload-label">
               <span>GST Certificate</span>
               <div className="file-upload-container">
@@ -473,7 +474,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             </label>
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="pan_number"
@@ -481,12 +482,12 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="PAN Number"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
               readOnly
             />
           </div>
 
-          <div className="vendor-management-form-group file-upload-group">
+          <div className="insurance-form-group file-upload-group">
             <label className="file-upload-label">
               <span>PAN Card</span>
               <div className="file-upload-container">
@@ -503,13 +504,13 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             </label>
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <select
               name="firm_type"
               value={formData.firm_type}
               onChange={handleChange}
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             >
               <option value="">Select Firm Type</option>
               <option value="Proprietorship">Proprietorship</option>
@@ -521,7 +522,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
             </select>
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="nature_of_work"
@@ -529,39 +530,39 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
               onChange={handleChange}
               placeholder="Nature of Work"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="factory_license_number"
               value={formData.factory_license_number}
               onChange={handleChange}
               placeholder="Factory License Number"
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="labour_license_number"
               value={formData.labour_license_number}
               onChange={handleChange}
               placeholder="Labour License Number"
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <select
               name="type_of_company"
               value={formData.type_of_company}
               onChange={handleChange}
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             >
               <option value="">Select Type of Company</option>
               <option value="Industries">Industries</option>
@@ -573,7 +574,7 @@ const CompanyForm = ({ company, onClose, onCompanyUpdated }) => {
           </div>
         </div>
 
-        <div className="vendor-management-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>

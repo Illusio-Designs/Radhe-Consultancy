@@ -4,6 +4,7 @@ import TableWithControl from "../../../components/common/Table/TableWithControl"
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
+import Button from "../../../components/common/Button/Button";
 import { userAPI } from "../../../services/api";
 import "../../../styles/pages/dashboard/users/User.css";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -77,73 +78,75 @@ const UserForm = ({ user, onClose, onUserUpdated, roles = [] }) => {
     <>
       {/* Removed inline error display */}
 
-      <form onSubmit={handleSubmit} className="user-management-form">
-        <div className="user-management-form-group">
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
-            }
-            className="user-management-form-input"
-            placeholder="Enter Consumer Name"
-            required
-          />
-        </div>
-
-        <div className="user-management-form-group">
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            className="user-management-form-input"
-            placeholder="Enter Email"
-            required
-          />
-        </div>
-
-        {!user && (
-          <div className="user-management-form-group">
+      <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <input
-              type="password"
-              name="password"
-              value={formData.password}
+              type="text"
+              name="username"
+              value={formData.username}
               onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
+                setFormData({ ...formData, username: e.target.value })
               }
-              className="user-management-form-input"
-              placeholder="Password"
-              required={!user}
+              className="insurance-form-input"
+              placeholder="Enter Consumer Name"
+              required
             />
           </div>
-        )}
 
-        <div className="user-management-form-group">
-          <select
-            name="status"
-            value={formData.status}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value })
-            }
-            className="user-management-form-input"
-            placeholder="Status"
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+          <div className="insurance-form-group">
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="insurance-form-input"
+              placeholder="Enter Email"
+              required
+            />
+          </div>
+
+          {!user && (
+            <div className="insurance-form-group">
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="insurance-form-input"
+                placeholder="Password"
+                required={!user}
+              />
+            </div>
+          )}
+
+          <div className="insurance-form-group">
+            <select
+              name="status"
+              value={formData.status}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
+              className="insurance-form-input"
+              placeholder="Status"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
         </div>
 
-        <div className="user-management-form-actions">
-          <button type="button" className="btn btn-outlined" onClick={onClose}>
+        <div className="insurance-form-actions">
+          <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
-          </button>
-          <button type="submit" className="btn btn-contained">
+          </Button>
+          <Button type="submit" variant="contained">
             {user ? "Update" : "Create"}
-          </button>
+          </Button>
         </div>
       </form>
     </>

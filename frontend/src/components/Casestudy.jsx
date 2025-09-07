@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import "../styles/components/Casestudy.css";
 import gallery1 from "../../src/assets/gallery-1-1.jpg";
 import gallery2 from "../../src/assets/gallery-1-2.jpg";
@@ -11,6 +11,12 @@ import gallery8 from "../../src/assets/gallery-1-8.jpg";
 import { FaEye } from 'react-icons/fa';
 
 const Casestudy = () => {
+  const [loadedImages, setLoadedImages] = useState(new Set());
+
+  const handleImageLoad = (imageSrc) => {
+    setLoadedImages(prev => new Set([...prev, imageSrc]));
+  };
+
   const images = [
     { src: gallery1, title: 'Initial Consultation', subtitle: 'Family Law' },
     { src: gallery2, title: 'Legal Advice', subtitle: 'Divorce Cases' },
@@ -29,7 +35,36 @@ const Casestudy = () => {
         <div className="image-grid">
           {images.map((image, index) => (
             <div className="image-container" key={index}>
-              <img src={image.src} alt={image.title} />
+              {!loadedImages.has(image.src) && (
+                <div 
+                  style={{
+                    backgroundColor: '#f0f0f0',
+                    filter: 'grayscale(100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#999',
+                    fontSize: '12px',
+                    width: '100%',
+                    height: '100%',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0
+                  }}
+                >
+                </div>
+              )}
+              <img 
+                src={image.src} 
+                alt={image.title} 
+                onLoad={() => handleImageLoad(image.src)}
+                style={{
+                  display: loadedImages.has(image.src) ? 'block' : 'none',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
               <div className="overlay">
                 <button className="eye-button"><FaEye /></button>
                 <span className="overlay-text">{image.title}</span>

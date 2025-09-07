@@ -15,6 +15,7 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
+import "../../../styles/components/StatCards.css";
 import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
@@ -184,9 +185,9 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="vendor-management-form">
-        <div className="vendor-management-form-grid">
-          <div className="vendor-management-form-group">
+      <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="name"
@@ -194,11 +195,11 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
               onChange={handleChange}
               placeholder="Consumer Name"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <input
               type="email"
               name="email"
@@ -206,11 +207,11 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
               onChange={handleChange}
               placeholder="Email"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <PhoneInput
               international
               defaultCountry="IN"
@@ -220,7 +221,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
               }
               placeholder="Enter phone number"
               required
-              className="vendor-management-form-input phone-input-custom"
+              className="insurance-form-input phone-input-custom"
               flags={flags}
               countrySelectProps={{
                 className: "phone-input-country-select",
@@ -228,14 +229,14 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
             />
           </div>
 
-          <div className="vendor-management-form-group">
+          <div className="insurance-form-group">
             <textarea
               name="contact_address"
               value={formData.contact_address}
               onChange={handleChange}
               placeholder="Contact Address"
               required
-              className="vendor-management-form-input"
+              className="insurance-form-input"
               rows="3"
             />
           </div>
@@ -243,7 +244,7 @@ const ConsumerForm = ({ consumer, onClose, onConsumerUpdated }) => {
 
         </div>
 
-        <div className="vendor-management-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
