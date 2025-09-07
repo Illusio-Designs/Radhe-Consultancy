@@ -33,6 +33,7 @@ import PlanManagement from "../pages/dashboard/compliance/PlanManagement";
 import StabilityManagement from "../pages/dashboard/compliance/StabilityManagement";
 import DSC from "../pages/dashboard/dsc/DSC";
 import DSCLogs from "../pages/dashboard/logs/DSCLogs";
+import RenewalDashboard from "../pages/dashboard/renewals/RenewalDashboard";
 import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
 import RenewalList from "../pages/dashboard/renewals/RenewalList";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
@@ -144,6 +145,8 @@ function DashboardLayout() {
         return <DSC searchQuery={searchQuery} />;
       case "/dashboard/dsc/logs":
         return <DSCLogs searchQuery={searchQuery} />;
+      case "/dashboard/renewals/dashboard":
+        return <RenewalDashboard />;
       case "/dashboard/renewals/manager":
         return <RenewalManager searchQuery={searchQuery} />;
       case "/dashboard/renewals/list":

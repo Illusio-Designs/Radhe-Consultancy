@@ -740,7 +740,7 @@ async function setupRenewalSystem() {
         `);
         
         const columnNames = columns.map(col => col.COLUMN_NAME);
-        const requiredColumns = ['id', 'service_type', 'service_name', 'reminder_times', 'reminder_days', 'is_active', 'created_by', 'updated_by', 'created_at', 'updated_at'];
+        const requiredColumns = ['id', 'service_type', 'service_name', 'reminder_times', 'reminder_days', 'reminder_intervals', 'is_active', 'created_by', 'updated_by', 'created_at', 'updated_at'];
         
         const missingColumns = requiredColumns.filter(col => !columnNames.includes(col));
         
@@ -768,6 +768,16 @@ async function setupRenewalSystem() {
           console.log('✅ renewal_configs table recreated with correct structure');
         } else {
           console.log('✅ renewal_configs table structure is correct');
+          
+          // Check if reminder_intervals column exists, if not add it
+          if (!columnNames.includes('reminder_intervals')) {
+            console.log('📋 Adding reminder_intervals column to renewal_configs table...');
+            await sequelize.query(`
+              ALTER TABLE renewal_configs 
+              ADD COLUMN reminder_intervals JSON AFTER reminder_days
+            `);
+            console.log('✅ reminder_intervals column added successfully');
+          }
         }
       } catch (error) {
         console.log('⚠️ Error checking table structure:', error.message);
@@ -865,14 +875,14 @@ async function setupRenewalSystem() {
     // Create default renewal configurations if they don't exist
     console.log('📋 Setting up default renewal configurations...');
     const defaultConfigs = [
-      { serviceType: 'vehicle', serviceName: 'Vehicle Insurance', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'ecp', serviceName: 'Employee Compensation Policy', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'health', serviceName: 'Health Insurance', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'fire', serviceName: 'Fire Insurance', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'dsc', serviceName: 'Digital Signature Certificate', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'factory', serviceName: 'Factory Quotation', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'labour_inspection', serviceName: 'Labour Inspection', reminderTimes: 5, reminderDays: 15 },
-      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30 }
+      { serviceType: 'vehicle', serviceName: 'Vehicle Insurance', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'ecp', serviceName: 'Employee Compensation Policy', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'health', serviceName: 'Health Insurance', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'fire', serviceName: 'Fire Insurance', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'dsc', serviceName: 'Digital Signature Certificate', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'factory', serviceName: 'Factory Quotation', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'labour_inspection', serviceName: 'Labour Inspection', reminderTimes: 5, reminderDays: 15, reminderIntervals: [15, 10, 7, 3, 1] },
+      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] }
     ];
     
     for (const config of defaultConfigs) {
@@ -887,12 +897,21 @@ async function setupRenewalSystem() {
             serviceName: config.serviceName,
             reminderTimes: config.reminderTimes,
             reminderDays: config.reminderDays,
+            reminderIntervals: config.reminderIntervals,
             createdBy: 1, // Admin user ID
             isActive: true
           });
           console.log(`✅ Created default config for ${config.serviceName}`);
         } else {
-          console.log(`⏭️ Config for ${config.serviceName} already exists`);
+          // Check if existing config needs reminderIntervals update
+          if (!existingConfig.reminderIntervals) {
+            await existingConfig.update({
+              reminderIntervals: config.reminderIntervals
+            });
+            console.log(`✅ Updated ${config.serviceName} with reminder intervals`);
+          } else {
+            console.log(`⏭️ Config for ${config.serviceName} already exists`);
+          }
         }
       } catch (error) {
         console.log(`⚠️ Error creating config for ${config.serviceName}:`, error.message);

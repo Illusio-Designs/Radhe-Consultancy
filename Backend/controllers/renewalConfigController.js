@@ -424,102 +424,8 @@ const getListByTypeAndPeriod = async (req, res) => {
   }
 };
 
-// Get live renewal counts and upcoming renewals for dashboard
-exports.getLiveRenewalData = async (req, res) => {
-  try {
-    const today = new Date();
-    
-    // Get all active renewal configs
-    const configs = await RenewalConfig.findAll({
-      where: { isActive: true }
-    });
-
-    const liveData = {};
-
-    for (const config of configs) {
-      try {
-        let upcomingCount = 0;
-        let expiringThisWeek = 0;
-        let expiringNextWeek = 0;
-        let expiringThisMonth = 0;
-
-        switch (config.serviceType) {
-          case 'labour_inspection':
-            const inspectionData = await getLabourInspectionLiveData(config, today);
-            upcomingCount = inspectionData.upcomingCount;
-            expiringThisWeek = inspectionData.expiringThisWeek;
-            expiringNextWeek = inspectionData.expiringNextWeek;
-            expiringThisMonth = inspectionData.expiringThisMonth;
-            break;
-
-          case 'labour_license':
-            const licenseData = await getLabourLicenseLiveData(config, today);
-            upcomingCount = licenseData.upcomingCount;
-            expiringThisWeek = licenseData.expiringThisWeek;
-            expiringNextWeek = licenseData.expiringNextWeek;
-            expiringThisMonth = licenseData.expiringThisMonth;
-            break;
-
-          case 'vehicle':
-            const vehicleData = await getVehiclePolicyLiveData(config, today);
-            upcomingCount = vehicleData.upcomingCount;
-            expiringThisWeek = vehicleData.expiringThisWeek;
-            expiringNextWeek = vehicleData.expiringNextWeek;
-            expiringThisMonth = vehicleData.expiringThisMonth;
-            break;
-
-          // Add other service types as needed
-        }
-
-        liveData[config.serviceType] = {
-          serviceName: config.serviceName,
-          upcomingCount,
-          expiringThisWeek,
-          expiringNextWeek,
-          expiringThisMonth,
-          reminderDays: config.reminderDays,
-          reminderTimes: config.reminderTimes,
-          reminderIntervals: config.reminderIntervals || []
-        };
-
-      } catch (error) {
-        console.error(`Error getting live data for ${config.serviceType}:`, error);
-        liveData[config.serviceType] = {
-          serviceName: config.serviceName,
-          error: 'Failed to fetch data'
-        };
-      }
-    }
-
-    // Calculate totals
-    const totals = {
-      totalUpcoming: Object.values(liveData).reduce((sum, data) => sum + (data.upcomingCount || 0), 0),
-      totalExpiringThisWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisWeek || 0), 0),
-      totalExpiringNextWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringNextWeek || 0), 0),
-      totalExpiringThisMonth: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisMonth || 0), 0)
-    };
-
-    res.json({
-      success: true,
-      data: {
-        services: liveData,
-        totals,
-        lastUpdated: new Date().toISOString()
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching live renewal data:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch live renewal data',
-      error: error.message
-    });
-  }
-};
-
 // Helper function to get labour inspection live data
-async function getLabourInspectionLiveData(config, today) {
+const getLabourInspectionLiveData = async (config, today) => {
   const { Op } = require('sequelize');
   const { LabourInspection } = require('../models');
 
@@ -582,10 +488,10 @@ async function getLabourInspectionLiveData(config, today) {
   ]);
 
   return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
-}
+};
 
 // Helper function to get labour license live data
-async function getLabourLicenseLiveData(config, today) {
+const getLabourLicenseLiveData = async (config, today) => {
   const { Op } = require('sequelize');
   const { LabourLicense } = require('../models');
 
@@ -648,10 +554,10 @@ async function getLabourLicenseLiveData(config, today) {
   ]);
 
   return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
-}
+};
 
 // Helper function to get vehicle policy live data
-async function getVehiclePolicyLiveData(config, today) {
+const getVehiclePolicyLiveData = async (config, today) => {
   const { Op } = require('sequelize');
   const { VehiclePolicy } = require('../models');
 
@@ -710,7 +616,105 @@ async function getVehiclePolicyLiveData(config, today) {
   ]);
 
   return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
-}
+};
+
+// Get live renewal counts and upcoming renewals for dashboard
+const getLiveRenewalData = async (req, res) => {
+  try {
+    const today = new Date();
+    
+    // Get all active renewal configs (exclude reminderIntervals if column doesn't exist)
+    const configs = await RenewalConfig.findAll({
+      where: { isActive: true },
+      attributes: {
+        exclude: ['reminderIntervals'] // Temporarily exclude this field
+      }
+    });
+
+    const liveData = {};
+
+    for (const config of configs) {
+      try {
+        let upcomingCount = 0;
+        let expiringThisWeek = 0;
+        let expiringNextWeek = 0;
+        let expiringThisMonth = 0;
+
+        switch (config.serviceType) {
+          case 'labour_inspection':
+            const inspectionData = await getLabourInspectionLiveData(config, today);
+            upcomingCount = inspectionData.upcomingCount;
+            expiringThisWeek = inspectionData.expiringThisWeek;
+            expiringNextWeek = inspectionData.expiringNextWeek;
+            expiringThisMonth = inspectionData.expiringThisMonth;
+            break;
+
+          case 'labour_license':
+            const licenseData = await getLabourLicenseLiveData(config, today);
+            upcomingCount = licenseData.upcomingCount;
+            expiringThisWeek = licenseData.expiringThisWeek;
+            expiringNextWeek = licenseData.expiringNextWeek;
+            expiringThisMonth = licenseData.expiringThisMonth;
+            break;
+
+          case 'vehicle':
+            const vehicleData = await getVehiclePolicyLiveData(config, today);
+            upcomingCount = vehicleData.upcomingCount;
+            expiringThisWeek = vehicleData.expiringThisWeek;
+            expiringNextWeek = vehicleData.expiringNextWeek;
+            expiringThisMonth = vehicleData.expiringThisMonth;
+            break;
+
+          // Add other service types as needed
+        }
+
+        liveData[config.serviceType] = {
+          serviceName: config.serviceName,
+          upcomingCount,
+          expiringThisWeek,
+          expiringNextWeek,
+          expiringThisMonth,
+          reminderDays: config.reminderDays,
+          reminderTimes: config.reminderTimes,
+          reminderIntervals: config.reminderIntervals || (config.serviceType === 'labour_inspection' ? [15, 10, 7, 3, 1] : [30, 21, 14, 7, 1])
+        };
+
+      } catch (error) {
+        console.error(`Error getting live data for ${config.serviceType}:`, error);
+        liveData[config.serviceType] = {
+          serviceName: config.serviceName,
+          error: 'Failed to fetch data'
+        };
+      }
+    }
+
+    // Calculate totals
+    const totals = {
+      totalUpcoming: Object.values(liveData).reduce((sum, data) => sum + (data.upcomingCount || 0), 0),
+      totalExpiringThisWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisWeek || 0), 0),
+      totalExpiringNextWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringNextWeek || 0), 0),
+      totalExpiringThisMonth: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisMonth || 0), 0)
+    };
+
+    res.json({
+      success: true,
+      data: {
+        services: liveData,
+        totals,
+        lastUpdated: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching live renewal data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch live renewal data',
+      error: error.message
+    });
+  }
+};
+
 
 module.exports = {
   getAllConfigs,

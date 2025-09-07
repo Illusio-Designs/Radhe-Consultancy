@@ -86,6 +86,11 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
         toggle: () => handleDropdownToggle("renewals"),
         items: [
           {
+            path: "/dashboard/renewals/dashboard",
+            icon: <LayoutDashboard />,
+            label: "Renewal Dashboard",
+          },
+          {
             path: "/dashboard/renewals/list",
             icon: <RefreshCw />,
             label: "Renewal List",

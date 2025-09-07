@@ -501,7 +501,7 @@ exports.generatePDF = async (req, res) => {
       phone: quotation.phone,
       email: quotation.email,
       date: new Date(quotation.createdAt).toLocaleDateString('en-GB'),
-      calculatedAmount: quotation.calculatedAmount || quotation.totalAmount,
+      calculatedAmount: (quotation.calculatedAmount || 0) * (quotation.year || 1),
       // Additional charges
       planCharge: quotation.planCharge || 0,
       stabilityCertificateAmount: quotation.stabilityCertificateAmount || 0,
@@ -514,7 +514,7 @@ exports.generatePDF = async (req, res) => {
           workers: `${quotation.noOfWorkers || quotation.numberOfWorkers || 'N/A'} Workers`,
           hoursPower: `${quotation.horsePower || 'N/A'} HP`,
           year: `${quotation.year || 'N/A'} Year(s)`,
-          total: (quotation.calculatedAmount || quotation.totalAmount || 0).toString()
+          total: ((quotation.calculatedAmount || 0) * (quotation.year || 1)).toString()
         }
       ]
     };
