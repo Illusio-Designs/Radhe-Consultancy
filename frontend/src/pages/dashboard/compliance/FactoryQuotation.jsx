@@ -1,7 +1,7 @@
 // This file is now FactoryQuotation.jsx
 import React, { useState, useEffect } from "react";
 import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload, BiShield, BiTrendingUp, BiCalendar } from "react-icons/bi";
-import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI, applicationManagementAPI, companyAPI } from "../../../services/api";
+import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI, applicationManagementAPI, companyAPI, renewalStatusAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
 import ActionButton from "../../../components/common/ActionButton/ActionButton";
@@ -83,7 +83,7 @@ const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => 
       if (error.message?.includes('already exists')) {
         toast.error('Plan manager already assigned to this quotation');
       } else {
-        toast.error('Failed to assign plan manager');
+      toast.error('Failed to assign plan manager');
       }
     } finally {
       setLoading(false);
@@ -216,7 +216,6 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
 // Application Approval Modal
 const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplication }) => {
   const [applicationDate, setApplicationDate] = useState(currentApplication?.application_date || '');
-  const [expiryDate, setExpiryDate] = useState(currentApplication?.expiry_date || '');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -233,8 +232,9 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
 
     setLoading(true);
     try {
-      await onApprove(files, applicationDate, expiryDate);
+      await onApprove(files, applicationDate);
       toast.success('Application approved successfully');
+      onClose(); // Close modal after successful approval
     } catch (error) {
       toast.error('Failed to approve application');
     } finally {
@@ -378,7 +378,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
     owner_address: '',
     designation: '',
     company_address: '',
-    contact_number: '',
+    contact_number: '+91',
     company_email: '',
     gst_number: '',
     pan_number: '',
@@ -389,6 +389,44 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
     type_of_company: '',
     company_website: ''
   });
+
+  // Backend renewal modal fields
+  const [renewalData, setRenewalData] = useState({
+    upload_option: null,
+    expiry_date: ''
+  });
+
+  // Ensure phone number starts with +91 for India
+  useEffect(() => {
+    if (!formData.contact_number || !formData.contact_number.startsWith('+91')) {
+      setFormData(prev => ({
+        ...prev,
+        contact_number: '+91'
+      }));
+    }
+  }, []);
+
+  // Populate form data when renewal modal opens
+  useEffect(() => {
+    if (isOpen && quotation) {
+      setFormData({
+        company_name: quotation.companyName || '',
+        company_code: quotation.companyCode || quotation.company_code || '',
+        owner_name: quotation.ownerName || '',
+        owner_address: quotation.ownerAddress || '',
+        designation: quotation.designation || '',
+        company_address: quotation.companyAddress || '',
+        contact_number: quotation.phone || '+91',
+        company_email: quotation.email || '',
+        gst_number: quotation.gstNumber || '',
+        pan_number: quotation.panNumber || '',
+        firm_type: quotation.firmType || '',
+        nature_of_work: quotation.natureOfWork || '',
+        type_of_company: quotation.typeOfCompany || '',
+        company_website: quotation.companyWebsite || ''
+      });
+    }
+  }, [isOpen, quotation]);
 
   const [files, setFiles] = useState({
     gst_document: null,
@@ -402,29 +440,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
 
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (quotation && isOpen) {
-      // Pre-fill form data from factory quotation
-      setFormData({
-        company_name: quotation.companyName || '',
-        company_code: '',
-        owner_name: quotation.companyName || '', // Using company name as owner name
-        owner_address: quotation.companyAddress || '',
-        designation: '',
-        company_address: quotation.companyAddress || '',
-        contact_number: quotation.phone || '',
-        company_email: quotation.email || '',
-        gst_number: '',
-        pan_number: '',
-        firm_type: '',
-        nature_of_work: '',
-        factory_license_number: '',
-        labour_license_number: '',
-        type_of_company: '',
-        company_website: ''
-      });
-    }
-  }, [quotation, isOpen]);
+
 
   const validateGST = (gst) => {
     // Remove any spaces and convert to uppercase
@@ -673,11 +689,46 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
           renewal_date: new Date().toISOString()
         });
         
+        // Create renewal status record
+        try {
+          // Create FormData for renewal status with files
+          const renewalFormData = new FormData();
+          renewalFormData.append('factory_quotation_id', quotation.id);
+          renewalFormData.append('expiry_date', renewalData.expiry_date);
+          
+          // Append files if they exist
+          if (renewalData.upload_option && renewalData.upload_option.length > 0) {
+            renewalData.upload_option.forEach(file => {
+              renewalFormData.append('files', file);
+            });
+          }
+          
+          await renewalStatusAPI.createRenewalStatus(renewalFormData);
+          console.log('Renewal status record created successfully');
+          
+          // Update application status to 'renewal' if it exists
+          if (quotation.applicationManagement) {
+            try {
+              await applicationManagementAPI.updateApplicationStatus(
+                quotation.applicationManagement.id, 
+                { status: 'renewal' }
+              );
+              console.log('Application status updated to renewal');
+            } catch (appError) {
+              console.error('Error updating application status:', appError);
+            }
+          }
+        } catch (renewalError) {
+          console.error('Error creating renewal status record:', renewalError);
+          // Don't fail the entire process if renewal status creation fails
+        }
+        
         const message = existingCompany 
           ? 'Renewal created successfully! Existing company has been updated.'
           : 'Renewal created successfully! New company/Vendor account has been created.';
         
         toast.success(message);
+        
         onRenewalCreated();
         onClose();
       } else {
@@ -809,6 +860,11 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 countrySelectProps={{
                   className: "phone-input-country-select"
                 }}
+                addInternationalOption={false}
+                limitMaxLength={true}
+                maxLength={15}
+                preferredCountries={['IN']}
+                countries={['IN', 'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'JP', 'CN', 'BR']}
               />
             </div>
 
@@ -969,6 +1025,40 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="Company Website (Optional)"
                 className="insurance-form-input"
+              />
+            </div>
+
+            {/* Backend Renewal Modal Fields */}
+            <div className="vendor-management-form-group">
+              <label>Upload Option:</label>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => {
+                  const selectedFiles = Array.from(e.target.files);
+                  setRenewalData(prev => ({
+                    ...prev,
+                    upload_option: selectedFiles
+                  }));
+                }}
+                className="vendor-management-form-input"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+              />
+              <small className="text-gray-500">
+                Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each)
+              </small>
+            </div>
+
+            <div className="vendor-management-form-group">
+              <label>Expiry Date:</label>
+              <input
+                type="date"
+                value={renewalData.expiry_date}
+                onChange={(e) => setRenewalData(prev => ({
+                  ...prev,
+                  expiry_date: e.target.value
+                }))}
+                className="vendor-management-form-input"
               />
             </div>
           </div>
@@ -1780,7 +1870,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         // Close modal if plan already exists
         setShowPlanManagerModal(false);
       } else {
-        toast.error('Failed to assign plan manager');
+      toast.error('Failed to assign plan manager');
       }
     }
   };
@@ -1813,7 +1903,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         // Close modal if stability management already exists
         setShowStabilityManagerModal(false);
       } else {
-        toast.error('Failed to assign stability manager');
+      toast.error('Failed to assign stability manager');
       }
     }
   };
@@ -1865,15 +1955,12 @@ function FactoryQuotation({ searchQuery = "" }) {
 
 
   // Handle application status change
-  const handleApplicationStatusChange = async (applicationId, newStatus, applicationDate, expiryDate, remarks) => {
+  const handleApplicationStatusChange = async (applicationId, newStatus, applicationDate, remarks) => {
     try {
       const updateData = { status: newStatus };
       
       if (newStatus === 'Approved' && applicationDate) {
         updateData.application_date = applicationDate;
-        if (expiryDate) {
-          updateData.expiry_date = expiryDate;
-        }
       }
       
       if (newStatus === 'Reject' && remarks) {
@@ -1891,13 +1978,12 @@ function FactoryQuotation({ searchQuery = "" }) {
   };
 
   // Handle application file upload
-  const handleApplicationFileUpload = async (applicationId, files, applicationDate, expiryDate) => {
+  const handleApplicationFileUpload = async (applicationId, files, applicationDate) => {
     try {
       // First update status with dates
       await applicationManagementAPI.updateApplicationStatus(applicationId, {
         status: 'Approved',
-        application_date: applicationDate,
-        expiry_date: expiryDate
+        application_date: applicationDate
       });
 
       // Then upload files if any were selected
@@ -2123,45 +2209,46 @@ function FactoryQuotation({ searchQuery = "" }) {
         // If application management record exists
         if (applicationRecord) {
           // If user is compliance manager or admin, show interactive dropdown
-          if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
-            return (
-              <div className="application-status-container">
-                <select
-                  value={applicationRecord.status}
-                  onChange={(e) => {
-                    const newStatus = e.target.value;
-                    if (newStatus === 'Approved') {
-                      // Show modal for dates and files
-                      setSelectedQuotation(quotation);
-                      setShowApplicationModal(true);
-                    } else if (newStatus === 'Reject') {
-                      // Show reject modal
-                      setSelectedQuotation(quotation);
-                      setShowApplicationRejectModal(true);
-                    } else {
-                      // Direct status update
-                      handleApplicationStatusChange(applicationRecord.id, newStatus);
-                    }
-                  }}
-                  className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
-                >
-                  <option value="application">Application</option>
-                  <option value="submit">Submit</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Reject">Reject</option>
-                </select>
-              </div>
-            );
-          }
-          
-          // For other users, show read-only status
+        if (userRoles.includes("compliance_manager") || userRoles.includes("admin")) {
           return (
-            <div>
-              <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
-                {applicationRecord.status}
-              </span>
+            <div className="application-status-container">
+              <select
+                value={applicationRecord.status}
+                onChange={(e) => {
+                  const newStatus = e.target.value;
+                  if (newStatus === 'Approved') {
+                    // Show modal for dates and files
+                    setSelectedQuotation(quotation);
+                    setShowApplicationModal(true);
+                  } else if (newStatus === 'Reject') {
+                    // Show reject modal
+                    setSelectedQuotation(quotation);
+                    setShowApplicationRejectModal(true);
+                  } else {
+                    // Direct status update
+                    handleApplicationStatusChange(applicationRecord.id, newStatus);
+                  }
+                }}
+                className={`status-badge-dropdown ${getStatusBadgeClass(applicationRecord.status)}`}
+              >
+                <option value="application">Application</option>
+                <option value="submit">Submit</option>
+                <option value="Approved">Approved</option>
+                  <option value="renewal">Renewal</option>
+                <option value="Reject">Reject</option>
+              </select>
             </div>
           );
+        }
+        
+        // For other users, show read-only status
+        return (
+          <div>
+            <span className={`status-badge ${getStatusBadgeClass(applicationRecord.status)}`}>
+              {applicationRecord.status}
+            </span>
+          </div>
+        );
         }
         
         // Default case
@@ -2326,8 +2413,8 @@ function FactoryQuotation({ searchQuery = "" }) {
       <ApplicationApprovalModal
         isOpen={showApplicationModal}
         onClose={() => setShowApplicationModal(false)}
-        onApprove={(files, applicationDate, expiryDate) => 
-          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate, expiryDate)
+        onApprove={(files, applicationDate) => 
+          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate)
         }
         currentApplication={selectedQuotation?.applicationManagement}
       />
@@ -2336,7 +2423,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         isOpen={showApplicationRejectModal}
         onClose={() => setShowApplicationRejectModal(false)}
         onReject={(remarks) => 
-          handleApplicationStatusChange(selectedQuotation?.applicationManagement?.id, 'Reject', null, null, remarks)
+          handleApplicationStatusChange(selectedQuotation?.applicationManagement?.id, 'Reject', null, remarks)
         }
       />
 

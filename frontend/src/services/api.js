@@ -2131,6 +2131,33 @@ export const applicationManagementAPI = {
   },
 };
 
+// Renewal Status API
+export const renewalStatusAPI = {
+  // Get all renewal status records
+  getAllRenewalStatus: async () => {
+    const response = await api.get('/renewal-status');
+    return response.data;
+  },
+
+  // Create renewal status record
+  createRenewalStatus: async (data) => {
+    const response = await api.post('/renewal-status', data);
+    return response.data;
+  },
+
+  // Update renewal status record
+  updateRenewalStatus: async (id, data) => {
+    const response = await api.put(`/renewal-status/${id}`, data);
+    return response.data;
+  },
+
+  // Delete renewal status record
+  deleteRenewalStatus: async (id) => {
+    const response = await api.delete(`/renewal-status/${id}`);
+    return response.data;
+  },
+};
+
 
 
 // Vendor API using VendorService
@@ -2191,6 +2218,23 @@ export const vendorAPI = {
       throw error;
     }
   },
+};
+
+// Document Download API
+export const documentDownloadAPI = {
+  // Download a specific document
+  downloadDocument: async (system, recordId, documentType, filename) => {
+    const response = await api.get(`/documents/${system}/${recordId}/${documentType}/${filename}`, {
+      responseType: 'blob'
+    });
+    return response;
+  },
+
+  // Get list of documents for a record
+  getDocumentList: async (system, recordId) => {
+    const response = await api.get(`/documents/${system}/${recordId}`);
+    return response.data;
+  }
 };
 
 export default api;

@@ -22,6 +22,7 @@ import "../../../styles/components/StatCards.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
 // File Upload Modal
 const FileUploadModal = ({ onClose, onUpload }) => {
@@ -708,6 +709,23 @@ const StabilityManagement = ({ searchQuery = "" }) => {
             {formatDate(record.renewal_date)}
           </div>
         ) : "-"
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      sortable: false,
+      render: (_, record) => (
+        <div className="flex items-center gap-2">
+          <DocumentDownload 
+            system="stability-management" 
+            recordId={record.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={record.upload_option ? `/uploads/stability_management/${record.upload_option}` : null}
+            fileName={record.upload_option || 'stability-document.pdf'}
+          />
+        </div>
       ),
     },
   ];

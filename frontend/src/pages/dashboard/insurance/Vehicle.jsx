@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BiPlus,
   BiEdit,
@@ -8,6 +8,7 @@ import {
   BiShield,
   BiTrendingUp,
   BiCalendar,
+  BiDownload,
 } from "react-icons/bi";
 import {
   vehiclePolicyAPI,
@@ -28,6 +29,7 @@ import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
 import Select, { components } from "react-select";
 import { useAuth } from "../../../contexts/AuthContext";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
 // Add CreateInsuranceCompanyModal component
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
@@ -907,6 +909,7 @@ const StatisticsCards = ({ statistics, loading }) => {
 function Vehicle({ searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1104,6 +1107,11 @@ function Vehicle({ searchQuery = "" }) {
     handleModalClose();
   };
 
+  const handleDownloadDocuments = (policy) => {
+    setSelectedPolicy(policy);
+    setShowDocumentModal(true);
+  };
+
   const columns = [
     {
       key: "sr_no",
@@ -1156,6 +1164,14 @@ function Vehicle({ searchQuery = "" }) {
           >
             <BiTrash />
           </ActionButton>
+          <DocumentDownload
+            system="vehicle-policies"
+            recordId={policy.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={policy.policy_document_path ? `/uploads/vehicle_policies/${policy.policy_document_path}` : null}
+            fileName={policy.policy_document_path || 'policy-document.pdf'}
+          />
         </div>
       ),
     },
@@ -1204,6 +1220,14 @@ function Vehicle({ searchQuery = "" }) {
             onPolicyUpdated={handlePolicyUpdated}
           />
         </Modal>
+
+        {/* Document Download Modal */}
+        {showDocumentModal && selectedPolicy && (
+          <DocumentDownload 
+            system="vehicle-policies" 
+            recordId={selectedPolicy.id} 
+          />
+        )}
       </div>
     </div>
   );

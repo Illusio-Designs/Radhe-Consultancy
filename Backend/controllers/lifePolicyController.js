@@ -191,22 +191,22 @@ exports.createPolicy = async (req, res) => {
       
       // Only create log if we have a valid target_user_id
       if (targetUserId) {
-        await UserRoleWorkLog.create({
-          user_id: req.user?.user_id || null,
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
           target_user_id: targetUserId, // Use the company's user_id
-          role_id: null,
-          action: 'created_life_policy',
-          details: JSON.stringify({
-            policy_id: createdPolicy.id,
-            policy_number: createdPolicy.policy_number,
-            customer_type: createdPolicy.customer_type,
-            company_id: createdPolicy.company_id,
-            consumer_id: createdPolicy.consumer_id,
-            sum_assured: createdPolicy.sum_assured,
-            proposer_name: createdPolicy.proposer_name,
-            company_name: companyName
-          })
-        });
+        role_id: null,
+        action: 'created_life_policy',
+        details: JSON.stringify({
+          policy_id: createdPolicy.id,
+          policy_number: createdPolicy.policy_number,
+          customer_type: createdPolicy.customer_type,
+          company_id: createdPolicy.company_id,
+          consumer_id: createdPolicy.consumer_id,
+          sum_assured: createdPolicy.sum_assured,
+          proposer_name: createdPolicy.proposer_name,
+          company_name: companyName
+        })
+      });
       } else {
         console.warn('[Life LOG] Skipping log creation - no valid target_user_id found');
       }
@@ -316,22 +316,22 @@ exports.updatePolicy = async (req, res) => {
       
       // Only create log if we have a valid target_user_id
       if (targetUserId) {
-        await UserRoleWorkLog.create({
-          user_id: req.user?.user_id || null,
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
           target_user_id: targetUserId, // Use the company's user_id
-          role_id: null,
-          action: 'updated_life_policy',
-          details: JSON.stringify({
-            policy_id: updatedPolicy.id,
-            policy_number: updatedPolicy.policy_number,
-            customer_type: updatedPolicy.customer_type,
-            company_id: updatedPolicy.company_id,
-            consumer_id: updatedPolicy.consumer_id,
-            sum_assured: updatedPolicy.sum_assured,
-            proposer_name: updatedPolicy.proposer_name,
-            changes: req.body
-          })
-        });
+        role_id: null,
+        action: 'updated_life_policy',
+        details: JSON.stringify({
+          policy_id: updatedPolicy.id,
+          policy_number: updatedPolicy.policy_number,
+          customer_type: updatedPolicy.customer_type,
+          company_id: updatedPolicy.company_id,
+          consumer_id: updatedPolicy.consumer_id,
+          sum_assured: updatedPolicy.sum_assured,
+          proposer_name: updatedPolicy.proposer_name,
+          changes: req.body
+        })
+      });
       } else {
         console.warn('[Life LOG] Skipping log creation - no valid target_user_id found');
       }
@@ -381,21 +381,21 @@ exports.deletePolicy = async (req, res) => {
       
       // Only create log if we have a valid target_user_id
       if (targetUserId) {
-        await UserRoleWorkLog.create({
-          user_id: req.user?.user_id || null,
+      await UserRoleWorkLog.create({
+        user_id: req.user?.user_id || null,
           target_user_id: targetUserId, // Use the company's user_id
-          role_id: null,
-          action: 'cancelled_life_policy',
-          details: JSON.stringify({
-            policy_id: policy.id,
-            policy_number: policy.policy_number,
-            customer_type: policy.customer_type,
-            company_id: policy.company_id,
-            consumer_id: policy.consumer_id,
-            sum_assured: policy.sum_assured,
-            proposer_name: policy.proposer_name
-          })
-        });
+        role_id: null,
+        action: 'cancelled_life_policy',
+        details: JSON.stringify({
+          policy_id: policy.id,
+          policy_number: policy.policy_number,
+          customer_type: policy.customer_type,
+          company_id: policy.company_id,
+          consumer_id: policy.consumer_id,
+          sum_assured: policy.sum_assured,
+          proposer_name: policy.proposer_name
+        })
+      });
       } else {
         console.warn('[Life LOG] Skipping log creation - no valid target_user_id found');
       }

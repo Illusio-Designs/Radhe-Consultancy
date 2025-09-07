@@ -122,17 +122,21 @@ exports.getLabourLicensesByCompany = async (req, res) => {
 // Create new labour license
 exports.createLabourLicense = async (req, res) => {
   try {
-    const {
-      company_id,
-      license_number,
-      expiry_date
+    const { 
+      company_id, 
+      license_number, 
+      expiry_date, 
+      status,
+      type,
+      remarks 
     } = req.body;
+    const { user } = req;
+    const { files } = req;
 
-    // Validate required fields
-    if (!company_id || !license_number || !expiry_date) {
+    if (!company_id || !license_number || !expiry_date || !type) {
       return res.status(400).json({
         success: false,
-        message: 'Company ID, license number, and expiry date are required'
+        message: 'Company, license number, expiry date, and license type are required'
       });
     }
 
@@ -148,29 +152,37 @@ exports.createLabourLicense = async (req, res) => {
       });
     }
 
-    // Create labour license
-    const license = await LabourLicense.create({
+    // Prepare upload option with file information
+    let uploadOption = null;
+    if (files && files.length > 0) {
+      uploadOption = {
+        files: files.map(file => ({
+          filename: file.filename,
+          originalname: file.originalname,
+          size: file.size,
+          path: file.path
+        })),
+        uploadedAt: new Date().toISOString()
+      };
+    }
+
+    const labourLicense = await LabourLicense.create({
       company_id,
       license_number,
       expiry_date,
-      status: 'active'
+      status: status || 'Active',
+      type: type || 'State',
+      remarks,
+      upload_option: uploadOption ? JSON.stringify(uploadOption) : null,
+      created_by: user.user_id
     });
 
-    // Fetch the created license with company details
-    const createdLicense = await LabourLicense.findByPk(license.license_id, {
-      include: [
-        {
-          model: Company,
-          as: 'company',
-          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
-        }
-      ]
-    });
+    console.log('Labour license created with upload option:', uploadOption);
 
     res.status(201).json({
       success: true,
       message: 'Labour license created successfully',
-      data: createdLicense
+      data: labourLicense
     });
   } catch (error) {
     console.error('Error creating labour license:', error);
@@ -186,61 +198,67 @@ exports.createLabourLicense = async (req, res) => {
 exports.updateLabourLicense = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      company_id,
-      license_number,
-      expiry_date,
-      status
+    const { 
+      company_id, 
+      license_number, 
+      expiry_date, 
+      status,
+      type,
+      remarks 
     } = req.body;
+    const { user } = req;
+    const { files } = req;
 
-    const license = await LabourLicense.findByPk(id);
-    if (!license) {
+    const labourLicense = await LabourLicense.findByPk(id);
+    if (!labourLicense) {
       return res.status(404).json({
         success: false,
         message: 'Labour license not found'
       });
     }
 
-    // Check if license number already exists (if changed)
-    if (license_number && license_number !== license.license_number) {
-      const existingLicense = await LabourLicense.findOne({
-        where: { 
-          license_number,
-          license_id: { [Op.ne]: id }
-        }
-      });
+    const isAdmin = user.roles.includes('Admin');
+    const isCreator = labourLicense.created_by === user.user_id;
 
-      if (existingLicense) {
-        return res.status(400).json({
-          success: false,
-          message: 'License number already exists'
-        });
-      }
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to update this labour license'
+      });
     }
 
-    // Update license
-    await license.update({
-      company_id: company_id || license.company_id,
-      license_number: license_number || license.license_number,
-      expiry_date: expiry_date || license.expiry_date,
-      status: status || license.status
-    });
+    // Prepare upload option with file information if files are provided
+    let uploadOption = null;
+    if (files && files.length > 0) {
+      uploadOption = {
+        files: files.map(file => ({
+          filename: file.filename,
+          originalname: file.originalname,
+          size: file.size,
+          path: file.path
+        })),
+        uploadedAt: new Date().toISOString()
+      };
+    }
 
-    // Fetch updated license with company details
-    const updatedLicense = await LabourLicense.findByPk(id, {
-      include: [
-        {
-          model: Company,
-          as: 'company',
-          attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
-        }
-      ]
-    });
+    // Update the labour license
+    const updateData = {};
+    if (company_id) updateData.company_id = company_id;
+    if (license_number) updateData.license_number = license_number;
+    if (expiry_date) updateData.expiry_date = expiry_date;
+    if (status) updateData.status = status;
+    if (type) updateData.type = type;
+    if (remarks !== undefined) updateData.remarks = remarks;
+    if (uploadOption) updateData.upload_option = JSON.stringify(uploadOption);
+
+    await labourLicense.update(updateData);
+
+    console.log('Labour license updated with upload option:', uploadOption);
 
     res.json({
       success: true,
       message: 'Labour license updated successfully',
-      data: updatedLicense
+      data: labourLicense
     });
   } catch (error) {
     console.error('Error updating labour license:', error);
@@ -430,6 +448,73 @@ exports.getLabourLicenseStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch labour license statistics',
+      error: error.message
+    });
+  }
+};
+
+// Upload labour license documents
+exports.uploadLicenseDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user } = req;
+    const { files } = req;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files uploaded'
+      });
+    }
+
+    const labourLicense = await LabourLicense.findByPk(id);
+    if (!labourLicense) {
+      return res.status(404).json({
+        success: false,
+        message: 'Labour license record not found'
+      });
+    }
+
+    const isAdmin = user.roles.includes('Admin');
+    const isCreator = labourLicense.created_by === user.user_id;
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to upload documents for this labour license record'
+      });
+    }
+
+    // Prepare upload option with file information
+    let uploadOption = {
+      files: files.map(file => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        size: file.size,
+        path: file.path
+      })),
+      uploadedAt: new Date().toISOString()
+    };
+
+    // Update the labour license with new upload option
+    await labourLicense.update({
+      upload_option: JSON.stringify(uploadOption)
+    });
+
+    console.log('Labour license documents uploaded:', uploadOption);
+
+    res.json({
+      success: true,
+      message: 'Labour license documents uploaded successfully',
+      data: {
+        files: uploadOption.files
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading labour license documents:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload labour license documents',
       error: error.message
     });
   }

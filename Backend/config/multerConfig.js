@@ -222,6 +222,76 @@ const applicationStorage = multer.diskStorage({
     }
 });
 
+// Configure storage for renewal documents
+const renewalStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = getUploadDir('renewal');
+        try {
+            console.log('[Multer] Setting destination for renewal document:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype
+            });
+            if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating renewal directory:', uploadDir);
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            console.log('[Multer] Using renewal directory:', uploadDir);
+            cb(null, uploadDir);
+        } catch (error) {
+            console.error('[Multer] Error in renewal destination function:', error);
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `renewal-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename for renewal document:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
+        cb(null, filename);
+    }
+});
+
+// Configure storage for labour license documents
+const licenseStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        const uploadDir = getUploadDir('labour_license');
+        try {
+            console.log('[Multer] Setting destination for labour license document:', {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype
+            });
+            if (!fsSync.existsSync(uploadDir)) {
+                console.log('[Multer] Creating labour license directory:', uploadDir);
+                await fs.mkdir(uploadDir, { recursive: true });
+            }
+            console.log('[Multer] Using labour license directory:', uploadDir);
+            cb(null, uploadDir);
+        } catch (error) {
+            console.error('[Multer] Error in labour license destination function:', error);
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const filename = `license-${uniqueSuffix}${ext}`;
+        console.log('[Multer] Generated filename for labour license document:', {
+            originalname: file.originalname,
+            filename: filename,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype
+        });
+        cb(null, filename);
+    }
+});
+
 // File filter for stability documents
 const stabilityFileFilter = (req, file, cb) => {
     // Allow common document types
@@ -654,6 +724,26 @@ const uploadApplicationFiles = multer({
     }
 }).array('files', 10);
 
+// Create multer upload instance for renewal documents
+const uploadRenewalFiles = multer({
+    storage: renewalStorage,
+    fileFilter,
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files per upload
+    }
+}).array('files', 10);
+
+// Create multer upload instance for labour license documents
+const uploadLicenseFiles = multer({
+    storage: licenseStorage,
+    fileFilter,
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files per upload
+    }
+}).array('files', 10);
+
 // Create multer upload instance for consumer creation (no files, just FormData)
 const uploadConsumerData = multer({
     storage: multer.memoryStorage(), // Use memory storage since we don't need to save files
@@ -731,5 +821,7 @@ module.exports = {
     uploadPlanFiles: uploadPlanFilesWithLogging,
     uploadStabilityFiles: uploadStabilityFilesWithLogging,
     uploadApplicationFiles: uploadApplicationFilesWithLogging,
+    uploadRenewalFiles,
+    uploadLicenseFiles,
     uploadConsumerData: uploadConsumerDataWithLogging
 }; 

@@ -408,9 +408,42 @@ const LabourInspection = ({ searchQuery = "" }) => {
   const handleStatusChange = async (inspectionId, newStatus) => {
     try {
       setUpdatingStatus(prev => ({ ...prev, [inspectionId]: true }));
-      const response = await labourInspectionAPI.updateInspection(inspectionId, { status: newStatus });
+      
+      // Get the current inspection data to check expiry
+      const currentInspection = filteredInspections.find(insp => insp.inspection_id === inspectionId);
+      
+      // Check if email service should be stopped
+      let shouldStopEmails = false;
+      let stopReason = '';
+      
+      if (newStatus === 'complete') {
+        shouldStopEmails = true;
+        stopReason = 'Status marked as complete';
+      } else if (currentInspection && currentInspection.expiry_date) {
+        const expiryDate = new Date(currentInspection.expiry_date);
+        const today = new Date();
+        const daysSinceExpiry = Math.ceil((today - expiryDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceExpiry > 15) {
+          shouldStopEmails = true;
+          stopReason = `Expired more than 15 days ago (${daysSinceExpiry} days)`;
+        }
+      }
+      
+      // Update the inspection status
+      const response = await labourInspectionAPI.updateInspection(inspectionId, { 
+        status: newStatus,
+        email_service_active: !shouldStopEmails // Add this field to track email service status
+      });
+      
       if (response.success) {
         toast.success(`Status updated to ${newStatus} successfully`);
+        
+        // Show notification about email service if stopped
+        if (shouldStopEmails) {
+          toast.info(`Email service stopped: ${stopReason}`);
+        }
+        
         await fetchInspections();
         await fetchStatistics();
       }
@@ -460,11 +493,61 @@ const LabourInspection = ({ searchQuery = "" }) => {
             month: '2-digit',
             year: 'numeric'
           })}</div>
-          <div className="text-sm text-gray-500">
-            Expires: {new Date(value).getTime() + (15 * 24 * 60 * 60 * 1000) > Date.now() ? 'Active' : 'Expired'}
-          </div>
         </div>
       ),
+    },
+    {
+      key: "expiry_date",
+      label: "Expiry Date",
+      sortable: true,
+      render: (value, inspection) => {
+        const expiryDate = new Date(value);
+        const today = new Date();
+        const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+        const isExpired = expiryDate < today;
+        const isExpiringSoon = daysUntilExpiry <= 15 && daysUntilExpiry > 0;
+        const isComplete = inspection.status === 'complete';
+        
+        let statusClass = '';
+        let statusText = '';
+        let emailServiceStatus = '';
+        
+        if (isComplete) {
+          statusClass = 'complete-highlight';
+          statusText = 'COMPLETE';
+          emailServiceStatus = 'Email Service: INACTIVE';
+        } else if (isExpired) {
+          statusClass = 'expired-highlight';
+          statusText = 'EXPIRED';
+          emailServiceStatus = 'Email Service: INACTIVE';
+        } else if (isExpiringSoon) {
+          statusClass = 'expiring-soon-highlight';
+          statusText = `${daysUntilExpiry} days left`;
+          emailServiceStatus = 'Email Service: ACTIVE';
+        } else {
+          statusClass = 'active-highlight';
+          statusText = 'Active';
+          emailServiceStatus = 'Email Service: ACTIVE';
+        }
+        
+        return (
+          <div className={`expiry-date-cell ${statusClass}`}>
+            <div className="expiry-date">
+              {expiryDate.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })}
+            </div>
+            <div className={`expiry-status ${statusClass}`}>
+              {statusText}
+            </div>
+            <div className="email-service-status">
+              {emailServiceStatus}
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: "status",

@@ -3,11 +3,18 @@ import {
   BiPlus,
   BiEdit,
   BiTrash,
-  BiErrorCircle,
+  BiSearch,
+  BiFilter,
+  BiDownload,
   BiUpload,
+  BiFile,
+  BiUser,
+  BiCalendar,
   BiShield,
   BiTrendingUp,
-  BiCalendar,
+  BiErrorCircle,
+  BiCheck,
+  BiX,
 } from "react-icons/bi";
 import {
   employeeCompensationAPI,
@@ -27,6 +34,8 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Select, { components } from "react-select";
 import { useAuth } from "../../../contexts/AuthContext";
+import DocumentDownload from "../../../components/common/DocumentDownload";
+import "../../../styles/pages/dashboard/insurance/Insurance.css";
 
 const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
   const [form, setForm] = useState({ name: "" });
@@ -1162,6 +1171,14 @@ function ECP({ searchQuery = "" }) {
           >
             <BiTrash />
           </ActionButton>
+          <DocumentDownload
+            system="employee-compensation"
+            recordId={policy.id}
+            buttonText="Download"
+            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            filePath={policy.policy_document_path ? `/uploads/employee_policies/${policy.policy_document_path}` : null}
+            fileName={policy.policy_document_path || 'policy-document.pdf'}
+          />
         </div>
       ),
     },

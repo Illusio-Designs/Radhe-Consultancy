@@ -20,6 +20,7 @@ const FactoryQuotation = require("./factoryQuotationModel");
 const PlanManagement = require("./planManagementModel");
 const StabilityManagement = require('./stabilityManagementModel');
 const ApplicationManagement = require('./applicationManagementModel');
+const RenewalStatus = require('./renewalStatusModel');
 const RenewalConfig = require('./renewalConfigModel')(sequelize, require('sequelize').DataTypes);
 const LabourInspection = require('./labourInspectionModel');
 const LabourLicense = require('./labourLicenseModel')(sequelize, require('sequelize').DataTypes);
@@ -53,6 +54,12 @@ ApplicationManagement.belongsTo(FactoryQuotation, { foreignKey: 'factory_quotati
 ApplicationManagement.belongsTo(User, { foreignKey: 'compliance_manager_id', as: 'complianceManager' });
 ApplicationManagement.belongsTo(User, { foreignKey: 'reviewed_by', as: 'reviewer' });
 FactoryQuotation.hasOne(ApplicationManagement, { foreignKey: 'factory_quotation_id', as: 'applicationManagement' });
+
+// Renewal Status Associations
+RenewalStatus.belongsTo(FactoryQuotation, { foreignKey: 'factory_quotation_id', as: 'factoryQuotation' });
+RenewalStatus.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+FactoryQuotation.hasOne(RenewalStatus, { foreignKey: 'factory_quotation_id', as: 'renewalStatus' });
+User.hasMany(RenewalStatus, { foreignKey: 'created_by', as: 'createdRenewalStatuses' });
 
 // Factory Quotation - Company Association
 FactoryQuotation.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -148,6 +155,7 @@ module.exports = {
   PlanManagement,
   StabilityManagement,
   ApplicationManagement,
+  RenewalStatus,
   RenewalConfig,
   LabourInspection,
   LabourLicense,

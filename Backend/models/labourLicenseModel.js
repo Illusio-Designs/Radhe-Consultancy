@@ -29,6 +29,12 @@ module.exports = (sequelize) => {
       defaultValue: 'active',
       comment: 'Current status of the license'
     },
+    type: {
+      type: DataTypes.ENUM('Central', 'State'),
+      allowNull: false,
+      defaultValue: 'State',
+      comment: 'Type of labour license - Central or State'
+    },
 
 
   }, {

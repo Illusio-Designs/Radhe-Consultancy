@@ -1,5 +1,8 @@
 const { LabourInspection, Company, User, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const EmailService = require('../services/emailService');
+
+const emailService = new EmailService();
 
 // Create new labour inspection
 const createLabourInspection = async (req, res) => {
@@ -246,7 +249,8 @@ const updateLabourInspection = async (req, res) => {
       date_of_notice,
       officer_name,
       remarks,
-      status
+      status,
+      email_service_active
     } = req.body;
 
     // Find the labour inspection
@@ -258,6 +262,24 @@ const updateLabourInspection = async (req, res) => {
       });
     }
 
+    // Check if email service should be stopped
+    let shouldStopEmails = false;
+    let stopReason = '';
+    
+    if (status === 'complete') {
+      shouldStopEmails = true;
+      stopReason = 'Status marked as complete';
+    } else if (labourInspection.expiry_date) {
+      const expiryDate = new Date(labourInspection.expiry_date);
+      const today = new Date();
+      const daysSinceExpiry = Math.ceil((today - expiryDate) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceExpiry > 15) {
+        shouldStopEmails = true;
+        stopReason = `Expired more than 15 days ago (${daysSinceExpiry} days)`;
+      }
+    }
+
     // Prepare update data
     const updateData = {
       company_id,
@@ -266,7 +288,8 @@ const updateLabourInspection = async (req, res) => {
       date_of_notice,
       officer_name,
       remarks,
-      status
+      status,
+      email_service_active: !shouldStopEmails // Stop email service if conditions are met
     };
 
     // If date_of_notice is being updated, recalculate expiry_date
@@ -286,10 +309,17 @@ const updateLabourInspection = async (req, res) => {
     // Update the labour inspection
     await labourInspection.update(updateData);
 
+    // Log email service status
+    if (shouldStopEmails) {
+      console.log(`[LabourInspection] Email service stopped for inspection ${id}: ${stopReason}`);
+    }
+
     res.json({
       success: true,
       message: 'Labour inspection updated successfully',
-      data: labourInspection
+      data: labourInspection,
+      emailServiceStopped: shouldStopEmails,
+      stopReason: shouldStopEmails ? stopReason : null
     });
   } catch (error) {
     console.error('Error updating labour inspection:', error);
