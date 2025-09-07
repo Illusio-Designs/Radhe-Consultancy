@@ -56,6 +56,5 @@
 
 /* Firefox scrollbar styles */
 .table-container {
-  scrollbar-width: thin;
-  scrollbar-color: #c1c1c1 #f1f1f1;
+  scrollbar-width: none;
 }

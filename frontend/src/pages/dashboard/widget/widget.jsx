@@ -236,113 +236,134 @@ const WidgetPage = () => {
           title="Upload File"
           size="md"
         >
-          <div className="upload-modal-content">
-            <Input
-              type="text"
-              label="Title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              required
-              placeholder="Enter document title"
-            />
-            
-            <Input
-              type="textarea"
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Enter document description"
-            />
-
-            <Dropdown
-              label="Category"
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              options={[
-                { value: 'documents', label: 'Documents' },
-                { value: 'images', label: 'Images' },
-                { value: 'contracts', label: 'Contracts' },
-                { value: 'reports', label: 'Reports' },
-                { value: 'other', label: 'Other' }
-              ]}
-              placeholder="Select category"
-            />
-
-            <Input
-              type="text"
-              label="Tags"
-              name="tags"
-              value={formData.tags}
-              onChange={handleInputChange}
-              placeholder="Enter tags (comma separated)"
-              helperText="Separate tags with commas"
-            />
-
-            <DatePicker
-              selected={formData.expiryDate}
-              onChange={(date) => setFormData(prev => ({ ...prev, expiryDate: date }))}
-              placeholderText="Select expiry date (optional)"
-              className="datepicker-input"
-              label="Expiry Date"
-            />
-
-            <div className="form-group">
-              <label className="checkbox-label">
+          <div className="insurance-form">
+            <div className="insurance-form-grid">
+              <div className="insurance-form-group">
                 <input
-                  type="checkbox"
-                  name="isPublic"
-                  checked={formData.isPublic}
+                  type="text"
+                  name="title"
+                  value={formData.title}
                   onChange={handleInputChange}
+                  required
+                  placeholder="Enter document title"
+                  className="insurance-form-input"
                 />
-                Make file public
-              </label>
-            </div>
+              </div>
+              
+              <div className="insurance-form-group">
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Enter document description"
+                  className="insurance-form-input"
+                  rows="3"
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="radio-group-label">Priority Level</label>
-              <div className="radio-group">
-                {['low', 'medium', 'high'].map(priority => (
-                  <label key={priority} className="radio-label">
-                    <input
-                      type="radio"
-                      name="priority"
-                      value={priority}
-                      checked={formData.priority === priority}
-                      onChange={handleInputChange}
-                    />
-                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                  </label>
-                ))}
+              <div className="insurance-form-group">
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="insurance-form-input"
+                >
+                  <option value="">Select category</option>
+                  <option value="documents">Documents</option>
+                  <option value="images">Images</option>
+                  <option value="contracts">Contracts</option>
+                  <option value="reports">Reports</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="insurance-form-group">
+                <input
+                  type="text"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleInputChange}
+                  placeholder="Enter tags (comma separated)"
+                  className="insurance-form-input"
+                />
+                <small className="text-gray-500">Separate tags with commas</small>
+              </div>
+
+              <div className="insurance-form-group">
+                <DatePicker
+                  selected={formData.expiryDate}
+                  onChange={(date) => setFormData(prev => ({ ...prev, expiryDate: date }))}
+                  placeholderText="Select expiry date (optional)"
+                  className="insurance-form-input"
+                />
+              </div>
+
+              <div className="insurance-form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="isPublic"
+                    checked={formData.isPublic}
+                    onChange={handleInputChange}
+                  />
+                  Make file public
+                </label>
+              </div>
+
+              <div className="insurance-form-group">
+                <label className="radio-group-label">Priority Level</label>
+                <div className="radio-group">
+                  {['low', 'medium', 'high'].map(priority => (
+                    <label key={priority} className="radio-label">
+                      <input
+                        type="radio"
+                        name="priority"
+                        value={priority}
+                        checked={formData.priority === priority}
+                        onChange={handleInputChange}
+                      />
+                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="file-upload-group">
+                <label className="file-upload-label">Choose File</label>
+                <div className="file-upload-container">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,image/*"
+                    onChange={handleFileSelect}
+                    className="file-upload-input"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    className="file-upload-button"
+                    onClick={() => document.querySelector('input[type="file"]').click()}
+                  >
+                    Choose File
+                  </Button>
+                </div>
+                <small className="text-gray-500">Supported formats: PDF, DOC, DOCX, Images</small>
+              </div>
+
+              <div className="insurance-form-group">
+                <PhoneNumberInput
+                  value={formData.phoneNumber}
+                  onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value }))}
+                />
               </div>
             </div>
 
-            <Input
-              type="file"
-              label="Choose File"
-              accept=".pdf,.doc,.docx,image/*"
-              onFileSelect={handleFileSelect}
-              helperText="Supported formats: PDF, DOC, DOCX, Images"
-              required
-            />
-
-            {/* Phone Number Field with Country Flags */}
-            <div className="form-group">
-              <label htmlFor="phoneNumber">Phone Number</label>
-              <PhoneNumberInput
-                value={formData.phoneNumber}
-                onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value }))}
-              />
-            </div>
-
-            <div className="modal-actions">
-              <Button onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
+            <div className="insurance-form-actions">
+              <Button onClick={() => setIsUploadModalOpen(false)} variant="outlined">Cancel</Button>
               <Button 
                 onClick={handleUpload} 
                 disabled={!selectedFile || !formData.title}
-                variant="primary"
+                variant="contained"
               >
                 Upload
               </Button>

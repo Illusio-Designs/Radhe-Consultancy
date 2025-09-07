@@ -10,6 +10,7 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
 import "../../../styles/pages/dashboard/labour/Labour.css";
+import "../../../styles/components/StatCards.css";
 import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiTrash, BiShield, BiTrendingUp, BiCalendar, BiCheckCircle, BiDownload } from "react-icons/bi";
 import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
@@ -615,17 +616,16 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="company_id">Company *</label>
+    <form onSubmit={handleSubmit} className="insurance-form">
+      <div className="insurance-form-grid">
+        <div className="insurance-form-group">
           <select
             id="company_id"
             name="company_id"
             value={formData.company_id}
             onChange={handleChange}
             required
-            className="form-control"
+            className="insurance-form-input"
           >
             <option value="">Select Company</option>
             {companies.map(company => (
@@ -635,11 +635,8 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             ))}
           </select>
         </div>
-      </div>
-
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="license_number">License Number *</label>
+        
+        <div className="insurance-form-group">
           <input
             type="text"
             id="license_number"
@@ -647,47 +644,12 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             value={formData.license_number}
             onChange={handleChange}
             required
-            className="form-control"
+            className="insurance-form-input"
             placeholder="Enter license number"
           />
         </div>
-        
-        <div className="form-group">
-          <label htmlFor="status">Status</label>
-          <select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            className="form-control"
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="Expired">Expired</option>
-            <option value="Suspended">Suspended</option>
-          </select>
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="type">License Type *</label>
-          <select
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
-            className="form-control"
-          >
-            <option value="">Select License Type</option>
-            <option value="Central">Central</option>
-            <option value="State">State</option>
-          </select>
-        </div>
-      </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="expiry_date">Expiry Date *</label>
+        <div className="insurance-form-group">
           <input
             type="date"
             id="expiry_date"
@@ -695,59 +657,16 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             value={formData.expiry_date}
             onChange={handleChange}
             required
-            className="form-control"
+            className="insurance-form-input"
           />
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="remarks">Remarks</label>
-          <textarea
-            id="remarks"
-            name="remarks"
-            value={formData.remarks}
-            onChange={handleChange}
-            className="form-control"
-            rows="3"
-            placeholder="Enter any additional remarks..."
-          />
-        </div>
-      </div>
-
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="files">Upload Documents</label>
-          <input
-            type="file"
-            id="files"
-            name="files"
-            onChange={handleFileChange}
-            multiple
-            className="form-control"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
-          />
-          <small className="text-gray-500">
-            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each)
-          </small>
-          {files.length > 0 && (
-            <div className="selected-files mt-2">
-              <strong>Selected Files:</strong>
-              {files.map((file, index) => (
-                <div key={index} className="text-sm text-gray-600">
-                  • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="form-actions">
-        <Button type="button" onClick={onCancel} variant="secondary">
+      <div className="insurance-form-actions">
+        <Button type="button" onClick={onCancel} variant="outlined">
           Cancel
         </Button>
-        <Button type="submit" variant="primary">
+        <Button type="submit" variant="contained">
           {license ? 'Update License' : 'Create License'}
         </Button>
       </div>

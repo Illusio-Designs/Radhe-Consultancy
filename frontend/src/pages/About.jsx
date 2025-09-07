@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
 import Workingwith from '../components/Workingwith';
 import Casestudy from '../components/Casestudy';
@@ -13,6 +13,11 @@ import avatar2 from '../assets/Ellipse 2606.png';
 import group from '../assets/Group 9.png';
 
 const About = () => {
+  const [loadedImages, setLoadedImages] = useState(new Set());
+
+  const handleImageLoad = (imageSrc) => {
+    setLoadedImages(prev => new Set([...prev, imageSrc]));
+  };
   const handleContactClick = () => {
     window.location.href = '/contact';
   };
@@ -29,9 +34,57 @@ const About = () => {
 
       <div className="about-main-section">
   <div className="about-image-section">
-    <img src={group} alt="group" className='group-image' />
+    {!loadedImages.has(group) && (
+      <div 
+        className='group-image' 
+        style={{
+          backgroundColor: '#f0f0f0',
+          filter: 'grayscale(100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#999',
+          fontSize: '12px'
+        }}
+      >
+        Loading...
+      </div>
+    )}
+    <img 
+      src={group} 
+      alt="group" 
+      className='group-image' 
+      onLoad={() => handleImageLoad(group)}
+      style={{
+        display: loadedImages.has(group) ? 'block' : 'none'
+      }}
+    />
     <div className="about-image-wrapper">
-      <img src={aboutImage} alt="Consultancy" className="about-main-image" />
+      {!loadedImages.has(aboutImage) && (
+        <div 
+          className="about-main-image" 
+          style={{
+            backgroundColor: '#f0f0f0',
+            filter: 'grayscale(100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#999',
+            fontSize: '12px'
+          }}
+        >
+          Loading...
+        </div>
+      )}
+      <img 
+        src={aboutImage} 
+        alt="Consultancy" 
+        className="about-main-image" 
+        onLoad={() => handleImageLoad(aboutImage)}
+        style={{
+          display: loadedImages.has(aboutImage) ? 'block' : 'none'
+        }}
+      />
       <div className="about-members-card">
         <span>Monthly Members</span>
         <h2>5000+</h2>
@@ -39,8 +92,58 @@ const About = () => {
       <div className="about-reviews-card">
         <div className="about-reviews-avatars">
           {/* Example avatars */}
-          <img src={avatar1} alt="avatar" />
-          <img src={avatar2} alt="avatar" />
+          {!loadedImages.has(avatar1) && (
+            <div 
+              style={{
+                backgroundColor: '#f0f0f0',
+                filter: 'grayscale(100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#999',
+                fontSize: '10px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%'
+              }}
+            >
+              L
+            </div>
+          )}
+          <img 
+            src={avatar1} 
+            alt="avatar" 
+            onLoad={() => handleImageLoad(avatar1)}
+            style={{
+              display: loadedImages.has(avatar1) ? 'block' : 'none'
+            }}
+          />
+          {!loadedImages.has(avatar2) && (
+            <div 
+              style={{
+                backgroundColor: '#f0f0f0',
+                filter: 'grayscale(100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#999',
+                fontSize: '10px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%'
+              }}
+            >
+              L
+            </div>
+          )}
+          <img 
+            src={avatar2} 
+            alt="avatar" 
+            onLoad={() => handleImageLoad(avatar2)}
+            style={{
+              display: loadedImages.has(avatar2) ? 'block' : 'none'
+            }}
+          />
           <div className='plus-icon'>+</div>
         </div>
         <span>8000+ reviews</span>

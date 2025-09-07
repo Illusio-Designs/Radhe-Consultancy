@@ -32,14 +32,21 @@ import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
 import "../../styles/components/dashboard/Sidebar.css";
 import { useAuth } from "../../contexts/AuthContext";
 
-const Sidebar = ({ onCollapse }) => {
+const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
   console.log("Sidebar: Component rendering");
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(parentIsCollapsed || false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const location = useLocation();
   const { user } = useAuth();
+
+  // Sync local state with parent state
+  useEffect(() => {
+    if (parentIsCollapsed !== undefined) {
+      setIsCollapsed(parentIsCollapsed);
+    }
+  }, [parentIsCollapsed]);
 
   // Get all user roles as lowercase
   const userRoles = user?.roles?.map((r) => r.toLowerCase()) || [];
@@ -495,8 +502,9 @@ const Sidebar = ({ onCollapse }) => {
   };
 
   const handleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-    onCollapse();
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    onCollapse(newCollapsedState);
   };
 
   const renderMenuItem = (item, index) => {

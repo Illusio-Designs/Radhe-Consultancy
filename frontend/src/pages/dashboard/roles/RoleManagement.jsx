@@ -56,31 +56,33 @@ const RoleForm = ({ role, onClose, onRoleUpdated }) => {
     <>
       {/* Removed inline error display */}
 
-      <form onSubmit={handleSubmit} className="role-management-form">
-        <div className="role-management-form-group">
-          <input
-            type="text"
-            name="role_name"
-            value={formData.role_name}
-            onChange={handleChange}
-            className="role-management-form-input"
-            placeholder="Role Name"
-            required
-          />
+      <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <input
+              type="text"
+              name="role_name"
+              value={formData.role_name}
+              onChange={handleChange}
+              className="insurance-form-input"
+              placeholder="Role Name"
+              required
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <input
+              type="text"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="insurance-form-input"
+              placeholder="Description"
+            />
+          </div>
         </div>
 
-        <div className="role-management-form-group">
-          <input
-            type="text"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="role-management-form-input"
-            placeholder="Description"
-          />
-        </div>
-
-        <div className="role-management-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>

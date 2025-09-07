@@ -179,7 +179,7 @@ function DashboardLayout() {
         <aside
           className={`dashboard-sidebar ${isCollapsed ? "collapsed" : ""}`}
         >
-          <Sidebar onCollapse={handleSidebarCollapse} />
+          <Sidebar onCollapse={handleSidebarCollapse} isCollapsed={isCollapsed} />
         </aside>
 
         <div className="dashboard-main-content">

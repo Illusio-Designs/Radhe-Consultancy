@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/pages/Contact.css';
 import { FiPhone, FiMapPin, FiMail, FiClock } from 'react-icons/fi';
 
 const Contact = () => {
+  const [loadedImages, setLoadedImages] = useState(new Set());
+
+  const handleImageLoad = (imageSrc) => {
+    setLoadedImages(prev => new Set([...prev, imageSrc]));
+  };
   return (
     <>
       <Header />

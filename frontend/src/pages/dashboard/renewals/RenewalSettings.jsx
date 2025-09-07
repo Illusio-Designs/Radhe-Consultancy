@@ -16,6 +16,7 @@ import {
   BiCalendar,
 } from "react-icons/bi";
 import "../../../styles/pages/dashboard/renewals/RenewalSettings.css";
+import "../../../styles/components/StatCards.css";
 
 const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
   const [formData, setFormData] = useState({
@@ -89,26 +90,24 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="renewal-form">
-      <div className="renewal-form-grid">
-        <div className="renewal-form-group">
-          <label className="renewal-form-label">Service Type</label>
+    <form onSubmit={handleSubmit} className="insurance-form">
+      <div className="insurance-form-grid">
+        <div className="insurance-form-group">
           <Select
             value={defaultServices.find(s => s.value === formData.serviceType)}
             onChange={handleServiceTypeChange}
             options={defaultServices}
             placeholder="Select Service Type"
             isClearable
-            className="renewal-form-input"
+            className="insurance-form-input"
             classNamePrefix="select"
           />
         </div>
 
-        <div className="renewal-form-group">
-          <label className="renewal-form-label">Service Name</label>
+        <div className="insurance-form-group">
           <input
             type="text"
-            className="renewal-form-input"
+            className="insurance-form-input"
             value={formData.serviceName}
             onChange={(e) => setFormData({ ...formData, serviceName: e.target.value })}
             placeholder="Service Name"
@@ -116,11 +115,10 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
           />
         </div>
 
-        <div className="renewal-form-group">
-          <label className="renewal-form-label">Reminder Times</label>
+        <div className="insurance-form-group">
           <input
             type="number"
-            className="renewal-form-input"
+            className="insurance-form-input"
             value={formData.reminderTimes}
             onChange={(e) => setFormData({ ...formData, reminderTimes: parseInt(e.target.value) || 0 })}
             placeholder="How many times"
@@ -130,11 +128,10 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
           />
         </div>
 
-        <div className="renewal-form-group">
-          <label className="renewal-form-label">Reminder Days</label>
+        <div className="insurance-form-group">
           <input
             type="number"
-            className="renewal-form-input"
+            className="insurance-form-input"
             value={formData.reminderDays}
             onChange={(e) => setFormData({ ...formData, reminderDays: parseInt(e.target.value) || 0 })}
             placeholder="Days before expiry"
@@ -146,14 +143,14 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
       </div>
 
       {error && (
-        <div className="renewal-form-error">
+        <div className="insurance-form-error">
           <BiErrorCircle className="inline mr-2" /> {error}
         </div>
       )}
 
-      <div className="renewal-form-actions">
+      <div className="insurance-form-actions">
         <Button
-          variant="secondary"
+          variant="outlined"
           onClick={onClose}
           disabled={loading}
         >

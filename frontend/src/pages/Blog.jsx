@@ -87,6 +87,11 @@ const blogPosts = [
 const POSTS_PER_PAGE = 6;
 
 const Blog = () => {
+  const [loadedImages, setLoadedImages] = useState(new Set());
+
+  const handleImageLoad = (imageSrc) => {
+    setLoadedImages(prev => new Set([...prev, imageSrc]));
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(blogPosts.length / POSTS_PER_PAGE);
   
@@ -113,7 +118,34 @@ const Blog = () => {
               <Link to={`/bloginner?title=${encodeURIComponent(post.title)}`} key={post.id} className="blog-card-link">
                 <article className="blog-card">
                   <div className="blog-image">
-                    <img src={post.image} alt={post.title} />
+                    {!loadedImages.has(post.image) && (
+                      <div 
+                        style={{
+                          backgroundColor: '#f0f0f0',
+                          filter: 'grayscale(100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#999',
+                          fontSize: '12px',
+                          width: '100%',
+                          height: '200px'
+                        }}
+                      >
+                        Loading...
+                      </div>
+                    )}
+                    <img 
+                      src={post.image} 
+                      alt={post.title} 
+                      onLoad={() => handleImageLoad(post.image)}
+                      style={{
+                        display: loadedImages.has(post.image) ? 'block' : 'none',
+                        width: '100%',
+                        height: '200px',
+                        objectFit: 'cover'
+                      }}
+                    />
                   </div>
                   <div className="blog-content">
                     <h2>{post.title}</h2>

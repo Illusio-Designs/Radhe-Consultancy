@@ -12,6 +12,7 @@ import PhoneInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 import 'react-phone-number-input/style.css';
 import "../../../styles/pages/dashboard/compliance/Compliance.css";
+import "../../../styles/components/StatCards.css";
 import "../../../styles/pages/dashboard/companies/Vendor.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -91,27 +92,28 @@ const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select Plan Manager">
-      <div className="plan-manager-selection-modal">
-        <div className="form-group">
-          <label>Select Plan Manager:</label>
-          <select
-            value={selectedPlanManager}
-            onChange={(e) => setSelectedPlanManager(e.target.value)}
-            className="form-control"
-            disabled={loading}
-          >
-            <option value="">
-              {loading ? 'Loading plan managers...' : 'Select Plan Manager'}
-            </option>
-            {planManagers.map(manager => (
-              <option key={manager.user_id} value={manager.user_id}>
-                {manager.username} ({manager.email})
+      <div className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <select
+              value={selectedPlanManager}
+              onChange={(e) => setSelectedPlanManager(e.target.value)}
+              className="insurance-form-input"
+              disabled={loading}
+            >
+              <option value="">
+                {loading ? 'Loading plan managers...' : 'Select Plan Manager'}
               </option>
-            ))}
-          </select>
+              {planManagers.map(manager => (
+                <option key={manager.user_id} value={manager.user_id}>
+                  {manager.username} ({manager.email})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="modal-actions">
+        <div className="insurance-form-actions">
           <Button onClick={onClose} variant="outlined">
             Cancel
           </Button>
@@ -176,26 +178,27 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select Stability Manager">
-      <div className="stability-manager-selection-modal">
-        <div className="form-group">
-          <label>Select Stability Manager:</label>
-          <select
-            value={selectedStabilityManager}
-            onChange={(e) => setSelectedStabilityManager(e.target.value)}
-            className="form-control"
-            disabled={loading}
-          >
-            <option value="">
-              {loading ? 'Loading stability managers...' : 'Select Stability Manager'}
-            </option>
-            {stabilityManagers.map(manager => (
-              <option key={manager.user_id} value={manager.user_id}>
-                {manager.username} ({manager.email})
+      <div className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <select
+              value={selectedStabilityManager}
+              onChange={(e) => setSelectedStabilityManager(e.target.value)}
+              className="insurance-form-input"
+              disabled={loading}
+            >
+              <option value="">
+                {loading ? 'Loading stability managers...' : 'Select Stability Manager'}
               </option>
-            ))}
-          </select>
+              {stabilityManagers.map(manager => (
+                <option key={manager.user_id} value={manager.user_id}>
+                  {manager.username} ({manager.email})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="modal-actions">
+        <div className="insurance-form-actions">
           <Button onClick={onClose} variant="outlined">
             Cancel
           </Button>
@@ -213,6 +216,7 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
 // Application Approval Modal
 const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplication }) => {
   const [applicationDate, setApplicationDate] = useState(currentApplication?.application_date || '');
+  const [expiryDate, setExpiryDate] = useState(currentApplication?.expiry_date || '');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -229,7 +233,7 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
 
     setLoading(true);
     try {
-      await onApprove(files, applicationDate);
+      await onApprove(files, applicationDate, expiryDate);
       toast.success('Application approved successfully');
       onClose(); // Close modal after successful approval
     } catch (error) {
@@ -241,30 +245,54 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Approve Application">
-      <div className="application-approval-modal">
-        <div className="form-group">
-          <label>Application Date (Required):</label>
-          <input
-            type="date"
-            value={applicationDate}
-            onChange={(e) => setApplicationDate(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
+      <div className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <input
+              type="date"
+              value={applicationDate}
+              onChange={(e) => setApplicationDate(e.target.value)}
+              className="insurance-form-input"
+              required
+            />
+          </div>
 
-        <div className="form-group">
-          <label>Upload Files (Optional):</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="form-control"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
-          />
-          <small className="text-gray-500">
-            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
-          </small>
+          <div className="insurance-form-group">
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="insurance-form-input"
+            />
+            <small className="text-gray-500">
+              Leave empty if no specific expiry date
+            </small>
+          </div>
+
+          <div className="file-upload-group">
+            <label className="file-upload-label">Upload Files (Optional)</label>
+            <div className="file-upload-container">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="file-upload-input"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+              />
+              <Button
+                type="button"
+                variant="outlined"
+                className="file-upload-button"
+                onClick={() => document.querySelector('input[type="file"]').click()}
+              >
+                <BiUpload className="mr-2" />
+                Choose Files
+              </Button>
+            </div>
+            <small className="text-gray-500">
+              Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
+            </small>
+          </div>
         </div>
 
         {files.length > 0 && (
@@ -278,7 +306,7 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
           </div>
         )}
 
-        <div className="modal-actions">
+        <div className="insurance-form-actions">
           <Button onClick={onClose} variant="outlined">
             Cancel
           </Button>
@@ -315,20 +343,21 @@ const ApplicationRejectModal = ({ isOpen, onClose, onReject }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Reject Application">
-      <div className="application-reject-modal">
-        <div className="form-group">
-          <label>Remarks (Required):</label>
-          <textarea
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            className="form-control"
-            rows="4"
-            placeholder="Enter rejection remarks..."
-            required
-          />
+      <div className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="insurance-form-input"
+              rows="4"
+              placeholder="Enter rejection remarks..."
+              required
+            />
+          </div>
         </div>
 
-        <div className="modal-actions">
+        <div className="insurance-form-actions">
           <Button onClick={onClose} variant="outlined">
             Cancel
           </Button>
@@ -746,9 +775,9 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
       <div className="renewal-modal">
 
 
-        <form onSubmit={handleSubmit} className="vendor-management-form">
-          <div className="vendor-management-form-grid">
-            <div className="vendor-management-form-group">
+        <form onSubmit={handleSubmit} className="insurance-form">
+          <div className="insurance-form-grid">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="company_name"
@@ -756,22 +785,22 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="Company Name"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="company_code"
                 value={formData.company_code}
                 onChange={handleChange}
                 placeholder="Company Code (e.g., COMP0001)"
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="owner_name"
@@ -779,23 +808,23 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="Owner Name"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <textarea
                 name="owner_address"
                 value={formData.owner_address}
                 onChange={handleChange}
                 placeholder="Owner Address"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
                 rows="3"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="designation"
@@ -803,24 +832,23 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="Designation"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <textarea
                 name="company_address"
                 value={formData.company_address}
                 onChange={handleChange}
                 placeholder="Company Address"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
                 rows="3"
               />
             </div>
 
-            <div className="vendor-management-form-group">
-              <label className="form-label">Phone Number (India +91)</label>
+            <div className="insurance-form-group">
               <PhoneInput
                 international
                 defaultCountry="IN"
@@ -828,7 +856,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handlePhoneChange}
                 placeholder="Enter phone number"
                 required
-                className="vendor-management-form-input phone-input-custom"
+                className="insurance-form-input phone-input-custom"
                 flags={flags}
                 countrySelectProps={{
                   className: "phone-input-country-select"
@@ -841,7 +869,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="email"
                 name="company_email"
@@ -849,11 +877,11 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="Email"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="gst_number"
@@ -861,29 +889,33 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="GST Number (15 digits)"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
                 maxLength={15}
               />
             </div>
 
-            <div className="vendor-management-form-group file-upload-group">
-              <label className="file-upload-label">
-                <span>GST Certificate</span>
-                <div className="file-upload-container">
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, 'gst_document')}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    className="file-upload-input"
-                  />
-                  <div className="file-upload-button">
-                    <BiUpload /> {fileNames.gst_document || 'Upload GST Certificate'}
-                  </div>
-                </div>
-              </label>
+            <div className="file-upload-group">
+              <label className="file-upload-label">GST Certificate</label>
+              <div className="file-upload-container">
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, 'gst_document')}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="file-upload-input"
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  className="file-upload-button"
+                  onClick={() => document.querySelector('input[type="file"]').click()}
+                >
+                  <BiUpload className="mr-2" />
+                  {fileNames.gst_document || 'Upload GST Certificate'}
+                </Button>
+              </div>
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="pan_number"
@@ -891,35 +923,39 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="PAN Number"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
                 readOnly
               />
             </div>
 
-            <div className="vendor-management-form-group file-upload-group">
-              <label className="file-upload-label">
-                <span>PAN Card</span>
-                <div className="file-upload-container">
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, 'pan_document')}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    className="file-upload-input"
-                  />
-                  <div className="file-upload-button">
-                    <BiUpload /> {fileNames.pan_document || 'Upload PAN Card'}
-                  </div>
-                </div>
-              </label>
+            <div className="file-upload-group">
+              <label className="file-upload-label">PAN Card</label>
+              <div className="file-upload-container">
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, 'pan_document')}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="file-upload-input"
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  className="file-upload-button"
+                  onClick={() => document.querySelector('input[type="file"]').click()}
+                >
+                  <BiUpload className="mr-2" />
+                  {fileNames.pan_document || 'Upload PAN Card'}
+                </Button>
+              </div>
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <select
                 name="firm_type"
                 value={formData.firm_type}
                 onChange={handleChange}
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               >
                 <option value="">Select Firm Type</option>
                 <option value="Proprietorship">Proprietorship</option>
@@ -931,7 +967,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
               </select>
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="nature_of_work"
@@ -939,39 +975,39 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                 onChange={handleChange}
                 placeholder="Nature of Work"
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="factory_license_number"
                 value={formData.factory_license_number}
                 onChange={handleChange}
                 placeholder="Factory License Number"
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="text"
                 name="labour_license_number"
                 value={formData.labour_license_number}
                 onChange={handleChange}
                 placeholder="Labour License Number"
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <select
                 name="type_of_company"
                 value={formData.type_of_company}
                 onChange={handleChange}
                 required
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               >
                 <option value="">Select Type of Company</option>
                 <option value="Industries">Industries</option>
@@ -982,14 +1018,14 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
               </select>
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <input
                 type="url"
                 name="company_website"
                 value={formData.company_website}
                 onChange={handleChange}
                 placeholder="Company Website (Optional)"
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
 
@@ -1028,7 +1064,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
             </div>
           </div>
 
-          <div className="vendor-management-form-actions">
+          <div className="insurance-form-actions">
             <Button type="button" variant="outlined" onClick={onClose}>
               Cancel
             </Button>
@@ -1220,62 +1256,62 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="compliance-form">
-        <div className="compliance-form-grid">
-          <div className="compliance-form-group">
+    <form onSubmit={handleSubmit} className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="companyName"
               value={formData.companyName}
               onChange={handleChange}
               placeholder="Company Name"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="text"
               name="companyAddress"
               value={formData.companyAddress}
               onChange={handleChange}
               placeholder="Company Address"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               placeholder="Phone Number"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Email"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             />
           </div>
 
-                    <div className="compliance-form-group">
+                    <div className="insurance-form-group">
             <select
               name="noOfWorkers"
               value={formData.noOfWorkers}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             >
         <option value="">Select No. of Workers</option>
@@ -1285,12 +1321,12 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
       </select>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <select
               name="horsePower"
               value={formData.horsePower}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             >
         <option value="">Select Horse Power</option>
@@ -1300,14 +1336,14 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
       </select>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="calculatedAmount"
               value={formData.calculatedAmount}
               onChange={handleChange}
               placeholder="Calculated Amount (Auto-calculated)"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
               min="0"
               step="0.01"
@@ -1318,14 +1354,14 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
             </small>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="year"
               value={formData.year}
               onChange={handleChange}
               placeholder="Number of Years (1, 2, 3...)"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
               min="1"
               max="10"
@@ -1335,12 +1371,12 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
             </small>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <select
               name="stabilityCertificateType"
               value={formData.stabilityCertificateType}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             >
         <option value="with load">With Load</option>
@@ -1348,79 +1384,79 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
       </select>
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="stabilityCertificateAmount"
               value={formData.stabilityCertificateAmount}
               onChange={handleChange}
               placeholder="Stability Certificate Amount"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
               min="0"
               step="0.01"
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="administrationCharge"
               value={formData.administrationCharge}
               onChange={handleChange}
               placeholder="Administration Charge"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
               min="0"
               step="0.01"
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="consultancyFees"
               value={formData.consultancyFees}
               onChange={handleChange}
               placeholder="Consultancy Fees"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
               min="0"
               step="0.01"
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="planCharge"
               value={formData.planCharge}
               onChange={handleChange}
               placeholder="Plan Charge"
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
               min="0"
               step="0.01"
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <input
               type="number"
               name="totalAmount"
               value={formData.totalAmount}
-              className="compliance-form-input"
+              className="insurance-form-input"
               placeholder="Total Amount"
               readOnly
             />
           </div>
 
-          <div className="compliance-form-group">
+          <div className="insurance-form-group">
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="compliance-form-input"
+              className="insurance-form-input"
               required
             >
         {["maked", "approved", "plan", "stability", "application", "renewal"].map((opt) => (
@@ -1436,7 +1472,7 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
           </div>
         )}
 
-        <div className="compliance-form-actions">
+        <div className="insurance-form-actions">
           <Button type="button" variant="outlined" onClick={onClose}>
             Cancel
           </Button>
@@ -1943,12 +1979,13 @@ function FactoryQuotation({ searchQuery = "" }) {
   };
 
   // Handle application file upload
-  const handleApplicationFileUpload = async (applicationId, files, applicationDate) => {
+  const handleApplicationFileUpload = async (applicationId, files, applicationDate, expiryDate) => {
     try {
       // First update status with dates
       await applicationManagementAPI.updateApplicationStatus(applicationId, {
         status: 'Approved',
-        application_date: applicationDate
+        application_date: applicationDate,
+        expiry_date: expiryDate
       });
 
       // Then upload files if any were selected
@@ -2378,8 +2415,8 @@ function FactoryQuotation({ searchQuery = "" }) {
       <ApplicationApprovalModal
         isOpen={showApplicationModal}
         onClose={() => setShowApplicationModal(false)}
-        onApprove={(files, applicationDate) => 
-          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate)
+        onApprove={(files, applicationDate, expiryDate) => 
+          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate, expiryDate)
         }
         currentApplication={selectedQuotation?.applicationManagement}
       />
@@ -2405,3 +2442,5 @@ function FactoryQuotation({ searchQuery = "" }) {
 }
 
 export default FactoryQuotation;
+
+
