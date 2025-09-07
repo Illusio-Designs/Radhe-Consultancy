@@ -1035,8 +1035,9 @@ function Fire({ searchQuery = "" }) {
           <DocumentDownload
             system="fire-policies"
             recordId={policy.id}
-            buttonText="Download"
-            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
             filePath={policy.policy_document_path ? `/uploads/fire_policies/${policy.policy_document_path}` : null}
             fileName={policy.policy_document_path || 'policy-document.pdf'}
           />

@@ -114,8 +114,9 @@ const FactoryQuotationRenewal = () => {
           <DocumentDownload
             system="renewal-status"
             recordId={quotation.id}
-            buttonText="Download"
-            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
             filePath={quotation.upload_option ? `/uploads/renewal_status/${quotation.upload_option}` : null}
             fileName={quotation.upload_option || 'renewal-document.pdf'}
           />

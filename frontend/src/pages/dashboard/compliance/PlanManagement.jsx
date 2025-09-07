@@ -517,8 +517,9 @@ const PlanManagement = ({ searchQuery = "" }) => {
           <DocumentDownload
             system="plan-management"
             recordId={record.id}
-            buttonText="Download"
-            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
             filePath={record.upload_option ? `/uploads/plan_management/${record.upload_option}` : null}
             fileName={record.upload_option || 'plan-document.pdf'}
           />

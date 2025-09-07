@@ -237,35 +237,36 @@ const Companies = ({ searchQuery = "" }) => {
 
   return (
     <div className="insurance">
-      <div className="insurance-content">
-        <div className="insurance-header">
-          <h1 className="insurance-title">Insurance Companies</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowCreateModal(true)}
-            icon={<BiPlus />}
-          >
-            Add Insurance Company
-          </Button>
-        </div>
-        {/* Removed local search bar */}
-        {error && (
-          <div className="insurance-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Insurance Companies</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowCreateModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Insurance Company
+            </Button>
           </div>
-        )}
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={companies}
-            columns={columns}
-            defaultPageSize={10}
-            emptyMessage="No insurance companies found"
-            className="insurance-table"
-          />
-        )}
-      </div>
+          {/* Removed local search bar */}
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={companies}
+              columns={columns}
+              defaultPageSize={10}
+              emptyMessage="No insurance companies found"
+              className="insurance-table"
+            />
+          )}
+        </div>
 
       <CreateInsuranceCompanyModal
         isOpen={showCreateModal}
@@ -282,6 +283,7 @@ const Companies = ({ searchQuery = "" }) => {
         company={selectedCompany}
         onUpdated={handleUpdated}
       />
+    </div>
     </div>
   );
 };

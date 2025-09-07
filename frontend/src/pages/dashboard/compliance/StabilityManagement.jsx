@@ -720,8 +720,9 @@ const StabilityManagement = ({ searchQuery = "" }) => {
           <DocumentDownload 
             system="stability-management" 
             recordId={record.id}
-            buttonText="Download"
-            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
             filePath={record.upload_option ? `/uploads/stability_management/${record.upload_option}` : null}
             fileName={record.upload_option || 'stability-document.pdf'}
           />

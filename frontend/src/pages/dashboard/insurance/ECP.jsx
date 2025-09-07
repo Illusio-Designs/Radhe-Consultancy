@@ -1174,8 +1174,9 @@ function ECP({ searchQuery = "" }) {
           <DocumentDownload
             system="employee-compensation"
             recordId={policy.id}
-            buttonText="Download"
-            buttonClass="document-download-btn btn-outline-secondary btn-sm"
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
             filePath={policy.policy_document_path ? `/uploads/employee_policies/${policy.policy_document_path}` : null}
             fileName={policy.policy_document_path || 'policy-document.pdf'}
           />
@@ -1186,41 +1187,42 @@ function ECP({ searchQuery = "" }) {
 
   return (
     <div className="insurance">
-      <div className="insurance-content">
-        <div className="insurance-header">
-          <h1 className="insurance-title">Employee Compensation Policies</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<BiPlus />}
-          >
-            Add Policy
-          </Button>
-        </div>
-
-        {/* ECP Statistics */}
-        <StatisticsCards />
-        {error && (
-          <div className="insurance-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Employee Compensation Policies</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Policy
+            </Button>
           </div>
-        )}
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={searchFilteredPolicies}
-            columns={columns}
-            defaultPageSize={pagination.pageSize}
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            serverSidePagination={true}
-          />
-        )}
-      </div>
+
+          {/* ECP Statistics */}
+          <StatisticsCards />
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={searchFilteredPolicies}
+              columns={columns}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
+            />
+          )}
+        </div>
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
@@ -1232,6 +1234,7 @@ function ECP({ searchQuery = "" }) {
           onPolicyUpdated={handlePolicyUpdated}
         />
       </Modal>
+    </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // This file is now FactoryQuotation.jsx
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload, BiShield, BiTrendingUp, BiCalendar } from "react-icons/bi";
+import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload, BiShield, BiTrendingUp, BiCalendar, BiDownload } from "react-icons/bi";
 import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI, applicationManagementAPI, companyAPI, renewalStatusAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -8,6 +8,7 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 import PhoneInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 import 'react-phone-number-input/style.css';
@@ -2270,14 +2271,13 @@ function FactoryQuotation({ searchQuery = "" }) {
           >
             <BiEdit />
           </ActionButton>
-          <ActionButton
-            onClick={() => handleDownloadQuotation(quotation)}
-            variant="secondary"
-            size="small"
-            title="Download PDF"
-          >
-            <BiFile />
-          </ActionButton>
+          <DocumentDownload
+            system="factory-quotations"
+            recordId={quotation.id}
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
+          />
 
           
 
@@ -2309,37 +2309,6 @@ function FactoryQuotation({ searchQuery = "" }) {
     { value: "application", label: "Application" },
   ];
 
-  const handleDownloadQuotation = async (quotation) => {
-    try {
-      // Always generate a new PDF
-      toast.info('Generating PDF...');
-      const generateResponse = await factoryQuotationAPI.generatePDF(quotation.id);
-      console.log('PDF generation response:', generateResponse);
-      
-      // Add a small delay to ensure the file is written to disk
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Download the PDF
-      toast.info('Downloading PDF...');
-      const blob = await factoryQuotationAPI.downloadPDF(quotation.id);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `factory_quotation_${quotation.id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success('Factory quotation downloaded successfully!');
-    } catch (error) {
-      console.error('Error downloading quotation:', error);
-      if (error.response?.status === 404) {
-        toast.error('PDF not found. Please try generating the PDF again.');
-      } else {
-        toast.error('Failed to download factory quotation. Please try again.');
-      }
-    }
-  };
 
   return (
     <div className="compliance-container">
