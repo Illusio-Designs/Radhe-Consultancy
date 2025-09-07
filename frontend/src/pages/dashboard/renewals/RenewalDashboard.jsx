@@ -200,11 +200,11 @@ const RenewalDashboard = () => {
                   </div>
                 </div>
 
-                {data.reminderIntervals && data.reminderIntervals.length > 0 && (
+                {data.reminderIntervals && Array.isArray(data.reminderIntervals) && data.reminderIntervals.length > 0 && (
                   <div className="reminder-info">
                     <div className="reminder-label">Reminder Intervals:</div>
                     <div className="reminder-intervals">
-                      {data.reminderIntervals.map((days, index) => (
+                      {(Array.isArray(data.reminderIntervals) ? data.reminderIntervals : []).map((days, index) => (
                         <span key={index} className="reminder-badge">
                           {days}d
                         </span>
