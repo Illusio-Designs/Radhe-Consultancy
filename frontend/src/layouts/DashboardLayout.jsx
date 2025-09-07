@@ -68,6 +68,10 @@ function DashboardLayout() {
     setIsCollapsed(collapsed);
   };
 
+  const handleToggleSidebar = (collapsed) => {
+    setIsCollapsed(collapsed);
+  };
+
   // Function to render the appropriate page based on the current route
   const renderPage = () => {
     const path = location.pathname;
@@ -186,6 +190,7 @@ function DashboardLayout() {
               onProfileAction={handleProfileAction}
               profileMenuItems={profileMenuItems}
               onSearch={setSearchQuery}
+              onToggleSidebar={handleToggleSidebar}
             />
           </header>
 

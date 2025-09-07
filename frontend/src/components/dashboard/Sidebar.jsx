@@ -595,14 +595,6 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
                 <img src={img} alt="img" className="main" />
               )}
             </h1>
-            {/* Move toggle button outside sidebar-content */}
-            <button
-              className="sidebar-toggle"
-              onClick={handleCollapse}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {isCollapsed ? <Menu /> : <X />}
-            </button>
           </div>
 
           {/* Navigation */}
