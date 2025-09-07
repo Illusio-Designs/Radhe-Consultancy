@@ -607,16 +607,6 @@ const LabourInspection = ({ searchQuery = "" }) => {
             </ActionButton>
           )}
           
-          {inspection.document_upload && (
-            <ActionButton
-              onClick={() => window.open(inspection.document_upload, '_blank')}
-              variant="secondary"
-              size="small"
-              title="View Document"
-            >
-              <BiFile />
-            </ActionButton>
-          )}
           
           {canDelete && (
             <ActionButton

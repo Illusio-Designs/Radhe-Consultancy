@@ -427,15 +427,6 @@ const LabourLicense = ({ searchQuery = "" }) => {
               <BiTrash />
             </ActionButton>
           )}
-          <DocumentDownload
-            system="labour-license"
-            recordId={license.license_id}
-            buttonText=""
-            buttonClass="action-button action-button-secondary action-button-small"
-            showIcon={true}
-            filePath={license.upload_option ? `/uploads/labour_license/${license.upload_option}` : null}
-            fileName={license.upload_option || 'license-document.pdf'}
-          />
         </div>
       ),
     }

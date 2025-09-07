@@ -2271,13 +2271,31 @@ function FactoryQuotation({ searchQuery = "" }) {
           >
             <BiEdit />
           </ActionButton>
-          <DocumentDownload
-            system="factory-quotations"
-            recordId={quotation.id}
-            buttonText=""
-            buttonClass="action-button action-button-secondary action-button-small"
-            showIcon={true}
-          />
+          <ActionButton
+            onClick={async () => {
+              try {
+                const response = await factoryQuotationAPI.downloadPDF(quotation.id);
+                const blob = new Blob([response], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `factory-quotation-${quotation.id}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                toast.success('PDF downloaded successfully');
+              } catch (error) {
+                console.error('Error downloading PDF:', error);
+                toast.error('Failed to download PDF');
+              }
+            }}
+            variant="secondary"
+            size="small"
+            title="Download PDF"
+          >
+            <BiDownload />
+          </ActionButton>
 
           
 
