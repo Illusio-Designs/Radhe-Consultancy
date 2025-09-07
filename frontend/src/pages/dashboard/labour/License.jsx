@@ -339,9 +339,9 @@ const LabourLicense = ({ searchQuery = "" }) => {
           <div className={`expiry-date-cell ${statusClass}`}>
             <div className="expiry-date">
               {expiryDate.toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
               })}
             </div>
             <div className={`expiry-status ${statusClass}`}>
@@ -349,8 +349,8 @@ const LabourLicense = ({ searchQuery = "" }) => {
             </div>
             <div className="email-service-status">
               {emailServiceStatus}
-            </div>
           </div>
+        </div>
         );
       },
     },
@@ -639,7 +639,7 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             className="insurance-form-input"
             placeholder="Enter license number"
           />
-        </div>
+      </div>
 
         <div className="insurance-form-group">
           <input

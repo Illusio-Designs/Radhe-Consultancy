@@ -58,13 +58,13 @@ const FileUploadModal = ({ onClose, onUpload }) => {
           <div className="file-upload-group">
             <label className="file-upload-label">Select Files</label>
             <div className="file-upload-container">
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
+          <input
+            type="file"
+            multiple
+            onChange={handleFileChange}
                 className="file-upload-input"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
-              />
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+          />
               <Button
                 type="button"
                 variant="outlined"
@@ -75,9 +75,9 @@ const FileUploadModal = ({ onClose, onUpload }) => {
                 Choose Files
               </Button>
             </div>
-            <small className="text-gray-500">
-              Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
-            </small>
+          <small className="text-gray-500">
+            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
+          </small>
           </div>
         </div>
 
@@ -218,14 +218,14 @@ const RejectModal = ({ onClose, onReject }) => {
       <div className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
-            <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
               className="insurance-form-input"
-              rows="4"
-              placeholder="Enter rejection remarks..."
-              required
-            />
+            rows="4"
+            placeholder="Enter rejection remarks..."
+            required
+          />
           </div>
         </div>
 

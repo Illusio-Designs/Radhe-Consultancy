@@ -71,11 +71,6 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
             icon: <Home />,
             label: "Home",
           },
-          {
-            path: "/dashboard/renewals/manager",
-            icon: <RefreshCw />,
-            label: "Renewals",
-          },
         ],
       },
       {
@@ -91,14 +86,9 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
             label: "Renewal Dashboard",
           },
           {
-            path: "/dashboard/renewals/list",
-            icon: <RefreshCw />,
-            label: "Renewal List",
-          },
-          {
-            path: "/dashboard/renewals/settings",
-            icon: <Settings />,
-            label: "Renewal Settings",
+            path: "/dashboard/renewals/log",
+            icon: <Clock />,
+            label: "Renewal Log",
           },
         ],
       },

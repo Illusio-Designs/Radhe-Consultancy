@@ -53,10 +53,7 @@ async function checkExistingAccounts() {
     
     const requiredAccounts = [
       { name: 'Admin', email: 'Admin@radheconsultancy.co.in', role: 'Admin' },
-      { name: 'Green Arc', email: 'greenarc@radheconsultancy.co.in', role: 'Plan_manager' },
-      { name: 'Little Star', email: 'littlestar@radheconsultancy.co.in', role: 'Plan_manager' },
-      { name: 'Jayeshbhai A Kataria', email: 'jayeshbhai@radheconsultancy.co.in', role: 'Stability_manager' },
-      { name: 'Samir G. Davda', email: 'samir@radheconsultancy.co.in', role: 'Stability_manager' }
+      // REMOVED: Test accounts no longer checked
     ];
     
     for (const account of requiredAccounts) {

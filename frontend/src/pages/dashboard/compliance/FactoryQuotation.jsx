@@ -96,21 +96,21 @@ const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => 
       <div className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
-            <select
-              value={selectedPlanManager}
-              onChange={(e) => setSelectedPlanManager(e.target.value)}
+          <select
+            value={selectedPlanManager}
+            onChange={(e) => setSelectedPlanManager(e.target.value)}
               className="insurance-form-input"
-              disabled={loading}
-            >
-              <option value="">
-                {loading ? 'Loading plan managers...' : 'Select Plan Manager'}
+            disabled={loading}
+          >
+            <option value="">
+              {loading ? 'Loading plan managers...' : 'Select Plan Manager'}
+            </option>
+            {planManagers.map(manager => (
+              <option key={manager.user_id} value={manager.user_id}>
+                {manager.username} ({manager.email})
               </option>
-              {planManagers.map(manager => (
-                <option key={manager.user_id} value={manager.user_id}>
-                  {manager.username} ({manager.email})
-                </option>
-              ))}
-            </select>
+            ))}
+          </select>
           </div>
         </div>
 
@@ -182,22 +182,22 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
       <div className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
-            <select
-              value={selectedStabilityManager}
-              onChange={(e) => setSelectedStabilityManager(e.target.value)}
+          <select
+            value={selectedStabilityManager}
+            onChange={(e) => setSelectedStabilityManager(e.target.value)}
               className="insurance-form-input"
-              disabled={loading}
-            >
-              <option value="">
-                {loading ? 'Loading stability managers...' : 'Select Stability Manager'}
+            disabled={loading}
+          >
+            <option value="">
+              {loading ? 'Loading stability managers...' : 'Select Stability Manager'}
+            </option>
+            {stabilityManagers.map(manager => (
+              <option key={manager.user_id} value={manager.user_id}>
+                {manager.username} ({manager.email})
               </option>
-              {stabilityManagers.map(manager => (
-                <option key={manager.user_id} value={manager.user_id}>
-                  {manager.username} ({manager.email})
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </select>
+        </div>
         </div>
         <div className="insurance-form-actions">
           <Button onClick={onClose} variant="outlined">
@@ -249,37 +249,37 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
       <div className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
-            <input
-              type="date"
-              value={applicationDate}
-              onChange={(e) => setApplicationDate(e.target.value)}
+          <input
+            type="date"
+            value={applicationDate}
+            onChange={(e) => setApplicationDate(e.target.value)}
               className="insurance-form-input"
-              required
-            />
-          </div>
+            required
+          />
+        </div>
 
           <div className="insurance-form-group">
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
+          <input
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
               className="insurance-form-input"
-            />
-            <small className="text-gray-500">
-              Leave empty if no specific expiry date
-            </small>
-          </div>
+          />
+          <small className="text-gray-500">
+            Leave empty if no specific expiry date
+          </small>
+        </div>
 
           <div className="file-upload-group">
             <label className="file-upload-label">Upload Files (Optional)</label>
             <div className="file-upload-container">
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
+          <input
+            type="file"
+            multiple
+            onChange={handleFileChange}
                 className="file-upload-input"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
-              />
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+          />
               <Button
                 type="button"
                 variant="outlined"
@@ -290,9 +290,9 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
                 Choose Files
               </Button>
             </div>
-            <small className="text-gray-500">
-              Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
-            </small>
+          <small className="text-gray-500">
+            Allowed file types: PDF, Word, Excel, Images, Text (Max 10MB each, up to 10 files)
+          </small>
           </div>
         </div>
 
@@ -347,14 +347,14 @@ const ApplicationRejectModal = ({ isOpen, onClose, onReject }) => {
       <div className="insurance-form">
         <div className="insurance-form-grid">
           <div className="insurance-form-group">
-            <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
               className="insurance-form-input"
-              rows="4"
-              placeholder="Enter rejection remarks..."
-              required
-            />
+            rows="4"
+            placeholder="Enter rejection remarks..."
+            required
+          />
           </div>
         </div>
 
@@ -897,13 +897,13 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
 
             <div className="file-upload-group">
               <label className="file-upload-label">GST Certificate</label>
-              <div className="file-upload-container">
-                <input
-                  type="file"
-                  onChange={(e) => handleFileChange(e, 'gst_document')}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="file-upload-input"
-                />
+                <div className="file-upload-container">
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange(e, 'gst_document')}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="file-upload-input"
+                  />
                 <Button
                   type="button"
                   variant="outlined"
@@ -913,7 +913,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                   <BiUpload className="mr-2" />
                   {fileNames.gst_document || 'Upload GST Certificate'}
                 </Button>
-              </div>
+                  </div>
             </div>
 
             <div className="insurance-form-group">
@@ -931,13 +931,13 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
 
             <div className="file-upload-group">
               <label className="file-upload-label">PAN Card</label>
-              <div className="file-upload-container">
-                <input
-                  type="file"
-                  onChange={(e) => handleFileChange(e, 'pan_document')}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="file-upload-input"
-                />
+                <div className="file-upload-container">
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange(e, 'pan_document')}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="file-upload-input"
+                  />
                 <Button
                   type="button"
                   variant="outlined"
@@ -947,7 +947,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                   <BiUpload className="mr-2" />
                   {fileNames.pan_document || 'Upload PAN Card'}
                 </Button>
-              </div>
+                  </div>
             </div>
 
             <div className="insurance-form-group">

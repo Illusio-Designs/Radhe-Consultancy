@@ -23,4 +23,7 @@ router.delete('/:id', auth, checkUserRole(['Admin']), labourLicenseController.de
 // Upload labour license documents (for existing records)
 router.post('/:id/upload', auth, checkUserRole(['Admin', 'Compliance_manager', 'Labour_law_manager']), uploadLicenseFiles, labourLicenseController.uploadLicenseDocuments);
 
+// Get labour license stats overview
+router.get('/stats/overview', auth, labourLicenseController.getLabourLicenseStatsOverview);
+
 module.exports = router;

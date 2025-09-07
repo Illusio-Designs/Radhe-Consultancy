@@ -36,34 +36,8 @@ const requiredAccounts = {
     password: 'Admin@123',
     role: 'Admin'
   },
-  planManagers: [
-    {
-      username: 'Green Arc',
-      email: 'greenarc@radheconsultancy.co.in',
-      password: 'GreenArc@123',
-      role: 'Plan_manager'
-    },
-    {
-      username: 'Little Star',
-      email: 'littlestar@radheconsultancy.co.in',
-      password: 'LittleStar@123',
-      role: 'Plan_manager'
-    }
-  ],
-  stabilityManagers: [
-    {
-      username: 'Jayeshbhai A Kataria',
-      email: 'jayeshbhai@radheconsultancy.co.in',
-      password: 'Jayeshbhai@123',
-      role: 'Stability_manager'
-    },
-    {
-      username: 'Samir G. Davda',
-      email: 'samir@radheconsultancy.co.in',
-      password: 'Samir@123',
-      role: 'Stability_manager'
-    }
-  ],
+  planManagers: [],
+  stabilityManagers: [],
   websiteManagers: [
     {
       username: 'Website Manager',

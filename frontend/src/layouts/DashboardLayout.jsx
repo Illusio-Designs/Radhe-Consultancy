@@ -34,10 +34,7 @@ import StabilityManagement from "../pages/dashboard/compliance/StabilityManageme
 import DSC from "../pages/dashboard/dsc/DSC";
 import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalDashboard from "../pages/dashboard/renewals/RenewalDashboard";
-import RenewalManager from "../pages/dashboard/renewals/RenewalManager";
-import RenewalList from "../pages/dashboard/renewals/RenewalList";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
-import RenewalSettings from "../pages/dashboard/renewals/RenewalSettings";
 import FactoryQuotationRenewal from "../pages/dashboard/compliance/FactoryQuotationRenewal";
 import UserRoleWorkLog from "../pages/dashboard/logs/UserRoleWorkLog";
 
@@ -147,14 +144,8 @@ function DashboardLayout() {
         return <DSCLogs searchQuery={searchQuery} />;
       case "/dashboard/renewals/dashboard":
         return <RenewalDashboard />;
-      case "/dashboard/renewals/manager":
-        return <RenewalManager searchQuery={searchQuery} />;
-      case "/dashboard/renewals/list":
-        return <RenewalList searchQuery={searchQuery} />;
       case "/dashboard/renewals/log":
         return <RenewalLog />;
-      case "/dashboard/renewals/settings":
-        return <RenewalSettings />;
       case "/dashboard/compliance/factory-quotation-renewal":
         return <FactoryQuotationRenewal />;
       case "/dashboard/logs/user-role-work-log":

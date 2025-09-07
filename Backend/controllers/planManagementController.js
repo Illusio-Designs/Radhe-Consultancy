@@ -284,23 +284,23 @@ const createPlanManagement = async (req, res) => {
 
       if (doubleCheck) {
         throw new Error('Plan management already exists for this quotation');
-      }
+    }
 
-      // Create new plan management record
-      const planManagement = await PlanManagement.create({
-        factory_quotation_id,
-        plan_manager_id,
-        status: 'plan'
+    // Create new plan management record
+    const planManagement = await PlanManagement.create({
+      factory_quotation_id,
+      plan_manager_id,
+      status: 'plan'
       }, { transaction: t });
 
-      // Update factory quotation status to 'plan'
-      await FactoryQuotation.update(
-        { status: 'plan' },
+    // Update factory quotation status to 'plan'
+    await FactoryQuotation.update(
+      { status: 'plan' },
         { 
           where: { id: factory_quotation_id },
           transaction: t
         }
-      );
+    );
 
       return planManagement;
     });

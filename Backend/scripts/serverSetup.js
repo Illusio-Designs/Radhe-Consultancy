@@ -524,18 +524,8 @@ async function setupPlanManagers() {
       throw new Error('Plan_manager role not found');
     }
 
-    const planManagers = [
-      {
-        username: 'Green Arc',
-        email: 'info2greenarc@gmail.com',
-        password: 'GreenArc@123'
-      },
-      {
-        username: 'Little Star',
-        email: 'littlestarcreation700@gmail.com',
-        password: 'LittleStar@123'
-      }
-    ];
+    // REMOVED: Test accounts no longer created
+    const planManagers = [];
 
     for (const manager of planManagers) {
       try {
@@ -616,18 +606,8 @@ async function setupStabilityManagers() {
       throw new Error('Stability_manager role not found');
     }
 
-    const stabilityManagers = [
-      {
-        username: 'Jayeshbhai A Kataria',
-        email: 'valuerjayeshakatira@gmail.com',
-        password: 'Jayeshbhai@123'
-      },
-      {
-        username: 'Samir G. Davda',
-        email: 'littlestarcreation700@gmail.com',
-        password: 'Samir@123'
-      }
-    ];
+    // REMOVED: Test accounts no longer created
+    const stabilityManagers = [];
 
     for (const manager of stabilityManagers) {
       try {
@@ -909,8 +889,8 @@ async function setupRenewalSystem() {
               reminderIntervals: config.reminderIntervals
             });
             console.log(`✅ Updated ${config.serviceName} with reminder intervals`);
-          } else {
-            console.log(`⏭️ Config for ${config.serviceName} already exists`);
+        } else {
+          console.log(`⏭️ Config for ${config.serviceName} already exists`);
           }
         }
       } catch (error) {

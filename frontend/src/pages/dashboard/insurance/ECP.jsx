@@ -1188,41 +1188,41 @@ function ECP({ searchQuery = "" }) {
   return (
     <div className="insurance">
       <div className="insurance-container">
-        <div className="insurance-content">
-          <div className="insurance-header">
-            <h1 className="insurance-title">Employee Compensation Policies</h1>
-            <Button
-              variant="contained"
-              onClick={() => setShowModal(true)}
-              icon={<BiPlus />}
-            >
-              Add Policy
-            </Button>
-          </div>
-
-          {/* ECP Statistics */}
-          <StatisticsCards />
-          {error && (
-            <div className="insurance-error">
-              <BiErrorCircle className="inline mr-2" /> {error}
-            </div>
-          )}
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={searchFilteredPolicies}
-              columns={columns}
-              defaultPageSize={pagination.pageSize}
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              totalItems={pagination.totalItems}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              serverSidePagination={true}
-            />
-          )}
+      <div className="insurance-content">
+        <div className="insurance-header">
+          <h1 className="insurance-title">Employee Compensation Policies</h1>
+          <Button
+            variant="contained"
+            onClick={() => setShowModal(true)}
+            icon={<BiPlus />}
+          >
+            Add Policy
+          </Button>
         </div>
+
+        {/* ECP Statistics */}
+        <StatisticsCards />
+        {error && (
+          <div className="insurance-error">
+            <BiErrorCircle className="inline mr-2" /> {error}
+          </div>
+        )}
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={searchFilteredPolicies}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
+      </div>
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}

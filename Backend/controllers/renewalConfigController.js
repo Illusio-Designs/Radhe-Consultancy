@@ -1,13 +1,14 @@
-const { RenewalConfig, ReminderLog } = require('../models');
+const { RenewalConfig, LabourInspection, LabourLicense, VehiclePolicy, EmployeeCompensationPolicy, HealthPolicies, FirePolicy, DSC } = require('../models');
 const { Op } = require('sequelize');
+const FactoryQuotation = require('../models/factoryQuotationModel');
 
 // Get all renewal configurations
 const getAllConfigs = async (req, res) => {
   try {
     const configs = await RenewalConfig.findAll({
-      order: [['serviceType', 'ASC']]
+      order: [['created_at', 'DESC']]
     });
-    
+
     res.json({
       success: true,
       data: configs
@@ -16,26 +17,28 @@ const getAllConfigs = async (req, res) => {
     console.error('Error fetching renewal configs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch renewal configurations'
+      message: 'Error fetching renewal configurations',
+      error: error.message
     });
   }
 };
 
-// Get configuration by service type
+// Get renewal config by service type
 const getConfigByService = async (req, res) => {
   try {
     const { serviceType } = req.params;
+
     const config = await RenewalConfig.findOne({
       where: { serviceType }
     });
-    
+
     if (!config) {
       return res.status(404).json({
         success: false,
-        message: 'Configuration not found for this service type'
+        message: 'Renewal configuration not found'
       });
     }
-    
+
     res.json({
       success: true,
       data: config
@@ -44,56 +47,66 @@ const getConfigByService = async (req, res) => {
     console.error('Error fetching renewal config:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch renewal configuration'
+      message: 'Error fetching renewal configuration',
+      error: error.message
     });
   }
 };
 
-// Create new renewal configuration
+// Create renewal configuration
 const createConfig = async (req, res) => {
   try {
-    const { serviceType, serviceName, reminderTimes, reminderDays } = req.body;
-    
+    const {
+      serviceType,
+      serviceName,
+      reminderTimes,
+      reminderDays,
+      reminderIntervals,
+      isActive
+    } = req.body;
+
     // Validate required fields
     if (!serviceType || !serviceName || !reminderTimes || !reminderDays) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: serviceType, serviceName, reminderTimes, reminderDays'
+        message: 'Missing required fields: serviceType, serviceName, reminderTimes, reminderDays'
       });
     }
-    
-    // Check if config already exists for this service type
+
+    // Check if service type already exists
     const existingConfig = await RenewalConfig.findOne({
       where: { serviceType }
     });
-    
+
     if (existingConfig) {
       return res.status(400).json({
         success: false,
-        message: 'Configuration already exists for this service type'
+        message: 'Service type already exists'
       });
     }
-    
-    // Create new configuration
-    const newConfig = await RenewalConfig.create({
+
+    const config = await RenewalConfig.create({
       serviceType,
       serviceName,
-      reminderTimes: parseInt(reminderTimes),
-      reminderDays: parseInt(reminderDays),
+      reminderTimes,
+      reminderDays,
+      reminderIntervals: reminderIntervals || (serviceType === 'labour_inspection' ? [15, 10, 7, 3, 1] : [30, 21, 14, 7, 1]),
+      isActive: isActive !== undefined ? isActive : true,
       createdBy: req.user.user_id,
-      isActive: true
+      updatedBy: req.user.user_id
     });
-    
+
     res.status(201).json({
       success: true,
       message: 'Renewal configuration created successfully',
-      data: newConfig
+      data: config
     });
   } catch (error) {
     console.error('Error creating renewal config:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create renewal configuration'
+      message: 'Error creating renewal configuration',
+      error: error.message
     });
   }
 };
@@ -102,25 +115,51 @@ const createConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reminderTimes, reminderDays, isActive } = req.body;
-    
+    const {
+      serviceType,
+      serviceName,
+      reminderTimes,
+      reminderDays,
+      reminderIntervals,
+      isActive
+    } = req.body;
+
     const config = await RenewalConfig.findByPk(id);
-    
+
     if (!config) {
       return res.status(404).json({
         success: false,
-        message: 'Configuration not found'
+        message: 'Renewal configuration not found'
       });
     }
-    
-    // Update fields
-    if (reminderTimes !== undefined) config.reminderTimes = parseInt(reminderTimes);
-    if (reminderDays !== undefined) config.reminderDays = parseInt(reminderDays);
-    if (isActive !== undefined) config.isActive = isActive;
-    
-    config.updatedBy = req.user.user_id;
-    await config.save();
-    
+
+    // Check if service type already exists (excluding current record)
+    if (serviceType && serviceType !== config.serviceType) {
+      const existingConfig = await RenewalConfig.findOne({
+        where: { 
+          serviceType,
+          id: { [Op.ne]: id }
+        }
+      });
+
+      if (existingConfig) {
+        return res.status(400).json({
+          success: false,
+          message: 'Service type already exists'
+        });
+      }
+    }
+
+    await config.update({
+      serviceType: serviceType || config.serviceType,
+      serviceName: serviceName || config.serviceName,
+      reminderTimes: reminderTimes !== undefined ? reminderTimes : config.reminderTimes,
+      reminderDays: reminderDays !== undefined ? reminderDays : config.reminderDays,
+      reminderIntervals: reminderIntervals !== undefined ? reminderIntervals : config.reminderIntervals,
+      isActive: isActive !== undefined ? isActive : config.isActive,
+      updatedBy: req.user.user_id
+    });
+
     res.json({
       success: true,
       message: 'Renewal configuration updated successfully',
@@ -130,7 +169,8 @@ const updateConfig = async (req, res) => {
     console.error('Error updating renewal config:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update renewal configuration'
+      message: 'Error updating renewal configuration',
+      error: error.message
     });
   }
 };
@@ -139,18 +179,18 @@ const updateConfig = async (req, res) => {
 const deleteConfig = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const config = await RenewalConfig.findByPk(id);
-    
+
     if (!config) {
       return res.status(404).json({
         success: false,
-        message: 'Configuration not found'
+        message: 'Renewal configuration not found'
       });
     }
-    
+
     await config.destroy();
-    
+
     res.json({
       success: true,
       message: 'Renewal configuration deleted successfully'
@@ -159,276 +199,14 @@ const deleteConfig = async (req, res) => {
     console.error('Error deleting renewal config:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete renewal configuration'
+      message: 'Error deleting renewal configuration',
+      error: error.message
     });
   }
 };
 
-// Get default service types for easy configuration
-const getDefaultServiceTypes = async (req, res) => {
-  try {
-    const defaultTypes = [
-      { serviceType: 'vehicle', serviceName: 'Vehicle Insurance', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'ecp', serviceName: 'Employee Compensation Policy', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'health', serviceName: 'Health Insurance', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'fire', serviceName: 'Fire Insurance', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'dsc', serviceName: 'Digital Signature Certificate', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'factory', serviceName: 'Factory Quotation', reminderTimes: 3, reminderDays: 30 },
-      { serviceType: 'labour_inspection', serviceName: 'Labour Inspection', reminderTimes: 5, reminderDays: 15 },
-      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30 }
-    ];
-    
-    res.json({
-      success: true,
-      data: defaultTypes
-    });
-  } catch (error) {
-    console.error('Error getting default service types:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get default service types'
-    });
-  }
-};
-
-// Get renewal logs
-const getLogs = async (req, res) => {
-  try {
-    const logs = await ReminderLog.findAll({
-      order: [['createdAt', 'DESC']]
-    });
-    
-    res.json({
-      success: true,
-      data: logs
-    });
-  } catch (error) {
-    console.error('Error fetching renewal logs:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch renewal logs'
-    });
-  }
-};
-
-// Search renewal configurations and logs
-const searchRenewals = async (req, res) => {
-  try {
-    const { query } = req.query;
-    
-    if (!query || query.trim().length < 3) {
-      return res.status(400).json({
-        success: false,
-        message: 'Search query must be at least 3 characters long'
-      });
-    }
-
-    const searchQuery = query.trim();
-    
-    // Search in configurations
-    const configs = await RenewalConfig.findAll({
-      where: {
-        [Op.or]: [
-          {
-            serviceType: {
-              [Op.like]: `%${searchQuery}%`
-            }
-          },
-          {
-            serviceName: {
-              [Op.like]: `%${searchQuery}%`
-            }
-          }
-        ]
-      }
-    });
-
-    // Search in logs
-    const logs = await ReminderLog.findAll({
-      where: {
-        [Op.or]: [
-          {
-            policy_type: {
-              [Op.like]: `%${searchQuery}%`
-            }
-          },
-          {
-            client_name: {
-              [Op.like]: `%${searchQuery}%`
-            }
-          },
-          {
-            status: {
-              [Op.like]: `%${searchQuery}%`
-            }
-          }
-        ]
-      },
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json({
-      success: true,
-      data: {
-        configurations: configs,
-        logs: logs
-      }
-    });
-  } catch (error) {
-    console.error('Error searching renewals:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to search renewals'
-    });
-  }
-};
-
-// Get renewal counts for different periods
-const getCounts = async (req, res) => {
-  try {
-    // This is a placeholder implementation
-    // You can enhance this to actually count renewals from your database
-    const counts = {
-      week: {
-        vehicles: 0,  // Changed from vehicle to vehicles
-        ecp: 0,
-        health: 0,
-        fire: 0,
-        dsc: 0,
-        factory_act: 0,  // Changed from factory to factory_act
-        labour_inspection: 0,
-        labour_license: 0
-      },
-      month: {
-        vehicles: 0,  // Changed from vehicle to vehicles
-        ecp: 0,
-        health: 0,
-        fire: 0,
-        dsc: 0,
-        factory_act: 0,  // Changed from factory to factory_act
-        labour_inspection: 0,
-        labour_license: 0
-      },
-      year: {
-        vehicles: 0,  // Changed from vehicle to vehicles
-        ecp: 0,
-        health: 0,
-        fire: 0,
-        dsc: 0,
-        factory_act: 0,  // Changed from factory to factory_act
-        labour_inspection: 0,
-        labour_license: 0
-      }
-    };
-    
-    res.json({
-      success: true,
-      data: counts
-    });
-  } catch (error) {
-    console.error('Error fetching renewal counts:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch renewal counts'
-    });
-  }
-};
-
-// Get renewals by type and period
-const getListByTypeAndPeriod = async (req, res) => {
-  try {
-    const { type, period } = req.query;
-    
-    if (!type || !period) {
-      return res.status(400).json({
-        success: false,
-        message: 'Type and period are required'
-      });
-    }
-
-    // This is a placeholder implementation
-    // You can enhance this to actually fetch renewals from your database
-    // For now, return sample data to test the frontend
-    let sampleRenewals = [];
-    
-    if (type === 'all') {
-      // Return multiple types when 'all' is selected
-      sampleRenewals = [
-        {
-          id: 1,
-          type: 'ecp',
-          holderName: 'Sample Company Ltd',
-          email: 'sample@company.com',
-          policy_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-          company_id: 1,
-          consumer_id: null,
-          status: 'active'
-        },
-        {
-          id: 2,
-          type: 'health',
-          holderName: 'Test Corporation',
-          email: 'test@corp.com',
-          policy_end_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
-          company_id: 2,
-          consumer_id: null,
-          status: 'active'
-        },
-        {
-          id: 3,
-          type: 'vehicles',
-          holderName: 'Auto Company',
-          email: 'auto@company.com',
-          policy_end_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(), // 45 days from now
-          company_id: 3,
-          consumer_id: null,
-          status: 'active'
-        },
-        {
-          id: 4,
-          type: 'fire',
-          holderName: 'Safety Corp',
-          email: 'safety@corp.com',
-          policy_end_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days from now
-          company_id: 4,
-          consumer_id: null,
-          status: 'active'
-        }
-      ];
-    } else {
-      // Return specific type data
-      sampleRenewals = [
-        {
-          id: 1,
-          type: type,
-          holderName: `${type.toUpperCase()} Company`,
-          email: `${type}@company.com`,
-          policy_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-          company_id: 1,
-          consumer_id: null,
-          status: 'active'
-        }
-      ];
-    }
-    
-    res.json({
-      success: true,
-      data: sampleRenewals
-    });
-  } catch (error) {
-    console.error('Error fetching renewals by type and period:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch renewals by type and period'
-    });
-  }
-};
-
-// Helper function to get labour inspection live data
+// Helper function for Labour Inspection live data
 const getLabourInspectionLiveData = async (config, today) => {
-  const { Op } = require('sequelize');
-  const { LabourInspection } = require('../models');
-
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
   
@@ -439,7 +217,7 @@ const getLabourInspectionLiveData = async (config, today) => {
   startOfNextWeek.setDate(endOfWeek.getDate() + 1);
   
   const endOfNextWeek = new Date(startOfNextWeek);
-  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+  startOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
   
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -448,7 +226,6 @@ const getLabourInspectionLiveData = async (config, today) => {
     // Upcoming renewals (within reminder window)
     LabourInspection.count({
       where: {
-        status: { [Op.in]: ['pending', 'running'] },
         expiry_date: {
           [Op.gte]: today,
           [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
@@ -459,7 +236,6 @@ const getLabourInspectionLiveData = async (config, today) => {
     // Expiring this week
     LabourInspection.count({
       where: {
-        status: { [Op.in]: ['pending', 'running'] },
         expiry_date: {
           [Op.between]: [startOfWeek, endOfWeek]
         }
@@ -469,7 +245,6 @@ const getLabourInspectionLiveData = async (config, today) => {
     // Expiring next week
     LabourInspection.count({
       where: {
-        status: { [Op.in]: ['pending', 'running'] },
         expiry_date: {
           [Op.between]: [startOfNextWeek, endOfNextWeek]
         }
@@ -479,7 +254,6 @@ const getLabourInspectionLiveData = async (config, today) => {
     // Expiring this month
     LabourInspection.count({
       where: {
-        status: { [Op.in]: ['pending', 'running'] },
         expiry_date: {
           [Op.between]: [startOfMonth, endOfMonth]
         }
@@ -487,14 +261,16 @@ const getLabourInspectionLiveData = async (config, today) => {
     })
   ]);
 
-  return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
+  return {
+    upcomingCount,
+    expiringThisWeek,
+    expiringNextWeek,
+    expiringThisMonth
+  };
 };
 
-// Helper function to get labour license live data
+// Helper function for Labour License live data
 const getLabourLicenseLiveData = async (config, today) => {
-  const { Op } = require('sequelize');
-  const { LabourLicense } = require('../models');
-
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
   
@@ -505,7 +281,7 @@ const getLabourLicenseLiveData = async (config, today) => {
   startOfNextWeek.setDate(endOfWeek.getDate() + 1);
   
   const endOfNextWeek = new Date(startOfNextWeek);
-  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+  startOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
   
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -514,7 +290,6 @@ const getLabourLicenseLiveData = async (config, today) => {
     // Upcoming renewals (within reminder window)
     LabourLicense.count({
       where: {
-        status: { [Op.in]: ['active', 'renewed'] },
         expiry_date: {
           [Op.gte]: today,
           [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
@@ -525,7 +300,6 @@ const getLabourLicenseLiveData = async (config, today) => {
     // Expiring this week
     LabourLicense.count({
       where: {
-        status: { [Op.in]: ['active', 'renewed'] },
         expiry_date: {
           [Op.between]: [startOfWeek, endOfWeek]
         }
@@ -535,7 +309,6 @@ const getLabourLicenseLiveData = async (config, today) => {
     // Expiring next week
     LabourLicense.count({
       where: {
-        status: { [Op.in]: ['active', 'renewed'] },
         expiry_date: {
           [Op.between]: [startOfNextWeek, endOfNextWeek]
         }
@@ -545,7 +318,6 @@ const getLabourLicenseLiveData = async (config, today) => {
     // Expiring this month
     LabourLicense.count({
       where: {
-        status: { [Op.in]: ['active', 'renewed'] },
         expiry_date: {
           [Op.between]: [startOfMonth, endOfMonth]
         }
@@ -553,14 +325,16 @@ const getLabourLicenseLiveData = async (config, today) => {
     })
   ]);
 
-  return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
+  return {
+    upcomingCount,
+    expiringThisWeek,
+    expiringNextWeek,
+    expiringThisMonth
+  };
 };
 
-// Helper function to get vehicle policy live data
+// Helper function for Vehicle Policy live data
 const getVehiclePolicyLiveData = async (config, today) => {
-  const { Op } = require('sequelize');
-  const { VehiclePolicy } = require('../models');
-
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
   
@@ -571,7 +345,7 @@ const getVehiclePolicyLiveData = async (config, today) => {
   startOfNextWeek.setDate(endOfWeek.getDate() + 1);
   
   const endOfNextWeek = new Date(startOfNextWeek);
-  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+  startOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
   
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -580,7 +354,7 @@ const getVehiclePolicyLiveData = async (config, today) => {
     // Upcoming renewals (within reminder window)
     VehiclePolicy.count({
       where: {
-        expiry_date: {
+        policy_end_date: {
           [Op.gte]: today,
           [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
         }
@@ -590,7 +364,7 @@ const getVehiclePolicyLiveData = async (config, today) => {
     // Expiring this week
     VehiclePolicy.count({
       where: {
-        expiry_date: {
+        policy_end_date: {
           [Op.between]: [startOfWeek, endOfWeek]
         }
       }
@@ -599,7 +373,7 @@ const getVehiclePolicyLiveData = async (config, today) => {
     // Expiring next week
     VehiclePolicy.count({
       where: {
-        expiry_date: {
+        policy_end_date: {
           [Op.between]: [startOfNextWeek, endOfNextWeek]
         }
       }
@@ -608,14 +382,65 @@ const getVehiclePolicyLiveData = async (config, today) => {
     // Expiring this month
     VehiclePolicy.count({
       where: {
-        expiry_date: {
+        policy_end_date: {
           [Op.between]: [startOfMonth, endOfMonth]
         }
       }
     })
   ]);
 
-  return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
+  return {
+    upcomingCount,
+    expiringThisWeek,
+    expiringNextWeek,
+    expiringThisMonth
+  };
+};
+
+// Helper function to get policy counts for different service types
+const getPolicyCount = async (config, today, dateField, days = null) => {
+  let Model;
+  
+  // Map service types to models
+  switch (config.serviceType) {
+    case 'ecp':
+      Model = EmployeeCompensationPolicy;
+      break;
+    case 'health':
+      Model = HealthPolicies;
+      break;
+    case 'fire':
+      Model = FirePolicy;
+      break;
+    case 'dsc':
+      Model = DSC;
+      break;
+    case 'factory':
+      Model = FactoryQuotation;
+      break;
+    default:
+      return 0;
+  }
+
+  if (days) {
+    const endDate = new Date(today.getTime() + (days * 24 * 60 * 60 * 1000));
+    return await Model.count({
+      where: {
+        [dateField]: {
+          [Op.between]: [today, endDate]
+        }
+      }
+    });
+  } else {
+    return await Model.count({
+      where: {
+        [dateField]: {
+          [Op.gte]: today,
+          [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
+        }
+      }
+    });
+  }
 };
 
 // Get live renewal counts and upcoming renewals for dashboard
@@ -665,7 +490,31 @@ const getLiveRenewalData = async (req, res) => {
             expiringThisMonth = vehicleData.expiringThisMonth;
             break;
 
-          // Add other service types as needed
+          case 'ecp':
+          case 'health':
+          case 'fire':
+            // These use policy_end_date
+            upcomingCount = await getPolicyCount(config, today, 'policy_end_date');
+            expiringThisWeek = await getPolicyCount(config, today, 'policy_end_date', 7);
+            expiringNextWeek = await getPolicyCount(config, today, 'policy_end_date', 14);
+            expiringThisMonth = await getPolicyCount(config, today, 'policy_end_date', 30);
+            break;
+
+          case 'dsc':
+            // DSC uses expiry_date
+            upcomingCount = await getPolicyCount(config, today, 'expiry_date');
+            expiringThisWeek = await getPolicyCount(config, today, 'expiry_date', 7);
+            expiringNextWeek = await getPolicyCount(config, today, 'expiry_date', 14);
+            expiringThisMonth = await getPolicyCount(config, today, 'expiry_date', 30);
+            break;
+
+          case 'factory':
+            // Factory uses renewal_date
+            upcomingCount = await getPolicyCount(config, today, 'renewal_date');
+            expiringThisWeek = await getPolicyCount(config, today, 'renewal_date', 7);
+            expiringNextWeek = await getPolicyCount(config, today, 'renewal_date', 14);
+            expiringThisMonth = await getPolicyCount(config, today, 'renewal_date', 30);
+            break;
         }
 
         liveData[config.serviceType] = {
@@ -683,38 +532,151 @@ const getLiveRenewalData = async (req, res) => {
         console.error(`Error getting live data for ${config.serviceType}:`, error);
         liveData[config.serviceType] = {
           serviceName: config.serviceName,
-          error: 'Failed to fetch data'
+          upcomingCount: 0,
+          expiringThisWeek: 0,
+          expiringNextWeek: 0,
+          expiringThisMonth: 0,
+          error: error.message
         };
       }
     }
 
-    // Calculate totals
-    const totals = {
-      totalUpcoming: Object.values(liveData).reduce((sum, data) => sum + (data.upcomingCount || 0), 0),
-      totalExpiringThisWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisWeek || 0), 0),
-      totalExpiringNextWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringNextWeek || 0), 0),
-      totalExpiringThisMonth: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisMonth || 0), 0)
-    };
-
     res.json({
       success: true,
-      data: {
-        services: liveData,
-        totals,
-        lastUpdated: new Date().toISOString()
-      }
+      data: liveData
     });
-
   } catch (error) {
     console.error('Error fetching live renewal data:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch live renewal data',
+      message: 'Error fetching live renewal data',
       error: error.message
     });
   }
 };
 
+// Get default service types
+const getDefaultServiceTypes = async (req, res) => {
+  try {
+    const serviceTypes = [
+      { value: 'vehicle', label: 'Vehicle Insurance' },
+      { value: 'ecp', label: 'Employee Compensation Policy' },
+      { value: 'health', label: 'Health Insurance' },
+      { value: 'fire', label: 'Fire Insurance' },
+      { value: 'dsc', label: 'Digital Signature Certificate' },
+      { value: 'factory', label: 'Factory Quotation' },
+      { value: 'labour_inspection', label: 'Labour Inspection' },
+      { value: 'labour_license', label: 'Labour License' }
+    ];
+
+    res.json({
+      success: true,
+      data: serviceTypes
+    });
+  } catch (error) {
+    console.error('Error fetching service types:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching service types',
+      error: error.message
+    });
+  }
+};
+
+// Get renewal logs
+const getLogs = async (req, res) => {
+  try {
+    // This would typically fetch from a logs table
+    res.json({
+      success: true,
+      data: [],
+      message: 'Logs functionality not implemented yet'
+    });
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching logs',
+      error: error.message
+    });
+  }
+};
+
+// Get renewal counts
+const getCounts = async (req, res) => {
+  try {
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+
+    const counts = {
+      total: 0,
+      upcoming: 0,
+      expiringThisWeek: 0,
+      expiringThisMonth: 0
+    };
+
+    // Get counts from all service types
+    const [labourInspectionCount, labourLicenseCount, vehicleCount] = await Promise.all([
+      LabourInspection.count(),
+      LabourLicense.count(),
+      VehiclePolicy.count()
+    ]);
+
+    counts.total = labourInspectionCount + labourLicenseCount + vehicleCount;
+
+    res.json({
+      success: true,
+      data: counts
+    });
+  } catch (error) {
+    console.error('Error fetching counts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching counts',
+      error: error.message
+    });
+  }
+};
+
+// Get renewal list by type and period
+const getListByTypeAndPeriod = async (req, res) => {
+  try {
+    const { type, period } = req.query;
+    
+    res.json({
+      success: true,
+      data: [],
+      message: 'List functionality not fully implemented yet'
+    });
+  } catch (error) {
+    console.error('Error fetching renewal list:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching renewal list',
+      error: error.message
+    });
+  }
+};
+
+// Search renewals
+const searchRenewals = async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    res.json({
+      success: true,
+      data: [],
+      message: 'Search functionality not fully implemented yet'
+    });
+  } catch (error) {
+    console.error('Error searching renewals:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error searching renewals',
+      error: error.message
+    });
+  }
+};
 
 module.exports = {
   getAllConfigs,
@@ -722,10 +684,13 @@ module.exports = {
   createConfig,
   updateConfig,
   deleteConfig,
+  getLiveRenewalData,
   getDefaultServiceTypes,
   getLogs,
-  searchRenewals,
   getCounts,
   getListByTypeAndPeriod,
-  getLiveRenewalData
+  searchRenewals,
+  getLabourInspectionLiveData,
+  getLabourLicenseLiveData,
+  getVehiclePolicyLiveData
 };
