@@ -34,7 +34,11 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
     { value: 'health', label: 'Health Insurance' },
     { value: 'fire', label: 'Fire Insurance' },
     { value: 'dsc', label: 'Digital Signature Certificate' },
-    { value: 'factory', label: 'Factory License' }
+    { value: 'factory', label: 'Factory License' },
+    { value: 'plan', label: 'Plan Management' },
+    { value: 'stability', label: 'Stability Management' },
+    { value: 'labour_license', label: 'Labour License' },
+    { value: 'labour_inspection', label: 'Labour Inspection' }
   ];
 
   useEffect(() => {

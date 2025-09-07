@@ -304,18 +304,54 @@ const LabourLicense = ({ searchQuery = "" }) => {
       key: "expiry_date",
       label: "Expiry Date",
       sortable: true,
-      render: (value) => (
-        <div>
-          <div>{new Date(value).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          })}</div>
-          <div className="text-sm text-gray-500">
-            {new Date(value) > Date.now() ? 'Active' : 'Expired'}
+      render: (value, license) => {
+        const expiryDate = new Date(value);
+        const today = new Date();
+        const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+        const isExpired = expiryDate < today;
+        const isExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry > 0;
+        const isExpiredStatus = license.status === 'expired';
+        
+        let statusClass = '';
+        let statusText = '';
+        let emailServiceStatus = '';
+        
+        if (isExpiredStatus) {
+          statusClass = 'expired-highlight';
+          statusText = 'EXPIRED';
+          emailServiceStatus = 'Email Service: INACTIVE';
+        } else if (isExpired) {
+          statusClass = 'expired-highlight';
+          statusText = 'EXPIRED';
+          emailServiceStatus = 'Email Service: INACTIVE';
+        } else if (isExpiringSoon) {
+          statusClass = 'expiring-soon-highlight';
+          statusText = `${daysUntilExpiry} days left`;
+          emailServiceStatus = 'Email Service: ACTIVE';
+        } else {
+          statusClass = 'active-highlight';
+          statusText = 'Active';
+          emailServiceStatus = 'Email Service: ACTIVE';
+        }
+        
+        return (
+          <div className={`expiry-date-cell ${statusClass}`}>
+            <div className="expiry-date">
+              {expiryDate.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })}
+            </div>
+            <div className={`expiry-status ${statusClass}`}>
+              {statusText}
+            </div>
+            <div className="email-service-status">
+              {emailServiceStatus}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "status",

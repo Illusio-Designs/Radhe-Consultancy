@@ -1326,10 +1326,19 @@ class RenewalService {
       // Determine reminder number based on days until expiry
       let reminderNumber = 1;
       if (daysUntilExpiry <= 3) reminderNumber = 5;
-      else if (daysUntilExpiry <= 5) reminderNumber = 4;
-      else if (daysUntilExpiry <= 8) reminderNumber = 3;
+      else if (daysUntilExpiry <= 6) reminderNumber = 4;
+      else if (daysUntilExpiry <= 9) reminderNumber = 3;
       else if (daysUntilExpiry <= 12) reminderNumber = 2;
       else reminderNumber = 1;
+
+      // Use dynamic reminder timing from config if available
+      if (config.calculateReminderNumber) {
+        reminderNumber = config.calculateReminderNumber(daysUntilExpiry);
+        if (reminderNumber === 0) {
+          console.log(`⏭️ No reminder due for inspection ${inspection.inspection_id} - ${daysUntilExpiry} days until expiry`);
+          return { success: false, message: 'No reminder due yet' };
+        }
+      }
 
       // Prepare reminder data
       const reminderData = {

@@ -1,5 +1,6 @@
 const { LabourLicense, Company } = require('../models');
 const { Op } = require('sequelize');
+const emailService = require('../services/emailService'); // Added import for emailService
 
 // Get all labour licenses with pagination and filters
 exports.getAllLabourLicenses = async (req, res) => {
@@ -517,5 +518,111 @@ exports.uploadLicenseDocuments = async (req, res) => {
       message: 'Failed to upload labour license documents',
       error: error.message
     });
+  }
+};
+
+// Check and manage email service status for labour license
+exports.checkEmailServiceStatus = async (license) => {
+  try {
+    const today = new Date();
+    const expiryDate = new Date(license.expiry_date);
+    const daysSinceExpiry = Math.ceil((today - expiryDate) / (1000 * 60 * 60 * 24));
+    
+    let shouldStopEmails = false;
+    let stopReason = '';
+    let emailServiceActive = true;
+    
+    // Stop emails if status is expired
+    if (license.status === 'expired') {
+      shouldStopEmails = true;
+      stopReason = 'Status marked as expired';
+      emailServiceActive = false;
+    }
+    // Stop emails if expired more than 15 days ago
+    else if (daysSinceExpiry > 15) {
+      shouldStopEmails = true;
+      stopReason = `Expired more than 15 days ago (${daysSinceExpiry} days)`;
+      emailServiceActive = false;
+    }
+    
+    // Update email service status if needed
+    if (shouldStopEmails && license.email_service_active !== false) {
+      await license.update({ 
+        email_service_active: false,
+        email_service_stopped_at: new Date(),
+        email_service_stop_reason: stopReason
+      });
+      
+      console.log(`[LabourLicense] Email service stopped for license ${license.license_id}: ${stopReason}`);
+    }
+    
+    return {
+      shouldStopEmails,
+      stopReason,
+      emailServiceActive,
+      daysSinceExpiry
+    };
+  } catch (error) {
+    console.error('Error checking email service status:', error);
+    return {
+      shouldStopEmails: false,
+      stopReason: 'Error checking status',
+      emailServiceActive: true,
+      daysSinceExpiry: 0
+    };
+  }
+};
+
+// Send labour license reminder email
+exports.sendLabourLicenseReminder = async (license) => {
+  try {
+    // Check if email service is active
+    const emailStatus = await exports.checkEmailServiceStatus(license);
+    
+    if (!emailStatus.emailServiceActive) {
+      console.log(`[LabourLicense] Email service inactive for license ${license.license_id}: ${emailStatus.stopReason}`);
+      return {
+        success: false,
+        message: 'Email service inactive',
+        reason: emailStatus.stopReason
+      };
+    }
+    
+    // Check if within reminder window (30 days before expiry)
+    const today = new Date();
+    const expiryDate = new Date(license.expiry_date);
+    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry > 30 || daysUntilExpiry < 0) {
+      return {
+        success: false,
+        message: 'Not within reminder window',
+        daysUntilExpiry
+      };
+    }
+    
+    // Send reminder email
+    const reminderData = {
+      daysUntilExpiry,
+      expiryDate: expiryDate.toISOString().split('T')[0],
+      reminderNumber: Math.min(Math.ceil((30 - daysUntilExpiry) / 7) + 1, 3) // 1-3 reminders
+    };
+    
+    const emailResult = await emailService.sendLabourLicenseReminder(license, reminderData);
+    
+    return {
+      success: true,
+      message: 'Reminder email sent successfully',
+      emailResult,
+      daysUntilExpiry
+    };
+    
+  } catch (error) {
+    console.error('Error sending labour license reminder:', error);
+    return {
+      success: false,
+      message: 'Failed to send reminder',
+      error: error.message
+    };
   }
 };

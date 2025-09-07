@@ -1207,3 +1207,28 @@
     font-size: 4rem;
   }
 }
+
+/* Live Renewal Dashboard Styles */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments for Live Renewal Dashboard */
+@media (max-width: 768px) {
+  .dashboard-page .grid-template-columns {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .dashboard-page .grid-template-columns-4 {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -19,7 +19,10 @@ router.get('/logs', auth, renewalConfigController.getLogs);
 // Get renewal counts
 router.get('/counts', auth, renewalConfigController.getCounts);
 
-// Get renewals by type and period
+// Get live renewal data for dashboard
+router.get('/live-data', auth, renewalConfigController.getLiveRenewalData);
+
+// Get renewal list by type and period
 router.get('/list', auth, renewalConfigController.getListByTypeAndPeriod);
 
 // Search renewals

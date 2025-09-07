@@ -424,6 +424,294 @@ const getListByTypeAndPeriod = async (req, res) => {
   }
 };
 
+// Get live renewal counts and upcoming renewals for dashboard
+exports.getLiveRenewalData = async (req, res) => {
+  try {
+    const today = new Date();
+    
+    // Get all active renewal configs
+    const configs = await RenewalConfig.findAll({
+      where: { isActive: true }
+    });
+
+    const liveData = {};
+
+    for (const config of configs) {
+      try {
+        let upcomingCount = 0;
+        let expiringThisWeek = 0;
+        let expiringNextWeek = 0;
+        let expiringThisMonth = 0;
+
+        switch (config.serviceType) {
+          case 'labour_inspection':
+            const inspectionData = await getLabourInspectionLiveData(config, today);
+            upcomingCount = inspectionData.upcomingCount;
+            expiringThisWeek = inspectionData.expiringThisWeek;
+            expiringNextWeek = inspectionData.expiringNextWeek;
+            expiringThisMonth = inspectionData.expiringThisMonth;
+            break;
+
+          case 'labour_license':
+            const licenseData = await getLabourLicenseLiveData(config, today);
+            upcomingCount = licenseData.upcomingCount;
+            expiringThisWeek = licenseData.expiringThisWeek;
+            expiringNextWeek = licenseData.expiringNextWeek;
+            expiringThisMonth = licenseData.expiringThisMonth;
+            break;
+
+          case 'vehicle':
+            const vehicleData = await getVehiclePolicyLiveData(config, today);
+            upcomingCount = vehicleData.upcomingCount;
+            expiringThisWeek = vehicleData.expiringThisWeek;
+            expiringNextWeek = vehicleData.expiringNextWeek;
+            expiringThisMonth = vehicleData.expiringThisMonth;
+            break;
+
+          // Add other service types as needed
+        }
+
+        liveData[config.serviceType] = {
+          serviceName: config.serviceName,
+          upcomingCount,
+          expiringThisWeek,
+          expiringNextWeek,
+          expiringThisMonth,
+          reminderDays: config.reminderDays,
+          reminderTimes: config.reminderTimes,
+          reminderIntervals: config.reminderIntervals || []
+        };
+
+      } catch (error) {
+        console.error(`Error getting live data for ${config.serviceType}:`, error);
+        liveData[config.serviceType] = {
+          serviceName: config.serviceName,
+          error: 'Failed to fetch data'
+        };
+      }
+    }
+
+    // Calculate totals
+    const totals = {
+      totalUpcoming: Object.values(liveData).reduce((sum, data) => sum + (data.upcomingCount || 0), 0),
+      totalExpiringThisWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisWeek || 0), 0),
+      totalExpiringNextWeek: Object.values(liveData).reduce((sum, data) => sum + (data.expiringNextWeek || 0), 0),
+      totalExpiringThisMonth: Object.values(liveData).reduce((sum, data) => sum + (data.expiringThisMonth || 0), 0)
+    };
+
+    res.json({
+      success: true,
+      data: {
+        services: liveData,
+        totals,
+        lastUpdated: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching live renewal data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch live renewal data',
+      error: error.message
+    });
+  }
+};
+
+// Helper function to get labour inspection live data
+async function getLabourInspectionLiveData(config, today) {
+  const { Op } = require('sequelize');
+  const { LabourInspection } = require('../models');
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+  const startOfNextWeek = new Date(endOfWeek);
+  startOfNextWeek.setDate(endOfWeek.getDate() + 1);
+  
+  const endOfNextWeek = new Date(startOfNextWeek);
+  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+  
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const [upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth] = await Promise.all([
+    // Upcoming renewals (within reminder window)
+    LabourInspection.count({
+      where: {
+        status: { [Op.in]: ['pending', 'running'] },
+        expiry_date: {
+          [Op.gte]: today,
+          [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
+        }
+      }
+    }),
+    
+    // Expiring this week
+    LabourInspection.count({
+      where: {
+        status: { [Op.in]: ['pending', 'running'] },
+        expiry_date: {
+          [Op.between]: [startOfWeek, endOfWeek]
+        }
+      }
+    }),
+    
+    // Expiring next week
+    LabourInspection.count({
+      where: {
+        status: { [Op.in]: ['pending', 'running'] },
+        expiry_date: {
+          [Op.between]: [startOfNextWeek, endOfNextWeek]
+        }
+      }
+    }),
+    
+    // Expiring this month
+    LabourInspection.count({
+      where: {
+        status: { [Op.in]: ['pending', 'running'] },
+        expiry_date: {
+          [Op.between]: [startOfMonth, endOfMonth]
+        }
+      }
+    })
+  ]);
+
+  return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
+}
+
+// Helper function to get labour license live data
+async function getLabourLicenseLiveData(config, today) {
+  const { Op } = require('sequelize');
+  const { LabourLicense } = require('../models');
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+  const startOfNextWeek = new Date(endOfWeek);
+  startOfNextWeek.setDate(endOfWeek.getDate() + 1);
+  
+  const endOfNextWeek = new Date(startOfNextWeek);
+  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+  
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const [upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth] = await Promise.all([
+    // Upcoming renewals (within reminder window)
+    LabourLicense.count({
+      where: {
+        status: { [Op.in]: ['active', 'renewed'] },
+        expiry_date: {
+          [Op.gte]: today,
+          [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
+        }
+      }
+    }),
+    
+    // Expiring this week
+    LabourLicense.count({
+      where: {
+        status: { [Op.in]: ['active', 'renewed'] },
+        expiry_date: {
+          [Op.between]: [startOfWeek, endOfWeek]
+        }
+      }
+    }),
+    
+    // Expiring next week
+    LabourLicense.count({
+      where: {
+        status: { [Op.in]: ['active', 'renewed'] },
+        expiry_date: {
+          [Op.between]: [startOfNextWeek, endOfNextWeek]
+        }
+      }
+    }),
+    
+    // Expiring this month
+    LabourLicense.count({
+      where: {
+        status: { [Op.in]: ['active', 'renewed'] },
+        expiry_date: {
+          [Op.between]: [startOfMonth, endOfMonth]
+        }
+      }
+    })
+  ]);
+
+  return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
+}
+
+// Helper function to get vehicle policy live data
+async function getVehiclePolicyLiveData(config, today) {
+  const { Op } = require('sequelize');
+  const { VehiclePolicy } = require('../models');
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+  const startOfNextWeek = new Date(endOfWeek);
+  startOfNextWeek.setDate(endOfWeek.getDate() + 1);
+  
+  const endOfNextWeek = new Date(startOfNextWeek);
+  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+  
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const [upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth] = await Promise.all([
+    // Upcoming renewals (within reminder window)
+    VehiclePolicy.count({
+      where: {
+        expiry_date: {
+          [Op.gte]: today,
+          [Op.lte]: new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000))
+        }
+      }
+    }),
+    
+    // Expiring this week
+    VehiclePolicy.count({
+      where: {
+        expiry_date: {
+          [Op.between]: [startOfWeek, endOfWeek]
+        }
+      }
+    }),
+    
+    // Expiring next week
+    VehiclePolicy.count({
+      where: {
+        expiry_date: {
+          [Op.between]: [startOfNextWeek, endOfNextWeek]
+        }
+      }
+    }),
+    
+    // Expiring this month
+    VehiclePolicy.count({
+      where: {
+        expiry_date: {
+          [Op.between]: [startOfMonth, endOfMonth]
+        }
+      }
+    })
+  ]);
+
+  return { upcomingCount, expiringThisWeek, expiringNextWeek, expiringThisMonth };
+}
+
 module.exports = {
   getAllConfigs,
   getConfigByService,
@@ -434,5 +722,6 @@ module.exports = {
   getLogs,
   searchRenewals,
   getCounts,
-  getListByTypeAndPeriod
+  getListByTypeAndPeriod,
+  getLiveRenewalData
 };
