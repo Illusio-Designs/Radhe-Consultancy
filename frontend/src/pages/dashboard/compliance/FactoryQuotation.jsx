@@ -216,6 +216,7 @@ const StabilityManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }
 // Application Approval Modal
 const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplication }) => {
   const [applicationDate, setApplicationDate] = useState(currentApplication?.application_date || '');
+  const [expiryDate, setExpiryDate] = useState(currentApplication?.expiry_date || '');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -232,7 +233,7 @@ const ApplicationApprovalModal = ({ isOpen, onClose, onApprove, currentApplicati
 
     setLoading(true);
     try {
-      await onApprove(files, applicationDate);
+      await onApprove(files, applicationDate, expiryDate);
       toast.success('Application approved successfully');
       onClose(); // Close modal after successful approval
     } catch (error) {
@@ -1978,12 +1979,13 @@ function FactoryQuotation({ searchQuery = "" }) {
   };
 
   // Handle application file upload
-  const handleApplicationFileUpload = async (applicationId, files, applicationDate) => {
+  const handleApplicationFileUpload = async (applicationId, files, applicationDate, expiryDate) => {
     try {
       // First update status with dates
       await applicationManagementAPI.updateApplicationStatus(applicationId, {
         status: 'Approved',
-        application_date: applicationDate
+        application_date: applicationDate,
+        expiry_date: expiryDate
       });
 
       // Then upload files if any were selected
@@ -2413,8 +2415,8 @@ function FactoryQuotation({ searchQuery = "" }) {
       <ApplicationApprovalModal
         isOpen={showApplicationModal}
         onClose={() => setShowApplicationModal(false)}
-        onApprove={(files, applicationDate) => 
-          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate)
+        onApprove={(files, applicationDate, expiryDate) => 
+          handleApplicationFileUpload(selectedQuotation?.applicationManagement?.id, files, applicationDate, expiryDate)
         }
         currentApplication={selectedQuotation?.applicationManagement}
       />
