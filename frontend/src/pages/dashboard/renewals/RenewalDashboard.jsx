@@ -17,6 +17,13 @@ import {
   BiListUl,
   BiRefresh,
   BiPlus,
+  BiCar,
+  BiUser,
+  BiHeart,
+  BiKey,
+  BiBuilding,
+  BiFileBlank,
+  BiSearch,
 } from "react-icons/bi";
 import "../../../styles/pages/dashboard/renewals/RenewalDashboard.css";
 
@@ -252,7 +259,7 @@ const StatisticsCards = ({ statistics, loading }) => {
 
 // Main Renewal Dashboard Component
 const RenewalDashboard = () => {
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState('statistics');
   const [configs, setConfigs] = useState([]);
   const [liveData, setLiveData] = useState(null);
   const [renewalsList, setRenewalsList] = useState([]);
@@ -356,16 +363,16 @@ const RenewalDashboard = () => {
 
   const getServiceIcon = (serviceType) => {
     const icons = {
-      vehicle: '🚗',
-      ecp: '👥',
-      health: '🏥',
-      fire: '🔥',
-      dsc: '🔐',
-      factory: '🏭',
-      labour_license: '📋',
-      labour_inspection: '🔍'
+      vehicle: <BiCar />,
+      ecp: <BiUser />,
+      health: <BiHeart />,
+      fire: <BiShield />,
+      dsc: <BiKey />,
+      factory: <BiBuilding />,
+      labour_license: <BiFileBlank />,
+      labour_inspection: <BiSearch />
     };
-    return icons[serviceType] || '📄';
+    return icons[serviceType] || <BiFileBlank />;
   };
 
   const getServiceName = (serviceType) => {
@@ -389,100 +396,147 @@ const RenewalDashboard = () => {
     return 'priority-high';
   };
 
-  // Active Tab - Show active configurations
-  const renderActiveTab = () => {
-    const activeConfigs = configs.filter(config => config.isActive);
-    
-    const columns = [
-      {
-        key: "serviceName",
-        label: "Service Name",
-        render: (_, config) => (
-          <div className="service-info">
-            <div className="service-icon">{getServiceIcon(config.serviceType)}</div>
-            <div className="service-details">
-              <div className="font-medium">{config.serviceName}</div>
-              <div className="text-sm text-gray-500">{config.serviceType}</div>
+  // Statistics Data Tab - Show live renewal data
+  const renderStatisticsTab = () => {
+    if (!liveData) {
+      return (
+        <div className="tab-content">
+          <div className="tab-header">
+            <h2>Statistics Data</h2>
+            <Button
+              variant="outlined"
+              onClick={fetchLiveData}
+              icon={<BiRefresh />}
+            >
+              Refresh Data
+            </Button>
+          </div>
+          <div className="empty-state">
+            <div className="empty-icon">
+              <BiTrendingUp />
             </div>
+            <h3>No Data Available</h3>
+            <p>Click refresh to load statistics data.</p>
           </div>
-        ),
-      },
-      {
-        key: "reminderTimes",
-        label: "Reminder Times",
-        render: (_, config) => (
-          <span className="badge bg-blue-100 text-blue-800 px-2 py-1 rounded">
-            {config.reminderTimes} times
-          </span>
-        ),
-      },
-      {
-        key: "reminderDays",
-        label: "Reminder Days",
-        render: (_, config) => (
-          <span className="badge bg-green-100 text-green-800 px-2 py-1 rounded">
-            {config.reminderDays} days
-          </span>
-        ),
-      },
-      {
-        key: "reminderIntervals",
-        label: "Intervals",
-        render: (_, config) => (
-          <span className="badge bg-purple-100 text-purple-800 px-2 py-1 rounded">
-            {Array.isArray(config.reminderIntervals) ? config.reminderIntervals.join(', ') : 'N/A'}
-          </span>
-        ),
-      },
-      {
-        key: "actions",
-        label: "Actions",
-        render: (_, config) => (
-          <div className="renewal-actions">
-            <ActionButton
-              onClick={() => handleEdit(config)}
-              variant="secondary"
-              size="small"
-            >
-              <BiEdit />
-            </ActionButton>
-            <ActionButton
-              onClick={() => handleDelete(config.id)}
-              variant="danger"
-              size="small"
-            >
-              <BiTrash />
-            </ActionButton>
-          </div>
-        ),
-      },
-    ];
-
+        </div>
+      );
+    }
+    
     return (
       <div className="tab-content">
         <div className="tab-header">
-          <h2>Active Configurations</h2>
+          <h2>Statistics Data</h2>
           <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<BiPlus />}
+            variant="outlined"
+            onClick={fetchLiveData}
+            icon={<BiRefresh />}
           >
-            Add Configuration
+            Refresh Data
           </Button>
         </div>
-        
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={activeConfigs}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-    );
-  };
+
+        {/* Summary Cards */}
+            <div className="statistics-cards-grid">
+          <div className="stat-card total-upcoming">
+                <div className="stat-icon">
+                  <BiCalendar />
+                </div>
+                <div className="stat-content">
+              <div className="stat-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.upcomingCount || 0), 0))}</div>
+                  <div className="stat-label">Total Upcoming</div>
+                </div>
+              </div>
+
+          <div className="stat-card this-week">
+                <div className="stat-icon">
+                  <BiErrorCircle />
+                </div>
+                <div className="stat-content">
+              <div className="stat-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.expiringThisWeek || 0), 0))}</div>
+                  <div className="stat-label">This Week</div>
+                </div>
+              </div>
+
+          <div className="stat-card next-week">
+                <div className="stat-icon">
+                  <BiListUl />
+                </div>
+                <div className="stat-content">
+              <div className="stat-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.expiringNextWeek || 0), 0))}</div>
+                  <div className="stat-label">Next Week</div>
+                </div>
+              </div>
+
+          <div className="stat-card this-month">
+                <div className="stat-icon">
+                  <BiTrendingUp />
+                </div>
+                <div className="stat-content">
+              <div className="stat-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.expiringThisMonth || 0), 0))}</div>
+                  <div className="stat-label">This Month</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Service Breakdown */}
+        <div className="services-breakdown">
+          <h3>Service Breakdown</h3>
+            <div className="services-grid">
+              {Object.entries(liveData).map(([serviceType, data]) => (
+                <div key={serviceType} className={`service-card ${getPriorityClass(data.upcomingCount)} ${data.error ? 'error-card' : ''}`}>
+                  <div className="service-header">
+                    <div className="service-icon">{getServiceIcon(serviceType)}</div>
+                    <div className="service-name">{data.serviceName || getServiceName(serviceType)}</div>
+                  </div>
+                  
+                  <div className="service-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Upcoming:</span>
+                      <span className="stat-value">{formatNumber(data.upcomingCount)}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">This Week:</span>
+                      <span className="stat-value">{formatNumber(data.expiringThisWeek)}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Next Week:</span>
+                      <span className="stat-value">{formatNumber(data.expiringNextWeek)}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">This Month:</span>
+                      <span className="stat-value">{formatNumber(data.expiringThisMonth)}</span>
+                    </div>
+                  </div>
+
+                  {data.reminderIntervals && Array.isArray(data.reminderIntervals) && data.reminderIntervals.length > 0 && (
+                    <div className="reminder-intervals">
+                      <div className="intervals-label">Reminder Intervals:</div>
+                      <div className="intervals-list">
+                        {data.reminderIntervals.map((interval, index) => (
+                          <span key={index} className="interval-badge">
+                            {interval}d
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {data.error && (
+                    <div className="service-error">
+                      <span className="error-icon">
+                        <BiErrorCircle />
+                      </span>
+                      <span className="error-message">{data.error}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+    </div>
+  );
+};
+
 
   // Settings Tab - Show all configurations for management
   const renderSettingsTab = () => {
@@ -563,7 +617,7 @@ const RenewalDashboard = () => {
             Add Configuration
           </Button>
         </div>
-        
+
         {loading ? (
           <Loader size="large" color="primary" />
         ) : (
@@ -581,7 +635,7 @@ const RenewalDashboard = () => {
   const renderListTab = () => {
     // Create a list of upcoming renewals from live data
     const upcomingRenewalsList = [];
-    
+
     if (liveData) {
       Object.entries(liveData).forEach(([serviceType, data]) => {
         if (data.upcomingCount > 0) {
@@ -590,7 +644,7 @@ const RenewalDashboard = () => {
             const daysUntilExpiry = Math.floor(Math.random() * 30) + 1; // Random 1-30 days
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + daysUntilExpiry);
-            
+
             upcomingRenewalsList.push({
               id: `${serviceType}-${i}`,
               serviceType,
@@ -646,7 +700,9 @@ const RenewalDashboard = () => {
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-icon">📋</div>
+            <div className="empty-icon">
+              <BiListUl />
+            </div>
             <h3>No Upcoming Renewals</h3>
             <p>There are no upcoming renewals to display at this time.</p>
           </div>
@@ -673,110 +729,15 @@ const RenewalDashboard = () => {
         </div>
       </div>
 
-      {/* Live Data Display - Always visible */}
-      {liveData && (
-        <div className="live-data-section">
-          <h2>Live Renewal Data</h2>
-          
-          {/* Summary Cards */}
-          <div className="summary-cards">
-            <div className="summary-card total-upcoming">
-              <div className="card-icon">📅</div>
-              <div className="card-content">
-                <h3>Total Upcoming</h3>
-                <div className="card-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.upcomingCount || 0), 0))}</div>
-              </div>
-            </div>
-
-            <div className="summary-card this-week">
-              <div className="card-icon">⚠️</div>
-              <div className="card-content">
-                <h3>This Week</h3>
-                <div className="card-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.expiringThisWeek || 0), 0))}</div>
-              </div>
-            </div>
-
-            <div className="summary-card next-week">
-              <div className="card-icon">📋</div>
-              <div className="card-content">
-                <h3>Next Week</h3>
-                <div className="card-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.expiringNextWeek || 0), 0))}</div>
-              </div>
-            </div>
-
-            <div className="summary-card this-month">
-              <div className="card-icon">📊</div>
-              <div className="card-content">
-                <h3>This Month</h3>
-                <div className="card-number">{formatNumber(Object.values(liveData).reduce((sum, service) => sum + (service.expiringThisMonth || 0), 0))}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Service Breakdown */}
-          <div className="services-section">
-            <h2>Service Breakdown</h2>
-            <div className="services-grid">
-              {Object.entries(liveData).map(([serviceType, data]) => (
-                <div key={serviceType} className={`service-card ${getPriorityClass(data.upcomingCount)} ${data.error ? 'error-card' : ''}`}>
-                  <div className="service-header">
-                    <div className="service-icon">{getServiceIcon(serviceType)}</div>
-                    <div className="service-name">{data.serviceName || getServiceName(serviceType)}</div>
-                  </div>
-                  
-                  <div className="service-stats">
-                    <div className="stat-item">
-                      <span className="stat-label">Upcoming:</span>
-                      <span className="stat-value">{formatNumber(data.upcomingCount)}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">This Week:</span>
-                      <span className="stat-value">{formatNumber(data.expiringThisWeek)}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Next Week:</span>
-                      <span className="stat-value">{formatNumber(data.expiringNextWeek)}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">This Month:</span>
-                      <span className="stat-value">{formatNumber(data.expiringThisMonth)}</span>
-                    </div>
-                  </div>
-
-                  {data.reminderIntervals && Array.isArray(data.reminderIntervals) && data.reminderIntervals.length > 0 && (
-                    <div className="reminder-intervals">
-                      <div className="intervals-label">Reminder Intervals:</div>
-                      <div className="intervals-list">
-                        {data.reminderIntervals.map((interval, index) => (
-                          <span key={index} className="interval-badge">
-                            {interval}d
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {data.error && (
-                    <div className="service-error">
-                      <span className="error-icon">⚠️</span>
-                      <span className="error-message">{data.error}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tab Navigation */}
       <div className="tab-navigation">
         <button
-          className={`tab-button ${activeTab === 'active' ? 'active' : ''}`}
-          onClick={() => setActiveTab('active')}
+          className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('statistics')}
         >
-          <BiShield className="tab-icon" />
-          Active
+          <BiTrendingUp className="tab-icon" />
+          Statistics Data
         </button>
         <button
           className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
@@ -801,10 +762,10 @@ const RenewalDashboard = () => {
       )}
 
       {/* Tab Content */}
-      {activeTab === 'active' && renderActiveTab()}
+      {activeTab === 'statistics' && renderStatisticsTab()}
       {activeTab === 'settings' && renderSettingsTab()}
       {activeTab === 'list' && renderListTab()}
-      
+
       {/* Modal */}
       <Modal
         isOpen={showModal}
