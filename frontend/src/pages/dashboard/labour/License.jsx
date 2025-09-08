@@ -652,6 +652,21 @@ const LicenseForm = ({ license, companies, onSubmit, onCancel }) => {
             className="insurance-form-input"
           />
         </div>
+
+        <div className="insurance-form-group">
+          <select
+            id="type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            required
+            className="insurance-form-input"
+          >
+            <option value="">Select License Type</option>
+            <option value="Central">Central</option>
+            <option value="State">State</option>
+          </select>
+        </div>
       </div>
 
       <div className="insurance-form-actions">
