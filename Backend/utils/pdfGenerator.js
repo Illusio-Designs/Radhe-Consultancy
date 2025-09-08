@@ -1,57 +1,45 @@
-const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const companyConfig = require('../config/companyConfig');
+const PDFDocument = require('pdfkit');
 
 class FactoryQuotationPDFGenerator {
   constructor() {
-    try {
-      this.doc = new PDFDocument({
-        size: 'A4',
-        margins: {
-          top: 20,
-          bottom: 20,
-          left: 20,
-          right: 20
-        }
-      });
-      console.log('PDF Generator: PDFDocument created successfully');
-    } catch (error) {
-      console.error('PDF Generator: Error creating PDFDocument:', error);
-      throw error;
-    }
+    console.log('PDF Generator: FactoryQuotationPDFGenerator initialized');
   }
 
-  // Helper method to parse charge values - handle strings, numbers, and null values
+  // Helper method to parse charge values
   parseCharge(value) {
     try {
-      if (value === null || value === undefined || value === '') return 0;
+    if (value === null || value === undefined || value === '') return 0;
       if (typeof value === 'number') return value;
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? 0 : parsed;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
     } catch (error) {
       console.error('Error parsing charge value:', value, error);
       return 0;
     }
   }
 
-  // Helper method to wrap text to fit within a specified width
-  wrapText(text, maxWidth, fontSize = 10) {
-    if (!text) return [];
-    const words = text.split(' ');
+  // Helper method to split address into multiple lines
+  splitAddressIntoLines(address, maxLength) {
+    if (!address || address === 'N/A') return ['N/A'];
+    
+    const words = address.split(' ');
     const lines = [];
     let currentLine = '';
     
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      const testLine = currentLine ? currentLine + ' ' + word : word;
-      const testWidth = this.doc.fontSize(fontSize).widthOfString(testLine);
-      
-      if (testWidth > maxWidth && currentLine !== '') {
+    for (const word of words) {
+      if ((currentLine + ' ' + word).length <= maxLength) {
+        currentLine += (currentLine ? ' ' : '') + word;
+      } else {
+        if (currentLine) {
         lines.push(currentLine);
         currentLine = word;
       } else {
-        currentLine = testLine;
+          // If single word is longer than maxLength, split it
+          lines.push(word.substring(0, maxLength));
+          currentLine = word.substring(maxLength);
+        }
       }
     }
     
@@ -59,28 +47,181 @@ class FactoryQuotationPDFGenerator {
       lines.push(currentLine);
     }
     
-    return lines;
+    return lines.slice(0, 5); // Maximum 5 lines
   }
 
-  // Generate the complete quotation PDF
+  // Generate quotation PDF matching the template format
   async generateQuotationPDF(quotationData, outputPath) {
     try {
-      this.quotationData = quotationData;
-      console.log('PDF Generator: Starting PDF generation for quotation:', quotationData.id);
-
-      // Create write stream
+      console.log('PDF Generator: Starting template-matching PDF generation for quotation:', quotationData.id);
+      
+      const doc = new PDFDocument({ 
+        margin: 50,
+        size: 'A4',
+        layout: 'portrait'
+      });
       const stream = fs.createWriteStream(outputPath);
-      this.doc.pipe(stream);
+      doc.pipe(stream);
 
-      // Generate the main page
-      this.generateMainPage();
+      // Calculate amounts
+      const factoryLicenseAmount = this.parseCharge(quotationData.calculatedAmount);
+      const additionalCharges = [
+        this.parseCharge(quotationData.planCharge),
+        this.parseCharge(quotationData.stabilityCertificateAmount),
+        this.parseCharge(quotationData.administrationCharge),
+        this.parseCharge(quotationData.consultancyFees)
+      ].filter(charge => charge > 0)
+       .reduce((sum, charge) => sum + charge, 0);
+      const grandTotal = factoryLicenseAmount + additionalCharges;
 
-      // Finalize PDF
-      this.doc.end();
+      // Add logo from assets folder
+      try {
+        const logoPath = path.join(__dirname, '../assest/@RADHE ADVISORY LOGO (1).png');
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, 50, 50, { width: 100,height: 60 });
+        }
+      } catch (logoError) {
+        console.log('Logo not found, using text header');
+      }
+
+      // Header - "Our Details" on right with full details (shifted left to avoid overlap)
+      doc.fontSize(14).fillColor('#000').font('Helvetica-Bold')
+         .text('Our Details', 360, 50);
+      
+      // Our Details content
+      doc.fontSize(10).fillColor('#000').font('Helvetica')
+         .text('RADHE ADVISORY', 360, 70);
+      doc.text('LABOUR LAW CONSULTANT', 360, 85);
+      doc.text('Email: radheconsultancy17@yahoo.com', 360, 100);
+      doc.text('Phone: +91-9913014516', 360, 115);
+      doc.text('Phone: +91-8511172645', 360, 130);
+
+      // Calculate dynamic box height based on address length
+      const address = quotationData.companyAddress || 'N/A';
+      const addressLines = this.splitAddressIntoLines(address, 40);
+      const dynamicHeight = Math.max(120, 60 + (addressLines.length * 15));
+      
+      // Main content box with border - positioned below logo
+      const contentY = 160;
+      const contentWidth = 500;
+      const contentHeight = dynamicHeight;
+      
+      // Draw main content box
+      doc.rect(50, contentY, contentWidth, contentHeight).stroke('#000');
+
+      // Left side - Company Details (full width, left-aligned only)
+      doc.fontSize(12).fillColor('#000').font('Helvetica-Bold')
+         .text('Company Name', 60, contentY + 10);
+      doc.fontSize(10).fillColor('#000').font('Helvetica')
+         .text(quotationData.companyName || 'N/A', 60, contentY + 30);
+      
+      // Horizontal line
+      doc.moveTo(60, contentY + 45).lineTo(250, contentY + 45).stroke('#000');
+      
+      doc.fontSize(12).fillColor('#000').font('Helvetica-Bold')
+         .text('Company Address', 60, contentY + 55);
+      
+      // Split address into multiple lines (4-5 lines) - using already calculated addressLines
+      
+      let addressY = contentY + 75;
+      addressLines.forEach((line, index) => {
+        doc.fontSize(10).fillColor('#000').font('Helvetica')
+           .text(line, 60, addressY + (index * 12));
+      });
+
+      // Right side - Quotation Details
+      doc.fontSize(12).fillColor('#000').font('Helvetica-Bold')
+         .text('Quotation Date', 300, contentY + 10);
+      doc.fontSize(10).fillColor('#000').font('Helvetica')
+         .text(quotationData.date || 'N/A', 300, contentY + 30);
+      
+      // Horizontal line
+      doc.moveTo(300, contentY + 45).lineTo(490, contentY + 45).stroke('#000');
+      
+      doc.fontSize(12).fillColor('#000').font('Helvetica-Bold')
+         .text('Quotation Number', 300, contentY + 55);
+      doc.fontSize(10).fillColor('#000').font('Helvetica')
+         .text(quotationData.id || 'N/A', 300, contentY + 75);
+
+      // Service Breakdown Table
+      const tableY = contentY + contentHeight + 30;
+      doc.fontSize(14).fillColor('#000').font('Helvetica-Bold')
+         .text('Service Breakdown', 50, tableY);
+
+      // Table headers
+      const tableStartY = tableY + 25;
+      const col1 = 50;
+      const col2 = 90;
+      const col3 = 180;
+      const col4 = 280;
+      const col5 = 380;
+      const col6 = 450;
+      const rowHeight = 25;
+
+      // Table Header Row
+      doc.rect(col1, tableStartY, 500, rowHeight).stroke('#000');
+      doc.fontSize(10).fillColor('#000').font('Helvetica-Bold')
+         .text('Sr. No.', col1 + 5, tableStartY + 8);
+      doc.text('Particular', col2 + 5, tableStartY + 8);
+      doc.text('No of Workers', col3 + 5, tableStartY + 8);
+      doc.text('Hours Power', col4 + 5, tableStartY + 8);
+      doc.text('Year', col5 + 5, tableStartY + 8);
+      doc.text('Total', col6 + 5, tableStartY + 8);
+
+      // Table Row 1 - Factory License
+      const row1Y = tableStartY + rowHeight;
+      doc.rect(col1, row1Y, 500, rowHeight).stroke('#000');
+      doc.fontSize(10).fillColor('#000').font('Helvetica')
+         .text('1', col1 + 5, row1Y + 8);
+      doc.text('Factory License', col2 + 5, row1Y + 8);
+      
+      // Parse work details properly
+      const workDetails = quotationData.items?.[0]?.workDetails || '250 to 500 HP, Up To 20 Workers';
+      const workers = workDetails.includes('Workers') ? workDetails.split(',')[1]?.trim() || 'Up To 20 Workers' : 'Up To 20 Workers';
+      const power = workDetails.includes('HP') ? workDetails.split(',')[0]?.trim() || '250 to 500 HP' : '250 to 500 HP';
+      
+      doc.text(workers, col3 + 5, row1Y + 8);
+      doc.text(power, col4 + 5, row1Y + 8);
+      doc.text(quotationData.items?.[0]?.year || '5 Year(s)', col5 + 5, row1Y + 8);
+      doc.text(factoryLicenseAmount.toString(), col6 + 5, row1Y + 8);
+
+      // Additional charges row
+      if (additionalCharges > 0) {
+        const row2Y = row1Y + rowHeight;
+        doc.rect(col1, row2Y, 500, rowHeight).stroke('#000');
+        doc.fontSize(10).fillColor('#000').font('Helvetica')
+           .text('2', col1 + 5, row2Y + 8);
+        doc.text('Additional Charge', col2 + 5, row2Y + 8);
+        doc.text('', col3 + 5, row2Y + 8);
+        doc.text('', col4 + 5, row2Y + 8);
+        doc.text('', col5 + 5, row2Y + 8);
+        doc.text(additionalCharges.toString(), col6 + 5, row2Y + 8);
+      }
+
+      // Total row
+      const totalRowY = additionalCharges > 0 ? row1Y + (rowHeight * 2) : row1Y + rowHeight;
+      doc.rect(col1, totalRowY, 500, rowHeight).stroke('#000');
+      doc.fontSize(10).fillColor('#000').font('Helvetica-Bold')
+         .text('Total', col1 + 5, totalRowY + 8, { width: col6 - col1 - 10 });
+      doc.text(grandTotal.toString(), col6 + 5, totalRowY + 8);
+
+      // Terms & Conditions
+      const termsY = totalRowY + rowHeight + 30;
+      doc.fontSize(12).fillColor('#000').font('Helvetica-Bold')
+         .text('Terms & Conditions:', 50, termsY);
+      doc.fontSize(10).fillColor('#000').font('Helvetica')
+         .text('• GST will be charged as applicable', 50, termsY + 20);
+
+      // Footer
+      const footerY = termsY + 50;
+      doc.fontSize(12).fillColor('#000').font('Helvetica-Bold')
+         .text('Thankyou Massage', 50, footerY, { align: 'center' });
+
+      doc.end();
 
       return new Promise((resolve, reject) => {
         stream.on('finish', () => {
-          console.log('PDF Generator: PDF generated successfully at:', outputPath);
+          console.log('PDF Generator: Template-matching PDF generated successfully at:', outputPath);
           resolve(outputPath);
         });
         stream.on('error', reject);
@@ -90,393 +231,6 @@ class FactoryQuotationPDFGenerator {
       console.error('PDF Generator: Error generating PDF:', error);
       throw error;
     }
-  }
-
-  // Generate the main quotation page
-  generateMainPage() {
-    console.log('PDF Generator: Starting main page generation with data:', this.quotationData);
-    
-    const pageWidth = 595.28;
-    let currentY = 20;
-
-    // 1. Header Section (Logo on left, Our Details on right)
-    currentY = this.drawHeaderSection(currentY);
-    currentY += 30;
-
-    // 2. Company and Quotation Details (Two-column box)
-    currentY = this.drawCompanyAndQuotationDetails(currentY);
-    currentY += 30;
-
-    // 3. Table Summary
-    currentY = this.drawTableSummary(currentY);
-    currentY += 30;
-
-    // 4. Final Amount
-    currentY = this.drawFinalAmount(currentY);
-    currentY += 30;
-
-    // 5. Terms & Conditions
-    currentY = this.drawTermsAndConditions(currentY);
-    currentY += 30;
-
-    // 6. Thank You Message
-    this.drawThankYouMessage(currentY);
-  }
-
-  // Draw header section with RADHE ADVISORY branding
-  drawHeaderSection(startY) {
-    const pageWidth = 595.28;
-    const margin = 20;
-    
-    // Main company branding
-    this.doc
-      .fontSize(20)
-      .font('Helvetica-Bold')
-      .fill('#1E40AF') // Blue color
-      .text('RADHE ADVISORY', margin, startY)
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fill('#1E40AF')
-      .text('LABOUR LAW CONSULTANT', margin, startY + 25)
-      .fontSize(10)
-      .font('Helvetica')
-      .fill('#000000')
-      .text('Compliance & Licensing Solutions', margin, startY + 45);
-
-    // Right side - Contact Details
-    const rightX = pageWidth - margin - 200;
-    const rightY = startY + 10;
-    
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fill('#1E40AF')
-      .text('RADHE ADVISORY', rightX, rightY, { align: 'right' })
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .fill('#1E40AF')
-      .text('LABOUR LAW CONSULTANT', rightX, rightY + 15, { align: 'right' })
-      .fontSize(9)
-      .font('Helvetica')
-      .fill('#000000')
-      .text('Email: radheconsultancy17@yahoo.com', rightX, rightY + 35, { align: 'right' })
-      .text('Phone: +91-9913014516 / +91-8511172645', rightX, rightY + 50, { align: 'right' });
-
-    return startY + 80;
-  }
-
-  // Draw company and quotation details in two-column box
-  drawCompanyAndQuotationDetails(startY) {
-    const pageWidth = 595.28;
-    const margin = 20;
-    const boxWidth = pageWidth - (margin * 2);
-    const columnWidth = (boxWidth - 20) / 2;
-
-    // We'll calculate the actual height needed based on content
-    let boxHeight = 120; // Default minimum height
-
-    // Draw the main box
-    this.doc
-      .rect(margin, startY, boxWidth, boxHeight)
-      .stroke('#000000', 1);
-
-    // Left column - Company Details
-    const leftX = margin + 10;
-    const leftY = startY + 15;
-    const maxAddressWidth = columnWidth - 20; // Leave some padding
-    
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fill('#000000')
-      .text('Company Details:', leftX, leftY)
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text(`Name: ${this.quotationData.companyName || 'N/A'}`, leftX, leftY + 20);
-    
-    // Handle address with automatic wrapping
-    const addressText = this.quotationData.companyAddress || 'Company Address';
-    const addressLines = this.wrapText(addressText, maxAddressWidth, 10);
-    
-    let currentY = leftY + 40;
-    addressLines.forEach((line, index) => {
-      this.doc
-        .fontSize(10)
-        .font('Helvetica')
-        .fill('#000000')
-        .text(line, leftX, currentY);
-      currentY += 12;
-    });
-    
-    // Phone
-    this.doc
-      .fontSize(10)
-      .font('Helvetica')
-      .fill('#000000')
-      .text(`Phone: ${this.quotationData.phone || 'Company Phone'}`, leftX, currentY + 10);
-    
-    // Calculate the actual height needed for this column
-    const leftColumnHeight = currentY + 30 - leftY;
-
-    // Right column - Quotation Details
-    const rightX = margin + 10 + columnWidth + 10;
-    const rightY = startY + 15;
-    
-    this.doc
-      .fontSize(14)
-      .font('Helvetica-Bold')
-      .fill('#1E40AF')
-      .text('QUOTATION DETAILS', rightX, rightY)
-      .fontSize(11)
-      .font('Helvetica-Bold')
-      .fill('#000000')
-      .text('Quotation Details:', rightX, rightY + 25)
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text(`Quotation No.: ${this.quotationData.id || 'N/A'}`, rightX, rightY + 45)
-      .text(`Date: ${this.quotationData.date || 'N/A'}`, rightX, rightY + 60)
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .fill('#10B981') // Green color for status
-      .text(`Status: ${this.quotationData.status || 'pending'}`, rightX, rightY + 75);
-
-    // Calculate the actual height needed and redraw the box if necessary
-    const rightColumnHeight = rightY + 95 - startY;
-    const actualHeight = Math.max(boxHeight, leftColumnHeight, rightColumnHeight);
-    
-    // Redraw the box with the correct height
-    if (actualHeight > boxHeight) {
-      this.doc
-        .rect(margin, startY, boxWidth, actualHeight)
-        .stroke('#000000', 1);
-    }
-
-    return startY + actualHeight + 20;
-  }
-
-  // Draw table summary with specific columns
-  drawTableSummary(startY) {
-    const pageWidth = 595.28;
-    const margin = 20;
-    const tableWidth = pageWidth - (margin * 2);
-    const headerHeight = 30;
-    const rowHeight = 25;
-
-    // Table headers
-    const headers = ['SP No.', 'Particular', 'Work Details', 'Years', 'Am'];
-    const columnWidths = [60, 200, 150, 80, 80];
-
-    // Draw SERVICE BREAKDOWN header
-    this.doc
-      .fontSize(14)
-      .font('Helvetica-Bold')
-      .fill('#1E40AF')
-      .text('SERVICE BREAKDOWN', margin + (tableWidth / 2) - 80, startY - 25, { align: 'center' });
-
-    // Draw header row
-    this.doc
-      .rect(margin, startY, tableWidth, headerHeight)
-      .fill('#F0F0F0')
-      .stroke('#000000', 1);
-
-    let currentX = margin + 5;
-    headers.forEach((header, index) => {
-    this.doc
-        .fontSize(10)
-      .font('Helvetica-Bold')
-        .fill('#000000')
-        .text(header, currentX, startY + 8);
-      currentX += columnWidths[index];
-    });
-
-    // Use actual data from quotationData or fallback to sample data
-    const tableData = this.quotationData.items || [
-      {
-        srNo: '',
-        particular: 'Factory License Compliance',
-        workDetails: '250 to 500 HP, 21 to 50 Workers',
-        year: '5 Year(s)',
-        total: ''
-      }
-    ];
-
-    // Add additional charges row if charges exist
-    console.log('PDF Generator: Checking additional charges:', {
-      planCharge: this.quotationData.planCharge,
-      stabilityCertificateAmount: this.quotationData.stabilityCertificateAmount,
-      administrationCharge: this.quotationData.administrationCharge,
-      consultancyFees: this.quotationData.consultancyFees
-    });
-
-    const additionalCharges = [
-      this.parseCharge(this.quotationData.planCharge),
-      this.parseCharge(this.quotationData.stabilityCertificateAmount),
-      this.parseCharge(this.quotationData.administrationCharge),
-      this.parseCharge(this.quotationData.consultancyFees)
-    ].filter(charge => charge > 0);
-
-    // Debug: Check if any charges exist even if they're 0
-    const allCharges = [
-      { name: 'Plan Charge', value: parseFloat(this.quotationData.planCharge) || 0 },
-      { name: 'Stability Certificate', value: parseFloat(this.quotationData.stabilityCertificateAmount) || 0 },
-      { name: 'Administration Charge', value: parseFloat(this.quotationData.administrationCharge) || 0 },
-      { name: 'Consultancy Fees', value: parseFloat(this.quotationData.consultancyFees) || 0 }
-    ];
-
-    console.log('PDF Generator: All charges breakdown:', allCharges);
-    console.log('PDF Generator: Charges with values > 0:', allCharges.filter(charge => charge.value > 0));
-
-    console.log('PDF Generator: Filtered additional charges:', additionalCharges);
-
-    if (additionalCharges.length > 0) {
-      const additionalTotal = additionalCharges.reduce((sum, charge) => sum + charge, 0);
-      console.log('PDF Generator: Adding additional charges row with total:', additionalTotal);
-      tableData.push({
-        srNo: '',
-        particular: 'Additional Charges',
-        workDetails: 'Additional Charges',
-        year: '',
-        total: additionalTotal.toString()
-      });
-    } else {
-      console.log('PDF Generator: No additional charges found');
-    }
-
-    console.log('PDF Generator: Final table data:', tableData);
-
-    let currentY = startY + headerHeight;
-    
-    tableData.forEach((row, index) => {
-      // Draw row background
-      this.doc
-        .rect(margin, currentY, tableWidth, rowHeight)
-        .stroke('#000000', 0.5);
-
-      // Draw row content
-      let colX = margin + 5;
-      
-      this.doc
-        .fontSize(10)
-        .font('Helvetica')
-        .fill('#000000')
-        .text(row.srNo, colX, currentY + 8);
-      colX += columnWidths[0];
-
-      this.doc.text(row.particular, colX, currentY + 8);
-      colX += columnWidths[1];
-
-      this.doc.text(row.workDetails, colX, currentY + 8);
-      colX += columnWidths[2];
-
-      this.doc.text(row.year, colX, currentY + 8);
-      colX += columnWidths[4];
-
-      this.doc.text(row.total, colX, currentY + 8);
-
-      currentY += rowHeight;
-    });
-
-    return currentY + 20;
-  }
-
-  // Draw final amount section
-  drawFinalAmount(startY) {
-    const pageWidth = 595.28;
-    const margin = 20;
-    const boxWidth = 200;
-    const boxHeight = 30;
-    const x = pageWidth - margin - boxWidth;
-
-    // Calculate grand total (Factory License + Additional Charges)
-    try {
-      // Use the calculated amount that already includes year multiplication from controller
-      const factoryLicenseAmount = this.parseCharge(this.quotationData.calculatedAmount);
-      const additionalCharges = [
-        this.parseCharge(this.quotationData.planCharge),
-        this.parseCharge(this.quotationData.stabilityCertificateAmount),
-        this.parseCharge(this.quotationData.administrationCharge),
-        this.parseCharge(this.quotationData.consultancyFees)
-      ].filter(charge => charge > 0)
-       .reduce((sum, charge) => sum + charge, 0);
-      
-      const grandTotal = factoryLicenseAmount + additionalCharges;
-      
-      console.log('PDF Generator: Final amount calculation:', {
-        factoryLicenseAmount,
-        additionalCharges,
-        grandTotal,
-        rawCalculatedAmount: this.quotationData.calculatedAmount
-      });
-      
-      // Draw the total amount box
-      this.doc
-        .rect(x, startY, boxWidth, boxHeight)
-        .stroke('#000000', 1);
-
-      // Total amount text
-      this.doc
-        .fontSize(12)
-        .font('Helvetica-Bold')
-        .fill('#000000')
-        .text('Total', x + 10, startY + 8)
-        .text(grandTotal.toString(), x + 120, startY + 8);
-
-      return startY + boxHeight + 20;
-    } catch (error) {
-      console.error('Error calculating grand total:', error);
-      
-      // Draw error message
-      this.doc
-        .rect(x, startY, boxWidth, boxHeight)
-        .stroke('#000000', 1);
-
-      this.doc
-        .fontSize(12)
-        .font('Helvetica-Bold')
-        .fill('#000000')
-        .text('Total', x + 10, startY + 8)
-        .text('Error', x + 120, startY + 8);
-
-      return startY + boxHeight + 20;
-    }
-  }
-
-  // Draw terms and conditions
-  drawTermsAndConditions(startY) {
-    const pageWidth = 595.28;
-    const margin = 20;
-
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fill('#000000')
-      .text('Terms & Conditions:', margin, startY)
-      .fontSize(10)
-      .font('Helvetica')
-      .text('• GST will be charged as applicable', margin + 20, startY + 20);
-
-    return startY + 50;
-  }
-
-  // Draw thank you message at page footer
-  drawThankYouMessage(startY) {
-    const pageWidth = 595.28;
-    const pageHeight = 841.89;
-    const margin = 20;
-
-    // Calculate footer position (bottom of page with margin)
-    const footerY = pageHeight - margin - 30;
-
-    this.doc
-      .fontSize(12)
-      .font('Helvetica')
-      .fill('#7F8C8D')
-      .text('Thank you for business with us', margin, footerY, {
-        align: 'center',
-        width: pageWidth - (margin * 2)
-      });
-
-    return footerY + 30;
   }
 
   // Legacy method for backward compatibility
