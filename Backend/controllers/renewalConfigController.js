@@ -8,7 +8,7 @@ const getAllConfigs = async (req, res) => {
     const configs = await RenewalConfig.findAll({
       order: [['created_at', 'DESC']]
     });
-
+    
     res.json({
       success: true,
       data: configs
@@ -31,14 +31,14 @@ const getConfigByService = async (req, res) => {
     const config = await RenewalConfig.findOne({
       where: { serviceType }
     });
-
+    
     if (!config) {
       return res.status(404).json({
         success: false,
         message: 'Renewal configuration not found'
       });
     }
-
+    
     res.json({
       success: true,
       data: config
@@ -64,7 +64,7 @@ const createConfig = async (req, res) => {
       reminderIntervals,
       isActive
     } = req.body;
-
+    
     // Validate required fields
     if (!serviceType || !serviceName || !reminderTimes || !reminderDays) {
       return res.status(400).json({
@@ -72,19 +72,19 @@ const createConfig = async (req, res) => {
         message: 'Missing required fields: serviceType, serviceName, reminderTimes, reminderDays'
       });
     }
-
+    
     // Check if service type already exists
     const existingConfig = await RenewalConfig.findOne({
       where: { serviceType }
     });
-
+    
     if (existingConfig) {
       return res.status(400).json({
         success: false,
         message: 'Service type already exists'
       });
     }
-
+    
     const config = await RenewalConfig.create({
       serviceType,
       serviceName,
@@ -95,7 +95,7 @@ const createConfig = async (req, res) => {
       createdBy: req.user.user_id,
       updatedBy: req.user.user_id
     });
-
+    
     res.status(201).json({
       success: true,
       message: 'Renewal configuration created successfully',
@@ -123,9 +123,9 @@ const updateConfig = async (req, res) => {
       reminderIntervals,
       isActive
     } = req.body;
-
+    
     const config = await RenewalConfig.findByPk(id);
-
+    
     if (!config) {
       return res.status(404).json({
         success: false,
@@ -159,7 +159,7 @@ const updateConfig = async (req, res) => {
       isActive: isActive !== undefined ? isActive : config.isActive,
       updatedBy: req.user.user_id
     });
-
+    
     res.json({
       success: true,
       message: 'Renewal configuration updated successfully',
@@ -179,18 +179,18 @@ const updateConfig = async (req, res) => {
 const deleteConfig = async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     const config = await RenewalConfig.findByPk(id);
-
+    
     if (!config) {
       return res.status(404).json({
         success: false,
         message: 'Renewal configuration not found'
       });
     }
-
+    
     await config.destroy();
-
+    
     res.json({
       success: true,
       message: 'Renewal configuration deleted successfully'
@@ -568,7 +568,7 @@ const getDefaultServiceTypes = async (req, res) => {
       { value: 'labour_inspection', label: 'Labour Inspection' },
       { value: 'labour_license', label: 'Labour License' }
     ];
-
+    
     res.json({
       success: true,
       data: serviceTypes
@@ -623,7 +623,7 @@ const getCounts = async (req, res) => {
     ]);
 
     counts.total = labourInspectionCount + labourLicenseCount + vehicleCount;
-
+    
     res.json({
       success: true,
       data: counts
@@ -651,7 +651,7 @@ const getListByTypeAndPeriod = async (req, res) => {
   } catch (error) {
     console.error('Error fetching renewal list:', error);
     res.status(500).json({
-      success: false,
+        success: false,
       message: 'Error fetching renewal list',
       error: error.message
     });
@@ -662,7 +662,7 @@ const getListByTypeAndPeriod = async (req, res) => {
 const searchRenewals = async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     res.json({
       success: true,
       data: [],

@@ -250,92 +250,92 @@ class EmailService {
         <title>Vehicle Insurance Renewal - RADHE CONSULTANCY</title>
       </head>
       <body style="margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #2c3e50; background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%); min-height: 100vh;">
+        
+        <!-- Email Container -->
+        <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); overflow: hidden;">
           
-          <!-- Email Container -->
-          <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); overflow: hidden;">
-              
-              <!-- Header -->
-              <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 30px 20px; text-align: center;">
-                  <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">🚗 Vehicle Insurance Renewal</h1>
-                  <p style="font-size: 14px; margin: 0; opacity: 0.9;">Important Reminder - Action Required</p>
-              </div>
-              
-              <!-- Main Content -->
-              <div style="padding: 40px 30px;">
-                  <h2 style="font-size: 20px; color: #e74c3c; margin: 0 0 20px 0; text-align: center; font-weight: 600;">⚠️ URGENT: Vehicle Insurance Expiring Soon!</h2>
-                  
-                  <p style="font-size: 16px; color: #2c3e50; margin: 20px 0; text-align: center; line-height: 1.6;">
-                      Dear <strong>${reminderData.clientName || 'Valued Client'}</strong>,<br>
-                      Your vehicle insurance policy expires in <strong>${daysUntilExpiry} days</strong>.
-                  </p>
-                  
-                  <!-- Alert Box -->
-                  <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
-                      <h3 style="font-size: 18px; margin: 0 0 10px 0;">🚨 EXPIRY ALERT</h3>
-                      <p style="margin: 0; font-size: 16px; font-weight: 600;">Expiry Date: <strong>${expiryDate}</strong></p>
-                  </div>
-                  
-                  <!-- Vehicle Details -->
-                  <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
-                      <h3 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 16px;">🚗 Vehicle Information</h3>
-                      <div style="display: grid; gap: 12px;">
-                          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                              <span style="font-weight: 600; color: #2c3e50;">Vehicle Number:</span>
-                              <span style="color: #6c757d;">${vehicleDetails?.vehicleNumber || 'N/A'}</span>
-                          </div>
-                          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                              <span style="font-weight: 600; color: #2c3e50;">Vehicle Type:</span>
-                              <span style="color: #6c757d;">${vehicleDetails?.vehicleType || 'N/A'}</span>
-                          </div>
-                          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                              <span style="font-weight: 600; color: #2c3e50;">Make & Model:</span>
-                              <span style="color: #6c757d;">${vehicleDetails?.vehicleMake || 'N/A'} ${vehicleDetails?.vehicleModel || ''}</span>
-                          </div>
-                          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                              <span style="font-weight: 600; color: #2c3e50;">Insurance Company:</span>
-                              <span style="color: #6c757d;">${vehicleDetails?.insuranceCompany || 'N/A'}</span>
-                          </div>
-                          <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                              <span style="font-weight: 600; color: #2c3e50;">Renewal Amount:</span>
-                              <span style="color: #6c757d;">₹${renewalAmount || 'N/A'}</span>
-                          </div>
-                      </div>
-                  </div>
-                  
-                  <!-- Action Required -->
-                  <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 25px 0;">
-                      <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #856404;">⚡ IMMEDIATE ACTION REQUIRED</h3>
-                      <ul style="margin: 0; padding-left: 20px; color: #856404;">
-                          <li style="margin: 6px 0;">Contact RADHE CONSULTANCY for renewal assistance</li>
-                          <li style="margin: 6px 0;">Submit required documents</li>
-                          <li style="margin: 6px 0;">Complete payment for new policy</li>
-                          <li style="margin: 6px 0;">Avoid any lapse in coverage</li>
-                      </ul>
-                  </div>
-                  
-                  <!-- Call to Action -->
-                  <div style="text-align: center; margin: 30px 0;">
-                      <a href="mailto:radhe@radheconsultancy.co.in" style="display: inline-block; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
-                          Contact Us Now
-                      </a>
-                  </div>
-                  
-                  <!-- Divider -->
-                  <div style="height: 1px; background: #e9ecef; margin: 30px 0;"></div>
-                  
-                  <p style="text-align: center; font-size: 14px; color: #6c7280; margin: 0;">
-                      <strong>Reminder Sent:</strong> ${new Date().toLocaleDateString('en-IN')} | 
-                      <strong>Days Until Expiry:</strong> ${daysUntilExpiry}
-                  </p>
-              </div>
-              
-              <!-- Footer -->
-              <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
-                  <p style="margin: 0; font-size: 12px; color: #6c7280;">
-                      © 2025 RADHE CONSULTANCY. All rights reserved.
-                  </p>
-              </div>
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 30px 20px; text-align: center;">
+            <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">🚗 Vehicle Insurance Renewal</h1>
+            <p style="font-size: 14px; margin: 0; opacity: 0.9;">Important Reminder - Action Required</p>
           </div>
+          
+          <!-- Main Content -->
+          <div style="padding: 40px 30px;">
+            <h2 style="font-size: 20px; color: #e74c3c; margin: 0 0 20px 0; text-align: center; font-weight: 600;">⚠️ URGENT: Vehicle Insurance Expiring Soon!</h2>
+            
+            <p style="font-size: 16px; color: #2c3e50; margin: 20px 0; text-align: center; line-height: 1.6;">
+              Dear <strong>${reminderData.clientName || 'Valued Client'}</strong>,<br>
+              Your vehicle insurance policy expires in <strong>${daysUntilExpiry} days</strong>.
+            </p>
+            
+            <!-- Alert Box -->
+            <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
+              <h3 style="font-size: 18px; margin: 0 0 10px 0;">🚨 EXPIRY ALERT</h3>
+              <p style="margin: 0; font-size: 16px; font-weight: 600;">Expiry Date: <strong>${expiryDate}</strong></p>
+            </div>
+            
+            <!-- Vehicle Details -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 16px;">🚗 Vehicle Information</h3>
+              <div style="display: grid; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="font-weight: 600; color: #2c3e50;">Vehicle Number:</span>
+                  <span style="color: #6c757d;">${vehicleDetails?.vehicleNumber || 'N/A'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="font-weight: 600; color: #2c3e50;">Vehicle Type:</span>
+                  <span style="color: #6c757d;">${vehicleDetails?.vehicleType || 'N/A'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="font-weight: 600; color: #2c3e50;">Make & Model:</span>
+                  <span style="color: #6c757d;">${vehicleDetails?.vehicleMake || 'N/A'} ${vehicleDetails?.vehicleModel || ''}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="font-weight: 600; color: #2c3e50;">Insurance Company:</span>
+                  <span style="color: #6c757d;">${vehicleDetails?.insuranceCompany || 'N/A'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                  <span style="font-weight: 600; color: #2c3e50;">Renewal Amount:</span>
+                  <span style="color: #6c757d;">₹${renewalAmount || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Action Required -->
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #856404;">⚡ IMMEDIATE ACTION REQUIRED</h3>
+              <ul style="margin: 0; padding-left: 20px; color: #856404;">
+                <li style="margin: 6px 0;">Contact RADHE CONSULTANCY for renewal assistance</li>
+                <li style="margin: 6px 0;">Submit required documents</li>
+                <li style="margin: 6px 0;">Complete payment for new policy</li>
+                <li style="margin: 6px 0;">Avoid any lapse in coverage</li>
+              </ul>
+            </div>
+            
+            <!-- Call to Action -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="mailto:radhe@radheconsultancy.co.in" style="display: inline-block; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                Contact Us Now
+              </a>
+            </div>
+            
+            <!-- Divider -->
+            <div style="height: 1px; background: #e9ecef; margin: 30px 0;"></div>
+            
+                  <p style="text-align: center; font-size: 14px; color: #6c7280; margin: 0;">
+              <strong>Reminder Sent:</strong> ${new Date().toLocaleDateString('en-IN')} | 
+              <strong>Days Until Expiry:</strong> ${daysUntilExpiry}
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+                  <p style="margin: 0; font-size: 12px; color: #6c7280;">
+              © 2025 RADHE CONSULTANCY. All rights reserved.
+            </p>
+          </div>
+        </div>
       </body>
       </html>
     `;
@@ -371,7 +371,7 @@ class EmailService {
   // Generate professional HTML email content for health insurance renewal
   generateHealthInsuranceEmail(reminderData) {
     try {
-      const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
+    const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/health_insurance_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       template = template.replace('APEX ZIPPER', clientName || 'Valued Client');
@@ -419,7 +419,7 @@ class EmailService {
   // Generate professional HTML email content for ECP renewal
   generateECPEmail(reminderData) {
     try {
-      const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
+    const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/ecp_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       template = template.replace('APEX ZIPPER', clientName || 'Valued Client');
@@ -467,7 +467,7 @@ class EmailService {
     // Generate professional HTML email content for Fire Policy renewal
   generateFirePolicyEmail(reminderData) {
     try {
-      const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
+    const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/fire_policy_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       template = template.replace('APEX ZIPPER', clientName || 'Valued Client');
@@ -483,7 +483,7 @@ class EmailService {
     } catch (error) {
       return '<p>Fire Policy Email Error</p>';
     }
-  }
+    }
 
   // Send DSC renewal reminder
   async sendDSCRenewalReminder(reminderData) {
@@ -515,7 +515,7 @@ class EmailService {
   // Generate professional HTML email content for DSC renewal
   generateDSCEmail(reminderData) {
     try {
-      const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
+    const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/dsc_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       template = template.replace('APEX ZIPPER', clientName || 'Valued Client');
@@ -660,7 +660,7 @@ class EmailService {
   // Generate professional HTML email content for Factory Quotation renewal
   generateFactoryQuotationRenewalEmail(reminderData) {
     try {
-      const { daysUntilExpiry, renewalDate, quotationDetails, clientName } = reminderData;
+    const { daysUntilExpiry, renewalDate, quotationDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/factory_quotation_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       template = template.replace('APEX ZIPPER', clientName || 'Valued Client');

@@ -26,7 +26,8 @@ exports.downloadDocument = async (req, res) => {
       'application-management': 'uploads/application',
       'renewal-status': 'uploads/renewal',
       'labour-inspection': 'uploads/labour_inspection',
-      'labour-license': 'uploads/labour_license'
+      'labour-license': 'uploads/labour_license',
+      'factory-quotations': 'uploads/pdfs'
     };
 
     const uploadDir = uploadDirs[system];
@@ -99,7 +100,8 @@ exports.getDocumentList = async (req, res) => {
       'application-management': 'uploads/application',
       'renewal-status': 'uploads/renewal',
       'labour-inspection': 'uploads/labour_inspection',
-      'labour-license': 'uploads/labour_license'
+      'labour-license': 'uploads/labour_license',
+      'factory-quotations': 'uploads/pdfs'
     };
 
     const uploadDir = uploadDirs[system];

@@ -24,9 +24,15 @@ class FactoryQuotationPDFGenerator {
 
   // Helper method to parse charge values - handle strings, numbers, and null values
   parseCharge(value) {
-    if (value === null || value === undefined || value === '') return 0;
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? 0 : parsed;
+    try {
+      if (value === null || value === undefined || value === '') return 0;
+      if (typeof value === 'number') return value;
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    } catch (error) {
+      console.error('Error parsing charge value:', value, error);
+      return 0;
+    }
   }
 
   // Helper method to wrap text to fit within a specified width
@@ -117,67 +123,57 @@ class FactoryQuotationPDFGenerator {
     this.drawThankYouMessage(currentY);
   }
 
-  // Draw header section with logo on left and "Our Details" on right
+  // Draw header section with RADHE ADVISORY branding
   drawHeaderSection(startY) {
     const pageWidth = 595.28;
     const margin = 20;
     
-    // Left side - Company Logo
-    const logoPath = path.join(__dirname, companyConfig.company.logoPath);
-    if (fs.existsSync(logoPath)) {
-      try {
-        // Load and display actual company logo
-        this.doc.image(logoPath, margin, startY, {
-          width: 80,
-          height: 60,
-          fit: [80, 60]
-        });
-        console.log('PDF Generator: Company logo loaded successfully');
-      } catch (error) {
-        console.error('PDF Generator: Could not load logo:', error);
-        // Fallback to company name if logo fails
-        this.doc
-          .fontSize(16)
-          .font('Helvetica-Bold')
-          .fill('#000000')
-          .text(companyConfig.company.name, margin, startY);
-      }
-    } else {
-      // Fallback to company name if logo file doesn't exist
-      this.doc
-        .fontSize(16)
-        .font('Helvetica-Bold')
-        .fill('#000000')
-        .text(companyConfig.company.name, margin, startY);
-    }
+    // Main company branding
+    this.doc
+      .fontSize(20)
+      .font('Helvetica-Bold')
+      .fill('#1E40AF') // Blue color
+      .text('RADHE ADVISORY', margin, startY)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .fill('#1E40AF')
+      .text('LABOUR LAW CONSULTANT', margin, startY + 25)
+      .fontSize(10)
+      .font('Helvetica')
+      .fill('#000000')
+      .text('Compliance & Licensing Solutions', margin, startY + 45);
 
-    // Right side - Company Details (only email and phone)
+    // Right side - Contact Details
     const rightX = pageWidth - margin - 200;
     const rightY = startY + 10;
     
     this.doc
       .fontSize(12)
       .font('Helvetica-Bold')
-      .fill('#000000')
-      .text('Our Details', rightX, rightY, { align: 'right' })
+      .fill('#1E40AF')
+      .text('RADHE ADVISORY', rightX, rightY, { align: 'right' })
       .fontSize(10)
+      .font('Helvetica-Bold')
+      .fill('#1E40AF')
+      .text('LABOUR LAW CONSULTANT', rightX, rightY + 15, { align: 'right' })
+      .fontSize(9)
       .font('Helvetica')
-      .fill('#7F8C8D')
-      .text(companyConfig.company.email, rightX, rightY + 20, { align: 'right' })
-      .text(companyConfig.company.phone, rightX, rightY + 35, { align: 'right' });
+      .fill('#000000')
+      .text('Email: radheconsultancy17@yahoo.com', rightX, rightY + 35, { align: 'right' })
+      .text('Phone: +91-9913014516 / +91-8511172645', rightX, rightY + 50, { align: 'right' });
 
-    return startY + 80; // Increased height to accommodate logo/details
+    return startY + 80;
   }
 
-      // Draw company and quotation details in two-column box
-    drawCompanyAndQuotationDetails(startY) {
+  // Draw company and quotation details in two-column box
+  drawCompanyAndQuotationDetails(startY) {
     const pageWidth = 595.28;
-      const margin = 20;
-      const boxWidth = pageWidth - (margin * 2);
-      const columnWidth = (boxWidth - 20) / 2;
+    const margin = 20;
+    const boxWidth = pageWidth - (margin * 2);
+    const columnWidth = (boxWidth - 20) / 2;
 
-      // We'll calculate the actual height needed based on content
-      let boxHeight = 120; // Default minimum height
+    // We'll calculate the actual height needed based on content
+    let boxHeight = 120; // Default minimum height
 
     // Draw the main box
     this.doc
@@ -193,48 +189,59 @@ class FactoryQuotationPDFGenerator {
       .fontSize(12)
       .font('Helvetica-Bold')
       .fill('#000000')
-      .text(this.quotationData.companyName || 'Quotation Company Name', leftX, leftY);
+      .text('Company Details:', leftX, leftY)
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .text(`Name: ${this.quotationData.companyName || 'N/A'}`, leftX, leftY + 20);
     
     // Handle address with automatic wrapping
     const addressText = this.quotationData.companyAddress || 'Company Address';
     const addressLines = this.wrapText(addressText, maxAddressWidth, 10);
     
-    let currentY = leftY + 20;
+    let currentY = leftY + 40;
     addressLines.forEach((line, index) => {
       this.doc
         .fontSize(10)
         .font('Helvetica')
         .fill('#000000')
         .text(line, leftX, currentY);
-      currentY += 15;
+      currentY += 12;
     });
     
-    // Email and phone
+    // Phone
     this.doc
       .fontSize(10)
       .font('Helvetica')
       .fill('#000000')
-      .text(this.quotationData.email || 'Company Email', leftX, currentY)
-      .text(this.quotationData.phone || 'Company Phone number', leftX, currentY + 20);
+      .text(`Phone: ${this.quotationData.phone || 'Company Phone'}`, leftX, currentY + 10);
     
     // Calculate the actual height needed for this column
-    const leftColumnHeight = currentY + 20 - leftY;
+    const leftColumnHeight = currentY + 30 - leftY;
 
     // Right column - Quotation Details
     const rightX = margin + 10 + columnWidth + 10;
     const rightY = startY + 15;
     
     this.doc
-      .fontSize(12)
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .fill('#1E40AF')
+      .text('QUOTATION DETAILS', rightX, rightY)
+      .fontSize(11)
       .font('Helvetica-Bold')
       .fill('#000000')
-      .text(`Quotation Date: ${this.quotationData.date || 'N/A'}`, rightX, rightY)
+      .text('Quotation Details:', rightX, rightY + 25)
       .fontSize(10)
-      .font('Helvetica')
-      .text(`Quotation Number: ${this.quotationData.id || 'N/A'}`, rightX, rightY + 20);
+      .font('Helvetica-Bold')
+      .text(`Quotation No.: ${this.quotationData.id || 'N/A'}`, rightX, rightY + 45)
+      .text(`Date: ${this.quotationData.date || 'N/A'}`, rightX, rightY + 60)
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fill('#10B981') // Green color for status
+      .text(`Status: ${this.quotationData.status || 'pending'}`, rightX, rightY + 75);
 
     // Calculate the actual height needed and redraw the box if necessary
-    const rightColumnHeight = rightY + 40 - startY;
+    const rightColumnHeight = rightY + 95 - startY;
     const actualHeight = Math.max(boxHeight, leftColumnHeight, rightColumnHeight);
     
     // Redraw the box with the correct height
@@ -256,8 +263,15 @@ class FactoryQuotationPDFGenerator {
     const rowHeight = 25;
 
     // Table headers
-    const headers = ['Sr. No.', 'Particular', 'No of Workers', 'Hours Power', 'Year', 'Total'];
-    const columnWidths = [60, 150, 100, 100, 60, 80];
+    const headers = ['SP No.', 'Particular', 'Work Details', 'Years', 'Am'];
+    const columnWidths = [60, 200, 150, 80, 80];
+
+    // Draw SERVICE BREAKDOWN header
+    this.doc
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .fill('#1E40AF')
+      .text('SERVICE BREAKDOWN', margin + (tableWidth / 2) - 80, startY - 25, { align: 'center' });
 
     // Draw header row
     this.doc
@@ -278,12 +292,11 @@ class FactoryQuotationPDFGenerator {
     // Use actual data from quotationData or fallback to sample data
     const tableData = this.quotationData.items || [
       {
-        srNo: '1',
-        particular: 'Factory License',
-        workers: '50 to 100',
-        hoursPower: '51 to 100',
-        year: '2',
-        total: '10000'
+        srNo: '',
+        particular: 'Factory License Compliance',
+        workDetails: '250 to 500 HP, 21 to 50 Workers',
+        year: '5 Year(s)',
+        total: ''
       }
     ];
 
@@ -319,10 +332,9 @@ class FactoryQuotationPDFGenerator {
       const additionalTotal = additionalCharges.reduce((sum, charge) => sum + charge, 0);
       console.log('PDF Generator: Adding additional charges row with total:', additionalTotal);
       tableData.push({
-        srNo: '2',
+        srNo: '',
         particular: 'Additional Charges',
-        workers: '',
-        hoursPower: '',
+        workDetails: 'Additional Charges',
         year: '',
         total: additionalTotal.toString()
       });
@@ -353,11 +365,8 @@ class FactoryQuotationPDFGenerator {
       this.doc.text(row.particular, colX, currentY + 8);
       colX += columnWidths[1];
 
-      this.doc.text(row.workers, colX, currentY + 8);
+      this.doc.text(row.workDetails, colX, currentY + 8);
       colX += columnWidths[2];
-
-      this.doc.text(row.hoursPower, colX, currentY + 8);
-      colX += columnWidths[3];
 
       this.doc.text(row.year, colX, currentY + 8);
       colX += columnWidths[4];
@@ -379,37 +388,57 @@ class FactoryQuotationPDFGenerator {
     const x = pageWidth - margin - boxWidth;
 
     // Calculate grand total (Factory License + Additional Charges)
-    const factoryLicenseAmount = parseFloat(this.quotationData.calculatedAmount) || 0;
-    const additionalCharges = [
-      this.parseCharge(this.quotationData.planCharge),
-      this.parseCharge(this.quotationData.stabilityCertificateAmount),
-      this.parseCharge(this.quotationData.administrationCharge),
-      this.parseCharge(this.quotationData.consultancyFees)
-    ].filter(charge => charge > 0)
-     .reduce((sum, charge) => sum + charge, 0);
-    
-    const grandTotal = factoryLicenseAmount + additionalCharges;
+    try {
+      // Use the calculated amount that already includes year multiplication from controller
+      const factoryLicenseAmount = this.parseCharge(this.quotationData.calculatedAmount);
+      const additionalCharges = [
+        this.parseCharge(this.quotationData.planCharge),
+        this.parseCharge(this.quotationData.stabilityCertificateAmount),
+        this.parseCharge(this.quotationData.administrationCharge),
+        this.parseCharge(this.quotationData.consultancyFees)
+      ].filter(charge => charge > 0)
+       .reduce((sum, charge) => sum + charge, 0);
+      
+      const grandTotal = factoryLicenseAmount + additionalCharges;
+      
+      console.log('PDF Generator: Final amount calculation:', {
+        factoryLicenseAmount,
+        additionalCharges,
+        grandTotal,
+        rawCalculatedAmount: this.quotationData.calculatedAmount
+      });
+      
+      // Draw the total amount box
+      this.doc
+        .rect(x, startY, boxWidth, boxHeight)
+        .stroke('#000000', 1);
 
-    console.log('PDF Generator: Final amount calculation:', {
-      factoryLicenseAmount,
-      additionalCharges,
-      grandTotal
-    });
+      // Total amount text
+      this.doc
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .fill('#000000')
+        .text('Total', x + 10, startY + 8)
+        .text(grandTotal.toString(), x + 120, startY + 8);
 
-    // Draw the total amount box
-    this.doc
-      .rect(x, startY, boxWidth, boxHeight)
-      .stroke('#000000', 1);
+      return startY + boxHeight + 20;
+    } catch (error) {
+      console.error('Error calculating grand total:', error);
+      
+      // Draw error message
+      this.doc
+        .rect(x, startY, boxWidth, boxHeight)
+        .stroke('#000000', 1);
 
-    // Total amount text
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fill('#000000')
-      .text('Total', x + 10, startY + 8)
-      .text(grandTotal.toString(), x + 120, startY + 8);
+      this.doc
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .fill('#000000')
+        .text('Total', x + 10, startY + 8)
+        .text('Error', x + 120, startY + 8);
 
-    return startY + boxHeight + 20;
+      return startY + boxHeight + 20;
+    }
   }
 
   // Draw terms and conditions
