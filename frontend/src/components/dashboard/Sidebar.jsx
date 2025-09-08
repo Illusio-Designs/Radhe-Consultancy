@@ -71,24 +71,10 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
             icon: <Home />,
             label: "Home",
           },
-        ],
-      },
-      {
-        label: "Renewals",
-        icon: <RefreshCw />,
-        isDropdown: true,
-        isOpen: activeDropdown === "renewals",
-        toggle: () => handleDropdownToggle("renewals"),
-        items: [
           {
             path: "/dashboard/renewals/dashboard",
-            icon: <LayoutDashboard />,
+            icon: <RefreshCw />,
             label: "Renewal Dashboard",
-          },
-          {
-            path: "/dashboard/renewals/log",
-            icon: <Clock />,
-            label: "Renewal Log",
           },
         ],
       },
@@ -299,7 +285,7 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
           {
             path: "/dashboard/renewals/log",
             icon: <Clock />,
-            label: "Reminder Log",
+            label: "Renewal Log",
           },
         ],
       },
