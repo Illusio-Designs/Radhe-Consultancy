@@ -462,8 +462,34 @@ exports.deleteQuotation = async (req, res) => {
   }
 };
 
-// Generate PDF for a quotation
+// Legacy PDF generation endpoint - now redirects to download
 exports.generatePDF = async (req, res) => {
+  try {
+    const quotationId = req.params.id;
+    
+    // Check if quotation exists
+    const quotation = await FactoryQuotation.findByPk(quotationId);
+    
+    if (!quotation) {
+      return res.status(404).json({ success: false, message: 'Quotation not found' });
+    }
+
+    // Return success with download URL - PDF will be generated fresh on download
+    res.json({
+      success: true,
+      message: 'PDF will be generated fresh on download',
+      data: {
+        downloadUrl: `/api/factory-quotations/${quotationId}/download-pdf`
+      }
+    });
+  } catch (error) {
+    console.error('Error in generatePDF:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Download PDF for a quotation - Generate fresh PDF on each download
+exports.downloadPDF = async (req, res) => {
   try {
     const quotationId = req.params.id;
     
@@ -474,26 +500,12 @@ exports.generatePDF = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Quotation not found' });
     }
 
-    console.log('Backend: Generating PDF for quotation:', {
-      id: quotation.id,
-      companyName: quotation.companyName,
-      horsePower: quotation.horsePower,
-      noOfWorkers: quotation.noOfWorkers,
-      calculatedAmount: quotation.calculatedAmount,
-      planCharge: quotation.planCharge,
-      stabilityCertificateAmount: quotation.stabilityCertificateAmount,
-      administrationCharge: quotation.administrationCharge,
-      consultancyFees: quotation.consultancyFees,
-      totalAmount: quotation.totalAmount,
-      year: quotation.year,
-      status: quotation.status,
-      createdAt: quotation.createdAt
-    });
+    console.log('Generating fresh PDF for download - quotation:', quotationId);
 
     // Generate PDF
     const pdfGenerator = new FactoryQuotationPDFGenerator();
     
-    // Prepare data for the new PDF generator
+    // Prepare data for the PDF generator
     const pdfData = {
       id: quotation.id,
       companyName: quotation.companyName,
@@ -509,114 +521,58 @@ exports.generatePDF = async (req, res) => {
       consultancyFees: quotation.consultancyFees || 0,
       items: [
         {
-          srNo: '1',
-          particular: 'Factory License',
-          workers: `${quotation.noOfWorkers || quotation.numberOfWorkers || 'N/A'} Workers`,
-          hoursPower: `${quotation.horsePower || 'N/A'} HP`,
+          srNo: '',
+          particular: 'Factory License Compliance',
+          workDetails: `${quotation.horsePower || 'N/A'} HP, ${quotation.noOfWorkers || quotation.numberOfWorkers || 'N/A'} Workers`,
           year: `${quotation.year || 'N/A'} Year(s)`,
           total: ((quotation.calculatedAmount || 0) * (quotation.year || 1)).toString()
         }
       ]
     };
 
-    // Generate PDF using new method
-    console.log('Starting PDF generation for quotation:', quotationId);
-    console.log('PDF Data being sent:', pdfData);
-    console.log('Additional charges in PDF data:', {
-      planCharge: pdfData.planCharge,
-      stabilityCertificateAmount: pdfData.stabilityCertificateAmount,
-      administrationCharge: pdfData.administrationCharge,
-      consultancyFees: pdfData.consultancyFees
-    });
-    
+    // Create temporary file for download
+    const fs = require('fs');
     const outputDir = path.join(__dirname, '../uploads/pdfs');
-    console.log('Output directory:', outputDir);
-    console.log('Current __dirname:', __dirname);
     
-    // Create unique filename for the PDF
+    // Ensure output directory exists
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    // Create unique filename for this download
     const timestamp = Date.now();
     const filename = `factory_quotation_${quotationId}_${timestamp}.pdf`;
     const outputPath = path.join(outputDir, filename);
     
-    let pdfPath;
-    try {
-      pdfPath = await pdfGenerator.generateQuotationPDF(pdfData, outputPath);
-      console.log('PDF generated successfully at:', pdfPath);
-    } catch (pdfError) {
-      console.error('PDF generation failed:', pdfError);
-      throw new Error(`PDF generation failed: ${pdfError.message}`);
-    }
+    console.log('Generating fresh PDF at:', outputPath);
     
-    const relativePath = `uploads/pdfs/${filename}`;
-    console.log('Relative path for database:', relativePath);
-
-    // Update quotation with PDF path
-    console.log('Updating database with pdfPath:', relativePath);
-    const updateResult = await FactoryQuotation.update(
-      { pdfPath: relativePath },
-      { where: { id: quotationId } }
-    );
-    console.log('Database update result:', updateResult);
+    // Generate PDF
+    await pdfGenerator.generateQuotationPDF(pdfData, outputPath);
     
-    // Verify the update by fetching the quotation again
-    const updatedQuotation = await FactoryQuotation.findByPk(quotationId);
-    console.log('Updated quotation pdfPath:', updatedQuotation?.pdfPath);
-
-    res.json({
-      success: true,
-      message: 'Professional PDF generated successfully',
-      data: {
-        filename: filename,
-        downloadUrl: `/api/factory-quotations/${quotationId}/download-pdf`
-      }
-    });
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Download PDF for a quotation
-exports.downloadPDF = async (req, res) => {
-  try {
-    const quotationId = req.params.id;
-    
-    // Get the quotation
-    const quotation = await FactoryQuotation.findByPk(quotationId);
-    
-    if (!quotation) {
-      return res.status(404).json({ success: false, message: 'Quotation not found' });
-    }
-
-    if (!quotation.pdfPath) {
-      return res.status(404).json({ success: false, message: 'PDF not found. Please generate PDF first.' });
-    }
-
-    const fs = require('fs');
-    
-    // Construct full file path
-    const filePath = path.join(__dirname, '..', quotation.pdfPath);
-    console.log('Download - quotation.pdfPath:', quotation.pdfPath);
-    console.log('Download - constructed filePath:', filePath);
-    console.log('Download - __dirname:', __dirname);
-    
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      console.log('Download - File does not exist at:', filePath);
-      return res.status(404).json({ success: false, message: 'PDF file not found on server' });
-    }
-    console.log('Download - File exists at:', filePath);
-
     // Set headers for file download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="factory_quotation_${quotationId}.pdf"`);
     
     // Stream the file
-    const fileStream = fs.createReadStream(filePath);
+    const fileStream = fs.createReadStream(outputPath);
     fileStream.pipe(res);
     
+    // Clean up the temporary file after streaming
+    fileStream.on('end', () => {
+      setTimeout(() => {
+        try {
+          if (fs.existsSync(outputPath)) {
+            fs.unlinkSync(outputPath);
+            console.log('Cleaned up temporary PDF:', outputPath);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up temporary PDF:', cleanupError);
+        }
+      }, 1000); // Wait 1 second before cleanup
+    });
+    
   } catch (error) {
-    console.error('Error downloading PDF:', error);
+    console.error('Error generating/downloading PDF:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 }; 
