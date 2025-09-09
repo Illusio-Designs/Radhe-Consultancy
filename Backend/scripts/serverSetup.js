@@ -862,7 +862,9 @@ async function setupRenewalSystem() {
       { serviceType: 'dsc', serviceName: 'Digital Signature Certificate', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
       { serviceType: 'factory', serviceName: 'Factory Quotation', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
       { serviceType: 'labour_inspection', serviceName: 'Labour Inspection', reminderTimes: 5, reminderDays: 15, reminderIntervals: [15, 10, 7, 3, 1] },
-      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] }
+      { serviceType: 'labour_license', serviceName: 'Labour License', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'stability', serviceName: 'Stability Management', reminderTimes: 3, reminderDays: 30, reminderIntervals: [30, 21, 14, 7, 1] },
+      { serviceType: 'life', serviceName: 'Life Insurance', reminderTimes: 12, reminderDays: 30, reminderIntervals: [30, 15, 7, 3, 1] }
     ];
     
     for (const config of defaultConfigs) {

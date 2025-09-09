@@ -48,7 +48,9 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
     { value: 'dsc', label: 'Digital Signature Certificate' },
     { value: 'factory', label: 'Factory License' },
     { value: 'labour_license', label: 'Labour License' },
-    { value: 'labour_inspection', label: 'Labour Inspection' }
+    { value: 'labour_inspection', label: 'Labour Inspection' },
+    { value: 'stability', label: 'Stability Management' },
+    { value: 'life', label: 'Life Insurance' }
   ];
 
   useEffect(() => {
@@ -370,7 +372,9 @@ const RenewalDashboard = () => {
       dsc: <BiKey />,
       factory: <BiBuilding />,
       labour_license: <BiFileBlank />,
-      labour_inspection: <BiSearch />
+      labour_inspection: <BiSearch />,
+      stability: <BiTrendingUp />,
+      life: <BiHeart />
     };
     return icons[serviceType] || <BiFileBlank />;
   };
@@ -384,7 +388,9 @@ const RenewalDashboard = () => {
       dsc: 'Digital Signature',
       factory: 'Factory License',
       labour_license: 'Labour License',
-      labour_inspection: 'Labour Inspection'
+      labour_inspection: 'Labour Inspection',
+      stability: 'Stability Management',
+      life: 'Life Insurance'
     };
     return names[serviceType] || serviceType;
   };
@@ -549,7 +555,6 @@ const RenewalDashboard = () => {
             <div className="service-icon">{getServiceIcon(config.serviceType)}</div>
             <div className="service-details">
               <div className="font-medium">{config.serviceName}</div>
-              <div className="text-sm text-gray-500">{config.serviceType}</div>
             </div>
           </div>
         ),

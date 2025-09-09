@@ -823,7 +823,66 @@ class EmailService {
     }
   }
 
+  // Send life insurance renewal reminder
+  async sendLifeInsuranceRenewalReminder(reminderData) {
+    try {
+      const { daysUntilPayment, nextPaymentDate, policyDetails, clientName, clientEmail } = reminderData;
+      
+      const emailContent = this.generateLifeInsuranceRenewalEmail(reminderData);
+      const subject = `Life Insurance Payment Reminder - ${daysUntilPayment} Days Until Payment`;
+      
+      // Create plain text version for fallback
+      const plainText = `Life Insurance Payment Reminder: Your policy #${policyDetails.policyNumber} payment is due in ${daysUntilPayment} days on ${nextPaymentDate}. Please contact us for assistance.`;
+      const result = await sendEmail(clientEmail, subject, plainText, emailContent);
+      console.log('✅ Life Insurance renewal reminder email sent successfully to:', clientEmail);
+      
+      return {
+        success: true,
+        messageId: result.messageId,
+        sentTo: clientEmail
+      };
+    } catch (error) {
+      console.error('❌ Error sending Life Insurance renewal reminder email:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 
+  // Generate professional HTML email content for Life Insurance renewal
+  generateLifeInsuranceRenewalEmail(reminderData) {
+    try {
+      const { daysUntilPayment, nextPaymentDate, policyDetails, clientName } = reminderData;
+      const templatePath = path.join(__dirname, '../email_templates/life_insurance_renewal.html');
+      let template = fs.readFileSync(templatePath, 'utf8');
+      
+      // Replace placeholders with actual data
+      template = template.replace(/\{\{clientName\}\}/g, clientName || 'Valued Client');
+      template = template.replace(/\{\{policyNumber\}\}/g, policyDetails?.policyNumber || 'N/A');
+      template = template.replace(/\{\{planName\}\}/g, policyDetails?.planName || 'N/A');
+      template = template.replace(/\{\{subProduct\}\}/g, policyDetails?.subProduct || 'N/A');
+      template = template.replace(/\{\{policyStartDate\}\}/g, policyDetails?.policyStartDate || 'N/A');
+      template = template.replace(/\{\{policyTerm\}\}/g, policyDetails?.policyTerm || 'N/A');
+      template = template.replace(/\{\{premiumPaymentTerm\}\}/g, policyDetails?.premiumPaymentTerm || 'N/A');
+      template = template.replace(/\{\{nextPaymentDate\}\}/g, nextPaymentDate || 'N/A');
+      template = template.replace(/\{\{daysUntilPayment\}\}/g, daysUntilPayment || 'N/A');
+      
+      // Handle urgent flag
+      const isUrgent = daysUntilPayment <= 7;
+      if (isUrgent) {
+        template = template.replace(/\{\{#if isUrgent\}\}.*?\{\{\/if\}\}/gs, 
+          '<div class="urgent"><h4>⚠️ URGENT: Payment Due Soon</h4><p>Your premium payment is due within ' + daysUntilPayment + ' days. Please make payment immediately to avoid policy lapse.</p></div>');
+      } else {
+        template = template.replace(/\{\{#if isUrgent\}\}.*?\{\{\/if\}\}/gs, '');
+      }
+      
+      return template;
+    } catch (error) {
+      console.error('Error generating life insurance email:', error);
+      return '<p>Life Insurance Email Error</p>';
+    }
+  }
 
 }
 

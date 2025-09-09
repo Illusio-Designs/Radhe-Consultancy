@@ -1,6 +1,7 @@
-const { RenewalConfig, LabourInspection, LabourLicense, VehiclePolicy, EmployeeCompensationPolicy, HealthPolicies, FirePolicy, DSC } = require('../models');
+const { RenewalConfig, LabourInspection, LabourLicense, VehiclePolicy, EmployeeCompensationPolicy, HealthPolicies, FirePolicy, DSC, LifePolicy, ReminderLog } = require('../models');
 const { Op } = require('sequelize');
 const FactoryQuotation = require('../models/factoryQuotationModel');
+const StabilityManagement = require('../models/stabilityManagementModel');
 
 // Get all renewal configurations
 const getAllConfigs = async (req, res) => {
@@ -397,6 +398,50 @@ const getVehiclePolicyLiveData = async (config, today) => {
   };
 };
 
+// Helper function to get life insurance counts with monthly payment term logic
+const getLifeInsuranceCount = async (config, today, days = null) => {
+  try {
+    const endDate = days ? new Date(today.getTime() + (days * 24 * 60 * 60 * 1000)) : 
+                          new Date(today.getTime() + (config.reminderDays * 24 * 60 * 60 * 1000));
+    
+    // Get all active life policies
+    const policies = await LifePolicy.findAll({
+      where: {
+        status: 'active',
+        policy_start_date: { [Op.not]: null },
+        pt: { [Op.not]: null }
+      },
+      attributes: ['id', 'policy_start_date', 'pt', 'policy_end_date']
+    });
+
+    let count = 0;
+    
+    for (const policy of policies) {
+      const startDate = new Date(policy.policy_start_date);
+      const policyTerm = parseInt(policy.pt); // Policy term in years
+      
+      // Calculate all monthly payment dates within the specified period
+      for (let year = 0; year < policyTerm; year++) {
+        for (let month = 0; month < 12; month++) {
+          const paymentDate = new Date(startDate);
+          paymentDate.setFullYear(startDate.getFullYear() + year);
+          paymentDate.setMonth(startDate.getMonth() + month);
+          
+          // Check if this payment date falls within our target period
+          if (paymentDate >= today && paymentDate <= endDate) {
+            count++;
+          }
+        }
+      }
+    }
+    
+    return count;
+  } catch (error) {
+    console.error('Error getting life insurance count:', error);
+    return 0;
+  }
+};
+
 // Helper function to get policy counts for different service types
 const getPolicyCount = async (config, today, dateField, days = null) => {
   let Model;
@@ -417,6 +462,12 @@ const getPolicyCount = async (config, today, dateField, days = null) => {
       break;
     case 'factory':
       Model = FactoryQuotation;
+      break;
+    case 'stability':
+      Model = StabilityManagement;
+      break;
+    case 'life':
+      Model = LifePolicy;
       break;
     default:
       return 0;
@@ -515,6 +566,22 @@ const getLiveRenewalData = async (req, res) => {
             expiringNextWeek = await getPolicyCount(config, today, 'renewal_date', 14);
             expiringThisMonth = await getPolicyCount(config, today, 'renewal_date', 30);
             break;
+
+          case 'stability':
+            // Stability uses renewal_date
+            upcomingCount = await getPolicyCount(config, today, 'renewal_date');
+            expiringThisWeek = await getPolicyCount(config, today, 'renewal_date', 7);
+            expiringNextWeek = await getPolicyCount(config, today, 'renewal_date', 14);
+            expiringThisMonth = await getPolicyCount(config, today, 'renewal_date', 30);
+            break;
+
+          case 'life':
+            // Life insurance uses monthly payment term logic
+            upcomingCount = await getLifeInsuranceCount(config, today);
+            expiringThisWeek = await getLifeInsuranceCount(config, today, 7);
+            expiringNextWeek = await getLifeInsuranceCount(config, today, 14);
+            expiringThisMonth = await getLifeInsuranceCount(config, today, 30);
+            break;
         }
 
         liveData[config.serviceType] = {
@@ -566,7 +633,9 @@ const getDefaultServiceTypes = async (req, res) => {
       { value: 'dsc', label: 'Digital Signature Certificate' },
       { value: 'factory', label: 'Factory Quotation' },
       { value: 'labour_inspection', label: 'Labour Inspection' },
-      { value: 'labour_license', label: 'Labour License' }
+      { value: 'labour_license', label: 'Labour License' },
+      { value: 'stability', label: 'Stability Management' },
+      { value: 'life', label: 'Life Insurance' }
     ];
     
     res.json({
