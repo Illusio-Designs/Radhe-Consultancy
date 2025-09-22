@@ -1,10 +1,37 @@
 const { sendEmail } = require('../utils/email');
 const fs = require('fs');
 const path = require('path');
+const { ReminderLog } = require('../models');
 
 class EmailService {
   constructor() {
     // Initialize email service
+  }
+
+  // Helper function to create reminder log
+  async createReminderLog(logData) {
+    try {
+      const log = await ReminderLog.create({
+        policy_id: logData.policy_id,
+        policy_type: logData.policy_type,
+        client_name: logData.client_name,
+        client_email: logData.client_email,
+        reminder_type: logData.reminder_type || 'email',
+        reminder_day: logData.reminder_day,
+        expiry_date: logData.expiry_date,
+        status: logData.status || 'sent',
+        email_subject: logData.email_subject,
+        response_data: logData.response_data,
+        error_message: logData.error_message,
+        days_until_expiry: logData.days_until_expiry
+      });
+      
+      console.log('✅ Reminder log created:', log.id);
+      return log;
+    } catch (error) {
+      console.error('❌ Error creating reminder log:', error);
+      return null;
+    }
   }
 
   // Send vehicle insurance renewal reminder
@@ -19,6 +46,21 @@ class EmailService {
       const plainText = `Vehicle Insurance Renewal Reminder: Your policy expires in ${daysUntilExpiry} days. Please contact RADHE CONSULTANCY for renewal assistance.`;
       const result = await sendEmail(clientData.email, subject, plainText, emailContent);
       console.log('✅ Vehicle Insurance renewal reminder sent successfully to:', clientData.email);
+      
+      // Create reminder log
+      await this.createReminderLog({
+        policy_id: vehicleDetails?.id || 0,
+        policy_type: 'vehicle',
+        client_name: clientData.name || 'N/A',
+        client_email: clientData.email,
+        reminder_type: 'email',
+        reminder_day: daysUntilExpiry,
+        expiry_date: expiryDate,
+        status: 'sent',
+        email_subject: subject,
+        response_data: { messageId: result.messageId },
+        days_until_expiry: daysUntilExpiry
+      });
       
       return {
         success: true,
@@ -331,7 +373,7 @@ class EmailService {
           
           <!-- Footer -->
           <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
-                  <p style="margin: 0; font-size: 12px; color: #6c7280;">
+            <p style="margin: 0; font-size: 12px; color: #6c7280;">
               © 2025 RADHE CONSULTANCY. All rights reserved.
             </p>
           </div>
@@ -835,6 +877,21 @@ class EmailService {
       const plainText = `Life Insurance Payment Reminder: Your policy #${policyDetails.policyNumber} payment is due in ${daysUntilPayment} days on ${nextPaymentDate}. Please contact us for assistance.`;
       const result = await sendEmail(clientEmail, subject, plainText, emailContent);
       console.log('✅ Life Insurance renewal reminder email sent successfully to:', clientEmail);
+      
+      // Create reminder log
+      await this.createReminderLog({
+        policy_id: policyDetails?.id || 0,
+        policy_type: 'life',
+        client_name: clientName || 'N/A',
+        client_email: clientEmail,
+        reminder_type: 'email',
+        reminder_day: daysUntilPayment,
+        expiry_date: nextPaymentDate,
+        status: 'sent',
+        email_subject: subject,
+        response_data: { messageId: result.messageId },
+        days_until_expiry: daysUntilPayment
+      });
       
       return {
         success: true,

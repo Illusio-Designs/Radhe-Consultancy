@@ -265,11 +265,13 @@ const RenewalDashboard = () => {
   const [configs, setConfigs] = useState([]);
   const [liveData, setLiveData] = useState(null);
   const [renewalsList, setRenewalsList] = useState([]);
+  const [serviceResults, setServiceResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState(null);
+  const [selectedServiceType, setSelectedServiceType] = useState('all');
   const [statistics, setStatistics] = useState({
     totalConfigs: 0,
     activeConfigs: 0,
@@ -281,6 +283,13 @@ const RenewalDashboard = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Fetch renewal list when list tab is active
+  useEffect(() => {
+    if (activeTab === 'list' && renewalsList.length === 0) {
+      fetchRenewalList();
+    }
+  }, [activeTab]);
 
   const fetchData = async () => {
     await Promise.all([
@@ -315,6 +324,63 @@ const RenewalDashboard = () => {
       }
     } catch (err) {
       console.error("Error fetching live data:", err);
+    }
+  };
+
+  const fetchRenewalList = async (serviceType = 'all', period = 30) => {
+    try {
+      setListLoading(true);
+      let response;
+      
+      if (serviceType === 'all') {
+        // Fetch from all service types
+        const serviceTypes = ['vehicle', 'ecp', 'health', 'fire', 'dsc', 'factory', 'labour_license', 'labour_inspection', 'stability', 'life'];
+        const promises = serviceTypes.map(type => 
+          renewalAPI.getListByTypeAndPeriod(type, period)
+        );
+        const results = await Promise.all(promises);
+        
+        // Process results to show all data including errors and empty results
+        const processedResults = results.map((result, index) => ({
+          serviceType: serviceTypes[index],
+          serviceName: getServiceName(serviceTypes[index]),
+          success: result.success,
+          data: result.success ? result.data : [],
+          error: result.success ? null : result.message || 'Unknown error',
+          count: result.success ? (result.data ? result.data.length : 0) : 0
+        }));
+        
+        // Log results for debugging
+        console.log('All service results:', processedResults);
+        console.log('Raw API results:', results);
+        console.log('Processed results with data:', processedResults.filter(r => r.success && r.data.length > 0));
+        
+        // Flatten successful results for the main list
+        const allRenewals = results
+          .filter(result => result.success && result.data && result.data.length > 0)
+          .flatMap(result => result.data)
+          .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+        
+        console.log('All renewals fetched:', allRenewals);
+        console.log('Renewals count:', allRenewals.length);
+        console.log('First renewal sample:', allRenewals[0]);
+        setRenewalsList(allRenewals);
+        setServiceResults(processedResults);
+      } else {
+        response = await renewalAPI.getListByTypeAndPeriod(serviceType, period);
+        console.log('Single service response:', response);
+        if (response.success) {
+          setRenewalsList(response.data);
+        } else {
+          setError("Failed to fetch renewal list");
+        }
+        setServiceResults([]); // Clear service results for single service
+      }
+    } catch (err) {
+      console.error("Error fetching renewal list:", err);
+      setError("Failed to fetch renewal list");
+    } finally {
+      setListLoading(false);
     }
   };
 
@@ -638,78 +704,124 @@ const RenewalDashboard = () => {
 
   // List Tab - Show upcoming renewals list
   const renderListTab = () => {
-    // Create a list of upcoming renewals from live data
-    const upcomingRenewalsList = [];
-
-    if (liveData) {
-      Object.entries(liveData).forEach(([serviceType, data]) => {
-        if (data.upcomingCount > 0) {
-          // Create mock renewal items based on the counts
-          for (let i = 0; i < Math.min(data.upcomingCount, 10); i++) {
-            const daysUntilExpiry = Math.floor(Math.random() * 30) + 1; // Random 1-30 days
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + daysUntilExpiry);
-
-            upcomingRenewalsList.push({
-              id: `${serviceType}-${i}`,
-              serviceType,
-              serviceName: data.serviceName || getServiceName(serviceType),
-              expiryDate: expiryDate.toISOString(),
-              daysUntilExpiry,
-              priority: getPriorityClass(daysUntilExpiry)
-            });
-          }
-        }
-      });
-    }
-
-    // Sort by days until expiry (ascending)
-    upcomingRenewalsList.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
-
     return (
       <div className="tab-content">
         <div className="tab-header">
           <h2>Upcoming Renewals List</h2>
-          <Button
-            variant="outlined"
-            onClick={fetchLiveData}
-            icon={<BiRefresh />}
-          >
-            Refresh
-          </Button>
+          <div className="tab-controls">
+            <select 
+              value={selectedServiceType} 
+              onChange={(e) => {
+                setSelectedServiceType(e.target.value);
+                fetchRenewalList(e.target.value);
+              }}
+              className="service-filter"
+            >
+              <option value="all">All Services</option>
+              <option value="vehicle">Vehicle Insurance</option>
+              <option value="ecp">Employee Compensation Policy</option>
+              <option value="health">Health Insurance</option>
+              <option value="fire">Fire Insurance</option>
+              <option value="dsc">Digital Signature</option>
+              <option value="factory">Factory License</option>
+              <option value="labour_license">Labour License</option>
+              <option value="labour_inspection">Labour Inspection</option>
+              <option value="stability">Stability Management</option>
+              <option value="life">Life Insurance</option>
+            </select>
+            <Button
+              variant="outlined"
+              onClick={() => fetchRenewalList(selectedServiceType)}
+              icon={<BiRefresh />}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        {loading ? (
+        {listLoading ? (
           <Loader size="large" color="primary" />
-        ) : upcomingRenewalsList.length > 0 ? (
-          <div className="renewals-list">
-            {upcomingRenewalsList.map((renewal, index) => (
-              <div key={renewal.id} className="renewal-item">
-                <div className="renewal-icon">
-                  {getServiceIcon(renewal.serviceType)}
-                </div>
-                <div className="renewal-details">
-                  <div className="renewal-title">{renewal.serviceName}</div>
-                  <div className="renewal-meta">
-                    <span className="renewal-type">{renewal.serviceType}</span>
-                    <span className="renewal-date">Expires: {new Date(renewal.expiryDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <div className="renewal-status">
-                  <span className={`status-badge ${renewal.priority}`}>
-                    {renewal.daysUntilExpiry} days
-                  </span>
+        ) : (
+          <div>
+            {/* Debug Info */}
+            <div style={{padding: '10px', background: '#e3f2fd', marginBottom: '10px', borderRadius: '4px'}}>
+              <strong>Debug Info:</strong> renewalsList.length = {renewalsList.length}, serviceResults.length = {serviceResults.length}
+            </div>
+
+            {/* Service Results Summary */}
+            {serviceResults.length > 0 && (
+              <div className="service-results-summary" style={{marginBottom: '20px'}}>
+                <h3>Service Results Summary</h3>
+                <div className="service-results-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px'}}>
+                  {serviceResults.map((result, index) => (
+                    <div key={index} className={`service-result-card ${result.success ? 'success' : 'error'}`} 
+                         style={{
+                           padding: '12px',
+                           borderRadius: '8px',
+                           border: `2px solid ${result.success ? '#28a745' : '#dc3545'}`,
+                           backgroundColor: result.success ? '#d4edda' : '#f8d7da'
+                         }}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+                        {getServiceIcon(result.serviceType)}
+                        <strong>{result.serviceName}</strong>
+                      </div>
+                      <div style={{fontSize: '14px'}}>
+                        {result.success ? (
+                          <span style={{color: '#155724'}}>
+                            ✅ {result.count} renewals found
+                          </span>
+                        ) : (
+                          <span style={{color: '#721c24'}}>
+                            ❌ Error: {result.error}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-icon">
-              <BiListUl />
-            </div>
-            <h3>No Upcoming Renewals</h3>
-            <p>There are no upcoming renewals to display at this time.</p>
+            )}
+
+            {/* Main Renewals List */}
+            {renewalsList.length > 0 ? (
+              <div className="renewals-list">
+                <h3>All Renewals ({renewalsList.length} total)</h3>
+                {renewalsList.map((renewal, index) => (
+                  <div key={renewal.id || index} className="renewal-item">
+                    <div className="renewal-icon">
+                      {getServiceIcon(renewal.serviceType)}
+                    </div>
+                    <div className="renewal-details">
+                      <div className="renewal-title">{getServiceName(renewal.serviceType)}</div>
+                      <div className="renewal-meta">
+                        <span className="renewal-policy">Policy: {renewal.policyNumber}</span>
+                        <span className="renewal-client">Client: {renewal.clientName}</span>
+                        <span className="renewal-email">Email: {renewal.clientEmail}</span>
+                        <span className="renewal-date">Expires: {new Date(renewal.expiryDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="renewal-status">
+                      <span className={`status-badge ${getPriorityClass(renewal.daysUntilExpiry)}`}>
+                        {renewal.daysUntilExpiry} days
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <BiListUl />
+                </div>
+                <h3>No Upcoming Renewals</h3>
+                <p>There are no upcoming renewals to display at this time.</p>
+                {serviceResults.length > 0 && (
+                  <div style={{padding: '10px', background: '#fff3cd', marginTop: '10px', borderRadius: '4px'}}>
+                    <strong>Note:</strong> Some services returned 0 results or had errors. Check the summary above for details.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

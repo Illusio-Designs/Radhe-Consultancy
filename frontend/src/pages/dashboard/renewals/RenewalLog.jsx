@@ -8,17 +8,61 @@ const RenewalLog = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    status: '',
+    policy_type: '',
+    reminder_type: ''
+  });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0
+  });
 
   useEffect(() => {
     fetchRenewalLogs();
-  }, []);
+  }, [filters]);
 
-  const fetchRenewalLogs = async () => {
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handlePageChange = (newPage) => {
+    fetchRenewalLogs(newPage);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      status: '',
+      policy_type: '',
+      reminder_type: ''
+    });
+  };
+
+  const fetchRenewalLogs = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await renewalAPI.getLogs();
+      const queryParams = {
+        page,
+        limit: pagination.limit,
+        ...filters
+      };
+      
+      const response = await renewalAPI.getLogs(queryParams);
       if (response.success) {
         setLogs(response.data || []);
+        if (response.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            page: response.pagination.page,
+            total: response.pagination.total,
+            totalPages: response.pagination.totalPages
+          }));
+        }
       } else {
         setError("Failed to fetch renewal logs");
       }
@@ -83,6 +127,66 @@ const RenewalLog = () => {
         <div className="renewal-log-header">
           <h1 className="renewal-log-title">📋 Renewal Log History</h1>
           <p className="renewal-log-subtitle">Complete history of all renewal reminders sent</p>
+        </div>
+
+        {/* Filter Controls */}
+        <div className="renewal-log-filters">
+          <div className="filter-group">
+            <label>Status:</label>
+            <select 
+              value={filters.status} 
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Status</option>
+              <option value="sent">Sent</option>
+              <option value="delivered">Delivered</option>
+              <option value="failed">Failed</option>
+              <option value="opened">Opened</option>
+              <option value="clicked">Clicked</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Policy Type:</label>
+            <select 
+              value={filters.policy_type} 
+              onChange={(e) => handleFilterChange('policy_type', e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Types</option>
+              <option value="vehicle">Vehicle Insurance</option>
+              <option value="health">Health Insurance</option>
+              <option value="fire">Fire Insurance</option>
+              <option value="dsc">Digital Signature</option>
+              <option value="factory">Factory License</option>
+              <option value="labour_license">Labour License</option>
+              <option value="labour_inspection">Labour Inspection</option>
+              <option value="stability">Stability Management</option>
+              <option value="life">Life Insurance</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Reminder Type:</label>
+            <select 
+              value={filters.reminder_type} 
+              onChange={(e) => handleFilterChange('reminder_type', e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Types</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
+
+          <button 
+            onClick={clearFilters}
+            className="clear-filters-btn"
+          >
+            Clear Filters
+          </button>
         </div>
 
         {error && (
@@ -172,10 +276,36 @@ const RenewalLog = () => {
 
         {logs.length > 0 && (
           <div className="renewal-log-footer">
-            <p>Showing {logs.length} renewal reminder logs</p>
+            <div className="pagination-info">
+              <p>Showing {logs.length} of {pagination.total} renewal reminder logs</p>
+              <p>Page {pagination.page} of {pagination.totalPages}</p>
+            </div>
+            
+            <div className="pagination-controls">
+              <button 
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1 || loading}
+                className="pagination-btn"
+              >
+                Previous
+              </button>
+              
+              <span className="page-info">
+                {pagination.page} / {pagination.totalPages}
+              </span>
+              
+              <button 
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.totalPages || loading}
+                className="pagination-btn"
+              >
+                Next
+              </button>
+            </div>
+            
             <button 
               className="refresh-button"
-              onClick={fetchRenewalLogs}
+              onClick={() => fetchRenewalLogs(pagination.page)}
               disabled={loading}
             >
               {loading ? 'Refreshing...' : '🔄 Refresh Logs'}

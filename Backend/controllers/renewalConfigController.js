@@ -1,4 +1,4 @@
-const { RenewalConfig, LabourInspection, LabourLicense, VehiclePolicy, EmployeeCompensationPolicy, HealthPolicies, FirePolicy, DSC, LifePolicy, ReminderLog } = require('../models');
+const { RenewalConfig, LabourInspection, LabourLicense, VehiclePolicy, EmployeeCompensationPolicy, HealthPolicies, FirePolicy, DSC, LifePolicy, ReminderLog, Company, Consumer } = require('../models');
 const { Op } = require('sequelize');
 const FactoryQuotation = require('../models/factoryQuotationModel');
 const StabilityManagement = require('../models/stabilityManagementModel');
@@ -655,11 +655,31 @@ const getDefaultServiceTypes = async (req, res) => {
 // Get renewal logs
 const getLogs = async (req, res) => {
   try {
-    // This would typically fetch from a logs table
+    const { page = 1, limit = 50, status, policy_type, reminder_type } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Build where clause
+    const whereClause = {};
+    if (status) whereClause.status = status;
+    if (policy_type) whereClause.policy_type = policy_type;
+    if (reminder_type) whereClause.reminder_type = reminder_type;
+
+    const { count, rows: logs } = await ReminderLog.findAndCountAll({
+      where: whereClause,
+      order: [['sent_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+    
     res.json({
       success: true,
-      data: [],
-      message: 'Logs functionality not implemented yet'
+      data: logs,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit)
+      }
     });
   } catch (error) {
     console.error('Error fetching logs:', error);
@@ -668,6 +688,32 @@ const getLogs = async (req, res) => {
       message: 'Error fetching logs',
       error: error.message
     });
+  }
+};
+
+// Create reminder log entry
+const createReminderLog = async (logData) => {
+  try {
+    const log = await ReminderLog.create({
+      policy_id: logData.policy_id,
+      policy_type: logData.policy_type,
+      client_name: logData.client_name,
+      client_email: logData.client_email,
+      reminder_type: logData.reminder_type || 'email',
+      reminder_day: logData.reminder_day,
+      expiry_date: logData.expiry_date,
+      status: logData.status || 'sent',
+      email_subject: logData.email_subject,
+      response_data: logData.response_data,
+      error_message: logData.error_message,
+      days_until_expiry: logData.days_until_expiry
+    });
+    
+    console.log('✅ Reminder log created:', log.id);
+    return log;
+  } catch (error) {
+    console.error('❌ Error creating reminder log:', error);
+    return null;
   }
 };
 
@@ -700,7 +746,7 @@ const getCounts = async (req, res) => {
   } catch (error) {
     console.error('Error fetching counts:', error);
     res.status(500).json({
-      success: false,
+        success: false,
       message: 'Error fetching counts',
       error: error.message
     });
@@ -710,17 +756,269 @@ const getCounts = async (req, res) => {
 // Get renewal list by type and period
 const getListByTypeAndPeriod = async (req, res) => {
   try {
-    const { type, period } = req.query;
+    const { type, period = 30 } = req.query;
+    
+    if (!type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service type is required'
+      });
+    }
+    
+    const today = new Date();
+    const endDate = new Date(today.getTime() + (parseInt(period) * 24 * 60 * 60 * 1000));
+    
+    let renewalList = [];
+    
+    switch (type) {
+      case 'vehicle':
+        renewalList = await VehiclePolicy.findAll({
+          where: {
+            policy_end_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'companyPolicyHolder',
+              attributes: ['company_id', 'company_name', 'company_email']
+            },
+            {
+              model: Consumer,
+              as: 'consumerPolicyHolder',
+              attributes: ['consumer_id', 'name', 'email']
+            }
+          ],
+          attributes: ['id', 'policy_number', 'vehicle_number', 'policy_end_date', 'company_id', 'consumer_id']
+        });
+        break;
+        
+      case 'ecp':
+        renewalList = await EmployeeCompensationPolicy.findAll({
+          where: {
+            policy_end_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'policyHolder',
+              attributes: ['company_id', 'company_name', 'company_email']
+            }
+          ],
+          attributes: ['id', 'policy_number', 'policy_end_date', 'company_id']
+        });
+        break;
+        
+      case 'health':
+        renewalList = await HealthPolicies.findAll({
+          where: {
+            policy_end_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'companyPolicyHolder',
+              attributes: ['company_id', 'company_name', 'company_email']
+            },
+            {
+              model: Consumer,
+              as: 'consumerPolicyHolder',
+              attributes: ['consumer_id', 'name', 'email']
+            }
+          ],
+          attributes: ['id', 'policy_number', 'policy_end_date', 'company_id', 'consumer_id']
+        });
+        break;
+        
+      case 'fire':
+        renewalList = await FirePolicy.findAll({
+          where: {
+            policy_end_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'companyPolicyHolder',
+              attributes: ['company_id', 'company_name', 'company_email']
+            },
+            {
+              model: Consumer,
+              as: 'consumerPolicyHolder',
+              attributes: ['consumer_id', 'name', 'email']
+            }
+          ],
+          attributes: ['id', 'policy_number', 'policy_end_date', 'company_id', 'consumer_id']
+        });
+        break;
+        
+      case 'dsc':
+        renewalList = await DSC.findAll({
+          where: {
+            expiry_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'company',
+              attributes: ['company_id', 'company_name', 'company_email']
+            },
+            {
+              model: Consumer,
+              as: 'consumer',
+              attributes: ['consumer_id', 'name', 'email']
+            }
+          ],
+          attributes: ['dsc_id', 'certificate_number', 'expiry_date', 'company_id', 'consumer_id']
+        });
+        break;
+        
+      case 'factory':
+        renewalList = await FactoryQuotation.findAll({
+          where: {
+            renewal_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'company',
+              attributes: ['company_id', 'company_name', 'company_email']
+            }
+          ],
+          attributes: ['id', 'renewal_date', 'company_id']
+        });
+        break;
+        
+      case 'labour_license':
+        renewalList = await LabourLicense.findAll({
+          where: {
+            expiry_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'company',
+              attributes: ['company_id', 'company_name', 'company_email']
+            }
+          ],
+          attributes: ['license_id', 'license_number', 'expiry_date', 'company_id']
+        });
+        break;
+        
+      case 'labour_inspection':
+        renewalList = await LabourInspection.findAll({
+          where: {
+            inspection_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'company',
+              attributes: ['company_id', 'company_name', 'company_email']
+            }
+          ],
+          attributes: ['inspection_id', 'inspection_number', 'inspection_date', 'company_id']
+        });
+        break;
+        
+      case 'stability':
+        renewalList = await StabilityManagement.findAll({
+          where: {
+            renewal_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: FactoryQuotation,
+              as: 'factoryQuotation',
+              attributes: ['id', 'company_id'],
+              include: [
+                {
+                  model: Company,
+                  as: 'company',
+                  attributes: ['company_id', 'company_name', 'company_email']
+                }
+              ]
+            }
+          ],
+          attributes: ['id', 'renewal_date', 'factory_quotation_id']
+        });
+        break;
+        
+      case 'life':
+        renewalList = await LifePolicy.findAll({
+          where: {
+            policy_end_date: {
+              [Op.between]: [today, endDate]
+            }
+          },
+          include: [
+            {
+              model: Company,
+              as: 'companyPolicyHolder',
+              attributes: ['company_id', 'company_name', 'company_email']
+            },
+            {
+              model: Consumer,
+              as: 'consumerPolicyHolder',
+              attributes: ['consumer_id', 'name', 'email']
+            }
+          ],
+          attributes: ['id', 'current_policy_number', 'policy_end_date', 'company_id', 'consumer_id']
+        });
+        break;
+        
+      default:
+        return res.status(400).json({
+          success: false,
+          message: `Invalid service type: ${type}`
+        });
+    }
+    
+    // Format the response data
+    const formattedData = renewalList.map(item => {
+      const data = item.toJSON();
+      const daysUntilExpiry = Math.ceil((new Date(data.policy_end_date || data.expiry_date || data.inspection_date || data.renewal_date) - today) / (1000 * 60 * 60 * 24));
+      
+      return {
+        id: data.id,
+        policyNumber: data.policy_number || data.certificate_number || data.id || data.license_number || data.inspection_number || data.current_policy_number,
+        expiryDate: data.policy_end_date || data.expiry_date || data.inspection_date || data.renewal_date,
+        daysUntilExpiry,
+        serviceType: type,
+        companyName: data.companyPolicyHolder?.company_name || data.company?.company_name || data.factoryQuotation?.company?.company_name || 'N/A',
+        companyEmail: data.companyPolicyHolder?.company_email || data.company?.company_email || data.factoryQuotation?.company?.company_email || 'N/A',
+        consumerName: data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
+        consumerEmail: data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A',
+        clientName: data.companyPolicyHolder?.company_name || data.company?.company_name || data.factoryQuotation?.company?.company_name || data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
+        clientEmail: data.companyPolicyHolder?.company_email || data.company?.company_email || data.factoryQuotation?.company?.company_email || data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A'
+      };
+    });
     
     res.json({
       success: true,
-      data: [],
-      message: 'List functionality not fully implemented yet'
+      data: formattedData,
+      total: formattedData.length
     });
   } catch (error) {
     console.error('Error fetching renewal list:', error);
     res.status(500).json({
-        success: false,
+      success: false,
       message: 'Error fetching renewal list',
       error: error.message
     });
@@ -731,11 +1029,254 @@ const getListByTypeAndPeriod = async (req, res) => {
 const searchRenewals = async (req, res) => {
   try {
     const { q } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query must be at least 2 characters long'
+      });
+    }
 
+    const searchTerm = `%${q.trim()}%`;
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+    
+    const searchResults = [];
+    
+    // Search across all service types
+    const searchPromises = [
+      // Vehicle Insurance
+      VehiclePolicy.findAll({
+        where: {
+          [Op.or]: [
+            { policy_number: { [Op.like]: searchTerm } },
+            { vehicle_number: { [Op.like]: searchTerm } }
+          ],
+          policy_end_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'companyPolicyHolder',
+            attributes: ['company_id', 'company_name', 'company_email']
+          },
+          {
+            model: Consumer,
+            as: 'consumerPolicyHolder',
+            attributes: ['consumer_id', 'name', 'email']
+          }
+        ],
+        attributes: ['id', 'policy_number', 'vehicle_number', 'policy_end_date', 'company_id', 'consumer_id']
+      }),
+      
+      // Health Insurance
+      HealthPolicies.findAll({
+        where: {
+          policy_number: { [Op.like]: searchTerm },
+          policy_end_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'companyPolicyHolder',
+            attributes: ['company_id', 'company_name', 'company_email']
+          },
+          {
+            model: Consumer,
+            as: 'consumerPolicyHolder',
+            attributes: ['consumer_id', 'name', 'email']
+          }
+        ],
+        attributes: ['id', 'policy_number', 'policy_end_date', 'company_id', 'consumer_id']
+      }),
+      
+      // Fire Insurance
+      FirePolicy.findAll({
+        where: {
+          policy_number: { [Op.like]: searchTerm },
+          policy_end_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'companyPolicyHolder',
+            attributes: ['company_id', 'company_name', 'company_email']
+          },
+          {
+            model: Consumer,
+            as: 'consumerPolicyHolder',
+            attributes: ['consumer_id', 'name', 'email']
+          }
+        ],
+        attributes: ['id', 'policy_number', 'policy_end_date', 'company_id', 'consumer_id']
+      }),
+      
+      // DSC
+      DSC.findAll({
+        where: {
+          certificate_number: { [Op.like]: searchTerm },
+          expiry_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'companyPolicyHolder',
+            attributes: ['company_id', 'company_name', 'company_email']
+          },
+          {
+            model: Consumer,
+            as: 'consumerPolicyHolder',
+            attributes: ['consumer_id', 'name', 'email']
+          }
+        ],
+        attributes: ['dsc_id', 'certificate_number', 'expiry_date', 'company_id', 'consumer_id']
+      }),
+      
+      // Factory Quotation
+      FactoryQuotation.findAll({
+        where: {
+          id: { [Op.like]: searchTerm },
+          renewal_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'company',
+            attributes: ['company_id', 'company_name', 'company_email']
+          }
+        ],
+        attributes: ['id', 'renewal_date', 'company_id']
+      }),
+      
+      // Labour License
+      LabourLicense.findAll({
+        where: {
+          license_number: { [Op.like]: searchTerm },
+          expiry_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'company',
+            attributes: ['company_id', 'company_name', 'company_email']
+          }
+        ],
+        attributes: ['license_id', 'license_number', 'expiry_date', 'company_id']
+      }),
+      
+      // Labour Inspection
+      LabourInspection.findAll({
+        where: {
+          inspection_number: { [Op.like]: searchTerm },
+          inspection_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'company',
+            attributes: ['company_id', 'company_name', 'company_email']
+          }
+        ],
+        attributes: ['inspection_id', 'inspection_number', 'inspection_date', 'company_id']
+      }),
+      
+      // Stability Management
+      StabilityManagement.findAll({
+        where: {
+          renewal_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: FactoryQuotation,
+            as: 'factoryQuotation',
+            attributes: ['id', 'company_id'],
+            include: [
+              {
+                model: Company,
+                as: 'company',
+                attributes: ['company_id', 'company_name', 'company_email']
+              }
+            ]
+          }
+        ],
+        attributes: ['id', 'renewal_date', 'factory_quotation_id']
+      }),
+      
+      // Life Insurance
+      LifePolicy.findAll({
+        where: {
+          current_policy_number: { [Op.like]: searchTerm },
+          policy_end_date: {
+            [Op.between]: [today, thirtyDaysFromNow]
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'companyPolicyHolder',
+            attributes: ['company_id', 'company_name', 'company_email']
+          },
+          {
+            model: Consumer,
+            as: 'consumerPolicyHolder',
+            attributes: ['consumer_id', 'name', 'email']
+          }
+        ],
+        attributes: ['id', 'current_policy_number', 'policy_end_date', 'company_id', 'consumer_id']
+      })
+    ];
+    
+    const results = await Promise.all(searchPromises);
+    
+    // Process results and add service type
+    const serviceTypes = ['vehicle', 'health', 'fire', 'dsc', 'factory', 'labour_license', 'labour_inspection', 'stability', 'life'];
+    
+    results.forEach((result, index) => {
+      const serviceType = serviceTypes[index];
+      result.forEach(item => {
+        const data = item.toJSON();
+        const daysUntilExpiry = Math.ceil((new Date(data.policy_end_date || data.expiry_date || data.inspection_date || data.renewal_date) - today) / (1000 * 60 * 60 * 24));
+        
+        searchResults.push({
+          id: data.id,
+          policyNumber: data.policy_number || data.certificate_number || data.id || data.license_number || data.inspection_number || data.current_policy_number,
+          expiryDate: data.policy_end_date || data.expiry_date || data.inspection_date || data.renewal_date,
+          daysUntilExpiry,
+          serviceType,
+          companyName: data.companyPolicyHolder?.company_name || data.company?.company_name || 'N/A',
+          companyEmail: data.companyPolicyHolder?.company_email || data.company?.company_email || 'N/A',
+          consumerName: data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
+          consumerEmail: data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A',
+          clientName: data.companyPolicyHolder?.company_name || data.company?.company_name || data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
+          clientEmail: data.companyPolicyHolder?.company_email || data.company?.company_email || data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A'
+        });
+      });
+    });
+    
+    // Sort by days until expiry
+    searchResults.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+    
     res.json({
       success: true,
-      data: [],
-      message: 'Search functionality not fully implemented yet'
+      data: searchResults,
+      total: searchResults.length,
+      query: q
     });
   } catch (error) {
     console.error('Error searching renewals:', error);
@@ -761,5 +1302,6 @@ module.exports = {
   searchRenewals,
   getLabourInspectionLiveData,
   getLabourLicenseLiveData,
-  getVehiclePolicyLiveData
+  getVehiclePolicyLiveData,
+  createReminderLog
 };
