@@ -36,7 +36,7 @@ import DSCLogs from "../pages/dashboard/logs/DSCLogs";
 import RenewalDashboard from "../pages/dashboard/renewals/RenewalDashboard";
 import RenewalLog from "../pages/dashboard/renewals/RenewalLog";
 import FactoryQuotationRenewal from "../pages/dashboard/compliance/FactoryQuotationRenewal";
-import UserRoleWorkLog from "../pages/dashboard/logs/UserRoleWorkLog";
+import UserRoleWorkLog from "../pages/dashboard/roles/UserRoleWorkLog";
 
 function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);

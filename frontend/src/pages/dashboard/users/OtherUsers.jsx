@@ -34,47 +34,65 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
       "Insurance_manager",
       "Compliance_manager",
       "DSC_manager",
-      "Labour_manager",
+      "Labour_law_manager",
       "Website_manager",
     ].includes(role.role_name)
   );
 
   // Fix: Only update formData if values actually change
   useEffect(() => {
-    if (user) {
+    console.log("UserForm useEffect - user changed:", user);
+    console.log("Available roles in context:", roles);
+    
+    if (user && roles && roles.length > 0) {
+      console.log("User roles:", user.roles);
+      const roleIds = user.roles?.map((role) => {
+        // Handle both object and primitive role structures
+        if (typeof role === 'object' && role.id) {
+          return role.id;
+        }
+        // If role is an object with role_name, we need to find the role ID from the roles context
+        if (typeof role === 'object' && role.role_name) {
+          const foundRole = roles.find(r => r.role_name === role.role_name);
+          console.log(`Looking for role ${role.role_name}, found:`, foundRole);
+          return foundRole ? foundRole.id : null;
+        }
+        // If role is just a string (role name), find the corresponding role ID
+        if (typeof role === 'string') {
+          const foundRole = roles.find(r => r.role_name === role);
+          console.log(`Looking for role ${role}, found:`, foundRole);
+          return foundRole ? foundRole.id : null;
+        }
+        return role;
+      }).filter(id => id !== null) || [];
+      console.log("Extracted role IDs:", roleIds);
+      
       setFormData((prev) => {
         const newFormData = {
           username: user.username || "",
           email: user.email || "",
           password: "",
-          role_ids: user.roles?.map((role) => role.id) || [],
+          role_ids: roleIds,
           user_type_id: user.user_type_id || 1,
           status: user.status || "Active",
         };
-        if (JSON.stringify(prev) !== JSON.stringify(newFormData)) {
-          return newFormData;
-        }
-        return prev;
+        console.log("Setting formData to:", newFormData);
+        return newFormData;
+      });
+    } else if (!user) {
+      // For new users, don't set any default roles - let user choose
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        role_ids: [],
+        user_type_id: 1,
+        status: "Active",
       });
     } else {
-      // For new users, don't set any default roles - let user choose
-      setFormData((prev) => {
-        const newFormData = {
-          username: "",
-          email: "",
-          password: "",
-          role_ids: [],
-          user_type_id: 1,
-          status: "Active",
-        };
-        if (JSON.stringify(prev) !== JSON.stringify(newFormData)) {
-          return newFormData;
-        }
-        return prev;
-      });
+      console.log("Waiting for roles to load...");
     }
-    // eslint-disable-next-line
-  }, [user]);
+  }, [user, roles]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,10 +134,15 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
     label: role.role_name,
   }));
 
+  console.log("Available role options:", roleOptions);
+  console.log("Current formData.role_ids:", formData.role_ids);
+
   // Get current selected values for react-select
   const selectedValues = roleOptions.filter((opt) =>
     formData.role_ids.includes(opt.value)
   );
+  
+  console.log("Selected values for react-select:", selectedValues);
 
   return (
     <>
