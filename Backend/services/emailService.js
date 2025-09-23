@@ -557,18 +557,43 @@ class EmailService {
   // Generate professional HTML email content for DSC renewal
   generateDSCEmail(reminderData) {
     try {
-    const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
+      const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/dsc_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
-      template = template.replace('APEX ZIPPER', clientName || 'Valued Client');
-      template = template.replace('15 days', `${daysUntilExpiry} days`);
-      template = template.replace('2025-12-15', expiryDate);
-      template = template.replace('DSC-2025-001', policyDetails?.certificateId || 'N/A');
-      template = template.replace('Active', policyDetails?.status || 'N/A');
-      template = template.replace('Class 3', policyDetails?.certificateName || 'N/A');
-      template = template.replace('15/8/2025', new Date().toLocaleDateString('en-IN'));
+      
+      // Format expiry date for display
+      const formattedExpiryDate = new Date(expiryDate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      
+      // Format reminder date
+      const reminderDate = new Date().toLocaleDateString('en-IN');
+      
+      // Handle remarks section - only show if remarks exist
+      let remarksSection = '';
+      if (policyDetails?.remarks && policyDetails.remarks.trim()) {
+        remarksSection = `
+          <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+            <span style="font-weight: 600; color: #2c3e50;">Remarks:</span>
+            <span style="color: #6c757d;">${policyDetails.remarks}</span>
+          </div>`;
+      }
+      
+      // Replace all placeholders with actual data
+      template = template.replace(/\{\{CLIENT_NAME\}\}/g, clientName || 'Valued Client');
+      template = template.replace(/\{\{DAYS_UNTIL_EXPIRY\}\}/g, daysUntilExpiry || 'N/A');
+      template = template.replace(/\{\{EXPIRY_DATE\}\}/g, formattedExpiryDate);
+      template = template.replace(/\{\{CERTIFICATE_NAME\}\}/g, policyDetails?.certificateName || 'Digital');
+      template = template.replace(/\{\{STATUS\}\}/g, policyDetails?.status || 'N/A');
+      template = template.replace(/\{\{CERTIFICATE_ID\}\}/g, policyDetails?.certificateId || 'N/A');
+      template = template.replace(/\{\{REMINDER_DATE\}\}/g, reminderDate);
+      template = template.replace(/\{\{REMARKS_SECTION\}\}/g, remarksSection);
+      
       return template;
     } catch (error) {
+      console.error('Error generating DSC email template:', error);
       return '<p>DSC Email Error</p>';
     }
   }

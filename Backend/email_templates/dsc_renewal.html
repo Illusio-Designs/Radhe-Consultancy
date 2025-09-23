@@ -21,14 +21,14 @@
       <h2 style="font-size: 20px; color: #9b59b6; margin: 0 0 20px 0; text-align: center; font-weight: 600;">⚠️ URGENT: DSC Expiring Soon!</h2>
       
       <p style="font-size: 16px; color: #2c3e50; margin: 20px 0; text-align: center; line-height: 1.6;">
-        Dear <strong>APEX ZIPPER</strong>,<br>
-        Your Digital Signature Certificate expires in <strong>12 days</strong>.
+        Dear <strong>{{CLIENT_NAME}}</strong>,<br>
+        Your Digital Signature Certificate expires in <strong>{{DAYS_UNTIL_EXPIRY}} days</strong>.
       </p>
       
       <!-- Alert Box -->
       <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
         <h3 style="font-size: 18px; margin: 0 0 10px 0;">🚨 EXPIRY ALERT</h3>
-        <p style="margin: 0; font-size: 16px; font-weight: 600;">Expiry Date: <strong>2025-12-12</strong></p>
+        <p style="margin: 0; font-size: 16px; font-weight: 600;">Expiry Date: <strong>{{EXPIRY_DATE}}</strong></p>
       </div>
       
       <!-- Certificate Details -->
@@ -37,15 +37,15 @@
         <div style="display: grid; gap: 12px;">
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
             <span style="font-weight: 600; color: #2c3e50;">Certificate Name:</span>
-            <span style="color: #6c757d;">Class 2 Individual Signing Certificate</span>
+            <span style="color: #6c757d;">{{CERTIFICATE_NAME}}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
             <span style="font-weight: 600; color: #2c3e50;">Status:</span>
-            <span style="color: #6c757d;">Active</span>
+            <span style="color: #6c757d;">{{STATUS}}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 8px 0;">
             <span style="font-weight: 600; color: #2c3e50;">Certificate ID:</span>
-            <span style="color: #6c757d;">DSC001</span>
+            <span style="color: #6c757d;">{{CERTIFICATE_ID}}</span>
           </div>
         </div>
       </div>
@@ -72,8 +72,8 @@
       <div style="height: 1px; background: #e9ecef; margin: 30px 0;"></div>
       
       <p style="text-align: center; font-size: 14px; color: #6c757d; margin: 0;">
-        <strong>Reminder Sent:</strong> 15/8/2025 | 
-        <strong>Days Until Expiry:</strong> 12
+        <strong>Reminder Sent:</strong> {{REMINDER_DATE}} | 
+        <strong>Days Until Expiry:</strong> {{DAYS_UNTIL_EXPIRY}}
       </p>
     </div>
     

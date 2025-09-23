@@ -607,7 +607,7 @@ exports.getHealthStatistics = async (req, res) => {
         }
       },
       group: [sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%M')],
-      order: [[sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%m'), 'ASC']]
+      order: [[sequelize.fn('DATE_FORMAT', sequelize.col('created_at'), '%M'), 'ASC']]
     });
 
     res.json({
