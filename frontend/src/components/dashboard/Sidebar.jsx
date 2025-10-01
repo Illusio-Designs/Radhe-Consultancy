@@ -462,6 +462,28 @@ const Sidebar = ({ onCollapse, isCollapsed: parentIsCollapsed }) => {
         label: "DSC",
       });
     }
+    // Add Labour Management menu for Labour Law Manager
+    if (isRole("labour_law_manager")) {
+      menuItems.push({
+        label: "Labour Management",
+        icon: <ClipboardList />,
+        isDropdown: true,
+        isOpen: activeDropdown === "labour",
+        toggle: () => handleDropdownToggle("labour"),
+        items: [
+          {
+            path: "/dashboard/labour/inspection",
+            icon: <ClipboardList />,
+            label: "Labour Law Inspection",
+          },
+          {
+            path: "/dashboard/labour/license",
+            icon: <BookOpenCheck />,
+            label: "Labour License Management",
+          },
+        ],
+      });
+    }
     // Only admin sees DSC Logs (already handled above in the admin block)
   }
 

@@ -27,29 +27,18 @@ const checkUserRole = (allowedRoles) => {
         return next();
       }
       
-      // Fallback to normalized comparison for backward compatibility
-      const normalizedUserRoles = userRoles.map(role => 
-        role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
-      );
-      const normalizedAllowedRoles = allowedRoles.map(role => 
-        role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
-      );
+      // Improved: Case-insensitive role check with detailed logging
+      const normalizedUserRoles = (userRoles || []).map(role => role.toLowerCase());
+      const normalizedAllowedRoles = (allowedRoles || []).map(role => role.toLowerCase());
 
-      const hasNormalizedMatch = normalizedUserRoles.some(userRole => 
-        normalizedAllowedRoles.includes(userRole)
-      );
+      const hasMatch = normalizedUserRoles.some(userRole => normalizedAllowedRoles.includes(userRole));
 
-      if (!hasNormalizedMatch) {
-        console.log('Role check failed:', {
-          userRoles,
-          allowedRoles,
-          normalizedUserRoles,
-          normalizedAllowedRoles
-        });
-        return res.status(403).json({ error: 'Access denied: insufficient role permissions' });
+      console.log('[checkUserRole] userRoles:', userRoles, 'allowedRoles:', allowedRoles, 'normalizedUserRoles:', normalizedUserRoles, 'normalizedAllowedRoles:', normalizedAllowedRoles, 'hasMatch:', hasMatch);
+
+      if (!hasMatch) {
+        return res.status(403).json({ error: 'Access denied: insufficient role permissions', debug: { userRoles, allowedRoles, normalizedUserRoles, normalizedAllowedRoles } });
       }
 
-      console.log('Normalized role match found');
       next();
     } catch (error) {
       console.error('Role check error:', error);
