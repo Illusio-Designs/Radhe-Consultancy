@@ -859,7 +859,7 @@ function Fire({ searchQuery = "" }) {
       setError("");
       setPolicies([]);
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   };
 
@@ -901,9 +901,7 @@ function Fire({ searchQuery = "" }) {
       // Fallback to client-side search if server search fails
       console.log('Fire: Server search error, falling back to client-side search');
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -1089,17 +1087,17 @@ function Fire({ searchQuery = "" }) {
             onPolicyUpdated={handlePolicyUpdated}
           />
         </Modal>
+        {/* Document Download Modal */}
+        {showDocumentModal && selectedPolicy && (
+          <DocumentDownload
+            isOpen={showDocumentModal}
+            onClose={() => setShowDocumentModal(false)}
+            system="fire"
+            recordId={selectedPolicy.id}
+            recordName={selectedPolicy.policyNumber || selectedPolicy.clientName}
+          />
+        )}
       </div>
-      {/* Document Download Modal */}
-      {showDocumentModal && selectedPolicy && (
-        <DocumentDownload
-          isOpen={showDocumentModal}
-          onClose={() => setShowDocumentModal(false)}
-          system="fire"
-          recordId={selectedPolicy.id}
-          recordName={selectedPolicy.policyNumber || selectedPolicy.clientName}
-        />
-      )}
     </div>
   );
 }

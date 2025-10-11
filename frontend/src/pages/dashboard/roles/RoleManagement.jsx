@@ -116,9 +116,7 @@ function RoleManagement() {
       setError("Failed to fetch roles");
       console.error("Error fetching roles:", err);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000); // Ensure loader is displayed for at least 2000ms
+      setLoading(false);
     }
   };
 
@@ -163,7 +161,7 @@ function RoleManagement() {
       key: "actions",
       label: "Actions",
       render: (_, role) => (
-        <div className="role-management-actions">
+        <div className="insurance-actions">
           <ActionButton
             onClick={() => handleEdit(role)}
             variant="secondary"
@@ -184,47 +182,49 @@ function RoleManagement() {
   ];
 
   return (
-    <div className="role-management">
-      <div className="role-management-content">
-        <div className="role-management-header">
-          <h1 className="role-management-title">Role Management</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<FiPlus />}
-          >
-            Add Role
-          </Button>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Role Management</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<FiPlus />}
+            >
+              Add Role
+            </Button>
+          </div>
+
+          {error && (
+            <div className="insurance-error">
+              <FiAlertCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={roles}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {error && (
-          <div className="role-management-error">
-            <FiAlertCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={roles}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedRole ? "Edit Role" : "Add New Role"}
-      >
-        <RoleForm
-          role={selectedRole}
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onRoleUpdated={handleRoleUpdated}
-        />
-      </Modal>
+          title={selectedRole ? "Edit Role" : "Add New Role"}
+        >
+          <RoleForm
+            role={selectedRole}
+            onClose={handleModalClose}
+            onRoleUpdated={handleRoleUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }

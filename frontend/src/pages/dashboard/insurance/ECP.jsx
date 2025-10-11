@@ -859,7 +859,7 @@ function ECP({ searchQuery = "" }) {
       setError("");
       setPolicies([]);
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   };
 
@@ -932,9 +932,7 @@ function ECP({ searchQuery = "" }) {
       // setError("Failed to search ECP policies");
       // setPolicies([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 

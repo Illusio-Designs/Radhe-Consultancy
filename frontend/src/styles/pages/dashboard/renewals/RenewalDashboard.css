@@ -815,3 +815,196 @@
   font-size: 14px;
   margin: 0;
 }
+
+/* Tab Controls */
+.tab-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Service Filter Select */
+.service-filter-select {
+  min-width: 280px;
+}
+
+.service-filter-select .select__control {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 2px 4px;
+  transition: all 0.2s ease;
+}
+
+.service-filter-select .select__control:hover {
+  border-color: #9ca3af;
+}
+
+.service-filter-select .select__control--is-focused {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.service-filter-select .select__menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.service-filter-select .select__option {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.service-filter-select .select__option:hover {
+  background-color: #f3f4f6;
+}
+
+.service-filter-select .select__option--is-selected {
+  background-color: #1F4F9C;
+  color: white;
+}
+
+.service-filter-select .select__option--is-focused {
+  background-color: #e5e7eb;
+}
+
+/* List Content */
+.list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Service Results Summary */
+.service-results-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.service-results-summary h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.service-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.service-result-card {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.service-result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.service-result-card.success {
+  border-color: #28a745;
+  background: #d4edda;
+}
+
+.service-result-card.error {
+  border-color: #dc3545;
+  background: #f8d7da;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.result-icon {
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.result-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.result-info {
+  font-size: 14px;
+}
+
+.result-success {
+  color: #155724;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.result-error {
+  color: #721c24;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Renewals List Structure */
+.renewals-list-header {
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.renewals-list-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.renewals-list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Responsive Design for List Tab */
+@media (max-width: 768px) {
+  .tab-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .service-filter-select {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .service-results-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .renewal-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

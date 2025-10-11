@@ -627,9 +627,7 @@ function CompanyList({ searchQuery = "" }) {
       setError("Failed to fetch companies");
       setCompanies([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+      setLoading(false);
     }
   };
 
@@ -654,9 +652,7 @@ function CompanyList({ searchQuery = "" }) {
       setError("Failed to search companies");
       setCompanies([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -758,7 +754,7 @@ function CompanyList({ searchQuery = "" }) {
       key: "actions",
       label: "Actions",
       render: (_, company) => (
-        <div className="vendor-management-actions">
+        <div className="insurance-actions">
           <ActionButton
             onClick={() => handleEdit(company)}
             variant="secondary"
@@ -845,50 +841,52 @@ function CompanyList({ searchQuery = "" }) {
   };
 
   return (
-    <div className="vendor-management">
-      <div className="vendor-management-content">
-        <div className="vendor-management-header">
-          <h1 className="vendor-management-title">Companies</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<BiPlus />}
-          >
-            Add Company
-          </Button>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Companies</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Company
+            </Button>
+          </div>
+
+          {/* Company Statistics */}
+          <StatisticsCards />
+
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={companies}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {/* Company Statistics */}
-        <StatisticsCards />
-
-        {error && (
-          <div className="vendor-management-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={companies}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedCompany ? "Edit Company" : "Add New Company"}
-      >
-        <CompanyForm
-          company={selectedCompany}
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onCompanyUpdated={handleCompanyUpdated}
-        />
-      </Modal>
+          title={selectedCompany ? "Edit Company" : "Add New Company"}
+        >
+          <CompanyForm
+            company={selectedCompany}
+            onClose={handleModalClose}
+            onCompanyUpdated={handleCompanyUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }

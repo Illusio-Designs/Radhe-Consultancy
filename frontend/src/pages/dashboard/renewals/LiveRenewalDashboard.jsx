@@ -84,85 +84,63 @@ const LiveRenewalDashboard = () => {
     }
   };
 
-  if (loading && !liveData) {
-    return (
-      <div className="dashboard-page">
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Loader size="large" color="primary" />
-          <div style={{ marginTop: '16px', color: '#6b7280' }}>Loading live renewal data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !liveData) {
-    return (
-      <div className="dashboard-page">
-        <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444' }}>
-          <BiErrorCircle size={48} />
-          <div style={{ marginTop: '16px', fontSize: '18px' }}>{error}</div>
-          <button 
-            onClick={fetchLiveData}
-            style={{
-              marginTop: '16px',
-              padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="dashboard-page">
-      {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '24px' 
-      }}>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '600', margin: '0 0 8px 0' }}>
-            Live Renewal Dashboard
-          </h1>
-          <p style={{ color: '#6b7280', margin: 0 }}>
-            Real-time overview of upcoming renewals across all services
-          </p>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ fontSize: '14px', color: '#6b7280' }}>
-            Last updated: {lastUpdated ? formatTimeAgo(lastUpdated) : 'Never'}
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Live Renewal Dashboard</h1>
+            <p>Real-time overview of upcoming renewals across all services</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
+              <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                Last updated: {lastUpdated ? formatTimeAgo(lastUpdated) : 'Never'}
+              </div>
+              <button
+                onClick={fetchLiveData}
+                disabled={loading}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <BiRefresh className={loading ? 'spin' : ''} />
+                Refresh
+              </button>
+            </div>
           </div>
-          <button
-            onClick={fetchLiveData}
-            disabled={loading}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <BiRefresh className={loading ? 'spin' : ''} />
-            Refresh
-          </button>
-        </div>
-      </div>
+
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+              <button 
+                onClick={fetchLiveData}
+                style={{
+                  marginLeft: '16px',
+                  padding: '6px 12px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {loading && !liveData ? (
+            <Loader size="large" color="primary" />
+          ) : liveData ? (
+            <>
 
       {/* Summary Cards */}
       {liveData?.totals && (
@@ -426,6 +404,10 @@ const LiveRenewalDashboard = () => {
           </div>
         </div>
       )}
+            </>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 };

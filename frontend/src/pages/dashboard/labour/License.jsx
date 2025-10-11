@@ -453,56 +453,57 @@ const LabourLicense = ({ searchQuery = "" }) => {
   }
 
   return (
-    <div className="labour-container">
-      <div className="labour-content">
-        <div className="labour-header">
-          <h1 className="labour-title">Labour License Management</h1>
-          <div className="list-container">
-            {canManageLicenses && (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setSelectedLicense(null);
-                  setShowModal(true);
-                }}
-                icon={<BiPlus />}
-              >
-                Add License
-              </Button>
-            )}
-            
-            <div className="dashboard-header-dropdown-container">
-              <Dropdown
-                options={statusOptions}
-                value={statusOptions.find((opt) => opt.value === statusFilter)}
-                onChange={(option) => {
-                  setStatusFilter(option ? option.value : "all");
-                  handleFilterChange();
-                }}
-                placeholder="Filter by Status"
-              />
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Labour License Management</h1>
+            <div className="list-container">
+              {canManageLicenses && (
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setSelectedLicense(null);
+                    setShowModal(true);
+                  }}
+                  icon={<BiPlus />}
+                >
+                  Add License
+                </Button>
+              )}
+              
+              <div className="dashboard-header-dropdown-container">
+                <Dropdown
+                  options={statusOptions}
+                  value={statusOptions.find((opt) => opt.value === statusFilter)}
+                  onChange={(option) => {
+                    setStatusFilter(option ? option.value : "all");
+                    handleFilterChange();
+                  }}
+                  placeholder="Filter by Status"
+                />
+              </div>
             </div>
           </div>
+
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+          
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredLicenses}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
-
-        <StatisticsCards statistics={statistics} loading={statsLoading} />
-        
-        {error && (
-          <div className="compliance-form-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredLicenses}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
 
       {/* Create/Edit Modal */}
       <Modal
@@ -534,6 +535,7 @@ const LabourLicense = ({ searchQuery = "" }) => {
           recordName={selectedLicense.company?.company_name || selectedLicense.company_name}
         />
       )}
+      </div>
     </div>
   );
 };

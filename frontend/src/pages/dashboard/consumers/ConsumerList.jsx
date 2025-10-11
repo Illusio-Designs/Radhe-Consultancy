@@ -317,9 +317,7 @@ function ConsumerList({ searchQuery = "" }) {
       setError("Failed to fetch consumers. Please try again.");
       setConsumers([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000); // Ensure loader is displayed for at least 2000ms
+      setLoading(false);
     }
   };
 
@@ -358,9 +356,7 @@ function ConsumerList({ searchQuery = "" }) {
       setError("Failed to search consumers. Please try again.");
       setConsumers([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -473,7 +469,7 @@ function ConsumerList({ searchQuery = "" }) {
       key: "actions",
       label: "Actions",
       render: (_, consumer) => (
-        <div className="vendor-management-actions">
+        <div className="insurance-actions">
           <ActionButton
             onClick={() => handleEdit(consumer)}
             variant="secondary"
@@ -564,50 +560,52 @@ function ConsumerList({ searchQuery = "" }) {
   };
 
   return (
-    <div className="vendor-management">
-      <div className="vendor-management-content">
-        <div className="vendor-management-header">
-          <h1 className="vendor-management-title">Consumers</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<BiPlus />}
-          >
-            Add Consumer
-          </Button>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Consumers</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Consumer
+            </Button>
+          </div>
+
+          {/* Consumer Statistics */}
+          <StatisticsCards />
+
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={consumers}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {/* Consumer Statistics */}
-        <StatisticsCards />
-
-        {error && (
-          <div className="vendor-management-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={consumers}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedConsumer ? "Edit Consumer" : "Add New Consumer"}
-      >
-        <ConsumerForm
-          consumer={selectedConsumer}
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onConsumerUpdated={handleConsumerUpdated}
-        />
-      </Modal>
+          title={selectedConsumer ? "Edit Consumer" : "Add New Consumer"}
+        >
+          <ConsumerForm
+            consumer={selectedConsumer}
+            onClose={handleModalClose}
+            onConsumerUpdated={handleConsumerUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }

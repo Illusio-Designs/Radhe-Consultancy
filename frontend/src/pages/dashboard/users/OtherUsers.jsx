@@ -416,8 +416,8 @@ function OtherUserList({ searchQuery = "" }) {
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
             value === "Active"
-              ? "user-management-status-active"
-              : "user-management-status-inactive"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
           }`}
         >
           {value || "Active"}
@@ -428,7 +428,7 @@ function OtherUserList({ searchQuery = "" }) {
       key: "actions",
       label: "Actions",
       render: (_, user) => (
-        <div className="user-management-actions">
+        <div className="insurance-actions">
           <ActionButton
             onClick={() => handleEdit(user)}
             variant="secondary"
@@ -449,47 +449,49 @@ function OtherUserList({ searchQuery = "" }) {
   ];
 
   return (
-    <div className="user-management">
-      <div className="user-management-content">
-        <div className="user-management-header">
-          <h1 className="user-management-title">Other Users</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<FiPlus />}
-          >
-            Add User
-          </Button>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Other Users</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<FiPlus />}
+            >
+              Add User
+            </Button>
+          </div>
+
+          {(error || dataError) && (
+            <div className="insurance-error">
+              <FiAlertCircle className="inline mr-2" /> {error || dataError}
+            </div>
+          )}
+
+          {loading || localLoading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredUsers}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {(error || dataError) && (
-          <div className="user-management-error">
-            <FiAlertCircle className="inline mr-2" /> {error || dataError}
-          </div>
-        )}
-
-        {loading || localLoading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredUsers}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedUser ? "Edit User" : "Add User"}
-      >
-        <UserForm
-          user={selectedUser}
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onUserUpdated={handleUserUpdated}
-        />
-      </Modal>
+          title={selectedUser ? "Edit User" : "Add User"}
+        >
+          <UserForm
+            user={selectedUser}
+            onClose={handleModalClose}
+            onUserUpdated={handleUserUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }

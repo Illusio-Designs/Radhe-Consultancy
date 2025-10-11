@@ -126,39 +126,41 @@ const FactoryQuotationRenewal = () => {
   ];
 
   return (
-    <div className="dsc">
-      <div className="dsc-content">
-        <div className="dsc-header">
-          <h1 className="dsc-title">Factory Quotation Renewals</h1>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Factory Quotation Renewals</h1>
+          </div>
+
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={renewals}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {error && (
-          <div className="dsc-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={renewals}
-            columns={columns}
-            defaultPageSize={10}
+        {/* Document Download Modal */}
+        {showDocumentModal && selectedQuotation && (
+          <DocumentDownload
+            isOpen={showDocumentModal}
+            onClose={() => setShowDocumentModal(false)}
+            system="renewal-status"
+            recordId={selectedQuotation.id}
+            recordName={selectedQuotation.companyName || selectedQuotation.company?.company_name}
           />
         )}
       </div>
-
-      {/* Document Download Modal */}
-      {showDocumentModal && selectedQuotation && (
-        <DocumentDownload
-          isOpen={showDocumentModal}
-          onClose={() => setShowDocumentModal(false)}
-          system="renewal-status"
-          recordId={selectedQuotation.id}
-          recordName={selectedQuotation.companyName || selectedQuotation.company?.company_name}
-        />
-      )}
     </div>
   );
 };

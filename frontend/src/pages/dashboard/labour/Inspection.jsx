@@ -639,66 +639,68 @@ const LabourInspection = ({ searchQuery = "" }) => {
   };
 
   return (
-    <div className="labour-container">
-      <div className="labour-content">
-        <div className="labour-header">
-          <h1 className="labour-title">Labour Law Inspection</h1>
-          <div className="list-container">
-            {canEdit && (
-              <Button
-                variant="contained"
-                onClick={() => setShowModal(true)}
-                icon={<BiPlus />}
-              >
-                Add Inspection
-              </Button>
-            )}
-            
-            <div className="dashboard-header-dropdown-container">
-              <Dropdown
-                options={statusOptions}
-                value={statusOptions.find((opt) => opt.value === statusFilter)}
-                onChange={(option) => {
-                  setStatusFilter(option ? option.value : "all");
-                  handleFilterChange();
-                }}
-                placeholder="Filter by Status"
-              />
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Labour Law Inspection</h1>
+            <div className="list-container">
+              {canEdit && (
+                <Button
+                  variant="contained"
+                  onClick={() => setShowModal(true)}
+                  icon={<BiPlus />}
+                >
+                  Add Inspection
+                </Button>
+              )}
+              
+              <div className="dashboard-header-dropdown-container">
+                <Dropdown
+                  options={statusOptions}
+                  value={statusOptions.find((opt) => opt.value === statusFilter)}
+                  onChange={(option) => {
+                    setStatusFilter(option ? option.value : "all");
+                    handleFilterChange();
+                  }}
+                  placeholder="Filter by Status"
+                />
+              </div>
             </div>
           </div>
+
+          
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+          
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredInspections}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        
-        <StatisticsCards statistics={statistics} loading={statsLoading} />
-        
-        {error && (
-          <div className="compliance-form-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredInspections}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedInspection ? "Edit Labour Inspection" : "Add New Labour Inspection"}
-      >
-        <LabourInspectionForm
-          inspection={selectedInspection}
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onInspectionUpdated={handleInspectionUpdated}
-        />
-      </Modal>
+          title={selectedInspection ? "Edit Labour Inspection" : "Add New Labour Inspection"}
+        >
+          <LabourInspectionForm
+            inspection={selectedInspection}
+            onClose={handleModalClose}
+            onInspectionUpdated={handleInspectionUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 };

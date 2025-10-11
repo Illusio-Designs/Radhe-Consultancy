@@ -922,7 +922,7 @@ function Health({ searchQuery = "" }) {
       setError("");
       setPolicies([]);
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   };
 
@@ -964,9 +964,7 @@ function Health({ searchQuery = "" }) {
       // Fallback to client-side search if server search fails
       console.log('Health: Server search error, falling back to client-side search');
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 

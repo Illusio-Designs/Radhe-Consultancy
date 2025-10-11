@@ -736,65 +736,67 @@ const StabilityManagement = ({ searchQuery = "" }) => {
   }, [filteredStabilityRecords]);
 
   return (
-    <div className="compliance-container">
-      <div className="compliance-content">
-        <div className="compliance-header">
-          <h1 className="compliance-title">Stability Management</h1>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Stability Management</h1>
+          </div>
+
+          {error && (
+            <div className="insurance-error">
+              <BiX className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {/* Statistics Cards */}
+          <div className="statistics-section">
+            <h2 className="statistics-title">Stability Management Statistics</h2>
+            <StatisticsCards statistics={statistics} loading={statsLoading} />
+          </div>
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredRecords}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {error && (
-          <div className="compliance-error">
-            <BiX className="inline mr-2" /> {error}
-          </div>
+        {showFileUploadModal && (
+          <FileUploadModal
+            onClose={() => {
+              setShowFileUploadModal(false);
+              setSelectedStability(null);
+            }}
+            onUpload={handleUploadFiles}
+          />
         )}
 
-        {/* Statistics Cards */}
-        <div className="statistics-section">
-          <h2 className="statistics-title">Stability Management Statistics</h2>
-          <StatisticsCards statistics={statistics} loading={statsLoading} />
-        </div>
+        {showRejectModal && (
+          <RejectModal
+            onClose={() => {
+              setShowRejectModal(false);
+              setSelectedStability(null);
+            }}
+            onReject={handleRejectStability}
+          />
+        )}
 
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredRecords}
-            columns={columns}
-            defaultPageSize={10}
+        {showDateModal && (
+          <StabilityDateModal
+            onClose={() => {
+              setShowDateModal(false);
+              setSelectedStability(null);
+            }}
+            onUpdate={handleUpdateStabilityDates}
+            currentDate={selectedStability?.stability_date}
           />
         )}
       </div>
-
-      {showFileUploadModal && (
-        <FileUploadModal
-          onClose={() => {
-            setShowFileUploadModal(false);
-            setSelectedStability(null);
-          }}
-          onUpload={handleUploadFiles}
-        />
-      )}
-
-      {showRejectModal && (
-        <RejectModal
-          onClose={() => {
-            setShowRejectModal(false);
-            setSelectedStability(null);
-          }}
-          onReject={handleRejectStability}
-        />
-      )}
-
-      {showDateModal && (
-        <StabilityDateModal
-          onClose={() => {
-            setShowDateModal(false);
-            setSelectedStability(null);
-          }}
-          onUpdate={handleUpdateStabilityDates}
-          currentDate={selectedStability?.stability_date}
-        />
-      )}
     </div>
   );
 }

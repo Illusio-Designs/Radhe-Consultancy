@@ -284,13 +284,6 @@ const RenewalDashboard = () => {
     fetchData();
   }, []);
 
-  // Fetch renewal list when list tab is active
-  useEffect(() => {
-    if (activeTab === 'list' && renewalsList.length === 0) {
-      fetchRenewalList();
-    }
-  }, [activeTab]);
-
   const fetchData = async () => {
     await Promise.all([
       fetchRenewalConfigs(),
@@ -656,25 +649,43 @@ const RenewalDashboard = () => {
         key: "actions",
         label: "Actions",
         render: (_, config) => (
-          <div className="renewal-actions">
-            <ActionButton
-              onClick={() => handleEdit(config)}
-              variant="secondary"
-              size="small"
-            >
-              <BiEdit />
-            </ActionButton>
-            <ActionButton
-              onClick={() => handleDelete(config.id)}
-              variant="danger"
-              size="small"
-            >
-              <BiTrash />
-            </ActionButton>
-          </div>
+        <div className="insurance-actions">
+          <ActionButton
+            onClick={() => handleEdit(config)}
+            variant="secondary"
+            size="small"
+          >
+            <BiEdit />
+          </ActionButton>
+          <ActionButton
+            onClick={() => handleDelete(config.id)}
+            variant="danger"
+            size="small"
+          >
+            <BiTrash />
+          </ActionButton>
+        </div>
         ),
       },
     ];
+
+    if (loading) {
+      return (
+        <div className="tab-content">
+          <div className="tab-header">
+            <h2>Renewal Settings</h2>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Configuration
+            </Button>
+          </div>
+          <Loader size="large" color="primary" />
+        </div>
+      );
+    }
 
     return (
       <div className="tab-content">
@@ -689,46 +700,84 @@ const RenewalDashboard = () => {
           </Button>
         </div>
 
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={configs}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
+        <TableWithControl
+          data={configs}
+          columns={columns}
+          defaultPageSize={10}
+        />
       </div>
     );
   };
 
   // List Tab - Show upcoming renewals list
   const renderListTab = () => {
+    const serviceTypeOptions = [
+      { value: 'all', label: 'All Services' },
+      { value: 'vehicle', label: 'Vehicle Insurance' },
+      { value: 'ecp', label: 'Employee Compensation Policy' },
+      { value: 'health', label: 'Health Insurance' },
+      { value: 'fire', label: 'Fire Insurance' },
+      { value: 'dsc', label: 'Digital Signature Certificate' },
+      { value: 'factory', label: 'Factory License' },
+      { value: 'labour_license', label: 'Labour License' },
+      { value: 'labour_inspection', label: 'Labour Inspection' },
+      { value: 'stability', label: 'Stability Management' },
+      { value: 'life', label: 'Life Insurance' }
+    ];
+
+    // If no data has been loaded yet, show empty state
+    if (renewalsList.length === 0 && serviceResults.length === 0 && !listLoading) {
+      return (
+        <div className="tab-content">
+          <div className="tab-header">
+            <h2>Upcoming Renewals List</h2>
+            <div className="tab-controls">
+              <Select
+                value={serviceTypeOptions.find(opt => opt.value === selectedServiceType)}
+                onChange={(option) => setSelectedServiceType(option.value)}
+                options={serviceTypeOptions}
+                placeholder="Select Service Type"
+                className="service-filter-select"
+                classNamePrefix="select"
+                isSearchable
+              />
+              <Button
+                variant="outlined"
+                onClick={() => fetchRenewalList(selectedServiceType)}
+                icon={<BiRefresh />}
+              >
+                Load Data
+              </Button>
+            </div>
+          </div>
+          <div className="empty-state">
+            <div className="empty-icon">
+              <BiListUl />
+            </div>
+            <h3>No Data Loaded</h3>
+            <p>Click "Load Data" to fetch upcoming renewals list.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="tab-content">
         <div className="tab-header">
           <h2>Upcoming Renewals List</h2>
           <div className="tab-controls">
-            <select 
-              value={selectedServiceType} 
-              onChange={(e) => {
-                setSelectedServiceType(e.target.value);
-                fetchRenewalList(e.target.value);
+            <Select
+              value={serviceTypeOptions.find(opt => opt.value === selectedServiceType)}
+              onChange={(option) => {
+                setSelectedServiceType(option.value);
+                fetchRenewalList(option.value);
               }}
-              className="service-filter"
-            >
-              <option value="all">All Services</option>
-              <option value="vehicle">Vehicle Insurance</option>
-              <option value="ecp">Employee Compensation Policy</option>
-              <option value="health">Health Insurance</option>
-              <option value="fire">Fire Insurance</option>
-              <option value="dsc">Digital Signature</option>
-              <option value="factory">Factory License</option>
-              <option value="labour_license">Labour License</option>
-              <option value="labour_inspection">Labour Inspection</option>
-              <option value="stability">Stability Management</option>
-              <option value="life">Life Insurance</option>
-            </select>
+              options={serviceTypeOptions}
+              placeholder="Select Service Type"
+              className="service-filter-select"
+              classNamePrefix="select"
+              isSearchable
+            />
             <Button
               variant="outlined"
               onClick={() => fetchRenewalList(selectedServiceType)}
@@ -740,38 +789,32 @@ const RenewalDashboard = () => {
         </div>
 
         {listLoading ? (
-          <Loader size="large" color="primary" />
+          <div className="list-content">
+            <Loader size="large" color="primary" />
+          </div>
         ) : (
-          <div>
-            {/* Debug Info */}
-            <div style={{padding: '10px', background: '#e3f2fd', marginBottom: '10px', borderRadius: '4px'}}>
-              <strong>Debug Info:</strong> renewalsList.length = {renewalsList.length}, serviceResults.length = {serviceResults.length}
-            </div>
-
+          <div className="list-content">
             {/* Service Results Summary */}
-            {serviceResults.length > 0 && (
-              <div className="service-results-summary" style={{marginBottom: '20px'}}>
+            {serviceResults.length > 0 && selectedServiceType === 'all' && (
+              <div className="service-results-summary">
                 <h3>Service Results Summary</h3>
-                <div className="service-results-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px'}}>
+                <div className="service-results-grid">
                   {serviceResults.map((result, index) => (
-                    <div key={index} className={`service-result-card ${result.success ? 'success' : 'error'}`} 
-                         style={{
-                           padding: '12px',
-                           borderRadius: '8px',
-                           border: `2px solid ${result.success ? '#28a745' : '#dc3545'}`,
-                           backgroundColor: result.success ? '#d4edda' : '#f8d7da'
-                         }}>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
-                        {getServiceIcon(result.serviceType)}
-                        <strong>{result.serviceName}</strong>
+                    <div 
+                      key={index} 
+                      className={`service-result-card ${result.success ? 'success' : 'error'}`}
+                    >
+                      <div className="result-header">
+                        <div className="result-icon">{getServiceIcon(result.serviceType)}</div>
+                        <strong className="result-name">{result.serviceName}</strong>
                       </div>
-                      <div style={{fontSize: '14px'}}>
+                      <div className="result-info">
                         {result.success ? (
-                          <span style={{color: '#155724'}}>
+                          <span className="result-success">
                             ✅ {result.count} renewals found
                           </span>
                         ) : (
-                          <span style={{color: '#721c24'}}>
+                          <span className="result-error">
                             ❌ Error: {result.error}
                           </span>
                         )}
@@ -785,28 +828,32 @@ const RenewalDashboard = () => {
             {/* Main Renewals List */}
             {renewalsList.length > 0 ? (
               <div className="renewals-list">
-                <h3>All Renewals ({renewalsList.length} total)</h3>
-                {renewalsList.map((renewal, index) => (
-                  <div key={renewal.id || index} className="renewal-item">
-                    <div className="renewal-icon">
-                      {getServiceIcon(renewal.serviceType)}
-                    </div>
-                    <div className="renewal-details">
-                      <div className="renewal-title">{getServiceName(renewal.serviceType)}</div>
-                      <div className="renewal-meta">
-                        <span className="renewal-policy">Policy: {renewal.policyNumber}</span>
-                        <span className="renewal-client">Client: {renewal.clientName}</span>
-                        <span className="renewal-email">Email: {renewal.clientEmail}</span>
-                        <span className="renewal-date">Expires: {new Date(renewal.expiryDate).toLocaleDateString()}</span>
+                <div className="renewals-list-header">
+                  <h3>Renewals ({renewalsList.length} total)</h3>
+                </div>
+                <div className="renewals-list-content">
+                  {renewalsList.map((renewal, index) => (
+                    <div key={renewal.id || index} className="renewal-item">
+                      <div className="renewal-icon">
+                        {getServiceIcon(renewal.serviceType)}
+                      </div>
+                      <div className="renewal-details">
+                        <div className="renewal-title">{getServiceName(renewal.serviceType)}</div>
+                        <div className="renewal-meta">
+                          <span className="renewal-policy">Policy: {renewal.policyNumber}</span>
+                          <span className="renewal-client">Client: {renewal.clientName}</span>
+                          <span className="renewal-email">Email: {renewal.clientEmail}</span>
+                          <span className="renewal-date">Expires: {new Date(renewal.expiryDate).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="renewal-status">
+                        <span className={`status-badge ${getPriorityClass(renewal.daysUntilExpiry)}`}>
+                          {renewal.daysUntilExpiry} days
+                        </span>
                       </div>
                     </div>
-                    <div className="renewal-status">
-                      <span className={`status-badge ${getPriorityClass(renewal.daysUntilExpiry)}`}>
-                        {renewal.daysUntilExpiry} days
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="empty-state">
@@ -814,12 +861,7 @@ const RenewalDashboard = () => {
                   <BiListUl />
                 </div>
                 <h3>No Upcoming Renewals</h3>
-                <p>There are no upcoming renewals to display at this time.</p>
-                {serviceResults.length > 0 && (
-                  <div style={{padding: '10px', background: '#fff3cd', marginTop: '10px', borderRadius: '4px'}}>
-                    <strong>Note:</strong> Some services returned 0 results or had errors. Check the summary above for details.
-                  </div>
-                )}
+                <p>There are no upcoming renewals to display for the selected service type.</p>
               </div>
             )}
           </div>
@@ -829,72 +871,72 @@ const RenewalDashboard = () => {
   };
 
   return (
-    <div className="renewal-dashboard">
-      <div className="dashboard-header">
-        <div className="header-content">
-          <h1>Renewal Management</h1>
-          <p>Manage renewal configurations and track upcoming renewals</p>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Renewal Management</h1>
+            <p>Manage renewal configurations and track upcoming renewals</p>
+            <Button
+              variant="outlined"
+              onClick={fetchData}
+              icon={<BiRefresh />}
+              style={{ marginTop: '12px' }}
+            >
+              Refresh All
+            </Button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="tab-navigation">
+            <button
+              className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
+              onClick={() => setActiveTab('statistics')}
+            >
+              <BiTrendingUp className="tab-icon" />
+              Statistics Data
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              <BiCog className="tab-icon" />
+              Settings
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
+              onClick={() => setActiveTab('list')}
+            >
+              <BiListUl className="tab-icon" />
+              List
+            </button>
+          </div>
+
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {/* Tab Content */}
+          {activeTab === 'statistics' && renderStatisticsTab()}
+          {activeTab === 'settings' && renderSettingsTab()}
+          {activeTab === 'list' && renderListTab()}
         </div>
-        <div className="header-actions">
-          <Button
-            variant="outlined"
-            onClick={fetchData}
-            icon={<BiRefresh />}
-          >
-            Refresh All
-          </Button>
-        </div>
-      </div>
 
-
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <button
-          className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('statistics')}
-        >
-          <BiTrendingUp className="tab-icon" />
-          Statistics Data
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <BiCog className="tab-icon" />
-          Settings
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
-          onClick={() => setActiveTab('list')}
-        >
-          <BiListUl className="tab-icon" />
-          List
-        </button>
-      </div>
-
-      {error && (
-        <div className="renewal-error">
-          <BiErrorCircle className="inline mr-2" /> {error}
-        </div>
-      )}
-
-      {/* Tab Content */}
-      {activeTab === 'statistics' && renderStatisticsTab()}
-      {activeTab === 'settings' && renderSettingsTab()}
-      {activeTab === 'list' && renderListTab()}
-
-      {/* Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedConfig ? "Edit Configuration" : "Add New Configuration"}
-      >
-        <RenewalForm
-          config={selectedConfig}
+        {/* Modal */}
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onConfigUpdated={handleConfigUpdated}
-        />
-      </Modal>
+          title={selectedConfig ? "Edit Configuration" : "Add New Configuration"}
+        >
+          <RenewalForm
+            config={selectedConfig}
+            onClose={handleModalClose}
+            onConfigUpdated={handleConfigUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 };

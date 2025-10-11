@@ -535,16 +535,18 @@ const PlanManagement = ({ searchQuery = "" }) => {
   // Add error boundary for unexpected errors
   if (!plans || !filteredPlans || !statistics) {
     return (
-      <div className="compliance-container">
-        <div className="compliance-content">
-          <div className="compliance-header">
-            <h1 className="compliance-title">Plan Management</h1>
-            <div className="plan-manager-info">
-              <BiUser /> Welcome, {user?.username || 'Plan Manager'}
+      <div className="insurance">
+        <div className="insurance-container">
+          <div className="insurance-content">
+            <div className="insurance-header">
+              <h1 className="insurance-title">Plan Management</h1>
+              <div className="plan-manager-info">
+                <BiUser /> Welcome, {user?.username || 'Plan Manager'}
+              </div>
             </div>
-          </div>
-          <div className="compliance-error">
-            <BiErrorCircle className="inline mr-2" /> Loading plan management data...
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> Loading plan management data...
+            </div>
           </div>
         </div>
       </div>
@@ -552,71 +554,73 @@ const PlanManagement = ({ searchQuery = "" }) => {
   }
 
   return (
-    <div className="compliance-container">
-      <div className="compliance-content">
-        <div className="compliance-header">
-          <h1 className="compliance-title">Plan Management</h1>
-          <div className="plan-manager-info">
-            <BiUser /> Welcome, {user?.username || 'Plan Manager'}
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Plan Management</h1>
+            <div className="plan-manager-info">
+              <BiUser /> Welcome, {user?.username || 'Plan Manager'}
+            </div>
           </div>
+
+          {error && (
+            <div className="insurance-error">
+              <BiX className="inline mr-2" /> {error}
+            </div>
+          )}
+
+          {/* Statistics Cards */}
+          <div className="statistics-section">
+            <h2 className="statistics-title">Plan Management Statistics</h2>
+            <StatisticsCards statistics={statistics} loading={statsLoading} />
+          </div>
+
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredRecords}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
         </div>
 
-        {error && (
-          <div className="compliance-error">
-            <BiX className="inline mr-2" /> {error}
-          </div>
+        {showModal && (
+          <FileUploadModal
+            onClose={() => {
+              setShowModal(false);
+              setEditingPlan(null);
+            }}
+            onUpload={handleUploadFiles}
+          />
         )}
 
-        {/* Statistics Cards */}
-        <div className="statistics-section">
-          <h2 className="statistics-title">Plan Management Statistics</h2>
-          <StatisticsCards statistics={statistics} loading={statsLoading} />
-        </div>
-
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredRecords}
-            columns={columns}
-            defaultPageSize={10}
+        {showRejectModal && (
+          <RejectModal
+            onClose={() => {
+              setShowRejectModal(false);
+              setEditingPlan(null);
+            }}
+            onReject={handleRejectPlan}
           />
+        )}
+
+        {/* Document Download Modal */}
+        {showDocumentModal && editingPlan && (
+          <Modal
+            isOpen={showDocumentModal}
+            onClose={() => setShowDocumentModal(false)}
+            title="Download Documents"
+          >
+            <DocumentDownload 
+              system="plan-management" 
+              recordId={editingPlan.id} 
+            />
+          </Modal>
         )}
       </div>
-
-      {showModal && (
-        <FileUploadModal
-          onClose={() => {
-            setShowModal(false);
-            setEditingPlan(null);
-          }}
-          onUpload={handleUploadFiles}
-        />
-      )}
-
-      {showRejectModal && (
-        <RejectModal
-          onClose={() => {
-            setShowRejectModal(false);
-            setEditingPlan(null);
-          }}
-          onReject={handleRejectPlan}
-        />
-      )}
-
-      {/* Document Download Modal */}
-      {showDocumentModal && editingPlan && (
-        <Modal
-          isOpen={showDocumentModal}
-          onClose={() => setShowDocumentModal(false)}
-          title="Download Documents"
-        >
-          <DocumentDownload 
-            system="plan-management" 
-            recordId={editingPlan.id} 
-          />
-        </Modal>
-      )}
     </div>
   );
 }

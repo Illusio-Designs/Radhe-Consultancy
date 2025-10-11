@@ -246,40 +246,50 @@ const UserRoleWorkLog = ({ searchQuery }) => {
   }
 
   return (
-    <div className="user-role-work-log">
-      <div className="page-header">
-        <h1>User Role Work Log</h1>
-        <p>Track all user role-related activities and changes</p>
-      </div>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">User Role Work Log</h1>
+            <p>Track all user role-related activities and changes</p>
+          </div>
 
-      <div className="search-container">
-        <SearchBar
-          placeholder="Search logs..."
-          onSearch={handleSearch}
-          initialValue={searchQuery || ''}
-        />
-      </div>
+          <div className="search-container">
+            <SearchBar
+              placeholder="Search logs..."
+              onSearch={handleSearch}
+              initialValue={searchQuery || ''}
+            />
+          </div>
 
-      <div className="table-container">
-        <Table
-          data={logs}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No logs found"
-        />
-      </div>
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <>
+              <div className="table-container">
+                <Table
+                  data={logs}
+                  columns={columns}
+                  loading={loading}
+                  emptyMessage="No logs found"
+                />
+              </div>
 
-      {totalPages > 1 && (
-        <div className="pagination-container">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            totalItems={totalCount}
-            itemsPerPage={pageSize}
-          />
+              {totalPages > 1 && (
+                <div className="pagination-container">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    totalItems={totalCount}
+                    itemsPerPage={pageSize}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -964,7 +964,7 @@ function Vehicle({ searchQuery = "" }) {
       setError("");
       setPolicies([]);
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   };
 
@@ -994,9 +994,7 @@ function Vehicle({ searchQuery = "" }) {
       // Fallback to client-side search if server search fails
       console.log('Vehicle: Server search error, falling back to client-side search');
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -1200,6 +1198,7 @@ function Vehicle({ searchQuery = "" }) {
               <BiErrorCircle className="inline mr-2" /> {error}
             </div>
           )}
+          
           {loading ? (
             <Loader size="large" color="primary" />
           ) : (

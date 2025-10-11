@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { renewalAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
+import { BiErrorCircle } from "react-icons/bi";
 import "../../../styles/pages/dashboard/renewals/RenewalLog.css";
 import "../../../styles/components/StatCards.css";
 
@@ -119,18 +120,17 @@ const RenewalLog = () => {
     });
   };
 
-  if (loading) return <Loader />;
-
   return (
-    <div className="renewal-log">
-      <div className="renewal-log-content">
-        <div className="renewal-log-header">
-          <h1 className="renewal-log-title">📋 Renewal Log History</h1>
-          <p className="renewal-log-subtitle">Complete history of all renewal reminders sent</p>
-        </div>
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">📋 Renewal Log History</h1>
+            <p>Complete history of all renewal reminders sent</p>
+          </div>
 
-        {/* Filter Controls */}
-        <div className="renewal-log-filters">
+          {/* Filter Controls */}
+          <div className="renewal-log-filters">
           <div className="filter-group">
             <label>Status:</label>
             <select 
@@ -189,13 +189,17 @@ const RenewalLog = () => {
           </button>
         </div>
 
-        {error && (
-          <div className="renewal-log-error">
-            <span>❌</span> {error}
-          </div>
-        )}
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
 
-        <div className="renewal-log-stats">
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <>
+              <div className="renewal-log-stats">
           <div className="stat-card">
             <div className="stat-number">{logs.length}</div>
             <div className="stat-label">Total Reminders</div>
@@ -312,6 +316,9 @@ const RenewalLog = () => {
             </button>
           </div>
         )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

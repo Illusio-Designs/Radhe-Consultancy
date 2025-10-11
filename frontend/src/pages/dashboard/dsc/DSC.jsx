@@ -484,9 +484,7 @@ function DSC({ searchQuery = "" }) {
         setError("Failed to fetch DSCs");
         setDSCs([]);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000);
+        setLoading(false);
       }
     };
     if (searchQuery && searchQuery.trim() !== "") {
@@ -534,9 +532,7 @@ function DSC({ searchQuery = "" }) {
       setError("Failed to fetch DSCs");
       setDSCs([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+      setLoading(false);
     }
   };
 
@@ -579,9 +575,7 @@ function DSC({ searchQuery = "" }) {
       setError("Failed to search DSCs");
       setDSCs([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -752,60 +746,62 @@ function DSC({ searchQuery = "" }) {
   ];
 
   return (
-    <div className="dsc">
-      <div className="dsc-content">
-        <div className="dsc-header">
-          <h1 className="dsc-title">Digital Signature Certificates</h1>
-          <div className="list-container">
-            <Button
-              variant="contained"
-              onClick={() => setShowModal(true)}
-              icon={<BiPlus />}
-            >
-              Add DSC
-            </Button>
-            <div className="dashboard-header-dropdown-container">
-              <Dropdown
-                options={statusOptions}
-                value={statusOptions.find((opt) => opt.value === statusFilter)}
-                onChange={(option) =>
-                  setStatusFilter(option ? option.value : "all")
-                }
-                placeholder="Filter by Status"
-              />
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Digital Signature Certificates</h1>
+            <div className="list-container">
+              <Button
+                variant="contained"
+                onClick={() => setShowModal(true)}
+                icon={<BiPlus />}
+              >
+                Add DSC
+              </Button>
+              <div className="dashboard-header-dropdown-container">
+                <Dropdown
+                  options={statusOptions}
+                  value={statusOptions.find((opt) => opt.value === statusFilter)}
+                  onChange={(option) =>
+                    setStatusFilter(option ? option.value : "all")
+                  }
+                  placeholder="Filter by Status"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        
-        <StatisticsCards statistics={statistics} loading={statsLoading} />
-        
-        {error && (
-          <div className="dsc-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
+          
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+          
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
 
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={filteredDSCs}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedDSC ? "Edit DSC" : "Add New DSC"}
-      >
-        <DSCForm
-          dsc={selectedDSC}
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredDSCs}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
+        </div>
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onDSCUpdated={handleDSCUpdated}
-        />
-      </Modal>
+          title={selectedDSC ? "Edit DSC" : "Add New DSC"}
+        >
+          <DSCForm
+            dsc={selectedDSC}
+            onClose={handleModalClose}
+            onDSCUpdated={handleDSCUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }

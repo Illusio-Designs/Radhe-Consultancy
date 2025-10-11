@@ -1031,7 +1031,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
             </div>
 
             {/* Backend Renewal Modal Fields */}
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <label>Upload Option:</label>
               <input
                 type="file"
@@ -1043,7 +1043,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                     upload_option: selectedFiles
                   }));
                 }}
-                className="vendor-management-form-input"
+                className="insurance-form-input"
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
               />
               <small className="text-gray-500">
@@ -1051,7 +1051,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
               </small>
             </div>
 
-            <div className="vendor-management-form-group">
+            <div className="insurance-form-group">
               <label>Expiry Date:</label>
               <input
                 type="date"
@@ -1060,7 +1060,7 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
                   ...prev,
                   expiry_date: e.target.value
                 }))}
-                className="vendor-management-form-input"
+                className="insurance-form-input"
               />
             </div>
           </div>
@@ -1468,7 +1468,7 @@ const FactoryQuotationForm = ({ quotation, onClose, onQuotationUpdated }) => {
         </div>
 
         {error && (
-          <div className="compliance-form-error">
+          <div className="insurance-error">
             <BiErrorCircle className="inline mr-2" /> {error}
           </div>
         )}
@@ -1654,9 +1654,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         setError("Failed to fetch factory quotations");
         setQuotations([]);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000);
+        setLoading(false);
       }
     };
 
@@ -1692,9 +1690,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       setError("Failed to search factory quotations");
       setQuotations([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -1718,9 +1714,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       setError("Failed to fetch factory quotations");
       setQuotations([]);
     } finally {
-      setTimeout(() => {
       setLoading(false);
-      }, 2000);
     }
   };
 
@@ -1756,9 +1750,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         renewal: 0
       });
     } finally {
-      setTimeout(() => {
-        setStatsLoading(false);
-      }, 1000);
+      setStatsLoading(false);
     }
   };
 
@@ -2329,51 +2321,52 @@ function FactoryQuotation({ searchQuery = "" }) {
 
 
   return (
-    <div className="compliance-container">
-      <div className="compliance-content">
-      <div className="compliance-header">
-        <h1 className="compliance-title">Factory Quotation</h1>
-          <div className="list-container">
-        {canEdit && (
-              <Button
-                variant="contained"
-                onClick={() => setShowModal(true)}
-                icon={<BiPlus />}
-              >
-            Add Quotation
-          </Button>
-        )}
-            <div className="dashboard-header-dropdown-container">
-              <Dropdown
-                options={statusOptions}
-                value={statusOptions.find((opt) => opt.value === statusFilter)}
-                onChange={(option) =>
-                  setStatusFilter(option ? option.value : "all")
-                }
-                placeholder="Filter by Status"
-              />
+    <div className="insurance">
+      <div className="insurance-container">
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Factory Quotation</h1>
+            <div className="list-container">
+              {canEdit && (
+                <Button
+                  variant="contained"
+                  onClick={() => setShowModal(true)}
+                  icon={<BiPlus />}
+                >
+                  Add Quotation
+                </Button>
+              )}
+              <div className="dashboard-header-dropdown-container">
+                <Dropdown
+                  options={statusOptions}
+                  value={statusOptions.find((opt) => opt.value === statusFilter)}
+                  onChange={(option) =>
+                    setStatusFilter(option ? option.value : "all")
+                  }
+                  placeholder="Filter by Status"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        
-        <StatisticsCards statistics={statistics} loading={statsLoading} />
-        
-        {error && (
-          <div className="compliance-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
-          </div>
-        )}
+          
+          <StatisticsCards statistics={statistics} loading={statsLoading} />
+          
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
 
-      {loading ? (
-        <Loader size="large" color="primary" />
-      ) : (
-          <TableWithControl
-            data={filteredQuotations}
-            columns={columns}
-            defaultPageSize={10}
-          />
-        )}
-      </div>
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={filteredQuotations}
+              columns={columns}
+              defaultPageSize={10}
+            />
+          )}
+        </div>
       <Modal
         isOpen={showModal}
         onClose={handleModalClose}
@@ -2416,14 +2409,14 @@ function FactoryQuotation({ searchQuery = "" }) {
         }
       />
 
-      {/* Renewal Modal */}
-      <RenewalModal
-        isOpen={showRenewalModal}
-        onClose={() => setShowRenewalModal(false)}
-        quotation={selectedQuotation}
-        onRenewalCreated={handleQuotationUpdated}
-      />
-
+        {/* Renewal Modal */}
+        <RenewalModal
+          isOpen={showRenewalModal}
+          onClose={() => setShowRenewalModal(false)}
+          quotation={selectedQuotation}
+          onRenewalCreated={handleQuotationUpdated}
+        />
+      </div>
     </div>
   );
 }

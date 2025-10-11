@@ -890,7 +890,7 @@ function Life({ searchQuery = "" }) {
       setError("");
       setPolicies([]);
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   };
 
@@ -920,9 +920,7 @@ function Life({ searchQuery = "" }) {
       // Fallback to client-side search if server search fails
       console.log('Life: Server search error, falling back to client-side search');
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
