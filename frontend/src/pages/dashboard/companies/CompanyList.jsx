@@ -595,29 +595,47 @@ function CompanyList({ searchQuery = "" }) {
   const [error, setError] = useState(null);
   const [statistics, setStatistics] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== "") {
       handleSearchCompanies(searchQuery);
     } else {
-      fetchCompanies();
+      fetchCompanies(1, 10);
     }
     fetchCompanyStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const response = await companyAPI.getAllCompanies();
-      if (Array.isArray(response)) {
+      const response = await companyAPI.getAllCompanies({ page, pageSize });
+      if (response && response.companies && Array.isArray(response.companies)) {
+        setCompanies(response.companies);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+        setError(null);
+      } else if (Array.isArray(response)) {
         setCompanies(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else if (response && response.data && Array.isArray(response.data)) {
         setCompanies(response.data);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
         setCompanies(response.data.data);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else {
         setError("Invalid data format received from server");
@@ -627,14 +645,20 @@ function CompanyList({ searchQuery = "" }) {
       setError("Failed to fetch companies");
       setCompanies([]);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
     }
   };
 
   const handleSearchCompanies = async (query) => {
     try {
       setLoading(true);
-      const response = await companyAPI.searchCompanies({ q: query });
+      const response = await companyAPI.searchCompanies({ 
+        q: query,
+        page: 1,
+        pageSize: pagination.pageSize 
+      });
       if (Array.isArray(response)) {
         setCompanies(response);
         setError(null);
@@ -652,7 +676,9 @@ function CompanyList({ searchQuery = "" }) {
       setError("Failed to search companies");
       setCompanies([]);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
 
@@ -700,9 +726,24 @@ function CompanyList({ searchQuery = "" }) {
 
   const handleCompanyUpdated = async () => {
     console.log('Company updated, refreshing list');
-    await fetchCompanies();
+    await fetchCompanies(pagination.currentPage, pagination.pageSize);
     await fetchCompanyStatistics();
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("CompanyList: Page changed to:", page);
+    await fetchCompanies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("CompanyList: Page size changed to:", newPageSize);
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchCompanies(1, newPageSize);
   };
 
   const fetchCompanyStatistics = async () => {
@@ -754,7 +795,7 @@ function CompanyList({ searchQuery = "" }) {
       key: "actions",
       label: "Actions",
       render: (_, company) => (
-        <div className="insurance-actions">
+        <div className="vendor-management-actions">
           <ActionButton
             onClick={() => handleEdit(company)}
             variant="secondary"
@@ -841,52 +882,56 @@ function CompanyList({ searchQuery = "" }) {
   };
 
   return (
-    <div className="insurance">
-      <div className="insurance-container">
-        <div className="insurance-content">
-          <div className="insurance-header">
-            <h1 className="insurance-title">Companies</h1>
-            <Button
-              variant="contained"
-              onClick={() => setShowModal(true)}
-              icon={<BiPlus />}
-            >
-              Add Company
-            </Button>
-          </div>
-
-          {/* Company Statistics */}
-          <StatisticsCards />
-
-          {error && (
-            <div className="insurance-error">
-              <BiErrorCircle className="inline mr-2" /> {error}
-            </div>
-          )}
-
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={companies}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+    <div className="vendor-management">
+      <div className="vendor-management-content">
+        <div className="vendor-management-header">
+          <h1 className="vendor-management-title">Companies</h1>
+          <Button
+            variant="contained"
+            onClick={() => setShowModal(true)}
+            icon={<BiPlus />}
+          >
+            Add Company
+          </Button>
         </div>
 
-        <Modal
-          isOpen={showModal}
-          onClose={handleModalClose}
-          title={selectedCompany ? "Edit Company" : "Add New Company"}
-        >
-          <CompanyForm
-            company={selectedCompany}
-            onClose={handleModalClose}
-            onCompanyUpdated={handleCompanyUpdated}
+        {/* Company Statistics */}
+        <StatisticsCards />
+
+        {error && (
+          <div className="vendor-management-error">
+            <BiErrorCircle className="inline mr-2" /> {error}
+          </div>
+        )}
+
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={companies}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
           />
-        </Modal>
+        )}
       </div>
+
+      <Modal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        title={selectedCompany ? "Edit Company" : "Add New Company"}
+      >
+        <CompanyForm
+          company={selectedCompany}
+          onClose={handleModalClose}
+          onCompanyUpdated={handleCompanyUpdated}
+        />
+      </Modal>
     </div>
   );
 }

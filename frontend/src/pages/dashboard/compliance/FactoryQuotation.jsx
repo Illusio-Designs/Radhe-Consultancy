@@ -1604,12 +1604,6 @@ function FactoryQuotation({ searchQuery = "" }) {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState(null);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    pageSize: 10,
-    totalPages: 1,
-    totalItems: 0,
-  });
   const [showPlanManagerModal, setShowPlanManagerModal] = useState(false);
   const [showStabilityManagerModal, setShowStabilityManagerModal] = useState(false);
   const [showStabilityModal, setShowStabilityModal] = useState(false);
@@ -1639,35 +1633,10 @@ function FactoryQuotation({ searchQuery = "" }) {
 
   useEffect(() => {
     console.log("Factory Quotation component mounted");
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await factoryQuotationAPI.getAllQuotations();
-        console.log("Factory Quotation API response:", response);
-
-        if (response && response.data && Array.isArray(response.data)) {
-          setQuotations(response.data);
-          setError(null);
-        } else if (response && Array.isArray(response)) {
-          setQuotations(response);
-          setError(null);
-        } else {
-          setError("Invalid data format received from server");
-          setQuotations([]);
-        }
-      } catch (err) {
-        console.error("Error fetching factory quotations:", err);
-        setError("Failed to fetch factory quotations");
-        setQuotations([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (searchQuery && searchQuery.trim() !== "") {
       handleSearchQuotations(searchQuery);
     } else {
-      fetchData();
+      fetchQuotations(1, 10);
     }
     fetchFactoryQuotationStatistics();
   }, [searchQuery]);
@@ -1676,10 +1645,22 @@ function FactoryQuotation({ searchQuery = "" }) {
     try {
       console.log("Searching factory quotations with query:", query);
       setLoading(true);
-      // Note: Backend doesn't have search endpoint yet, so we'll filter client-side
-      const response = await factoryQuotationAPI.getAllQuotations();
+      const response = await factoryQuotationAPI.searchQuotations({ 
+        q: query,
+        page: 1,
+        pageSize: pagination.pageSize 
+      });
       
-      if (response && response.data && Array.isArray(response.data)) {
+      if (response && response.quotations && Array.isArray(response.quotations)) {
+        setQuotations(response.quotations);
+        setPagination({
+          currentPage: response.currentPage || 1,
+          pageSize: response.pageSize || pagination.pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+        setError(null);
+      } else if (response && response.data && Array.isArray(response.data)) {
         const filtered = response.data.filter(quotation => 
           quotation.companyName?.toLowerCase().includes(query.toLowerCase()) ||
           quotation.email?.toLowerCase().includes(query.toLowerCase()) ||
@@ -1687,29 +1668,46 @@ function FactoryQuotation({ searchQuery = "" }) {
         );
         setQuotations(filtered);
         setError(null);
+      } else if (Array.isArray(response)) {
+        setQuotations(response);
+        setError(null);
       } else {
         setError("Invalid data format received from server");
         setQuotations([]);
       }
     } catch (err) {
       console.error("Error searching factory quotations:", err);
-      setError("Failed to search factory quotations");
-      setQuotations([]);
+      // Fallback to fetching all if search fails
+      await fetchQuotations(1, pagination.pageSize);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchQuotations = async () => {
+  const fetchQuotations = async (page = 1, pageSize = 10) => {
     try {
-      console.log("Fetching factory quotations...");
+      console.log("Fetching factory quotations...", { page, pageSize });
       setLoading(true);
-      const response = await factoryQuotationAPI.getAllQuotations();
+      const response = await factoryQuotationAPI.getAllQuotations({ page, pageSize });
       console.log("Factory Quotation API response:", response);
 
-      if (response && response.data && Array.isArray(response.data)) {
+      if (response && response.quotations && Array.isArray(response.quotations)) {
+        setQuotations(response.quotations);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+        setError(null);
+      } else if (response && response.data && Array.isArray(response.data)) {
         setQuotations(response.data);
-      setError(null);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+        setError(null);
+      } else if (Array.isArray(response)) {
+        setQuotations(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+        setError(null);
       } else {
         console.error("Invalid response format:", response);
         setError("Invalid data format received from server");
@@ -1774,8 +1772,23 @@ function FactoryQuotation({ searchQuery = "" }) {
 
   const handleQuotationUpdated = async () => {
     console.log("Factory quotation updated, refreshing list");
-    await fetchQuotations();
+    await fetchQuotations(pagination.currentPage, pagination.pageSize);
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("FactoryQuotation: Page changed to:", page);
+    await fetchQuotations(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("FactoryQuotation: Page size changed to:", newPageSize);
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchQuotations(1, newPageSize);
   };
 
   const handleStatusChange = async (quotationId, newStatus) => {
@@ -1826,7 +1839,7 @@ function FactoryQuotation({ searchQuery = "" }) {
         const response = await factoryQuotationAPI.updateStatus(quotationId, { status: newStatus });
         if (response.success) {
           toast.success(`Status updated to ${newStatus} successfully`);
-          await fetchQuotations();
+          await fetchQuotations(pagination.currentPage, pagination.pageSize);
         }
         return;
       }
@@ -1842,7 +1855,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       const response = await factoryQuotationAPI.updateStatus(quotationId, { status: newStatus });
       if (response.success) {
         toast.success(`Status updated to ${newStatus} successfully`);
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -1859,7 +1872,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       
       if (response.success) {
         toast.success('Plan manager assigned successfully');
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
         // Close modal after successful assignment
         setShowPlanManagerModal(false);
       }
@@ -1892,7 +1905,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       
       if (response.success) {
         toast.success('Stability manager assigned successfully');
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
         // Close modal after successful assignment
         setShowStabilityManagerModal(false);
       }
@@ -1920,7 +1933,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       const response = await stabilityManagementAPI.updateStabilityStatus(stabilityId, updateData);
       if (response.success) {
         toast.success('Stability status updated successfully');
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
       }
     } catch (error) {
       toast.error('Failed to update stability status');
@@ -1945,7 +1958,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       const response = await stabilityManagementAPI.uploadStabilityFiles(stabilityId, formData);
       if (response.success) {
         toast.success('Files uploaded and stability approved successfully');
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
       }
     } catch (error) {
       toast.error('Failed to upload stability files');
@@ -1970,7 +1983,7 @@ function FactoryQuotation({ searchQuery = "" }) {
       const response = await applicationManagementAPI.updateApplicationStatus(applicationId, updateData);
       if (response.success) {
         toast.success('Application status updated successfully');
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
       }
     } catch (error) {
       toast.error('Failed to update application status');
@@ -1997,12 +2010,12 @@ function FactoryQuotation({ searchQuery = "" }) {
         const response = await applicationManagementAPI.uploadApplicationFiles(applicationId, formData);
         if (response.success) {
           toast.success('Files uploaded and application approved successfully');
-          await fetchQuotations();
+          await fetchQuotations(pagination.currentPage, pagination.pageSize);
         }
       } else {
         // No files selected, just approve the application
         toast.success('Application approved successfully');
-        await fetchQuotations();
+        await fetchQuotations(pagination.currentPage, pagination.pageSize);
       }
     } catch (error) {
       console.error('Error in application file upload:', error);
@@ -2363,15 +2376,21 @@ function FactoryQuotation({ searchQuery = "" }) {
             </div>
           )}
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={filteredQuotations}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+      {loading ? (
+        <Loader size="large" color="primary" />
+      ) : (
+          <TableWithControl
+            data={filteredQuotations}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
         </div>
       <Modal
         isOpen={showModal}

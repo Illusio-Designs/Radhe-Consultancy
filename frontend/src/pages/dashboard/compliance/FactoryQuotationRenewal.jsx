@@ -13,20 +13,37 @@ const FactoryQuotationRenewal = () => {
   const [error, setError] = useState(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
-    fetchRenewals();
+    fetchRenewals(1, 10);
   }, []);
 
-  const fetchRenewals = async () => {
+  const fetchRenewals = async (page = 1, pageSize = 10) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await factoryQuotationAPI.getAllQuotations();
-      const renewalQuotations = response.data.filter(quotation => 
-        quotation.status === 'renewal'
-      );
-      setRenewals(renewalQuotations);
+      const response = await factoryQuotationAPI.getAllQuotations({ page, pageSize, status: 'renewal' });
+      if (response && response.quotations && Array.isArray(response.quotations)) {
+        setRenewals(response.quotations);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+      } else if (response.data && Array.isArray(response.data)) {
+        const renewalQuotations = response.data.filter(quotation => quotation.status === 'renewal');
+        setRenewals(renewalQuotations);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+      } else {
+        setRenewals([]);
+      }
     } catch (err) {
       setError("Failed to fetch renewals");
       setRenewals([]);
@@ -34,6 +51,19 @@ const FactoryQuotationRenewal = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchRenewals(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchRenewals(1, newPageSize);
   };
 
   const formatDate = (dateString) => {
@@ -139,15 +169,21 @@ const FactoryQuotationRenewal = () => {
             </div>
           )}
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={renewals}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={renewals}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
         </div>
 
         {/* Document Download Modal */}

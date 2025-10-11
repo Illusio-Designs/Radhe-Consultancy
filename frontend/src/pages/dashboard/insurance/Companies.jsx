@@ -143,26 +143,43 @@ const Companies = ({ searchQuery = "" }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== "") {
       handleSearchCompanies(searchQuery);
     } else {
-      fetchCompanies();
+      fetchCompanies(1, 10);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const data = await insuranceCompanyAPI.getAllCompanies();
-      const list = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.data)
-        ? data.data
-        : [];
-      setCompanies(list);
+      const data = await insuranceCompanyAPI.getAllCompanies({ page, pageSize });
+      if (data && data.companies && Array.isArray(data.companies)) {
+        setCompanies(data.companies);
+        setPagination({
+          currentPage: data.currentPage || page,
+          pageSize: data.pageSize || pageSize,
+          totalPages: data.totalPages || 1,
+          totalItems: data.totalItems || 0,
+        });
+      } else {
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
+        setCompanies(list);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+      }
       setError(null);
     } catch (err) {
       setError("Failed to fetch insurance companies");
@@ -175,7 +192,11 @@ const Companies = ({ searchQuery = "" }) => {
   const handleSearchCompanies = async (query) => {
     try {
       setLoading(true);
-      const response = await insuranceCompanyAPI.searchCompanies({ q: query });
+      const response = await insuranceCompanyAPI.searchCompanies({ 
+        q: query,
+        page: 1,
+        pageSize: pagination.pageSize 
+      });
       const list = Array.isArray(response.data)
         ? response.data
         : Array.isArray(response?.data?.data)
@@ -192,11 +213,24 @@ const Companies = ({ searchQuery = "" }) => {
   };
 
   const handleCreated = async (newCompany) => {
-    await fetchCompanies();
+    await fetchCompanies(pagination.currentPage, pagination.pageSize);
   };
 
   const handleUpdated = async () => {
-    await fetchCompanies();
+    await fetchCompanies(pagination.currentPage, pagination.pageSize);
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchCompanies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchCompanies(1, newPageSize);
   };
 
   const handleEdit = (company) => {
@@ -261,7 +295,13 @@ const Companies = ({ searchQuery = "" }) => {
             <TableWithControl
               data={companies}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
               emptyMessage="No insurance companies found"
               className="insurance-table"
             />

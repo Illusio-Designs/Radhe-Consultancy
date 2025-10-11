@@ -273,31 +273,49 @@ function ConsumerList({ searchQuery = "" }) {
   const [success, setSuccess] = useState("");
   const [statistics, setStatistics] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim() !== "") {
       handleSearchConsumers(searchQuery);
     } else {
-      fetchConsumers();
+      fetchConsumers(1, 10);
     }
     fetchConsumerStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  const fetchConsumers = async () => {
+  const fetchConsumers = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await consumerAPI.getAllConsumers();
+      const response = await consumerAPI.getAllConsumers({ page, pageSize });
 
+      // Check if response has consumers property with pagination
+      if (response && response.consumers && Array.isArray(response.consumers)) {
+        setConsumers(response.consumers);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+      }
       // Check if response is an array directly
-      if (Array.isArray(response)) {
+      else if (Array.isArray(response)) {
         setConsumers(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
       }
       // Check if response has data property and it's an array
       else if (response && response.data && Array.isArray(response.data)) {
         setConsumers(response.data);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
       }
       // Check if response has data property and it's an object with data array
       else if (
@@ -307,6 +325,7 @@ function ConsumerList({ searchQuery = "" }) {
         Array.isArray(response.data.data)
       ) {
         setConsumers(response.data.data);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
       } else {
         console.error("Invalid response format:", response);
         setError("Invalid data format received from server");
@@ -327,11 +346,15 @@ function ConsumerList({ searchQuery = "" }) {
       setError(null);
       
       if (!query.trim()) {
-        await fetchConsumers();
+        await fetchConsumers(1, pagination.pageSize);
         return;
       }
       
-      const response = await consumerAPI.searchConsumers({ q: query });
+      const response = await consumerAPI.searchConsumers({ 
+        q: query,
+        page: 1,
+        pageSize: pagination.pageSize 
+      });
       if (Array.isArray(response)) {
         setConsumers(response);
       } else if (response && response.data && Array.isArray(response.data)) {
@@ -376,7 +399,7 @@ function ConsumerList({ searchQuery = "" }) {
           draggable: true,
           progress: undefined,
         });
-        await fetchConsumers();
+        await fetchConsumers(pagination.currentPage, pagination.pageSize);
         await fetchConsumerStatistics();
       } catch (err) {
         const errorMessage = "Failed to delete consumer";
@@ -435,7 +458,7 @@ function ConsumerList({ searchQuery = "" }) {
   };
 
   const handleConsumerUpdated = async () => {
-    await fetchConsumers();
+    await fetchConsumers(pagination.currentPage, pagination.pageSize);
     await fetchConsumerStatistics();
     handleModalClose();
     toast.success("Consumer updated successfully!", {
@@ -447,6 +470,19 @@ function ConsumerList({ searchQuery = "" }) {
       draggable: true,
       progress: undefined,
     });
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchConsumers(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchConsumers(1, newPageSize);
   };
 
   const columns = [
@@ -583,15 +619,21 @@ function ConsumerList({ searchQuery = "" }) {
             </div>
           )}
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={consumers}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={consumers}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
         </div>
 
         <Modal
