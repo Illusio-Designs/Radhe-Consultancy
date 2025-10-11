@@ -301,6 +301,12 @@ const LabourInspection = ({ searchQuery = "" }) => {
   const [statistics, setStatistics] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [updatingStatus, setUpdatingStatus] = useState({});
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const { user, userRoles } = useAuth();
 
   // Handle search when searchQuery changes
@@ -338,14 +344,18 @@ const LabourInspection = ({ searchQuery = "" }) => {
   };
 
   useEffect(() => {
-    fetchInspections();
+    fetchInspections(1, 10);
     fetchStatistics();
   }, []);
 
-  const fetchInspections = async () => {
+  const fetchInspections = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const params = {};
+      console.log('Inspection: Fetching inspections for page:', page, 'pageSize:', pageSize);
+      const params = {
+        page,
+        pageSize,
+      };
       
       if (statusFilter !== 'all') params.status = statusFilter;
 
@@ -353,6 +363,14 @@ const LabourInspection = ({ searchQuery = "" }) => {
       if (response.success) {
         setInspections(response.data || []);
         setFilteredInspections(response.data || []);
+        if (response.pagination) {
+          setPagination({
+            currentPage: response.pagination.currentPage || page,
+            pageSize: response.pagination.itemsPerPage || pageSize,
+            totalPages: response.pagination.totalPages || 1,
+            totalItems: response.pagination.totalItems || 0,
+          });
+        }
       }
     } catch (error) {
       setError(error.message || 'Failed to fetch inspections');
@@ -391,7 +409,7 @@ const LabourInspection = ({ searchQuery = "" }) => {
       try {
         await labourInspectionAPI.deleteInspection(inspection.inspection_id);
         toast.success('Inspection deleted successfully!');
-        fetchInspections();
+        await fetchInspections(pagination.currentPage, pagination.pageSize);
         fetchStatistics();
       } catch (error) {
         toast.error(error.message || 'Failed to delete inspection');
@@ -399,8 +417,27 @@ const LabourInspection = ({ searchQuery = "" }) => {
     }
   };
 
+  const handlePageChange = async (page) => {
+    console.log("Inspection: Page changed to:", page);
+    await fetchInspections(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("Inspection: Page size changed to:", newPageSize);
+    
+    // Update pagination state first
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    
+    // Then fetch inspections with the new page size
+    await fetchInspections(1, newPageSize);
+  };
+
   const handleInspectionUpdated = () => {
-    fetchInspections();
+    fetchInspections(pagination.currentPage, pagination.pageSize);
     fetchStatistics();
   };
 
@@ -678,16 +715,22 @@ const LabourInspection = ({ searchQuery = "" }) => {
             </div>
           )}
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={filteredInspections}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
-        </div>
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={filteredInspections}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
+      </div>
 
         <Modal
           isOpen={showModal}

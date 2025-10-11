@@ -1604,6 +1604,12 @@ function FactoryQuotation({ searchQuery = "" }) {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const [showPlanManagerModal, setShowPlanManagerModal] = useState(false);
   const [showStabilityManagerModal, setShowStabilityManagerModal] = useState(false);
   const [showStabilityModal, setShowStabilityModal] = useState(false);

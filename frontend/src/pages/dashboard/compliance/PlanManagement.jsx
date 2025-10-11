@@ -255,6 +255,12 @@ const PlanManagement = ({ searchQuery = "" }) => {
   const [statistics, setStatistics] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const { user } = useAuth();
   const [showDocumentModal, setShowDocumentModal] = useState(false);
 
@@ -286,17 +292,31 @@ const PlanManagement = ({ searchQuery = "" }) => {
   };
 
   useEffect(() => {
-    fetchPlanManagementRecords();
+    fetchPlanManagementRecords(1, 10);
     fetchPlanStatistics();
   }, []);
 
-  const fetchPlanManagementRecords = async () => {
+  const fetchPlanManagementRecords = async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
-      const response = await planManagementAPI.getAllPlanManagement();
+      console.log('PlanManagement: Fetching plans for page:', page, 'pageSize:', pageSize);
+      const response = await planManagementAPI.getAllPlanManagement({
+        page,
+        pageSize,
+        status: statusFilter === 'all' ? undefined : statusFilter
+      });
+      
       if (response.success) {
-        setPlans(response.data);
-        setFilteredPlans(response.data); // Initialize filteredPlans
+        setPlans(response.data || []);
+        setFilteredPlans(response.data || []);
+        if (response.pagination) {
+          setPagination({
+            currentPage: response.pagination.currentPage || page,
+            pageSize: response.pagination.itemsPerPage || pageSize,
+            totalPages: response.pagination.totalPages || 1,
+            totalItems: response.pagination.totalItems || 0,
+          });
+        }
         setError(null);
       } else {
         setError("Failed to fetch plan management records");
@@ -339,6 +359,25 @@ const PlanManagement = ({ searchQuery = "" }) => {
     } finally {
       setStatsLoading(false);
     }
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("PlanManagement: Page changed to:", page);
+    await fetchPlanManagementRecords(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("PlanManagement: Page size changed to:", newPageSize);
+    
+    // Update pagination state first
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    
+    // Then fetch plans with the new page size
+    await fetchPlanManagementRecords(1, newPageSize);
   };
 
   const handleStatusChange = async (planId, newStatus) => {
@@ -576,16 +615,22 @@ const PlanManagement = ({ searchQuery = "" }) => {
             <StatisticsCards statistics={statistics} loading={statsLoading} />
           </div>
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={filteredRecords}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
-        </div>
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={filteredRecords}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
+      </div>
 
         {showModal && (
           <FileUploadModal

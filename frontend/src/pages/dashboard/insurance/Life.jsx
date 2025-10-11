@@ -845,6 +845,12 @@ function Life({ searchQuery = "" }) {
     monthlyStats: []
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const { user, userRoles } = useAuth();
   const isCompany = userRoles.includes("company");
   const isConsumer = userRoles.includes("consumer");
@@ -853,7 +859,7 @@ function Life({ searchQuery = "" }) {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
 
   useEffect(() => {
-    fetchPolicies();
+    fetchPolicies(1, 10);
     fetchLifeStatistics();
   }, []);
 
@@ -865,21 +871,32 @@ function Life({ searchQuery = "" }) {
       handleSearchPolicies(searchQuery);
     } else if (searchQuery === "") {
       console.log('Life: Clearing search, fetching all policies');
-      fetchPolicies();
+      fetchPolicies(1, pagination.pageSize);
     }
   }, [searchQuery]);
 
-  const fetchPolicies = async () => {
+  const fetchPolicies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      console.log('Life: Fetching all policies');
-      const response = await lifePolicyAPI.getAllPolicies();
+      console.log('Life: Fetching policies for page:', page, 'pageSize:', pageSize);
+      const response = await lifePolicyAPI.getAllPolicies({
+        page,
+        pageSize,
+      });
       console.log('Life: Fetch response:', response);
-      if (response && Array.isArray(response.policies)) {
+
+      if (response && response.policies && Array.isArray(response.policies)) {
         setPolicies(response.policies);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
         setError(null);
       } else if (Array.isArray(response)) {
         setPolicies(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else {
         setError("Invalid data format received from server");
@@ -980,7 +997,7 @@ function Life({ searchQuery = "" }) {
       try {
         await lifePolicyAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
-        await fetchPolicies();
+        await fetchPolicies(pagination.currentPage, pagination.pageSize);
         await fetchLifeStatistics();
       } catch (err) {
         setError("Failed to delete policy");
@@ -1000,9 +1017,28 @@ function Life({ searchQuery = "" }) {
   };
 
   const handlePolicyUpdated = async () => {
-    await fetchPolicies();
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
     await fetchLifeStatistics();
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("Life: Page changed to:", page);
+    await fetchPolicies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("Life: Page size changed to:", newPageSize);
+    
+    // Update pagination state first
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    
+    // Then fetch policies with the new page size
+    await fetchPolicies(1, newPageSize);
   };
 
   const handleDownloadDocuments = async (policy) => {
@@ -1116,7 +1152,13 @@ function Life({ searchQuery = "" }) {
             <TableWithControl
               data={searchFilteredPolicies}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
             />
           )}
         </div>

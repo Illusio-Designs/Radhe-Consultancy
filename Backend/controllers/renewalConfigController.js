@@ -655,7 +655,8 @@ const getDefaultServiceTypes = async (req, res) => {
 // Get renewal logs
 const getLogs = async (req, res) => {
   try {
-    const { page = 1, limit = 50, status, policy_type, reminder_type } = req.query;
+    const { page = 1, limit = 50, pageSize, status, policy_type, reminder_type } = req.query;
+    const actualLimit = parseInt(limit) || parseInt(pageSize) || 50;
     const offset = (page - 1) * limit;
 
     // Build where clause
@@ -667,7 +668,7 @@ const getLogs = async (req, res) => {
     const { count, rows: logs } = await ReminderLog.findAndCountAll({
       where: whereClause,
       order: [['sent_at', 'DESC']],
-      limit: parseInt(limit),
+      limit: actualLimit,
       offset: parseInt(offset)
     });
     
@@ -677,7 +678,7 @@ const getLogs = async (req, res) => {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        limit: actualLimit,
         totalPages: Math.ceil(count / limit)
       }
     });

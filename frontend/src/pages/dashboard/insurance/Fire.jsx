@@ -814,6 +814,12 @@ function Fire({ searchQuery = "" }) {
     monthlyStats: []
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const { user, userRoles } = useAuth();
   const isCompany = userRoles.includes("company");
   const isConsumer = userRoles.includes("consumer");
@@ -822,7 +828,7 @@ function Fire({ searchQuery = "" }) {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
 
   useEffect(() => {
-    fetchPolicies();
+    fetchPolicies(1, 10);
     fetchFireStatistics();
   }, []);
 
@@ -834,21 +840,32 @@ function Fire({ searchQuery = "" }) {
       handleSearchPolicies(searchQuery);
     } else if (searchQuery === "") {
       console.log('Fire: Clearing search, fetching all policies');
-      fetchPolicies();
+      fetchPolicies(1, pagination.pageSize);
     }
   }, [searchQuery]);
 
-  const fetchPolicies = async () => {
+  const fetchPolicies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      console.log('Fire: Fetching all policies');
-      const response = await firePolicyAPI.getAllPolicies();
+      console.log('Fire: Fetching policies for page:', page, 'pageSize:', pageSize);
+      const response = await firePolicyAPI.getAllPolicies({
+        page,
+        pageSize,
+      });
       console.log('Fire: Fetch response:', response);
-      if (response && Array.isArray(response.policies)) {
+
+      if (response && response.policies && Array.isArray(response.policies)) {
         setPolicies(response.policies);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
         setError(null);
       } else if (Array.isArray(response)) {
         setPolicies(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else {
         setError("Invalid data format received from server");
@@ -948,7 +965,7 @@ function Fire({ searchQuery = "" }) {
       try {
         await firePolicyAPI.deletePolicy(policyId);
         toast.success("Policy deleted successfully!");
-        await fetchPolicies();
+        await fetchPolicies(pagination.currentPage, pagination.pageSize);
         await fetchFireStatistics();
       } catch (err) {
         setError("Failed to delete policy");
@@ -968,9 +985,28 @@ function Fire({ searchQuery = "" }) {
   };
 
   const handlePolicyUpdated = async () => {
-    await fetchPolicies();
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
     await fetchFireStatistics();
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("Fire: Page changed to:", page);
+    await fetchPolicies(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("Fire: Page size changed to:", newPageSize);
+    
+    // Update pagination state first
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    
+    // Then fetch policies with the new page size
+    await fetchPolicies(1, newPageSize);
   };
 
   const handleDownloadDocuments = (policy) => {
@@ -1072,7 +1108,13 @@ function Fire({ searchQuery = "" }) {
             <TableWithControl
               data={searchFilteredPolicies}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
             />
           )}
         </div>

@@ -104,6 +104,12 @@ const LabourLicense = ({ searchQuery = "" }) => {
   const [updatingStatus, setUpdatingStatus] = useState({});
   const [companies, setCompanies] = useState([]);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const { user, userRoles } = useAuth();
 
   // Check if user has permission to manage labour licenses
@@ -112,13 +118,27 @@ const LabourLicense = ({ searchQuery = "" }) => {
                            userRoles?.includes('labour_law_manager');
 
   // Fetch all licenses
-  const fetchLicenses = async () => {
+  const fetchLicenses = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const response = await labourLicenseAPI.getAllLicenses();
+      console.log('License: Fetching licenses for page:', page, 'pageSize:', pageSize);
+      const response = await labourLicenseAPI.getAllLicenses({
+        page,
+        pageSize,
+        status: statusFilter === 'all' ? undefined : statusFilter
+      });
+      
       if (response.success) {
         setLicenses(response.data || []);
         setFilteredLicenses(response.data || []);
+        if (response.pagination) {
+          setPagination({
+            currentPage: response.pagination.currentPage || page,
+            pageSize: response.pagination.itemsPerPage || pageSize,
+            totalPages: response.pagination.totalPages || 1,
+            totalItems: response.pagination.totalItems || 0,
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching licenses:', error);
@@ -170,7 +190,7 @@ const LabourLicense = ({ searchQuery = "" }) => {
 
   // Initial data fetch
   useEffect(() => {
-    fetchLicenses();
+    fetchLicenses(1, 10);
     fetchStatistics();
     fetchCompanies();
   }, []);
@@ -205,7 +225,7 @@ const LabourLicense = ({ searchQuery = "" }) => {
       const response = await labourLicenseAPI.updateLicense(licenseId, { status: newStatus });
       if (response.success) {
         toast.success('Status updated successfully');
-        fetchLicenses(); // Refresh data
+        await fetchLicenses(pagination.currentPage, pagination.pageSize);
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -213,6 +233,25 @@ const LabourLicense = ({ searchQuery = "" }) => {
     } finally {
       setUpdatingStatus(prev => ({ ...prev, [licenseId]: false }));
     }
+  };
+
+  const handlePageChange = async (page) => {
+    console.log("License: Page changed to:", page);
+    await fetchLicenses(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    console.log("License: Page size changed to:", newPageSize);
+    
+    // Update pagination state first
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    
+    // Then fetch licenses with the new page size
+    await fetchLicenses(1, newPageSize);
   };
 
   // Handle create/edit license
