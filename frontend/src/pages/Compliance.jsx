@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
 import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
+import Loader from '../components/common/Loader/Loader';
+import OptimizedImage from '../components/OptimizedImage';
 import { 
   HiBuildingOffice2,
   HiDocumentCheck,
@@ -23,6 +25,15 @@ import right from "../assets/blog-1-shape-right.png.webp";
 import '../styles/pages/Compliance.css';
 
 const Compliance = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleContactClick = () => {
     window.location.href = '/contact';
   };
@@ -80,6 +91,10 @@ const Compliance = () => {
     }
   ];
 
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
     <>
       <Header />
@@ -90,8 +105,8 @@ const Compliance = () => {
         </div>
       </div>
       <div className="page-container">
-      <img src={left} alt="left" className="left-shape" />
-      <img src={right} alt="right" className="right-shape" />
+      <OptimizedImage src={left} alt="left" className="left-shape" />
+      <OptimizedImage src={right} alt="right" className="right-shape" />
         <div className="services-grid">
           {complianceServices.map((service, index) => (
             <div key={index} className="service-card">

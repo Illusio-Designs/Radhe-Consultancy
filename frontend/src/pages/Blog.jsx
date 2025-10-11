@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
 import Pagination from '../components/common/Pagination';
+import Loader from '../components/common/Loader/Loader';
+import OptimizedImage from '../components/OptimizedImage';
 import { HiOutlineArrowRight } from 'react-icons/hi2';
 import img from "../assets/Mask group (1).webp";
 import img1 from "../assets/Mask group (2).webp";
@@ -87,12 +89,16 @@ const blogPosts = [
 const POSTS_PER_PAGE = 6;
 
 const Blog = () => {
-  const [loadedImages, setLoadedImages] = useState(new Set());
-
-  const handleImageLoad = (imageSrc) => {
-    setLoadedImages(prev => new Set([...prev, imageSrc]));
-  };
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const totalPages = Math.ceil(blogPosts.length / POSTS_PER_PAGE);
   
   const getCurrentPosts = () => {
@@ -100,6 +106,10 @@ const Blog = () => {
     const endIndex = startIndex + POSTS_PER_PAGE;
     return blogPosts.slice(startIndex, endIndex);
   };
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <>
@@ -118,33 +128,9 @@ const Blog = () => {
               <Link to={`/bloginner?title=${encodeURIComponent(post.title)}`} key={post.id} className="blog-card-link">
                 <article className="blog-card">
                   <div className="blog-image">
-                    {!loadedImages.has(post.image) && (
-                      <div 
-                        style={{
-                          backgroundColor: '#f0f0f0',
-                          filter: 'grayscale(100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#999',
-                          fontSize: '12px',
-                          width: '100%',
-                          height: '200px'
-                        }}
-                      >
-                        Loading...
-                      </div>
-                    )}
-                    <img 
+                    <OptimizedImage 
                       src={post.image} 
-                      alt={post.title} 
-                      onLoad={() => handleImageLoad(post.image)}
-                      style={{
-                        display: loadedImages.has(post.image) ? 'block' : 'none',
-                        width: '100%',
-                        height: '200px',
-                        objectFit: 'cover'
-                      }}
+                      alt={post.title}
                     />
                   </div>
                   <div className="blog-content">

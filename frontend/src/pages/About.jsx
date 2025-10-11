@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Workingwith from '../components/Workingwith';
 import Casestudy from '../components/Casestudy';
@@ -6,6 +6,8 @@ import Testimonial from '../components/Testimonial';
 import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
+import Loader from '../components/common/Loader/Loader';
+import OptimizedImage from '../components/OptimizedImage';
 import '../styles/pages/About.css';
 import aboutImage from '../assets/business-people-busy-discussing-financial-matter-meeting.webp';
 import avatar1 from '../assets/Ellipse 2603.webp';
@@ -13,14 +15,21 @@ import avatar2 from '../assets/Ellipse 2606.webp';
 import group from '../assets/Group 9.webp';
 
 const About = () => {
-  const [loadedImages, setLoadedImages] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleImageLoad = (imageSrc) => {
-    setLoadedImages(prev => new Set([...prev, imageSrc]));
-  };
   const handleContactClick = () => {
     window.location.href = '/contact';
   };
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <>
@@ -34,57 +43,13 @@ const About = () => {
 
       <div className="about-main-section">
   <div className="about-image-section">
-    {!loadedImages.has(group) && (
-      <div 
-        className='group-image' 
-        style={{
-          backgroundColor: '#f0f0f0',
-          filter: 'grayscale(100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#999',
-          fontSize: '12px'
-        }}
-      >
-        Loading...
-      </div>
-    )}
-    <img 
+    <OptimizedImage 
       src={group} 
       alt="group" 
-      className='group-image' 
-      onLoad={() => handleImageLoad(group)}
-      style={{
-        display: loadedImages.has(group) ? 'block' : 'none'
-      }}
+      className='group-image'
     />
     <div className="about-image-wrapper">
-      {!loadedImages.has(aboutImage) && (
-        <div 
-          className="about-main-image" 
-          style={{
-            backgroundColor: '#f0f0f0',
-            filter: 'grayscale(100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#999',
-            fontSize: '12px'
-          }}
-        >
-          Loading...
-        </div>
-      )}
-      <img 
-        src={aboutImage} 
-        alt="Consultancy" 
-        className="about-main-image" 
-        onLoad={() => handleImageLoad(aboutImage)}
-        style={{
-          display: loadedImages.has(aboutImage) ? 'block' : 'none'
-        }}
-      />
+      <OptimizedImage src={aboutImage} alt="Consultancy" className="about-main-image" />
       <div className="about-members-card">
         <span>Monthly Members</span>
         <h2>5000+</h2>
@@ -92,57 +57,13 @@ const About = () => {
       <div className="about-reviews-card">
         <div className="about-reviews-avatars">
           {/* Example avatars */}
-          {!loadedImages.has(avatar1) && (
-            <div 
-              style={{
-                backgroundColor: '#f0f0f0',
-                filter: 'grayscale(100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#999',
-                fontSize: '10px',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%'
-              }}
-            >
-              L
-            </div>
-          )}
-          <img 
+          <OptimizedImage 
             src={avatar1} 
-            alt="avatar" 
-            onLoad={() => handleImageLoad(avatar1)}
-            style={{
-              display: loadedImages.has(avatar1) ? 'block' : 'none'
-            }}
+            alt="avatar"
           />
-          {!loadedImages.has(avatar2) && (
-            <div 
-              style={{
-                backgroundColor: '#f0f0f0',
-                filter: 'grayscale(100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#999',
-                fontSize: '10px',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%'
-              }}
-            >
-              L
-            </div>
-          )}
-          <img 
+          <OptimizedImage 
             src={avatar2} 
-            alt="avatar" 
-            onLoad={() => handleImageLoad(avatar2)}
-            style={{
-              display: loadedImages.has(avatar2) ? 'block' : 'none'
-            }}
+            alt="avatar"
           />
           <div className='plus-icon'>+</div>
         </div>

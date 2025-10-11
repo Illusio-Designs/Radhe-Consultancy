@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, memo, useCallback } from 'react';
 import Header from '../components/Header';
 import Workingwith from '../components/Workingwith';
 import Casestudy from '../components/Casestudy';
@@ -6,6 +6,12 @@ import Testimonial from '../components/Testimonial';
 import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
+import Loader from '../components/common/Loader/Loader';
+import OptimizedImage from '../components/OptimizedImage';
+import TrustedConsultancy from '../components/home/TrustedConsultancy';
+import WhyChooseUs from '../components/home/WhyChooseUs';
+import CaseStudySection from '../components/home/CaseStudySection';
+import useThrottle from '../hooks/useThrottle';
 import img from "../assets/about-1-left.webp";
 import img2 from "../assets/about-1-right.webp";
 import img3 from "../assets/about-1-right-2.webp";
@@ -22,32 +28,35 @@ import img12 from "../assets/hero_1_2.webp";
 import sliderImg1 from "../assets/business-people-busy-discussing-financial-matter-meeting.webp";
 import sliderImg2 from "../assets/businessman-pointing-screen-showing-project-details-colleague.webp";
 import sliderImg3 from "../assets/close-up-smiley-women-working.webp";
-import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "../styles/pages/Home.css"
 
 const Home = () => {
+  const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
-  const [loadedImages, setLoadedImages] = useState(new Set());
   const scrollContainerRef = useRef(null);
 
-  const handleImageLoad = (imageSrc) => {
-    setLoadedImages(prev => new Set([...prev, imageSrc]));
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleContactClick = () => {
+  const handleContactClick = useCallback(() => {
     window.location.href = '/contact';
-  };
+  }, []);
 
-  const handleAboutClick = () => {
+  const handleAboutClick = useCallback(() => {
     window.location.href = '/about';
-  };
+  }, []);
 
-  // Dynamic slider data
-  const sliderData = [
+  // Dynamic slider data - memoized to prevent recreation
+  const sliderData = useMemo(() => [
     {
       subtitle: "Your Guardian In Law",
       title: "Experienced Attorneys, Trusted Results",
@@ -72,7 +81,7 @@ const Home = () => {
       rating: 5,
       image: sliderImg3
     }
-  ];
+  ], []);
 
   // Auto slide effect
   useEffect(() => {
@@ -91,57 +100,71 @@ const Home = () => {
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [currentSlide]);
+  }, [currentSlide, sliderData.length]);
 
-  useEffect(() => {
-    const checkWidth = () => {
-      setIsMobile(window.innerWidth < 500);
-      checkScrollPosition();
-    };
+  // Navigation functions - defined BEFORE they're used
+  const checkScrollPosition = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
     
-    checkWidth();
-    window.addEventListener('resize', checkWidth);
-    return () => window.removeEventListener('resize', checkWidth);
+    const isAtStart = container.scrollLeft <= 0;
+    const isAtEnd = container.scrollLeft >= container.scrollWidth - container.clientWidth - 10;
+    
+    // Only update if values actually changed to prevent re-renders
+    setShowLeftArrow(prev => {
+      const newValue = !isAtStart;
+      return newValue === prev ? prev : newValue;
+    });
+    setShowRightArrow(prev => {
+      const newValue = !isAtEnd;
+      return newValue === prev ? prev : newValue;
+    });
   }, []);
+  
+  // Throttle scroll position check to reduce re-renders
+  const throttledCheckScrollPosition = useThrottle(checkScrollPosition, 200);
 
-  // Navigation functions
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     if (currentSlide === sliderData.length - 1) {
-      // When reaching last slide, disable transition and jump to first
       setIsTransitioning(false);
       setCurrentSlide(0);
-      // Re-enable transition after a small delay
       setTimeout(() => {
         setIsTransitioning(true);
       }, 50);
     } else {
       setCurrentSlide(prev => prev + 1);
     }
-  };
+  }, [currentSlide, sliderData.length]);
 
-  const checkScrollPosition = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+  useEffect(() => {
+    const checkWidth = () => {
+      const mobile = window.innerWidth < 500;
+      setIsMobile(prev => prev === mobile ? prev : mobile);
+      checkScrollPosition();
+    };
     
-    setShowLeftArrow(container.scrollLeft > 0);
-    setShowRightArrow(
-      container.scrollLeft < container.scrollWidth - container.clientWidth - 10
-    );
-  };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, [checkScrollPosition]);
 
-  const scrollLeft = () => {
+  const scrollLeft = useCallback(() => {
     const container = scrollContainerRef.current;
     if (container) {
       container.scrollBy({ left: -container.offsetWidth, behavior: 'smooth' });
     }
-  };
+  }, []);
 
-  const scrollRight = () => {
+  const scrollRight = useCallback(() => {
     const container = scrollContainerRef.current;
     if (container) {
       container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
     }
-  };
+  }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <>
@@ -165,26 +188,9 @@ const Home = () => {
                       <button className="contact-btn" onClick={handleContactClick}>Contact Us →</button>
                     </div>
                                          <div className="hero-image">
-                       {!loadedImages.has(slide.image) && (
-                         <div 
-                           style={{
-                             filter: 'grayscale(100%)',
-                             display: 'flex',
-                             alignItems: 'center',
-                             justifyContent: 'center',
-                             color: '#999',
-                             fontSize: '14px'
-                           }}
-                         >
-                         </div>
-                       )}
-                       <img 
+                       <OptimizedImage 
                          src={slide.image} 
-                         alt="Legal services illustration" 
-                         onLoad={() => handleImageLoad(slide.image)}
-                         style={{
-                           display: loadedImages.has(slide.image) ? 'block' : 'none',
-                         }}
+                         alt="Legal services illustration"
                        />
                      </div>
                   </div>
@@ -208,176 +214,15 @@ const Home = () => {
           </div>
         </div>
        
-        <div className="trusted-consultancy">
-                     {!loadedImages.has(img6) && (
-             <div 
-               className="img6" 
-               style={{
-                 backgroundColor: '#f0f0f0',
-                 filter: 'grayscale(100%)',
-                 display: 'flex',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-                 color: '#999',
-                 fontSize: '12px'
-               }}
-             >
-               
-             </div>
-           )}
-           <img 
-             src={img6} 
-             alt="Law Scale" 
-             className="img6" 
-             onLoad={() => handleImageLoad(img6)}
-             style={{
-               display: loadedImages.has(img6) ? 'block' : 'none'
-             }}
-           />
-           {!loadedImages.has(img7) && (
-             <div 
-               className="img7" 
-               style={{
-                 backgroundColor: '#f0f0f0',
-                 filter: 'grayscale(100%)',
-                 display: 'flex',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-                 color: '#999',
-                 fontSize: '12px'
-               }}
-             >
-               
-             </div>
-           )}
-           <img 
-             src={img7} 
-             alt="Law Scale" 
-             className="img7" 
-             onLoad={() => handleImageLoad(img7)}
-             style={{
-               display: loadedImages.has(img7) ? 'block' : 'none'
-             }}
-           />
-           {!loadedImages.has(img8) && (
-             <div 
-               className="img8" 
-               style={{
-                 backgroundColor: '#f0f0f0',
-                 filter: 'grayscale(100%)',
-                 display: 'flex',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-                 color: '#999',
-                 fontSize: '12px'
-               }}
-             >
-               
-             </div>
-           )}
-           <img 
-             src={img8} 
-             alt="Law Scale" 
-             className="img8" 
-             onLoad={() => handleImageLoad(img8)}
-             style={{
-               display: loadedImages.has(img8) ? 'block' : 'none'
-             }}
-           />
-          <div className="trusted-container">
-       <div className="trusted-left">
-    <div className="image-group">
-             <div className='img-left'>
-       {!loadedImages.has(img) && (
-         <div 
-           className="img1" 
-           style={{
-             backgroundColor: '#f0f0f0',
-             filter: 'grayscale(100%)',
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'center',
-             color: '#999',
-             fontSize: '12px'
-           }}
-         >
-           
-         </div>
-       )}
-       <img 
-         src={img} 
-         alt="Law Scale" 
-         className="img1" 
-         onLoad={() => handleImageLoad(img)}
-         style={{
-           display: loadedImages.has(img) ? 'block' : 'none'
-         }}
-       />
-       </div>
-       <div className='img-right'>
-       {!loadedImages.has(img2) && (
-         <div 
-           className="img2" 
-           style={{
-             backgroundColor: '#f0f0f0',
-             filter: 'grayscale(100%)',
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'center',
-             color: '#999',
-             fontSize: '12px'
-           }}
-         >
-           
-         </div>
-       )}
-       <img 
-         src={img2} 
-         alt="Lawyer" 
-         className="img2" 
-         onLoad={() => handleImageLoad(img2)}
-         style={{
-           display: loadedImages.has(img2) ? 'block' : 'none'
-         }}
-       />
-       {!loadedImages.has(img3) && (
-         <div 
-           className="img3" 
-           style={{
-             backgroundColor: '#f0f0f0',
-             filter: 'grayscale(100%)',
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'center',
-             color: '#999',
-             fontSize: '12px'
-           }}
-         >
-           
-         </div>
-       )}
-       <img 
-         src={img3} 
-         alt="Gavel on Books" 
-         className="img3" 
-         onLoad={() => handleImageLoad(img3)}
-         style={{
-           display: loadedImages.has(img3) ? 'block' : 'none'
-         }}
-       />
-     </div>
-    </div>
-  </div>
-  <div className="trusted-right">
-    <p className="about-subtitle">About Us</p>
-    <h2>Your Trusted Consultancy</h2>
-    <p className="about-description">
-    With years of experience, we provide expert legal services across various domains. Our mission is to offer strategic, client-focused legal solutions that protect your rights and interests.
-    </p>
-    <button className="more-about-btn" onClick={handleAboutClick}>More About →</button>
-  </div>
-  </div>
-        </div>
+        <TrustedConsultancy 
+          img={img} 
+          img2={img2} 
+          img3={img3} 
+          img6={img6} 
+          img7={img7} 
+          img8={img8}
+          handleAboutClick={handleAboutClick}
+        />
 
         <div className="achievement-bar">
   <div className="achievement-card">
@@ -413,7 +258,7 @@ const Home = () => {
         <div className="services-section">
           <p className="services-subtitle">What We Do</p>
           <h2 className="services-title">Legal Services We Offer</h2>
-          <div className="services-cards" ref={scrollContainerRef} onScroll={checkScrollPosition}>
+           <div className="services-cards" ref={scrollContainerRef} onScroll={throttledCheckScrollPosition}>
             <div className="service-card light">
               <h3>Compliance & Licensing</h3>
               <ul>
@@ -487,109 +332,10 @@ const Home = () => {
         </div>
         
 
-        <div className="why">
-      {/* Left Section: Image with Play Button */}
-      <div className="why-left">
-        <div className="video-thumbnail">
-                     {!loadedImages.has(img9) && (
-             <div 
-               className="video-img" 
-               style={{
-                 backgroundColor: '#f0f0f0',
-                 filter: 'grayscale(100%)',
-                 display: 'flex',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-                 color: '#999',
-                 fontSize: '14px'
-               }}
-             >
-               
-             </div>
-           )}
-           <img 
-             src={img9} 
-             alt="Gavel and Sand Timer" 
-             className="video-img" 
-             onLoad={() => handleImageLoad(img9)}
-             style={{
-               display: loadedImages.has(img9) ? 'block' : 'none'
-             }}
-           />
-          <div className="play-button">
-            <div className="circle">
-              <div className="triangle"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Section: Content */}
-      <div className="why-right">
-             {!loadedImages.has(img10) && (
-         <div 
-           className="img10" 
-           style={{
-             backgroundColor: '#f0f0f0',
-             filter: 'grayscale(100%)',
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'center',
-             color: '#999',
-             fontSize: '12px'
-           }}
-         >
-           
-         </div>
-       )}
-       <img 
-         src={img10} 
-         alt="Law Scale" 
-         className="img10" 
-         onLoad={() => handleImageLoad(img10)}
-         style={{
-           display: loadedImages.has(img10) ? 'block' : 'none'
-         }}
-       />
-        <p className="why-subtitle">Why Choose Us?</p>
-        <h2 className="why-title">Navigating The Law: Your Assurance Of Peace</h2>
-
-<div className="points">
-        <div className="why-point">
-          <div className="icon-circle"><FaEnvelopeOpenText /></div>
-          <div>
-            <h3>Initial Consultation</h3>
-            <p>Our experienced lawyers thoroughly analyze the facts of each case. Then they apply the relevant laws to provide clear advice.</p>
-          </div>
-        </div>
-
-        <div className="why-point">
-          <div className="icon-circle"><FaBalanceScale /></div>
-          <div>
-            <h3>Case Evaluation</h3>
-            <p>We prioritize understanding your concerns and aligning with your goals. Your satisfaction is our top priority.</p>
-          </div>
-        </div>
-
-        <div className="why-point">
-          <div className="icon-circle"><FaPencilRuler /></div>
-          <div>
-            <h3>Legal Strategy</h3>
-            <p>We develop a customized plan to protect your rights and achieve the best possible outcome.</p>
-          </div>
-        </div>
-        </div>
-      </div>
-    </div>
+        <WhyChooseUs img9={img9} img10={img10} />
 
         <Workingwith />
-        <div className="casestudy">
-      <div className="casestudy-content">
-            <p>Case Study</p>
-            <h1>Attorney Legal Excellence in Action</h1>
-        </div>
-      <Casestudy />
-        </div>
+        <CaseStudySection />
         <Testimonial />
         <Contact />
         <NewsUpdates />

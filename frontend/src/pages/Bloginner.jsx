@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Testimonials from '../components/Testimonial';
+import Loader from '../components/common/Loader/Loader';
+import OptimizedImage from '../components/OptimizedImage';
 import '../styles/pages/Bloginner.css';
 import NewsUpdates from '../components/NewsUpdates';
 import blog from '../assets/bloginner1.webp';
@@ -12,13 +14,25 @@ import img from "../assets/Mask group (1).webp";
 import img1 from "../assets/Mask group (2).webp";
 
 const Bloginner = () => {
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const title = searchParams.get('title');
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleContactClick = () => {
     window.location.href = '/contact';
   };
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <>
@@ -32,7 +46,7 @@ const Bloginner = () => {
       
         <div className="blogmain-wrapper">
       <div className="bloginner-image">
-        <img src={blog} alt="blog" />
+        <OptimizedImage src={blog} alt="blog" />
       </div>
       
       <div className="bloginner-content-wrapper">
@@ -55,21 +69,21 @@ const Bloginner = () => {
         <div className="bloginner-sidebar">
           <h4>Recommendation News</h4>
           <div className="sidebar-news-item">
-            <img src={img} alt="news" />
+            <OptimizedImage src={img} alt="news" />
             <div>
               <h2>23 cases have been successfully</h2>
              <p>Lorem ipsum dolor sit amet. read more</p>
             </div>
           </div>
           <div className="sidebar-news-item">
-            <img src={img1} alt="news" />
+            <OptimizedImage src={img1} alt="news" />
             <div>
               <h2>23 cases have been successfully</h2>
               <p>Lorem ipsum dolor sit amet. read more</p>
             </div>
           </div>
           <div className="sidebar-news-item">
-            <img src={img} alt="news" />
+            <OptimizedImage src={img} alt="news" />
             <div>
               <h2>23 cases have been successfully</h2>
               <p>Lorem ipsum dolor sit amet. read more</p>
@@ -82,11 +96,11 @@ const Bloginner = () => {
         <h2>Longest Handled Cases</h2>
         <div className="longest-cases-cards">
           <div className="case-card">
-            <img src={blog1} alt="case" />
+            <OptimizedImage src={blog1} alt="case" />
             <h2>The Case of Giant Theft of Money at the Bank</h2>
           </div>
           <div className="case-card">
-            <img src={blog2} alt="case" />
+            <OptimizedImage src={blog2} alt="case" />
             <h2>Mysterious Murder Cases in Manila City</h2>
           </div>
         </div>

@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
 import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
+import Loader from '../components/common/Loader/Loader';
 import { HiOutlineArrowRight } from 'react-icons/hi2';
 import '../styles/pages/Insurance.css';
 
 const Insurance = () => {
-  const [loadedImages, setLoadedImages] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleImageLoad = (imageSrc) => {
-    setLoadedImages(prev => new Set([...prev, imageSrc]));
-  };
   const handleContactClick = () => {
     window.location.href = '/contact';
   };
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <>

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 import '../styles/components/Contact.css';
+import OptimizedImage from './OptimizedImage';
 import { FaUser, FaEnvelope, FaPhone, FaPen } from 'react-icons/fa';
 import { HiOutlineArrowRight, HiPhone, HiEnvelope, HiMapPin } from 'react-icons/hi2';
 import img from "../assets/contact-1-top.png.webp";
@@ -7,7 +8,7 @@ import img from "../assets/contact-1-top.png.webp";
 const Contact = () => {
   return (
     <div className="contact-container">
-      <img src={img} alt="contact" className="contact-img" />
+      <OptimizedImage src={img} alt="contact" className="contact-img" />
       {/* Left Side Form */}
       <div className="contact-form-section">
         <p className="form-subheading">Have Any Questions?</p>
@@ -71,4 +72,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default memo(Contact);

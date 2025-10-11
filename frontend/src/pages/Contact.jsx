@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import Loader from '../components/common/Loader/Loader';
 import '../styles/pages/Contact.css';
 import { FiPhone, FiMapPin, FiMail, FiClock } from 'react-icons/fi';
 
 const Contact = () => {
-  const [loadedImages, setLoadedImages] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleImageLoad = (imageSrc) => {
-    setLoadedImages(prev => new Set([...prev, imageSrc]));
-  };
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
     <>
       <Header />
@@ -64,7 +72,7 @@ const Contact = () => {
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }} 
               allowFullScreen="" 
-              loading="lazy" 
+               
               referrerPolicy="no-referrer-when-downgrade"
             />
           </div>

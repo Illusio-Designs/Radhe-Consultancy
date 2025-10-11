@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'; // Added useState and useEffect imports
+import React, { useState, useEffect, memo } from 'react';
 import '../styles/components/NewsUpdates.css';
+import OptimizedImage from './OptimizedImage';
 import img from '../assets/blog-s-1-3-425x325.webp';
 import img2 from '../assets/blog-s-1-4-425x325.webp';
 import img3 from '../assets/blog-s-1-5-425x325.webp';
@@ -33,12 +34,6 @@ const newsData = [
 const NewsUpdates = () => {
   const [currentIndex, setCurrentIndex] = useState(0); // Moved useState inside the component
   const [visibleCards, setVisibleCards] = useState(3); // Default state for visible cards
-  const [loadedImages, setLoadedImages] = useState(new Set());
-
-  const handleImageLoad = (imageSrc) => {
-    setLoadedImages(prev => new Set([...prev, imageSrc]));
-  };
-
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 500) {
@@ -79,55 +74,8 @@ const NewsUpdates = () => {
 
   return (
     <section className="news-section">
-         {!loadedImages.has(left) && (
-           <div 
-             className="left-shape" 
-             style={{
-               backgroundColor: '#f0f0f0',
-               filter: 'grayscale(100%)',
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'center',
-               color: '#999',
-               fontSize: '12px'
-             }}
-           >
-           </div>
-         )}
-         <img 
-           src={left} 
-           alt="left" 
-           className="left-shape" 
-           onLoad={() => handleImageLoad(left)}
-           style={{
-             display: loadedImages.has(left) ? 'block' : 'none'
-           }}
-         />
-         {!loadedImages.has(right) && (
-           <div 
-             className="right-shape" 
-             style={{
-               backgroundColor: '#f0f0f0',
-               filter: 'grayscale(100%)',
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'center',
-               color: '#999',
-               fontSize: '12px'
-             }}
-           >
-             Loading...
-           </div>
-         )}
-         <img 
-           src={right} 
-           alt="right" 
-           className="right-shape" 
-           onLoad={() => handleImageLoad(right)}
-           style={{
-             display: loadedImages.has(right) ? 'block' : 'none'
-           }}
-         />
+         <OptimizedImage src={left} alt="left" className="left-shape" />
+         <OptimizedImage src={right} alt="right" className="right-shape" />
        <p className="section-title">News & Blog</p>
 
 <div className="testimonial-heading-nav">
@@ -140,36 +88,7 @@ const NewsUpdates = () => {
       <div className="news-cards">
         {visibleNews.map((item, index) => (
           <div className="news-card" key={index}>
-            {!loadedImages.has(item.img) && (
-              <div 
-                className="news-image" 
-                style={{
-                  backgroundColor: '#f0f0f0',
-                  filter: 'grayscale(100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#999',
-                  fontSize: '12px',
-                  width: '100%',
-                  height: '200px'
-                }}
-              >
-                Loading...
-              </div>
-            )}
-            <img 
-              src={item.img} 
-              alt="news" 
-              className="news-image" 
-              onLoad={() => handleImageLoad(item.img)}
-              style={{
-                display: loadedImages.has(item.img) ? 'block' : 'none',
-                width: '100%',
-                height: '200px',
-                objectFit: 'cover'
-              }}
-            />
+            <OptimizedImage src={item.img} alt="news" className="news-image" />
             <div className="news-meta">
               <span>👤 By {item.author}</span>
               <span>📅 {item.date}</span>
@@ -183,4 +102,4 @@ const NewsUpdates = () => {
   );
 };
 
-export default NewsUpdates;
+export default memo(NewsUpdates);

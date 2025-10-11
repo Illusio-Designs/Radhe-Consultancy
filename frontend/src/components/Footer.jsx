@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 import '../styles/components/Footer.css';
+import OptimizedImage from './OptimizedImage';
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 import img from '../assets/@RADHE CONSULTANCY LOGO.webp';
 import top from "../assets/footer-1-top.png.webp"
@@ -9,7 +10,7 @@ const Footer = () => {
     <div className="page-footer">
       <div className="newsletter">
         <div className="newsletter-content">
-          <img src={top} alt="top" className="newsletter-top" />
+          <OptimizedImage src={top} alt="top" className="newsletter-top" />
           <h4>Newsletter</h4>
           <h2>Sign Up To Get Latest Update</h2>
         </div>
@@ -36,7 +37,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="footer-col center-logo">
-          <img src={img} alt="logo" className="footer-logo" />
+          <OptimizedImage src={img} alt="logo" className="footer-logo" />
           <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
           <div className="social-icons">
             <div className="social-icon">
@@ -73,4 +74,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default memo(Footer);

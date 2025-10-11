@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import '../styles/components/Testimonial.css';
 
 const testimonials = [
@@ -98,4 +98,4 @@ const Testimonial = () => {
   );
 };
 
-export default Testimonial;
+export default memo(Testimonial);

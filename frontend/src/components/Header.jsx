@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { HiPhone, HiEnvelope, HiMapPin, HiMagnifyingGlass } from 'react-icons/hi2';
 import { HiOutlineArrowSmallDown, HiOutlineArrowRight, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
 import { FaFacebook, FaTwitter, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
+import OptimizedImage from './OptimizedImage';
 import img from '../assets/@RADHE CONSULTANCY LOGO blue.webp';
 import '../styles/components/Header.css';
 
@@ -106,7 +107,7 @@ const Header = () => {
       {/* Main Navbar */}
       <div className="navbar">
         <div className="logo" onClick={() => window.location.href = '/'}>
-          <img src={img} alt="Radhe Consultancy" />
+          <OptimizedImage src={img} alt="Radhe Consultancy" />
         </div>
 
         <nav className={`nav-links ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
@@ -153,4 +154,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default memo(Header);
