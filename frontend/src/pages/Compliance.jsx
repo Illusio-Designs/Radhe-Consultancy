@@ -17,8 +17,8 @@ import {
   HiUsers,
   HiOutlineArrowRight
 } from 'react-icons/hi2';
-import left from "../assets/blog-1-shape-left.png.png";
-import right from "../assets/blog-1-shape-right.png.png";
+import left from "../assets/blog-1-shape-left.png.webp";
+import right from "../assets/blog-1-shape-right.png.webp";
 
 import '../styles/pages/Compliance.css';
 

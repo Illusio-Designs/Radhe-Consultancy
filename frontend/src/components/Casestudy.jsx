@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import "../styles/components/Casestudy.css";
-import gallery1 from "../../src/assets/gallery-1-1.jpg";
-import gallery2 from "../../src/assets/gallery-1-2.jpg";
-import gallery3 from "../../src/assets/gallery-1-3.jpg";
-import gallery4 from "../../src/assets/gallery-1-4.jpg";
-import gallery5 from "../../src/assets/gallery-1-5.jpg";
-import gallery6 from "../../src/assets/gallery-1-6.jpg";
-import gallery7 from "../../src/assets/gallery-1-7.jpg";
-import gallery8 from "../../src/assets/gallery-1-8.jpg";
+import gallery1 from "../../src/assets/gallery-1-1.webp";
+import gallery2 from "../../src/assets/gallery-1-2.webp";
+import gallery3 from "../../src/assets/gallery-1-3.webp";
+import gallery4 from "../../src/assets/gallery-1-4.webp";
+import gallery5 from "../../src/assets/gallery-1-5.webp";
+import gallery6 from "../../src/assets/gallery-1-6.webp";
+import gallery7 from "../../src/assets/gallery-1-7.webp";
+import gallery8 from "../../src/assets/gallery-1-8.webp";
 import { FaEye } from 'react-icons/fa';
 
 const Casestudy = () => {

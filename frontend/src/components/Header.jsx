@@ -3,7 +3,7 @@ import { HiPhone, HiEnvelope, HiMapPin, HiMagnifyingGlass } from 'react-icons/hi
 import { HiOutlineArrowSmallDown, HiOutlineArrowRight, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
 import { FaFacebook, FaTwitter, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
-import img from '../assets/@RADHE CONSULTANCY LOGO blue.png';
+import img from '../assets/@RADHE CONSULTANCY LOGO blue.webp';
 import '../styles/components/Header.css';
 
 const MenuButton = ({ open, onClick }) => {

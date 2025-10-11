@@ -1,8 +1,8 @@
 import React from 'react';
 import '../styles/components/Footer.css';
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
-import img from '../assets/@RADHE CONSULTANCY LOGO.png';
-import top from "../assets/footer-1-top.png.png"
+import img from '../assets/@RADHE CONSULTANCY LOGO.webp';
+import top from "../assets/footer-1-top.png.webp"
 
 const Footer = () => {
   return (

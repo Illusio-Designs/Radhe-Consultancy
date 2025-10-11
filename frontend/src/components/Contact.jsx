@@ -2,7 +2,7 @@ import React from 'react';
 import '../styles/components/Contact.css';
 import { FaUser, FaEnvelope, FaPhone, FaPen } from 'react-icons/fa';
 import { HiOutlineArrowRight, HiPhone, HiEnvelope, HiMapPin } from 'react-icons/hi2';
-import img from "../assets/contact-1-top.png.png";
+import img from "../assets/contact-1-top.png.webp";
 
 const Contact = () => {
   return (

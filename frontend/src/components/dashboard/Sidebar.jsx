@@ -28,7 +28,7 @@ import {
   Home,
   Settings,
 } from "lucide-react";
-import img from "../../assets/@RADHE CONSULTANCY LOGO.png";
+import img from "../../assets/@RADHE CONSULTANCY LOGO.webp";
 import "../../styles/components/dashboard/Sidebar.css";
 import { useAuth } from "../../contexts/AuthContext";
 

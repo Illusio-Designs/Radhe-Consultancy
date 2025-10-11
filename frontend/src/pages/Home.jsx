@@ -6,22 +6,22 @@ import Testimonial from '../components/Testimonial';
 import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
-import img from "../assets/about-1-left.jpg";
-import img2 from "../assets/about-1-right.jpg";
-import img3 from "../assets/about-1-right-2.jpg";
-import img4 from "../assets/Container.png";
-import img5 from "../assets/Container1.png";
-import img6 from "../assets/about1-left-shape.png.png";
-import img7 from "../assets/about1-right-top.png.png";
-import img8 from "../assets/about1-right-bottom.png.png";
-import img9 from "../assets/process-1.jpg";
-import img10 from "../assets/process-1-shape.png.png";
-import img11 from "../assets/hero-1-title-1.png.png";
-import img12 from "../assets/hero_1_2.jpg";
+import img from "../assets/about-1-left.webp";
+import img2 from "../assets/about-1-right.webp";
+import img3 from "../assets/about-1-right-2.webp";
+import img4 from "../assets/Container.webp";
+import img5 from "../assets/Container1.webp";
+import img6 from "../assets/about1-left-shape.png.webp";
+import img7 from "../assets/about1-right-top.png.webp";
+import img8 from "../assets/about1-right-bottom.png.webp";
+import img9 from "../assets/process-1.webp";
+import img10 from "../assets/process-1-shape.png.webp";
+import img11 from "../assets/hero-1-title-1.png.webp";
+import img12 from "../assets/hero_1_2.webp";
 // Import additional images for slider
-import sliderImg1 from "../assets/business-people-busy-discussing-financial-matter-meeting.jpg";
-import sliderImg2 from "../assets/businessman-pointing-screen-showing-project-details-colleague.jpg";
-import sliderImg3 from "../assets/close-up-smiley-women-working.jpg";
+import sliderImg1 from "../assets/business-people-busy-discussing-financial-matter-meeting.webp";
+import sliderImg2 from "../assets/businessman-pointing-screen-showing-project-details-colleague.webp";
+import sliderImg3 from "../assets/close-up-smiley-women-working.webp";
 import { FaFacebook, FaInstagram, FaTwitter, FaEnvelopeOpenText, FaBalanceScale, FaPencilRuler, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "../styles/pages/Home.css"
 

@@ -5,11 +5,11 @@ import Footer from '../components/Footer';
 import Testimonials from '../components/Testimonial';
 import '../styles/pages/Bloginner.css';
 import NewsUpdates from '../components/NewsUpdates';
-import blog from '../assets/bloginner1.png';
-import blog1 from '../assets/bloginner2.png';
-import blog2 from '../assets/bloginner3.png';
-import img from "../assets/Mask group (1).png";
-import img1 from "../assets/Mask group (2).png";
+import blog from '../assets/bloginner1.webp';
+import blog1 from '../assets/bloginner2.webp';
+import blog2 from '../assets/bloginner3.webp';
+import img from "../assets/Mask group (1).webp";
+import img1 from "../assets/Mask group (2).webp";
 
 const Bloginner = () => {
   const location = useLocation();

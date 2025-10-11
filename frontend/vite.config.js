@@ -1,10 +1,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { webpPlugin } from './scripts/viteWebPPlugin.js';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    webpPlugin({
+      quality: 85,
+      extensions: ['.jpg', '.jpeg', '.png'],
+      inputDirs: ['src/assets', 'public']
+    })
+  ],
   server: {
     port: 3001,
     cors: {

@@ -1,11 +1,11 @@
 import React from 'react';
 import '../styles/components/Workingwith.css';
-import img1 from '../assets/brand_1_4-1.svg.png';
-import img2 from '../assets/brand_1_5-1.svg.png';
-import img3 from '../assets/brand_1_1-1.svg.png';
-import img4 from '../assets/brand_1_2-1.svg.png';
-import img5 from '../assets/brand_1_3-1.svg.png';
-import img6 from '../assets/brand_1_4-1.svg.png';
+import img1 from '../assets/brand_1_4-1.svg.webp';
+import img2 from '../assets/brand_1_5-1.svg.webp';
+import img3 from '../assets/brand_1_1-1.svg.webp';
+import img4 from '../assets/brand_1_2-1.svg.webp';
+import img5 from '../assets/brand_1_3-1.svg.webp';
+import img6 from '../assets/brand_1_4-1.svg.webp';
 
 const Workingwith = () => {
   return (

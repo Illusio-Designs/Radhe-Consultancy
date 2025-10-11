@@ -7,10 +7,10 @@ import Contact from '../components/Contact';
 import NewsUpdates from '../components/NewsUpdates';
 import Footer from '../components/Footer';
 import '../styles/pages/About.css';
-import aboutImage from '../assets/business-people-busy-discussing-financial-matter-meeting.jpg';
-import avatar1 from '../assets/Ellipse 2603.png';
-import avatar2 from '../assets/Ellipse 2606.png';
-import group from '../assets/Group 9.png';
+import aboutImage from '../assets/business-people-busy-discussing-financial-matter-meeting.webp';
+import avatar1 from '../assets/Ellipse 2603.webp';
+import avatar2 from '../assets/Ellipse 2606.webp';
+import group from '../assets/Group 9.webp';
 
 const About = () => {
   const [loadedImages, setLoadedImages] = useState(new Set());

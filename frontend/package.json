@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "convert:webp": "node scripts/convertToWebP.js",
+    "watch:images": "node scripts/watchImages.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -43,10 +45,12 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
+    "chokidar": "^4.0.3",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "rollup-plugin-visualizer": "^5.12.0",
+    "sharp": "^0.34.4",
     "vite": "^5.1.3"
   }
 }

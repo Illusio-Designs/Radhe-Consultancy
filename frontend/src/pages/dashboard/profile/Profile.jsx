@@ -6,7 +6,7 @@ import Input from "../../../components/common/Input/Input";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import { authAPI, userAPI } from "../../../services/api";
-import img from "../../../assets/img (1).png";
+import img from "../../../assets/img (1).webp";
 import "../../../styles/pages/dashboard/profile/Profile.css";
 import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";

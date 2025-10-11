@@ -5,8 +5,8 @@ import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
 import Pagination from '../components/common/Pagination';
 import { HiOutlineArrowRight } from 'react-icons/hi2';
-import img from "../assets/Mask group (1).png";
-import img1 from "../assets/Mask group (2).png";
+import img from "../assets/Mask group (1).webp";
+import img1 from "../assets/Mask group (2).webp";
 import '../styles/pages/Blog.css';
 
 const blogPosts = [
