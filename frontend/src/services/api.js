@@ -294,10 +294,15 @@ export const userAPI = {
     }
   },
 
-  getCompanyUsers: async () => {
+  getCompanyUsers: async (params = {}) => {
     try {
-      console.log("API Service: Fetching company users");
-      const response = await api.get("/users?role=company");
+      console.log("API Service: Fetching company users", params);
+      const queryParams = new URLSearchParams({
+        role: 'company',
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const response = await api.get(`/users?${queryParams}`);
       console.log("API Service: Company users fetched successfully");
       return response.data;
     } catch (error) {
@@ -306,10 +311,15 @@ export const userAPI = {
     }
   },
 
-  getConsumerUsers: async () => {
+  getConsumerUsers: async (params = {}) => {
     try {
-      console.log("API Service: Fetching consumer users");
-      const response = await api.get("/users?role=consumer");
+      console.log("API Service: Fetching consumer users", params);
+      const queryParams = new URLSearchParams({
+        role: 'consumer',
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const response = await api.get(`/users?${queryParams}`);
       console.log("API Service: Consumer users fetched successfully");
       return response.data;
     } catch (error) {
@@ -318,10 +328,15 @@ export const userAPI = {
     }
   },
 
-  getOtherUsers: async () => {
+  getOtherUsers: async (params = {}) => {
     try {
-      console.log("API Service: Fetching other users");
-      const response = await api.get("/users?role=other");
+      console.log("API Service: Fetching other users", params);
+      const queryParams = new URLSearchParams({
+        role: 'other',
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const response = await api.get(`/users?${queryParams}`);
       console.log("API Service: Other users fetched successfully");
       return response.data;
     } catch (error) {
@@ -382,9 +397,14 @@ export const userAPI = {
 
 // Role API
 export const roleAPI = {
-  getAllRoles: async () => {
-    const response = await api.get('/roles');
-      return response.data;
+  getAllRoles: async (params = {}) => {
+    const queryParams = new URLSearchParams({
+      ...(params.page && { page: params.page }),
+      ...(params.pageSize && { pageSize: params.pageSize })
+    }).toString();
+    const url = queryParams ? `/roles?${queryParams}` : '/roles';
+    const response = await api.get(url);
+    return response.data;
   },
   getRoleById: async (id) => {
       const response = await api.get(`/roles/${id}`);
@@ -422,9 +442,14 @@ export const roleAPI = {
 
 // Company API
 export const companyAPI = {
-  getAllCompanies: async () => {
+  getAllCompanies: async (params = {}) => {
     try {
-      const response = await api.get("/companies");
+      const queryParams = new URLSearchParams({
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const url = queryParams ? `/companies?${queryParams}` : '/companies';
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error("Error fetching companies:", error);
@@ -575,10 +600,15 @@ export const consumerAPI = {
     }
   },
 
-  getAllConsumers: async () => {
+  getAllConsumers: async (params = {}) => {
     try {
-      console.log("API Service: Fetching all consumers");
-      const response = await api.get("/consumers");
+      console.log("API Service: Fetching all consumers", params);
+      const queryParams = new URLSearchParams({
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const url = queryParams ? `/consumers?${queryParams}` : '/consumers';
+      const response = await api.get(url);
       console.log("API Service: Consumers fetched successfully");
 
       // Check if response has data property
@@ -590,6 +620,10 @@ export const consumerAPI = {
         // If response.data has a data property that's an array, return that
         else if (response.data.data && Array.isArray(response.data.data)) {
           return response.data.data;
+        }
+        // If response.data has consumers property with pagination
+        else if (response.data.consumers && Array.isArray(response.data.consumers)) {
+          return response.data;
         }
         // If response.data has a success property and a data property that's an array
         else if (
@@ -939,9 +973,14 @@ export const employeeCompensationAPI = {
 
 // Insurance Company API
 export const insuranceCompanyAPI = {
-  getAllCompanies: async () => {
+  getAllCompanies: async (params = {}) => {
     try {
-      const response = await api.get("/insurance-companies");
+      const queryParams = new URLSearchParams({
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const url = queryParams ? `/insurance-companies?${queryParams}` : '/insurance-companies';
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       throw error;
@@ -1508,10 +1547,15 @@ export const lifePolicyAPI = {
 
 // DSC API
 export const dscAPI = {
-  getAllDSCs: async () => {
+  getAllDSCs: async (params = {}) => {
     try {
-      console.log("API Service: Fetching all DSCs");
-      const response = await api.get("/dsc");
+      console.log("API Service: Fetching all DSCs", params);
+      const queryParams = new URLSearchParams({
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const url = queryParams ? `/dsc?${queryParams}` : '/dsc';
+      const response = await api.get(url);
       console.log("API Service: DSCs fetched successfully");
       return response.data;
     } catch (error) {
@@ -1604,10 +1648,15 @@ export const dscAPI = {
     }
   },
 
-  getDSCsByCompany: async (companyId) => {
+  getDSCsByCompany: async (companyId, params = {}) => {
     try {
-      console.log("API Service: Fetching DSCs by company:", companyId);
-      const response = await api.get(`/dsc/company/${companyId}`);
+      console.log("API Service: Fetching DSCs by company:", companyId, params);
+      const queryParams = new URLSearchParams({
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const url = queryParams ? `/dsc/company/${companyId}?${queryParams}` : `/dsc/company/${companyId}`;
+      const response = await api.get(url);
       console.log("API Service: Company DSCs fetched successfully");
       return response.data;
     } catch (error) {
@@ -1616,10 +1665,15 @@ export const dscAPI = {
     }
   },
 
-  getDSCsByConsumer: async (consumerId) => {
+  getDSCsByConsumer: async (consumerId, params = {}) => {
     try {
-      console.log("API Service: Fetching DSCs by consumer:", consumerId);
-      const response = await api.get(`/dsc/consumer/${consumerId}`);
+      console.log("API Service: Fetching DSCs by consumer:", consumerId, params);
+      const queryParams = new URLSearchParams({
+        ...(params.page && { page: params.page }),
+        ...(params.pageSize && { pageSize: params.pageSize })
+      }).toString();
+      const url = queryParams ? `/dsc/consumer/${consumerId}?${queryParams}` : `/dsc/consumer/${consumerId}`;
+      const response = await api.get(url);
       console.log("API Service: Consumer DSCs fetched successfully");
       return response.data;
     } catch (error) {
@@ -1785,8 +1839,14 @@ export const factoryQuotationAPI = {
     return response.data;
   },
   // Get all quotations
-  getAllQuotations: async () => {
-    const response = await api.get('/factory-quotations');
+  getAllQuotations: async (params = {}) => {
+    const queryParams = new URLSearchParams({
+      ...(params.page && { page: params.page }),
+      ...(params.pageSize && { pageSize: params.pageSize }),
+      ...(params.status && { status: params.status })
+    }).toString();
+    const url = queryParams ? `/factory-quotations?${queryParams}` : '/factory-quotations';
+    const response = await api.get(url);
     return response.data;
   },
   // Search quotations
@@ -2037,8 +2097,13 @@ export const stabilityManagementAPI = {
   },
 
   // Get all stability management records
-  getAllStabilityManagement: async () => {
-    const response = await api.get('/stability-management');
+  getAllStabilityManagement: async (params = {}) => {
+    const queryParams = new URLSearchParams({
+      ...(params.page && { page: params.page }),
+      ...(params.pageSize && { pageSize: params.pageSize })
+    }).toString();
+    const url = queryParams ? `/stability-management?${queryParams}` : '/stability-management';
+    const response = await api.get(url);
     return response.data;
   },
 

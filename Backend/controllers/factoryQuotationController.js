@@ -140,7 +140,18 @@ exports.getQuotationById = async (req, res) => {
 // Get all quotations
 exports.getAllQuotations = async (req, res) => {
   try {
-    const quotations = await FactoryQuotation.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * limit;
+    const { status } = req.query;
+
+    const whereClause = {};
+    if (status) {
+      whereClause.status = status;
+    }
+
+    const { count, rows } = await FactoryQuotation.findAndCountAll({
+      where: whereClause,
       include: [
         {
           model: PlanManagement,
@@ -191,10 +202,19 @@ exports.getAllQuotations = async (req, res) => {
           ]
         }
       ],
+      limit,
+      offset,
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ success: true, data: quotations });
+    res.json({ 
+      success: true, 
+      quotations: rows,
+      currentPage: page,
+      pageSize: limit,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count
+    });
   } catch (error) {
     console.error('Error fetching quotations:', error);
     res.status(500).json({ success: false, message: error.message });

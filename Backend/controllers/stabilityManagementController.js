@@ -53,6 +53,10 @@ const getAllStabilityManagement = async (req, res) => {
     const isAdmin = user.roles.includes('Admin');
     const isStabilityManager = user.roles.includes('Stability_manager');
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * limit;
+
     let whereClause = {};
     
     // If user is stability manager, only show their assigned records
@@ -60,7 +64,7 @@ const getAllStabilityManagement = async (req, res) => {
       whereClause.stability_manager_id = user.user_id;
     }
 
-    const stabilityRecords = await StabilityManagement.findAll({
+    const { count, rows } = await StabilityManagement.findAndCountAll({
       where: whereClause,
       attributes: ['id', 'factory_quotation_id', 'stability_manager_id', 'status', 'load_type', 'stability_date', 'renewal_date', 'remarks', 'files', 'submitted_at', 'reviewed_at', 'reviewed_by', 'created_at', 'updated_at'],
       include: [
@@ -80,18 +84,24 @@ const getAllStabilityManagement = async (req, res) => {
           attributes: ['user_id', 'username', 'email']
         }
       ],
+      limit,
+      offset,
       order: [['createdAt', 'DESC']]
     });
 
-    console.log('Stability records found:', stabilityRecords.length);
-    if (stabilityRecords.length > 0) {
-      console.log('First record created_at:', stabilityRecords[0].created_at);
-      console.log('First record createdAt:', stabilityRecords[0].createdAt);
+    console.log('Stability records found:', count);
+    if (rows.length > 0) {
+      console.log('First record created_at:', rows[0].created_at);
+      console.log('First record createdAt:', rows[0].createdAt);
     }
 
     res.json({
       success: true,
-      data: stabilityRecords
+      data: rows,
+      currentPage: page,
+      pageSize: limit,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count
     });
   } catch (error) {
     console.error('Error fetching stability management records:', error);

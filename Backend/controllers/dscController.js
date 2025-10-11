@@ -11,7 +11,11 @@ exports.getAllDSCs = async (req, res) => {
             console.log('[getAllDSC] Requested by unknown user');
         }
 
-        const dscs = await DSC.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await DSC.findAndCountAll({
             include: [
                 {
                     model: Company,
@@ -24,11 +28,21 @@ exports.getAllDSCs = async (req, res) => {
                     attributes: ['consumer_id', 'name', 'email', 'phone_number']
                 }
             ],
+            limit,
+            offset,
             order: [['created_at', 'DESC']]
         });
+
         // Debug log: how many DSC records found
-        console.log('[getAllDSC] Found DSC records:', dscs.length);
-        res.json({ success: true, dscs });
+        console.log('[getAllDSC] Found DSC records:', count);
+        res.json({ 
+            success: true, 
+            dscs: rows,
+            currentPage: page,
+            pageSize: limit,
+            totalPages: Math.ceil(count / limit),
+            totalItems: count
+        });
     } catch (error) {
         console.error('Error in getAllDSCs:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -248,7 +262,11 @@ exports.getDSCsByCompany = async (req, res) => {
             });
         }
 
-        const dscs = await DSC.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await DSC.findAndCountAll({
             where: { company_id: companyId },
             include: [
                 {
@@ -262,9 +280,19 @@ exports.getDSCsByCompany = async (req, res) => {
                     attributes: ['consumer_id', 'consumer_name', 'email', 'phone_number']
                 }
             ],
+            limit,
+            offset,
             order: [['created_at', 'DESC']]
         });
-        res.json({ success: true, dscs });
+
+        res.json({ 
+            success: true, 
+            dscs: rows,
+            currentPage: page,
+            pageSize: limit,
+            totalPages: Math.ceil(count / limit),
+            totalItems: count
+        });
     } catch (error) {
         console.error('Error in getDSCsByCompany:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -283,7 +311,11 @@ exports.getDSCsByConsumer = async (req, res) => {
             });
         }
 
-        const dscs = await DSC.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await DSC.findAndCountAll({
             where: { consumer_id: consumerId },
             include: [
                 {
@@ -297,9 +329,19 @@ exports.getDSCsByConsumer = async (req, res) => {
                     attributes: ['consumer_id', 'consumer_name', 'email', 'phone_number']
                 }
             ],
+            limit,
+            offset,
             order: [['created_at', 'DESC']]
         });
-        res.json({ success: true, dscs });
+
+        res.json({ 
+            success: true, 
+            dscs: rows,
+            currentPage: page,
+            pageSize: limit,
+            totalPages: Math.ceil(count / limit),
+            totalItems: count
+        });
     } catch (error) {
         console.error('Error in getDSCsByConsumer:', error);
         res.status(500).json({ success: false, message: error.message });

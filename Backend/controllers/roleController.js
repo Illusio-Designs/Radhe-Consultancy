@@ -44,8 +44,24 @@ class RoleController {
   // Get all roles
   async getAllRoles(req, res) {
     try {
-      const roles = await Role.findAll();
-      res.json(roles);
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+      const offset = (page - 1) * limit;
+
+      const { count, rows } = await Role.findAndCountAll({
+        limit,
+        offset,
+        order: [['role_name', 'ASC']]
+      });
+
+      res.json({
+        success: true,
+        roles: rows,
+        currentPage: page,
+        pageSize: limit,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

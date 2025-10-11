@@ -184,7 +184,11 @@ const consumerController = {
   // Get all consumers
   async getAllConsumers(req, res) {
     try {
-      const consumers = await Consumer.findAll({
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+      const offset = (page - 1) * limit;
+
+      const { count, rows } = await Consumer.findAndCountAll({
         include: [{
           model: User,
           as: 'user',
@@ -194,11 +198,19 @@ const consumerController = {
             attributes: ['role_name'],
             through: { attributes: ['is_primary'] }
           }]
-        }]
+        }],
+        limit,
+        offset,
+        order: [['created_at', 'DESC']]
       });
+
       res.status(200).json({
         success: true,
-        data: consumers
+        consumers: rows,
+        currentPage: page,
+        pageSize: limit,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count
       });
     } catch (error) {
       res.status(500).json({

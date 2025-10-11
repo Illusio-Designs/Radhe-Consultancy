@@ -162,22 +162,53 @@ function ConsumerUserList({ searchQuery = "" }) {
   const [filters, setFilters] = useState({ status: "" });
   const [localLoading, setLocalLoading] = useState(true);
   const [consumerUsers, setConsumerUsers] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
+
+  // Fetch consumer users function
+  const fetchConsumerUsers = async (page = 1, pageSize = 10) => {
+    try {
+      setLocalLoading(true);
+      const response = await userAPI.getConsumerUsers({ page, pageSize });
+      console.log("Consumer users response:", response);
+      
+      if (response && response.users && Array.isArray(response.users)) {
+        setConsumerUsers(response.users);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+      } else if (Array.isArray(response)) {
+        setConsumerUsers(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+      } else {
+        setConsumerUsers([]);
+      }
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching consumer users:", err);
+      setError("Failed to load users");
+      setConsumerUsers([]);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
 
   // Add effect to handle initial data loading
   useEffect(() => {
     const initializeData = async () => {
       try {
-        setLocalLoading(true);
         await refreshData();
-        // Fetch consumer users specifically
-        const response = await userAPI.getConsumerUsers();
-        console.log("Consumer users response:", response);
-        setConsumerUsers(response);
+        await fetchConsumerUsers(1, 10);
       } catch (err) {
         console.error("Error initializing data:", err);
         setError("Failed to load users");
-      } finally {
-        setLocalLoading(false);
       }
     };
 
@@ -240,9 +271,7 @@ function ConsumerUserList({ searchQuery = "" }) {
       try {
         await userAPI.deleteUser(userId);
         await refreshData();
-        // Refresh consumer users specifically
-        const response = await userAPI.getConsumerUsers();
-        setConsumerUsers(response);
+        await fetchConsumerUsers(pagination.currentPage, pagination.pageSize);
         toast.success("User deleted successfully!");
       } catch (err) {
         setError("Failed to delete user");
@@ -266,15 +295,26 @@ function ConsumerUserList({ searchQuery = "" }) {
   const handleUserUpdated = async () => {
     try {
       await refreshData();
-      // Refresh consumer users specifically
-      const response = await userAPI.getConsumerUsers();
-      setConsumerUsers(response);
+      await fetchConsumerUsers(pagination.currentPage, pagination.pageSize);
       toast.success("User updated successfully!");
     } catch (err) {
       console.error("Error refreshing users:", err);
       toast.error("An error occurred. Please try again.");
     }
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchConsumerUsers(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchConsumerUsers(1, newPageSize);
   };
 
   const columns = [
@@ -387,7 +427,13 @@ function ConsumerUserList({ searchQuery = "" }) {
             <TableWithControl
               data={filteredUsers}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
             />
           )}
         </div>

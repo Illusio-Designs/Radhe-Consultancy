@@ -5,12 +5,23 @@ const { validationResult } = require('express-validator');
 // Get all insurance companies
 const getAllInsuranceCompanies = async (req, res) => {
   try {
-    const companies = await InsuranceCompany.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await InsuranceCompany.findAndCountAll({
+      limit,
+      offset,
       order: [['name', 'ASC']]
     });
+
     res.json({
       success: true,
-      data: companies
+      companies: rows,
+      currentPage: page,
+      pageSize: limit,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count
     });
   } catch (error) {
     console.error('Error fetching insurance companies:', error);
