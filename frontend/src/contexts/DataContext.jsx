@@ -4,6 +4,8 @@ import React, {
   useState,
   useEffect,
   startTransition,
+  useCallback,
+  useMemo,
 } from "react";
 import { userAPI, roleAPI } from "../services/api";
 import { useAuth } from "./AuthContext";
@@ -25,7 +27,8 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchUsers = async () => {
+  // Memoize fetch functions to prevent recreation
+  const fetchUsers = useCallback(async () => {
     try {
       const data = await userAPI.getAllUsers();
       startTransition(() => {
@@ -37,9 +40,9 @@ export const DataProvider = ({ children }) => {
         setError("Failed to fetch users");
       });
     }
-  };
+  }, []);
 
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
       const data = await roleAPI.getAllRoles();
       startTransition(() => {
@@ -51,9 +54,10 @@ export const DataProvider = ({ children }) => {
         setError("Failed to fetch roles");
       });
     }
-  };
+  }, []);
 
-  const refreshData = async () => {
+  // Memoize refreshData function
+  const refreshData = useCallback(async () => {
     if (!isAuthenticated) {
       console.log("Not authenticated, skipping data refresh");
       return;
@@ -76,7 +80,7 @@ export const DataProvider = ({ children }) => {
         setLoading(false);
       });
     }
-  };
+  }, [isAuthenticated, fetchUsers, fetchRoles]);
 
   // Only fetch data when authentication is complete and user is authenticated
   useEffect(() => {
@@ -89,9 +93,10 @@ export const DataProvider = ({ children }) => {
         setRoles([]);
       });
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, refreshData]);
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     users,
     roles,
     loading,
@@ -99,7 +104,7 @@ export const DataProvider = ({ children }) => {
     refreshData,
     fetchUsers,
     fetchRoles,
-  };
+  }), [users, roles, loading, error, refreshData, fetchUsers, fetchRoles]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };

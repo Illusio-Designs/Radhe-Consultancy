@@ -2,6 +2,53 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Simple in-memory cache for API responses
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache helper functions
+const getCacheKey = (url, params) => {
+  return `${url}${params ? JSON.stringify(params) : ''}`;
+};
+
+const getCachedData = (key) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCachedData = (key, data) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+  // Limit cache size to prevent memory issues
+  if (cache.size > 100) {
+    const firstKey = cache.keys().next().value;
+    cache.delete(firstKey);
+  }
+};
+
+// Clear cache for specific patterns (useful after mutations)
+const clearCachePattern = (pattern) => {
+  const keysToDelete = [];
+  for (const key of cache.keys()) {
+    if (key.includes(pattern)) {
+      keysToDelete.push(key);
+    }
+  }
+  keysToDelete.forEach(key => cache.delete(key));
+};
+
+// Export cache utilities
+export const cacheUtils = {
+  clear: () => cache.clear(),
+  clearPattern: clearCachePattern,
+  invalidate: (url) => cache.delete(url)
+};
 
 // Create axios instance with default config
 const api = axios.create({
@@ -9,7 +56,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 30 second timeout (increased from 10s)
 });
 
 // Auth state management
@@ -212,10 +259,15 @@ export const authAPI = {
 
 // User API
 export const userAPI = {
-  // Get all users
+  // Get all users (with caching)
   getAllUsers: async () => {
+    const cacheKey = getCacheKey('/users');
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
     const response = await api.get('/users');
-      return response.data;
+    setCachedData(cacheKey, response.data);
+    return response.data;
   },
 
   // Get users by role
@@ -383,8 +435,13 @@ export const userAPI = {
 // Role API
 export const roleAPI = {
   getAllRoles: async () => {
+    const cacheKey = getCacheKey('/roles');
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
     const response = await api.get('/roles');
-      return response.data;
+    setCachedData(cacheKey, response.data);
+    return response.data;
   },
   getRoleById: async (id) => {
       const response = await api.get(`/roles/${id}`);
@@ -424,7 +481,12 @@ export const roleAPI = {
 export const companyAPI = {
   getAllCompanies: async () => {
     try {
+      const cacheKey = getCacheKey("/companies");
+      const cached = getCachedData(cacheKey);
+      if (cached) return cached;
+
       const response = await api.get("/companies");
+      setCachedData(cacheKey, response.data);
       return response.data;
     } catch (error) {
       console.error("Error fetching companies:", error);

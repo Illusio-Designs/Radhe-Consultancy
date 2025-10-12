@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { renewalAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import Select from "react-select";
@@ -27,8 +27,8 @@ import {
 } from "react-icons/bi";
 import "../../../styles/pages/dashboard/renewals/RenewalDashboard.css";
 
-// Renewal Form Component
-const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
+// Renewal Form Component - Memoized
+const RenewalForm = memo(({ config, onClose, onConfigUpdated }) => {
   const [formData, setFormData] = useState({
     serviceType: '',
     serviceName: '',
@@ -201,7 +201,9 @@ const RenewalForm = ({ config, onClose, onConfigUpdated }) => {
       </div>
     </form>
   );
-};
+});
+
+RenewalForm.displayName = 'RenewalForm';
 
 // Statistics Cards Component
 const StatisticsCards = ({ statistics, loading }) => {

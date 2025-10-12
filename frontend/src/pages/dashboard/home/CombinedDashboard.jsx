@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, memo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
 
-const CombinedDashboard = () => {
-  const { user, userRoles } = useAuth();
+const CombinedDashboard = memo(() => {
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +27,8 @@ const CombinedDashboard = () => {
       </div>
     </div>
   );
-};
+});
+
+CombinedDashboard.displayName = 'CombinedDashboard';
 
 export default CombinedDashboard;

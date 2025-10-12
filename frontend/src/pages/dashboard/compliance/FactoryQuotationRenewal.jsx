@@ -1,24 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { factoryQuotationAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import { toast } from "react-toastify";
-import { BiErrorCircle, BiDownload } from "react-icons/bi";
+import { BiErrorCircle } from "react-icons/bi";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
 import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
-const FactoryQuotationRenewal = () => {
+const FactoryQuotationRenewal = memo(() => {
   const [renewals, setRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
 
-  useEffect(() => {
-    fetchRenewals();
-  }, []);
-
-  const fetchRenewals = async () => {
+  // Memoize fetchRenewals to prevent recreation on every render
+  const fetchRenewals = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -34,20 +31,27 @@ const FactoryQuotationRenewal = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const formatDate = (dateString) => {
+  useEffect(() => {
+    fetchRenewals();
+  }, [fetchRenewals]);
+
+  // Memoize formatDate function
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB");
-  };
+  }, []);
 
-  const handleDownloadDocuments = (quotation) => {
+  // Memoize handleDownloadDocuments
+  const handleDownloadDocuments = useCallback((quotation) => {
     setSelectedQuotation(quotation);
     setShowDocumentModal(true);
-  };
+  }, []);
 
-  const columns = [
+  // Memoize columns to prevent recreation on every render
+  const columns = useMemo(() => [
     {
       key: "sr_no",
       label: "Sr No.",
@@ -123,7 +127,7 @@ const FactoryQuotationRenewal = () => {
         </div>
       ),
     },
-  ];
+  ], [formatDate]);
 
   return (
     <div className="insurance">
@@ -163,6 +167,8 @@ const FactoryQuotationRenewal = () => {
       </div>
     </div>
   );
-};
+});
+
+FactoryQuotationRenewal.displayName = 'FactoryQuotationRenewal';
 
 export default FactoryQuotationRenewal; 

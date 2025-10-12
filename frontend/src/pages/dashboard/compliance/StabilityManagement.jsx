@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import {
   BiCheck,
   BiX,
@@ -24,16 +24,16 @@ import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
 import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
-// File Upload Modal
-const FileUploadModal = ({ onClose, onUpload }) => {
+// File Upload Modal - Memoized
+const FileUploadModal = memo(({ onClose, onUpload }) => {
   const [files, setFiles] = useState([]);
   const [stabilityDate, setStabilityDate] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = useCallback((e) => {
     const selectedFiles = Array.from(e.target.files);
     setFiles(selectedFiles);
-  };
+  }, []);
 
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -122,7 +122,9 @@ const FileUploadModal = ({ onClose, onUpload }) => {
       </div>
     </Modal>
   );
-};
+});
+
+FileUploadModal.displayName = 'FileUploadModal';
 
 // Reject Modal
 const RejectModal = ({ onClose, onReject }) => {
