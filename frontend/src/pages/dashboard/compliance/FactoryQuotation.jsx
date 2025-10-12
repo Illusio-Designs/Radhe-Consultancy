@@ -1611,6 +1611,12 @@ function FactoryQuotation({ searchQuery = "" }) {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showApplicationRejectModal, setShowApplicationRejectModal] = useState(false);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const [statistics, setStatistics] = useState({
     total: 0,
     pending: 0,

@@ -20,16 +20,11 @@ const FactoryQuotationRenewal = memo(() => {
     totalItems: 0,
   });
 
-<<<<<<< HEAD
-  // Memoize fetchRenewals to prevent recreation on every render
-  const fetchRenewals = useCallback(async () => {
-=======
   useEffect(() => {
     fetchRenewals(1, 10);
-  }, []);
+  }, [fetchRenewals]);
 
-  const fetchRenewals = async (page = 1, pageSize = 10) => {
->>>>>>> 4cf65e5b0a92f4bbdc8f2d1a3e5be7ee45162c96
+  const fetchRenewals = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     setError(null);
     try {
@@ -58,14 +53,6 @@ const FactoryQuotationRenewal = memo(() => {
     }
   }, []);
 
-<<<<<<< HEAD
-  useEffect(() => {
-    fetchRenewals();
-  }, [fetchRenewals]);
-
-  // Memoize formatDate function
-  const formatDate = useCallback((dateString) => {
-=======
   const handlePageChange = async (page) => {
     await fetchRenewals(page, pagination.pageSize);
   };
@@ -79,8 +66,7 @@ const FactoryQuotationRenewal = memo(() => {
     await fetchRenewals(1, newPageSize);
   };
 
-  const formatDate = (dateString) => {
->>>>>>> 4cf65e5b0a92f4bbdc8f2d1a3e5be7ee45162c96
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB");

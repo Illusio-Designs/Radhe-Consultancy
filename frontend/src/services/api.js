@@ -449,15 +449,6 @@ export const userAPI = {
 
 // Role API
 export const roleAPI = {
-<<<<<<< HEAD
-  getAllRoles: async () => {
-    const cacheKey = getCacheKey('/roles');
-    const cached = getCachedData(cacheKey);
-    if (cached) return cached;
-
-    const response = await api.get('/roles');
-    setCachedData(cacheKey, response.data);
-=======
   getAllRoles: async (params = {}) => {
     const queryParams = new URLSearchParams({
       ...(params.page && { page: params.page }),
@@ -465,7 +456,6 @@ export const roleAPI = {
     }).toString();
     const url = queryParams ? `/roles?${queryParams}` : '/roles';
     const response = await api.get(url);
->>>>>>> 4cf65e5b0a92f4bbdc8f2d1a3e5be7ee45162c96
     return response.data;
   },
   getRoleById: async (id) => {
@@ -506,21 +496,12 @@ export const roleAPI = {
 export const companyAPI = {
   getAllCompanies: async (params = {}) => {
     try {
-<<<<<<< HEAD
-      const cacheKey = getCacheKey("/companies");
-      const cached = getCachedData(cacheKey);
-      if (cached) return cached;
-
-      const response = await api.get("/companies");
-      setCachedData(cacheKey, response.data);
-=======
       const queryParams = new URLSearchParams({
         ...(params.page && { page: params.page }),
         ...(params.pageSize && { pageSize: params.pageSize })
       }).toString();
       const url = queryParams ? `/companies?${queryParams}` : '/companies';
       const response = await api.get(url);
->>>>>>> 4cf65e5b0a92f4bbdc8f2d1a3e5be7ee45162c96
       return response.data;
     } catch (error) {
       console.error("Error fetching companies:", error);
