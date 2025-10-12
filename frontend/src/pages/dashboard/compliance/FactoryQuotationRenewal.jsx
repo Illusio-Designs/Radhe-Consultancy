@@ -13,17 +13,42 @@ const FactoryQuotationRenewal = memo(() => {
   const [error, setError] = useState(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
+<<<<<<< HEAD
   // Memoize fetchRenewals to prevent recreation on every render
   const fetchRenewals = useCallback(async () => {
+=======
+  useEffect(() => {
+    fetchRenewals(1, 10);
+  }, []);
+
+  const fetchRenewals = async (page = 1, pageSize = 10) => {
+>>>>>>> 4cf65e5b0a92f4bbdc8f2d1a3e5be7ee45162c96
     setLoading(true);
     setError(null);
     try {
-      const response = await factoryQuotationAPI.getAllQuotations();
-      const renewalQuotations = response.data.filter(quotation => 
-        quotation.status === 'renewal'
-      );
-      setRenewals(renewalQuotations);
+      const response = await factoryQuotationAPI.getAllQuotations({ page, pageSize, status: 'renewal' });
+      if (response && response.quotations && Array.isArray(response.quotations)) {
+        setRenewals(response.quotations);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+      } else if (response.data && Array.isArray(response.data)) {
+        const renewalQuotations = response.data.filter(quotation => quotation.status === 'renewal');
+        setRenewals(renewalQuotations);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+      } else {
+        setRenewals([]);
+      }
     } catch (err) {
       setError("Failed to fetch renewals");
       setRenewals([]);
@@ -33,12 +58,29 @@ const FactoryQuotationRenewal = memo(() => {
     }
   }, []);
 
+<<<<<<< HEAD
   useEffect(() => {
     fetchRenewals();
   }, [fetchRenewals]);
 
   // Memoize formatDate function
   const formatDate = useCallback((dateString) => {
+=======
+  const handlePageChange = async (page) => {
+    await fetchRenewals(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchRenewals(1, newPageSize);
+  };
+
+  const formatDate = (dateString) => {
+>>>>>>> 4cf65e5b0a92f4bbdc8f2d1a3e5be7ee45162c96
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB");
@@ -143,15 +185,21 @@ const FactoryQuotationRenewal = memo(() => {
             </div>
           )}
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={renewals}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={renewals}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
         </div>
 
         {/* Document Download Modal */}

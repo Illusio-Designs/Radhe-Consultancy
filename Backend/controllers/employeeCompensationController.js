@@ -56,8 +56,18 @@ exports.getActiveCompanies = async (req, res) => {
 exports.getAllPolicies = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
     const offset = (page - 1) * limit;
+
+    // Debug log: pagination parameters
+    console.log('[getAllPolicies] Pagination parameters:', {
+      page,
+      limit,
+      pageSize: req.query.pageSize,
+      limitParam: req.query.limit,
+      offset,
+      query: req.query
+    });
 
     // Debug log: who is requesting and what roles
     if (req.user) {

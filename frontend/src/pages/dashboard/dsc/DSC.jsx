@@ -454,43 +454,19 @@ function DSC({ searchQuery = "" }) {
   const isConsumer = userRoles.includes("consumer");
   const companyId = user?.profile?.company_id || user?.company?.company_id;
   const consumerId = user?.profile?.consumer_id || user?.consumer?.consumer_id;
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
     console.log("DSC component mounted");
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        let response;
-        if (isCompany && companyId) {
-          response = await dscAPI.getDSCsByCompany(companyId);
-        } else if (isConsumer && consumerId) {
-          response = await dscAPI.getDSCsByConsumer(consumerId);
-        } else {
-          response = await dscAPI.getAllDSCs();
-        }
-        if (response && Array.isArray(response.dscs)) {
-          const mapped = response.dscs.map(toCamelCase);
-          setDSCs(mapped);
-          setError(null);
-        } else if (Array.isArray(response)) {
-          const mapped = response.map(toCamelCase);
-          setDSCs(mapped);
-          setError(null);
-        } else {
-          setError("Invalid data format received from server");
-          setDSCs([]);
-        }
-      } catch (err) {
-        setError("Failed to fetch DSCs");
-        setDSCs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     if (searchQuery && searchQuery.trim() !== "") {
       handleSearchDSCs(searchQuery);
     } else {
-      fetchData();
+      fetchDSCs(1, 10);
     }
     fetchDSCStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -510,17 +486,35 @@ function DSC({ searchQuery = "" }) {
     consumer: dsc.consumer,
   });
 
-  const fetchDSCs = async () => {
+  const fetchDSCs = async (page = 1, pageSize = 10) => {
     try {
-      console.log("Fetching DSCs...");
+      console.log("Fetching DSCs...", { page, pageSize });
       setLoading(true);
-      const response = await dscAPI.getAllDSCs();
+      let response;
+      if (isCompany && companyId) {
+        response = await dscAPI.getDSCsByCompany(companyId, { page, pageSize });
+      } else if (isConsumer && consumerId) {
+        response = await dscAPI.getDSCsByConsumer(consumerId, { page, pageSize });
+      } else {
+        response = await dscAPI.getAllDSCs({ page, pageSize });
+      }
       console.log("DSCs API response:", response);
 
-      if (response && Array.isArray(response.dscs)) {
+      if (response && response.dscs && Array.isArray(response.dscs)) {
+        const mapped = response.dscs.map(toCamelCase);
+        setDSCs(mapped);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+        setError(null);
+      } else if (Array.isArray(response.dscs)) {
         const mapped = response.dscs.map(toCamelCase);
         console.log("Mapped DSCs:", mapped);
         setDSCs(mapped);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
         setError(null);
       } else {
         console.error("Invalid response format:", response);
@@ -552,7 +546,11 @@ function DSC({ searchQuery = "" }) {
     try {
       console.log("Searching DSCs with query:", query);
       setLoading(true);
-      const response = await dscAPI.searchDSCs({ q: query });
+      const response = await dscAPI.searchDSCs({ 
+        q: query,
+        page: 1,
+        pageSize: pagination.pageSize 
+      });
       console.log("DSC search response:", response);
 
       if (response && Array.isArray(response.dscs)) {
@@ -584,7 +582,7 @@ function DSC({ searchQuery = "" }) {
       try {
         await dscAPI.deleteDSC(dscId);
         toast.success("DSC deleted successfully!");
-        await fetchDSCs();
+        await fetchDSCs(pagination.currentPage, pagination.pageSize);
         await fetchDSCStatistics();
       } catch (err) {
         const errorMessage = "Failed to delete DSC";
@@ -608,9 +606,22 @@ function DSC({ searchQuery = "" }) {
 
   const handleDSCUpdated = async () => {
     console.log("DSC updated, refreshing list");
-    await fetchDSCs();
+    await fetchDSCs(pagination.currentPage, pagination.pageSize);
     await fetchDSCStatistics();
     handleModalClose();
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchDSCs(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchDSCs(1, newPageSize);
   };
 
   const columns = [
@@ -780,15 +791,21 @@ function DSC({ searchQuery = "" }) {
             </div>
           )}
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={filteredDSCs}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={filteredDSCs}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
         </div>
         <Modal
           isOpen={showModal}

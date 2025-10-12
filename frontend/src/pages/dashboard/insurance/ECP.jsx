@@ -1043,6 +1043,15 @@ function ECP({ searchQuery = "" }) {
 
   const handlePageSizeChange = async (newPageSize) => {
     console.log("ECP: Page size changed to:", newPageSize);
+    
+    // Update pagination state first
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    
+    // Then fetch policies with the new page size
     await fetchPolicies(1, newPageSize);
   };
 

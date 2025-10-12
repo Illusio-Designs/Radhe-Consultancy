@@ -77,10 +77,12 @@ const getAllLabourInspections = async (req, res) => {
     const {
       page = 1,
       limit = 10,
+      pageSize,
       status
     } = req.query;
 
-    const offset = (page - 1) * limit;
+    const actualLimit = parseInt(limit) || parseInt(pageSize) || 10;
+    const offset = (page - 1) * actualLimit;
     const whereClause = {};
 
     // Add filters
@@ -103,7 +105,7 @@ const getAllLabourInspections = async (req, res) => {
         }
       ],
       order: [['created_at', 'DESC']],
-      limit: parseInt(limit),
+      limit: actualLimit,
       offset: parseInt(offset)
     });
 
@@ -116,7 +118,7 @@ const getAllLabourInspections = async (req, res) => {
         currentPage: parseInt(page),
         totalPages,
         totalItems: count,
-        itemsPerPage: parseInt(limit)
+        itemsPerPage: actualLimit
       }
     });
   } catch (error) {
@@ -387,7 +389,7 @@ const getLabourInspectionsByCompany = async (req, res) => {
         }
       ],
       order: [['created_at', 'DESC']],
-      limit: parseInt(limit),
+      limit: actualLimit,
       offset: parseInt(offset)
     });
 
@@ -400,7 +402,7 @@ const getLabourInspectionsByCompany = async (req, res) => {
         current_page: parseInt(page),
         total_pages: totalPages,
         total_records: count,
-        limit: parseInt(limit)
+        limit: actualLimit
       }
     });
   } catch (error) {

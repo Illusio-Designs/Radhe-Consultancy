@@ -249,24 +249,60 @@ const UserForm = ({ user, onClose, onUserUpdated }) => {
 
 function OtherUserList({ searchQuery = "" }) {
   const { user } = useAuth();
-  const { users, roles, loading, error: dataError, refreshData } = useData();
+  const { roles, loading, error: dataError, refreshData } = useData();
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "" });
   const [localLoading, setLocalLoading] = useState(true);
+  const [otherUsers, setOtherUsers] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
+
+  // Fetch other users function
+  const fetchOtherUsers = async (page = 1, pageSize = 10) => {
+    try {
+      setLocalLoading(true);
+      const response = await userAPI.getOtherUsers({ page, pageSize });
+      console.log("Other users response:", response);
+      
+      if (response && response.users && Array.isArray(response.users)) {
+        setOtherUsers(response.users);
+        setPagination({
+          currentPage: response.currentPage || page,
+          pageSize: response.pageSize || pageSize,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalItems || 0,
+        });
+      } else if (Array.isArray(response)) {
+        setOtherUsers(response);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+      } else {
+        setOtherUsers([]);
+      }
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching other users:", err);
+      setError("Failed to load users");
+      setOtherUsers([]);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
 
   // Add effect to handle initial data loading
   useEffect(() => {
     const initializeData = async () => {
       try {
-        setLocalLoading(true);
         await refreshData();
+        await fetchOtherUsers(1, 10);
       } catch (err) {
         console.error("Error initializing data:", err);
         setError("Failed to load users");
-      } finally {
-        setLocalLoading(false);
       }
     };
 
@@ -275,43 +311,9 @@ function OtherUserList({ searchQuery = "" }) {
 
   // Debug: Log users data structure
   useEffect(() => {
-    console.log("Users data:", users);
+    console.log("Other users data:", otherUsers);
     console.log("Roles data:", roles);
-  }, [users, roles]);
-
-  // Filter users to show Admin and other roles except Company and Consumer
-  const otherUsers = users.filter((user) => {
-    console.log("Filtering user:", user);
-
-    // Check if user has any roles that are not Company or Consumer
-    if (user.roles && user.roles.length > 0) {
-      return user.roles.some((role) => {
-        // Check if role is an object with role_name property
-        if (typeof role === "object" && role.role_name) {
-          return role.role_name !== "Company" && role.role_name !== "Consumer";
-        }
-        // If role is just a string
-        if (typeof role === "string") {
-          return role !== "Company" && role !== "Consumer";
-        }
-        return false;
-      });
-    }
-
-    // Fallback for old data structure
-    const roleName = user.Role?.role_name;
-    if (roleName) {
-      return roleName !== "Company" && roleName !== "Consumer";
-    }
-
-    // If role is not in user object, try to find it in roles array
-    const userRole = roles.find((role) => role.id === user.role_id);
-    return (
-      userRole &&
-      userRole.role_name !== "Company" &&
-      userRole.role_name !== "Consumer"
-    );
-  });
+  }, [otherUsers, roles]);
 
   const getRoleNames = (user) => {
     console.log("Getting role names for user:", user);
@@ -363,6 +365,7 @@ function OtherUserList({ searchQuery = "" }) {
       try {
         await userAPI.deleteUser(userId);
         await refreshData();
+        await fetchOtherUsers(pagination.currentPage, pagination.pageSize);
         toast.success("User deleted successfully!");
       } catch (err) {
         setError("Failed to delete user");
@@ -384,9 +387,28 @@ function OtherUserList({ searchQuery = "" }) {
   };
 
   const handleUserUpdated = async () => {
-    await refreshData();
+    try {
+      await refreshData();
+      await fetchOtherUsers(pagination.currentPage, pagination.pageSize);
+      toast.success("User updated successfully!");
+    } catch (err) {
+      console.error("Error refreshing users:", err);
+      toast.error("An error occurred. Please try again.");
+    }
     handleModalClose();
-    toast.success("User updated successfully!");
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchOtherUsers(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchOtherUsers(1, newPageSize);
   };
 
   const columns = [
@@ -475,7 +497,13 @@ function OtherUserList({ searchQuery = "" }) {
             <TableWithControl
               data={filteredUsers}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
             />
           )}
         </div>

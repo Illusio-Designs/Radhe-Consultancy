@@ -101,16 +101,35 @@ function RoleManagement() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
-    fetchRoles();
+    fetchRoles(1, 10);
   }, []);
 
-  const fetchRoles = async () => {
+  const fetchRoles = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const data = await roleAPI.getAllRoles();
-      setRoles(data);
+      const data = await roleAPI.getAllRoles({ page, pageSize });
+      if (data && data.roles && Array.isArray(data.roles)) {
+        setRoles(data.roles);
+        setPagination({
+          currentPage: data.currentPage || page,
+          pageSize: data.pageSize || pageSize,
+          totalPages: data.totalPages || 1,
+          totalItems: data.totalItems || 0,
+        });
+      } else if (Array.isArray(data)) {
+        setRoles(data);
+        setPagination((prev) => ({ ...prev, currentPage: page }));
+      } else {
+        setRoles([]);
+      }
       setError(null);
     } catch (err) {
       setError("Failed to fetch roles");
@@ -124,7 +143,7 @@ function RoleManagement() {
     if (window.confirm("Are you sure you want to delete this role?")) {
       try {
         await roleAPI.deleteRole(roleId);
-        await fetchRoles();
+        await fetchRoles(pagination.currentPage, pagination.pageSize);
         toast.success("Role deleted successfully!");
       } catch (err) {
         setError("Failed to delete role");
@@ -149,9 +168,22 @@ function RoleManagement() {
   };
 
   const handleRoleUpdated = async () => {
-    await fetchRoles();
+    await fetchRoles(pagination.currentPage, pagination.pageSize);
     handleModalClose();
     toast.success("Role updated successfully!");
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchRoles(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchRoles(1, newPageSize);
   };
 
   const columns = [
@@ -208,7 +240,13 @@ function RoleManagement() {
             <TableWithControl
               data={roles}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
             />
           )}
         </div>

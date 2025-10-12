@@ -75,8 +75,9 @@ const createLabourLicense = async (req, res) => {
 // Get all labour licenses
 const getAllLabourLicenses = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, type, status } = req.query;
-    const offset = (page - 1) * limit;
+    const { page = 1, limit = 10, pageSize, search, type, status } = req.query;
+    const actualLimit = parseInt(limit) || parseInt(pageSize) || 10;
+    const offset = (page - 1) * actualLimit;
 
     let whereClause = {};
 
@@ -107,7 +108,7 @@ const getAllLabourLicenses = async (req, res) => {
           attributes: ['company_id', 'company_name', 'company_code']
         }
       ],
-      limit: parseInt(limit),
+      limit: actualLimit,
       offset: parseInt(offset),
       order: [['created_at', 'DESC']]
     });
@@ -118,7 +119,7 @@ const getAllLabourLicenses = async (req, res) => {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        limit: actualLimit,
         pages: Math.ceil(count / limit)
       }
     });

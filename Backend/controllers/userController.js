@@ -201,6 +201,10 @@ const getCompanyUsers = async (req, res) => {
   try {
     console.log("[getCompanyUsers] Searching for users with Company role...");
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * limit;
+
     // First, let's check what roles exist
     const allRoles = await Role.findAll();
     console.log(
@@ -215,7 +219,7 @@ const getCompanyUsers = async (req, res) => {
       companyRole ? companyRole.role_name : "NOT FOUND"
     );
 
-    const users = await User.findAll({
+    const { count, rows } = await User.findAndCountAll({
       include: [
         {
           model: Role,
@@ -225,22 +229,32 @@ const getCompanyUsers = async (req, res) => {
           through: { attributes: ["is_primary"] },
         },
       ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
     console.log(
       "[getCompanyUsers] Found users with Company role:",
-      users.length
+      count
     );
     console.log(
       "[getCompanyUsers] Users:",
-      users.map((u) => ({
+      rows.map((u) => ({
         id: u.user_id,
         email: u.email,
         roles: u.roles.map((r) => r.role_name),
       }))
     );
 
-    res.json(users);
+    res.json({
+      success: true,
+      users: rows,
+      currentPage: page,
+      pageSize: limit,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count
+    });
   } catch (error) {
     console.error("[getCompanyUsers] Error:", error);
     res.status(500).json({ error: error.message });
@@ -252,6 +266,10 @@ const getConsumerUsers = async (req, res) => {
   try {
     console.log("[getConsumerUsers] Searching for users with Consumer role...");
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * limit;
+
     // Check if Consumer role exists
     const consumerRole = await Role.findOne({
       where: { role_name: "Consumer" },
@@ -261,7 +279,7 @@ const getConsumerUsers = async (req, res) => {
       consumerRole ? consumerRole.role_name : "NOT FOUND"
     );
 
-    const users = await User.findAll({
+    const { count, rows } = await User.findAndCountAll({
       include: [
         {
           model: Role,
@@ -271,22 +289,32 @@ const getConsumerUsers = async (req, res) => {
           through: { attributes: ["is_primary"] },
         },
       ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
     console.log(
       "[getConsumerUsers] Found users with Consumer role:",
-      users.length
+      count
     );
     console.log(
       "[getConsumerUsers] Users:",
-      users.map((u) => ({
+      rows.map((u) => ({
         id: u.user_id,
         email: u.email,
         roles: u.roles.map((r) => r.role_name),
       }))
     );
 
-    res.json(users);
+    res.json({
+      success: true,
+      users: rows,
+      currentPage: page,
+      pageSize: limit,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count
+    });
   } catch (error) {
     console.error("[getConsumerUsers] Error:", error);
     res.status(500).json({ error: error.message });
@@ -296,7 +324,11 @@ const getConsumerUsers = async (req, res) => {
 // Get other users (not company or consumer)
 const getOtherUsers = async (req, res) => {
   try {
-    const users = await User.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await User.findAndCountAll({
       include: [
         {
           model: Role,
@@ -310,9 +342,19 @@ const getOtherUsers = async (req, res) => {
           through: { attributes: ["is_primary"] },
         },
       ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
-    res.json(users);
+    res.json({
+      success: true,
+      users: rows,
+      currentPage: page,
+      pageSize: limit,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

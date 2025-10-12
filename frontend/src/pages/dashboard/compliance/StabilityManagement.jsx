@@ -371,6 +371,12 @@ const StabilityManagement = ({ searchQuery = "" }) => {
   const [statsLoading, setStatsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const { user } = useAuth();
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   // Handle search when searchQuery changes
   useEffect(() => {
@@ -400,18 +406,28 @@ const StabilityManagement = ({ searchQuery = "" }) => {
   };
 
   useEffect(() => {
-    fetchStabilityManagementRecords();
+    fetchStabilityManagementRecords(1, 10);
     fetchStabilityStatistics();
   }, []);
 
-  const fetchStabilityManagementRecords = async () => {
+  const fetchStabilityManagementRecords = async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
-      const response = await stabilityManagementAPI.getAllStabilityManagement();
+      const response = await stabilityManagementAPI.getAllStabilityManagement({ page, pageSize });
       console.log('Stability management API response:', response);
       if (response.success) {
         console.log('Stability management records:', response.data);
         setStabilityRecords(response.data);
+        if (response.currentPage) {
+          setPagination({
+            currentPage: response.currentPage || page,
+            pageSize: response.pageSize || pageSize,
+            totalPages: response.totalPages || 1,
+            totalItems: response.totalItems || 0,
+          });
+        } else {
+          setPagination((prev) => ({ ...prev, currentPage: page }));
+        }
         setError(null);
       } else {
         setError("Failed to fetch stability management records");
@@ -422,6 +438,19 @@ const StabilityManagement = ({ searchQuery = "" }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = async (page) => {
+    await fetchStabilityManagementRecords(page, pagination.pageSize);
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      pageSize: newPageSize,
+    }));
+    await fetchStabilityManagementRecords(1, newPageSize);
   };
 
   const fetchStabilityStatistics = async () => {
@@ -477,14 +506,14 @@ const StabilityManagement = ({ searchQuery = "" }) => {
         const response = await stabilityManagementAPI.updateStabilityStatus(stabilityId, { status: 'submit' });
         if (response.success) {
           toast.success('Stability submitted successfully');
-          await fetchStabilityManagementRecords();
+          await fetchStabilityManagementRecords(pagination.currentPage, pagination.pageSize);
         }
       } else if (newStatus === 'stability') {
         // Update status to stability
         const response = await stabilityManagementAPI.updateStabilityStatus(stabilityId, { status: 'stability' });
         if (response.success) {
           toast.success('Stability status updated successfully');
-          await fetchStabilityManagementRecords();
+          await fetchStabilityManagementRecords(pagination.currentPage, pagination.pageSize);
         }
       }
     } catch (error) {
@@ -511,7 +540,7 @@ const StabilityManagement = ({ searchQuery = "" }) => {
       const response = await stabilityManagementAPI.uploadStabilityFiles(selectedStability.id, formData);
       if (response.success) {
         toast.success('Files uploaded and stability approved successfully');
-        await fetchStabilityManagementRecords();
+        await fetchStabilityManagementRecords(pagination.currentPage, pagination.pageSize);
         setShowFileUploadModal(false);
         setSelectedStability(null);
       }
@@ -530,7 +559,7 @@ const StabilityManagement = ({ searchQuery = "" }) => {
       });
       if (response.success) {
         toast.success('Stability rejected successfully');
-        await fetchStabilityManagementRecords();
+        await fetchStabilityManagementRecords(pagination.currentPage, pagination.pageSize);
         setShowRejectModal(false);
         setSelectedStability(null);
       }
@@ -547,7 +576,7 @@ const StabilityManagement = ({ searchQuery = "" }) => {
       
       setShowDateModal(false);
       setSelectedStability(null);
-      fetchStabilityManagementRecords();
+      fetchStabilityManagementRecords(pagination.currentPage, pagination.pageSize);
     } catch (error) {
       console.error('Error updating stability dates:', error);
       throw error;
@@ -757,15 +786,21 @@ const StabilityManagement = ({ searchQuery = "" }) => {
             <StatisticsCards statistics={statistics} loading={statsLoading} />
           </div>
 
-          {loading ? (
-            <Loader size="large" color="primary" />
-          ) : (
-            <TableWithControl
-              data={filteredRecords}
-              columns={columns}
-              defaultPageSize={10}
-            />
-          )}
+        {loading ? (
+          <Loader size="large" color="primary" />
+        ) : (
+          <TableWithControl
+            data={filteredRecords}
+            columns={columns}
+            defaultPageSize={pagination.pageSize}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            serverSidePagination={true}
+          />
+        )}
         </div>
 
         {showFileUploadModal && (

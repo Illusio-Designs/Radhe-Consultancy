@@ -39,6 +39,13 @@ const TableWithControl = ({
     }
   }, [externalCurrentPage, currentPage]);
 
+  // Update page size when external page size changes (for server-side pagination)
+  useEffect(() => {
+    if (serverSidePagination && defaultPageSize !== pageSize) {
+      setPageSize(defaultPageSize);
+    }
+  }, [defaultPageSize, serverSidePagination, pageSize]);
+
   useEffect(() => {
     if (!Array.isArray(data)) {
       setFilteredData([]);
