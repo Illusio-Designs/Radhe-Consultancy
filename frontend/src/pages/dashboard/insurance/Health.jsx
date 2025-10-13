@@ -197,6 +197,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
           ? data
           : Array.isArray(data.data)
           ? data.data
+          : Array.isArray(data.companies)
+          ? data.companies
           : [];
         setInsuranceCompanies(companies);
         if (newICId) {

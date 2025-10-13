@@ -190,11 +190,13 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     const fetchICs = async () => {
       try {
         const data = await insuranceCompanyAPI.getAllCompanies();
-        // Support both array and {success, data: array}
+        // Support both array and {success, data: array} and {success, companies: array}
         const companies = Array.isArray(data)
           ? data
           : Array.isArray(data.data)
           ? data.data
+          : Array.isArray(data.companies)
+          ? data.companies
           : [];
         setInsuranceCompanies(companies);
         if (newICId) {
