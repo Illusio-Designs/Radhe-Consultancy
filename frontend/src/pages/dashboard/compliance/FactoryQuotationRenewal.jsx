@@ -20,10 +20,6 @@ const FactoryQuotationRenewal = memo(() => {
     totalItems: 0,
   });
 
-  useEffect(() => {
-    fetchRenewals(1, 10);
-  }, [fetchRenewals]);
-
   const fetchRenewals = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     setError(null);
@@ -52,6 +48,10 @@ const FactoryQuotationRenewal = memo(() => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchRenewals(1, 10);
+  }, [fetchRenewals]);
 
   const handlePageChange = async (page) => {
     await fetchRenewals(page, pagination.pageSize);
