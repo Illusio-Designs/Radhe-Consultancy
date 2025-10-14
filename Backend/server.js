@@ -5,6 +5,7 @@ require("dotenv").config();
 const sequelize = require("./config/db");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cron = require("node-cron");
 const {
   setupRolesAndPermissions,
   setupAdminUser,
@@ -16,6 +17,7 @@ const {
 } = require("./config/cors");
 const { registerRoutes } = require("./routes");
 const config = require("./config/config");
+const runAutomaticRenewalReminders = require("./scripts/sendRenewalReminders");
 
 // Initialize Express app
 const app = express();
@@ -206,6 +208,32 @@ const startServer = async () => {
       console.log(`🌍 Environment: ${config.server.nodeEnv}`);
       console.log(`🔗 Backend URL: ${config.server.backendUrl}`);
       console.log("✨ All systems ready!");
+      
+      // Setup automatic renewal reminders cron job
+      // Runs every day at 9:00 AM IST
+      const cronSchedule = process.env.RENEWAL_CRON_SCHEDULE || '0 9 * * *';
+      
+      console.log('\n' + '='.repeat(50));
+      console.log('⏰ AUTOMATIC RENEWAL REMINDER SCHEDULER');
+      console.log('='.repeat(50));
+      console.log(`📅 Schedule: ${cronSchedule} (Cron format)`);
+      console.log(`🕐 Next run: Every day at 9:00 AM IST`);
+      console.log('='.repeat(50) + '\n');
+      
+      cron.schedule(cronSchedule, async () => {
+        console.log('\n🔔 CRON JOB TRIGGERED - Running automatic renewal reminders...');
+        try {
+          await runAutomaticRenewalReminders();
+          console.log('✅ Automatic renewal reminders completed successfully\n');
+        } catch (error) {
+          console.error('❌ Error in automatic renewal reminders:', error);
+        }
+      }, {
+        scheduled: true,
+        timezone: "Asia/Kolkata"
+      });
+      
+      console.log('✅ Automatic renewal reminder scheduler activated!');
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);

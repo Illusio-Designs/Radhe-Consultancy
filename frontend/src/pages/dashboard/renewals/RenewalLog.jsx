@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { renewalAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
-import { BiErrorCircle } from "react-icons/bi";
+import { BiErrorCircle, BiRefresh } from "react-icons/bi";
+import Button from "../../../components/common/Button/Button";
+import { toast } from "react-toastify";
 import "../../../styles/pages/dashboard/renewals/RenewalLog.css";
 import "../../../styles/components/StatCards.css";
 
@@ -125,8 +127,16 @@ const RenewalLog = () => {
       <div className="insurance-container">
         <div className="insurance-content">
           <div className="insurance-header">
-            <h1 className="insurance-title">📋 Renewal Log History</h1>
-            <p>Complete history of all renewal reminders sent</p>
+            <div>
+              <h1 className="insurance-title">📋 Renewal Log History</h1>
+              <p>Complete history of all renewal reminders sent automatically</p>
+              <p style={{ fontSize: '0.9em', color: '#666', marginTop: '0.5em' }}>
+                ⏰ Automatic emails sent daily at 9:00 AM IST
+              </p>
+              <p style={{ fontSize: '0.85em', color: '#ff6b00', marginTop: '0.3em', fontWeight: '600' }}>
+                🔐 Currently Active: DSC Only
+              </p>
+            </div>
           </div>
 
           {/* Filter Controls */}

@@ -296,7 +296,23 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // If GST number is being updated, auto-fill PAN number
+    if (name === 'gstNumber' && value.length >= 12) {
+      const extractedPAN = value.substring(2, 12).toUpperCase();
+      setFormData((prev) => ({ 
+        ...prev, 
+        [name]: value.toUpperCase(),
+        panNumber: extractedPAN
+      }));
+    } else if (name === 'gstNumber') {
+      setFormData((prev) => ({ 
+        ...prev, 
+        [name]: value.toUpperCase()
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -386,8 +402,12 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
         sanitizedFormData.companyId = null;
       }
       const submitData = new FormData();
-      // Add all form fields
+      // Add all form fields (excluding calculated fields that are added separately)
       Object.entries(sanitizedFormData).forEach(([key, value]) => {
+        // Skip gst and grossPremium as they are calculated and added separately
+        if (key === 'gst' || key === 'grossPremium') {
+          return;
+        }
         if (
           value !== undefined &&
           value !== null &&
@@ -401,11 +421,9 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
           submitData.append(apiKey, value);
         }
       });
-      // Add calculated fields (ensure single value, not array)
-      const gstValue = Array.isArray(gst) ? gst[gst.length - 1] : gst;
-      const grossPremiumValue = Array.isArray(grossPremium) ? grossPremium[grossPremium.length - 1] : grossPremium;
-      submitData.append("gst", parseFloat(gstValue).toFixed(2));
-      submitData.append("gross_premium", parseFloat(grossPremiumValue).toFixed(2));
+      // Add calculated fields
+      submitData.append("gst", parseFloat(gst).toFixed(2));
+      submitData.append("gross_premium", parseFloat(grossPremium).toFixed(2));
       // Add file if selected
       if (files.policyDocument) {
         submitData.append(
@@ -613,7 +631,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               onChange={handleChange}
               placeholder="GST Number"
               className="insurance-form-input"
-              readOnly={!!formData.companyId}
             />
           </div>
           <div className="insurance-form-group">
@@ -624,7 +641,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               onChange={handleChange}
               placeholder="PAN Number"
               className="insurance-form-input"
-              readOnly={!!formData.companyId}
             />
           </div>
           <div className="insurance-form-group">

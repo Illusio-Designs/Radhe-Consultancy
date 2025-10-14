@@ -169,7 +169,7 @@ const LabourLicense = ({ searchQuery = "" }) => {
     try {
       const response = await companyAPI.getAllCompanies();
       if (response.success) {
-        setCompanies(response.data || []);
+        setCompanies(response.companies || response.data || []);
       }
     } catch (error) {
       console.error('Error fetching companies:', error);

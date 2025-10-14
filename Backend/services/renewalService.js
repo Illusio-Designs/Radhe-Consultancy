@@ -89,12 +89,12 @@ class RenewalService {
           {
             model: Company,
             as: 'companyPolicyHolder',
-            attributes: ['company_id', 'companyName', 'email', 'phone']
+            attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
           },
           {
             model: Consumer,
             as: 'consumerPolicyHolder',
-            attributes: ['consumer_id', 'name', 'email', 'phone']
+            attributes: ['consumer_id', 'name', 'email', 'phone_number']
           }
         ],
         order: [['policy_end_date', 'ASC']]
@@ -191,10 +191,10 @@ class RenewalService {
       if (policy.companyPolicyHolder) {
         return {
           id: policy.companyPolicyHolder.company_id,
-          companyName: policy.companyPolicyHolder.companyName,
-          name: policy.companyPolicyHolder.companyName,
-          email: policy.companyPolicyHolder.email || policy.email,
-          phone: policy.companyPolicyHolder.phone || policy.mobile_number
+          companyName: policy.companyPolicyHolder.company_name,
+          name: policy.companyPolicyHolder.company_name,
+          email: policy.companyPolicyHolder.company_email || policy.email,
+          phone: policy.companyPolicyHolder.contact_number || policy.mobile_number
         };
       } else if (policy.consumerPolicyHolder) {
         return {
@@ -202,7 +202,7 @@ class RenewalService {
           companyName: policy.organisation_or_holder_name,
           name: policy.consumerPolicyHolder.name,
           email: policy.consumerPolicyHolder.email || policy.email,
-          phone: policy.consumerPolicyHolder.phone || policy.mobile_number
+          phone: policy.consumerPolicyHolder.phone_number || policy.mobile_number
         };
       } else {
         // Fallback to policy data
@@ -252,7 +252,14 @@ class RenewalService {
     const expiry = new Date(expiryDate);
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    
+    // Handle edge cases
+    if (isNaN(diffDays)) {
+      return 0;
+    }
+    
+    // Ensure we return a positive integer
+    return Math.max(0, diffDays);
   }
 
   // Get renewal dashboard data
@@ -370,12 +377,12 @@ class RenewalService {
           {
             model: Company,
             as: 'companyPolicyHolder',
-            attributes: ['company_id', 'companyName', 'email', 'phone']
+            attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
           },
           {
             model: Consumer,
             as: 'consumerPolicyHolder',
-            attributes: ['consumer_id', 'name', 'email', 'phone']
+            attributes: ['consumer_id', 'name', 'email', 'phone_number']
           }
         ],
         order: [['policy_end_date', 'ASC']]
@@ -469,7 +476,7 @@ class RenewalService {
           {
             model: Company,
             as: 'company',
-            attributes: ['company_id', 'companyName', 'email', 'phone']
+            attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
           }
         ],
         order: [['policy_end_date', 'ASC']]
@@ -511,12 +518,12 @@ class RenewalService {
           {
             model: Company,
             as: 'company',
-            attributes: ['company_id', 'companyName', 'email', 'phone']
+            attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
           },
           {
             model: Consumer,
             as: 'consumer',
-            attributes: ['consumer_id', 'name', 'email', 'phone']
+            attributes: ['consumer_id', 'name', 'email', 'phone_number']
           }
         ],
         order: [['policy_end_date', 'ASC']]
@@ -558,12 +565,12 @@ class RenewalService {
           {
             model: Company,
             as: 'company',
-            attributes: ['company_id', 'companyName', 'email', 'phone']
+            attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
           },
           {
             model: Consumer,
             as: 'consumer',
-            attributes: ['consumer_id', 'name', 'email', 'phone']
+            attributes: ['consumer_id', 'name', 'email', 'phone_number']
           }
         ],
         order: [['expiry_date', 'ASC']]
@@ -764,6 +771,106 @@ class RenewalService {
     } catch (error) {
       console.error(`❌ Error processing ECP policy ${policy.id}:`, error);
       return { success: false, error: error.message };
+    }
+  }
+
+  // Process all DSC renewals that need reminders
+  async processDSCRenewals() {
+    try {
+      console.log('🔄 Starting DSC renewal processing...');
+      
+      // Get DSCs that need reminders
+      const dscs = await this.getDSCsNeedingReminders();
+      console.log(`📋 Found ${dscs.length} DSCs needing reminders`);
+
+      let processedCount = 0;
+      let successCount = 0;
+      let errorCount = 0;
+
+      const config = {}; // DSC doesn't need config
+
+      for (const dsc of dscs) {
+        try {
+          const result = await this.processSingleDSC(dsc, config);
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+          processedCount++;
+        } catch (error) {
+          console.error(`❌ Error processing DSC ${dsc.dsc_id}:`, error);
+          errorCount++;
+        }
+      }
+
+      console.log(`✅ DSC renewal processing completed:`);
+      console.log(`   - Total processed: ${processedCount}`);
+      console.log(`   - Successful: ${successCount}`);
+      console.log(`   - Errors: ${errorCount}`);
+
+      return {
+        success: true,
+        processed: processedCount,
+        sent: successCount,
+        errors: errorCount
+      };
+    } catch (error) {
+      console.error('❌ Error in DSC renewal processing:', error);
+      return {
+        success: false,
+        processed: 0,
+        sent: 0,
+        errors: 1,
+        error: error.message
+      };
+    }
+  }
+
+  // Get DSCs that need reminders
+  async getDSCsNeedingReminders() {
+    try {
+      const today = new Date();
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+      // Get active DSCs expiring within 30 days
+      const dscs = await DSC.findAll({
+        where: {
+          status: 'in',
+          expiry_date: {
+            [Op.lte]: thirtyDaysFromNow
+          }
+        },
+        include: [
+          {
+            model: Company,
+            as: 'company',
+            attributes: ['company_id', 'company_name', 'company_email', 'contact_number']
+          },
+          {
+            model: Consumer,
+            as: 'consumer',
+            attributes: ['consumer_id', 'name', 'email', 'phone_number']
+          }
+        ],
+        order: [['expiry_date', 'ASC']]
+      });
+
+      // Filter DSCs that need reminders today
+      const dscsNeedingReminders = [];
+      for (const dsc of dscs) {
+        const daysUntilExpiry = this.getDaysUntilExpiry(dsc.expiry_date);
+        
+        if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+          dscsNeedingReminders.push(dsc);
+        }
+      }
+
+      return dscsNeedingReminders;
+    } catch (error) {
+      console.error('❌ Error getting DSCs needing reminders:', error);
+      throw error;
     }
   }
 

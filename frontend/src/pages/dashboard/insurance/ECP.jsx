@@ -331,8 +331,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       submitData.append("gst_number", formData.gstNumber);
       submitData.append("pan_number", formData.panNumber);
       submitData.append("remarks", formData.remarks);
-      submitData.append("gst", gst);
-      submitData.append("gross_premium", grossPremium);
+      submitData.append("gst", parseFloat(gst).toFixed(2));
+      submitData.append("gross_premium", parseFloat(grossPremium).toFixed(2));
 
       // Handle file upload
       if (files.policyDocument) {
@@ -401,10 +401,26 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // If GST number is being updated, auto-fill PAN number
+    if (name === 'gstNumber' && value.length >= 12) {
+      const extractedPAN = value.substring(2, 12).toUpperCase();
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value.toUpperCase(),
+        panNumber: extractedPAN
+      }));
+    } else if (name === 'gstNumber') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value.toUpperCase()
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   // Prepare options for react-select
@@ -608,7 +624,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               onChange={handleChange}
               placeholder="GST Number"
               className="insurance-form-input"
-              readOnly={!!formData.companyId}
             />
           </div>
 
@@ -620,7 +635,6 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
               onChange={handleChange}
               placeholder="PAN Number"
               className="insurance-form-input"
-              readOnly={!!formData.companyId}
             />
           </div>
 

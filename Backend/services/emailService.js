@@ -532,11 +532,35 @@ class EmailService {
     try {
       const { daysUntilExpiry, expiryDate, policyDetails, clientName, clientEmail } = reminderData;
       
-      const emailContent = this.generateDSCEmail(reminderData);
-      const subject = `DSC Renewal Reminder - ${daysUntilExpiry} Days Remaining`;
+      // Handle days display logic
+      let daysDisplay;
+      if (daysUntilExpiry === 0) {
+        daysDisplay = 'today';
+      } else if (daysUntilExpiry === 1) {
+        daysDisplay = '1 day';
+      } else if (daysUntilExpiry > 1) {
+        daysDisplay = `${daysUntilExpiry} days`;
+      } else {
+        daysDisplay = 'N/A';
+      }
+      
+      // Handle subject line display logic
+      let subjectDays;
+      if (daysUntilExpiry === 0) {
+        subjectDays = 'Today';
+      } else if (daysUntilExpiry === 1) {
+        subjectDays = '1 Day';
+      } else if (daysUntilExpiry > 1) {
+        subjectDays = `${daysUntilExpiry} Days`;
+      } else {
+        subjectDays = 'N/A';
+      }
+      
+      const emailContent = this.generateDSCEmail(reminderData, daysDisplay);
+      const subject = `DSC Renewal Reminder - ${subjectDays} Remaining`;
       
       // Create plain text version for fallback
-      const plainText = `DSC Renewal Reminder: Your certificate expires in ${daysUntilExpiry} days. Please contact RADHE CONSULTANCY for renewal assistance.`;
+      const plainText = `DSC Renewal Reminder: Your certificate expires in ${daysDisplay}. Please contact RADHE CONSULTANCY for renewal assistance.`;
       const result = await sendEmail(clientEmail, subject, plainText, emailContent);
       console.log('✅ DSC renewal reminder sent successfully to:', clientEmail);
       
@@ -555,7 +579,7 @@ class EmailService {
   }
 
   // Generate professional HTML email content for DSC renewal
-  generateDSCEmail(reminderData) {
+  generateDSCEmail(reminderData, daysDisplay) {
     try {
       const { daysUntilExpiry, expiryDate, policyDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/dsc_renewal.html');
@@ -583,11 +607,10 @@ class EmailService {
       
       // Replace all placeholders with actual data
       template = template.replace(/\{\{CLIENT_NAME\}\}/g, clientName || 'Valued Client');
-      template = template.replace(/\{\{DAYS_UNTIL_EXPIRY\}\}/g, daysUntilExpiry || 'N/A');
+      template = template.replace(/\{\{DAYS_UNTIL_EXPIRY\}\}/g, daysDisplay);
       template = template.replace(/\{\{EXPIRY_DATE\}\}/g, formattedExpiryDate);
       template = template.replace(/\{\{CERTIFICATE_NAME\}\}/g, policyDetails?.certificateName || 'Digital');
       template = template.replace(/\{\{STATUS\}\}/g, policyDetails?.status || 'N/A');
-      template = template.replace(/\{\{CERTIFICATE_ID\}\}/g, policyDetails?.certificateId || 'N/A');
       template = template.replace(/\{\{REMINDER_DATE\}\}/g, reminderDate);
       template = template.replace(/\{\{REMARKS_SECTION\}\}/g, remarksSection);
       

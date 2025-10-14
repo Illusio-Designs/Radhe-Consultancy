@@ -1820,6 +1820,17 @@ export const renewalAPI = {
       return response.data;
   },
 
+  // Trigger renewal processing
+  triggerRenewals: async () => {
+    try {
+      const response = await api.post('/renewals/trigger');
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error triggering renewals:', error);
+      throw error;
+    }
+  },
+
   // Get renewal counts for different periods
   getCounts: async () => {
     try {

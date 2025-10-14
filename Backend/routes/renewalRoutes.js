@@ -28,4 +28,40 @@ router.get('/list', auth, renewalConfigController.getListByTypeAndPeriod);
 // Search renewals
 router.get('/search', auth, renewalConfigController.searchRenewals);
 
+// Trigger renewal processing manually
+router.post('/trigger', auth, async (req, res) => {
+  try {
+    const RenewalService = require('../services/renewalService');
+    const renewalService = new RenewalService();
+    
+    console.log('🚀 Manual renewal trigger initiated');
+    
+    // Process all policy types
+    const results = {
+      vehicle: await renewalService.processVehicleInsuranceRenewals(),
+      health: await renewalService.processHealthInsuranceRenewals(),
+      life: await renewalService.processLifeInsuranceRenewals(),
+      fire: await renewalService.processFirePolicyRenewals(),
+      ecp: await renewalService.processECPRenewals(),
+      dsc: await renewalService.processDSCRenewals(),
+      labourLicense: await renewalService.processLabourLicenseRenewals(),
+      labourInspection: await renewalService.processLabourInspectionRenewals()
+    };
+    
+    console.log('✅ Renewal processing completed');
+    
+    res.json({
+      success: true,
+      message: 'Renewal reminders processed successfully',
+      results
+    });
+  } catch (error) {
+    console.error('❌ Error triggering renewals:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router; 

@@ -383,7 +383,12 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
       // Add all form fields with proper type conversion
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
+        // Skip empty strings for ID fields (company_id, consumer_id)
+        if ((key === 'companyId' || key === 'consumerId') && value === '') {
+          return;
+        }
+        
+        if (value !== undefined && value !== null && value !== '') {
           // Convert camelCase to snake_case for API
           const apiKey = key.replace(
             /[A-Z]/g,
