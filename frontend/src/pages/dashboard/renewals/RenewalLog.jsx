@@ -134,7 +134,7 @@ const RenewalLog = () => {
                 ⏰ Automatic emails sent daily at 9:00 AM IST
               </p>
               <p style={{ fontSize: '0.85em', color: '#ff6b00', marginTop: '0.3em', fontWeight: '600' }}>
-                🔐 Currently Active: DSC Only
+                🔐 Currently Active: DSC + Labour License
               </p>
             </div>
           </div>
@@ -249,7 +249,6 @@ const RenewalLog = () => {
               <div key={log.id || index} className="table-row">
                 <div className="table-cell policy-info">
                   <div className="policy-type">{log.policy_type?.toUpperCase() || 'UNKNOWN'}</div>
-                  <div className="policy-id">ID: {log.policy_id}</div>
                   {log.email_subject && (
                     <div className="email-subject">{log.email_subject}</div>
                   )}
@@ -279,8 +278,8 @@ const RenewalLog = () => {
                 </div>
                 
                 <div className="table-cell days-until-expiry">
-                  <span className={`days-badge ${log.days_until_expiry <= 7 ? 'urgent' : log.days_until_expiry <= 30 ? 'warning' : 'normal'}`}>
-                    {log.days_until_expiry || 'N/A'} days
+                  <span className={`days-badge ${(log.days_until_expiry !== null && log.days_until_expiry !== undefined ? log.days_until_expiry : log.reminder_day) <= 7 ? 'urgent' : (log.days_until_expiry !== null && log.days_until_expiry !== undefined ? log.days_until_expiry : log.reminder_day) <= 30 ? 'warning' : 'normal'}`}>
+                    {(log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A'} days
                   </span>
                 </div>
               </div>

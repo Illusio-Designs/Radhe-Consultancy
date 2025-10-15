@@ -1528,7 +1528,7 @@ class RenewalService {
       return {
         success: true,
         processed: processedCount,
-        successful: successCount,
+        sent: successCount,
         errors: errorCount
       };
     } catch (error) {

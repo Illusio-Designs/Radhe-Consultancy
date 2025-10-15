@@ -81,11 +81,28 @@ class EmailService {
     try {
       const { daysUntilExpiry, expiryDate, reminderNumber } = reminderData;
       
-      const emailContent = this.generateLabourLicenseEmail(licenseData, reminderData);
-      const subject = `Labour License Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Expiry`;
+      // Handle days display logic
+      let daysDisplay;
+      let subjectDays;
+      if (daysUntilExpiry === 0) {
+        daysDisplay = 'today';
+        subjectDays = 'Today';
+      } else if (daysUntilExpiry === 1) {
+        daysDisplay = '1 day';
+        subjectDays = '1 Day';
+      } else if (daysUntilExpiry > 1) {
+        daysDisplay = `${daysUntilExpiry} days`;
+        subjectDays = `${daysUntilExpiry} Days`;
+      } else {
+        daysDisplay = 'N/A';
+        subjectDays = 'N/A';
+      }
+      
+      const emailContent = this.generateLabourLicenseEmail(licenseData, reminderData, daysDisplay);
+      const subject = `Labour License Reminder #${reminderNumber} - ${subjectDays} Until Expiry`;
       
       // Create plain text version for fallback
-      const plainText = `Labour License Reminder #${reminderNumber}: Your license expires in ${daysUntilExpiry} days. Please contact RADHE CONSULTANCY for assistance.`;
+      const plainText = `Labour License Reminder #${reminderNumber}: Your license expires ${daysDisplay}. Please contact RADHE CONSULTANCY for assistance.`;
       const result = await sendEmail(licenseData.company?.company_email, subject, plainText, emailContent);
       console.log('✅ Labour License reminder sent successfully to:', licenseData.company?.company_email);
       
@@ -815,7 +832,7 @@ class EmailService {
   }
 
   // Generate professional HTML email content for labour license reminder
-  generateLabourLicenseEmail(licenseData, reminderData) {
+  generateLabourLicenseEmail(licenseData, reminderData, daysDisplay) {
     try {
       const { daysUntilExpiry, expiryDate, reminderNumber } = reminderData;
       
@@ -825,11 +842,12 @@ class EmailService {
       
       // Replace placeholders with actual data
       template = template.replace('APEX ZIPPER', licenseData.company?.company_name || 'Valued Client');
-      template = template.replace('15 days', `${daysUntilExpiry} days`);
+      template = template.replace('15 days', daysDisplay);
       template = template.replace('2025-12-20', expiryDate);
       template = template.replace('LIC-2025-001', licenseData.license_number || 'N/A');
       template = template.replace('15/8/2025', new Date().toLocaleDateString('en-IN'));
       template = template.replace('Reminder #2 of 3', `Reminder #${reminderNumber} of 3`);
+      template = template.replace('Type', licenseData.type || 'State');
       
       return template;
     } catch (error) {

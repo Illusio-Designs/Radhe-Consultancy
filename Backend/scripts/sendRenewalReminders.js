@@ -6,12 +6,12 @@ async function runAutomaticRenewalReminders() {
     console.log('='.repeat(50));
     console.log('🚀 AUTOMATIC RENEWAL REMINDER PROCESS STARTED');
     console.log('⏰ Time:', new Date().toLocaleString());
-    console.log('📌 Active: DSC Only');
+    console.log('📌 Active: DSC + Labour License');
     console.log('='.repeat(50));
 
     const renewalService = new RenewalService();
 
-    // ⚠️ ONLY DSC REMINDERS ACTIVE - Other types commented out
+    // ⚠️ DSC + Labour License ACTIVE - Other types commented out
     const results = {
       // vehicle: await renewalService.processVehicleInsuranceRenewals(),
       // health: await renewalService.processHealthInsuranceRenewals(),
@@ -19,7 +19,7 @@ async function runAutomaticRenewalReminders() {
       // fire: await renewalService.processFirePolicyRenewals(),
       // ecp: await renewalService.processECPRenewals(),
       dsc: await renewalService.processDSCRenewals(),
-      // labourLicense: await renewalService.processLabourLicenseRenewals(),
+      labourLicense: await renewalService.processLabourLicenseReminders(),
       // labourInspection: await renewalService.processLabourInspectionRenewals()
     };
 
@@ -32,7 +32,7 @@ async function runAutomaticRenewalReminders() {
     // console.log('🔥 Fire Policy:', results.fire.sent, 'emails sent');
     // console.log('🏢 ECP:', results.ecp.sent, 'emails sent');
     console.log('🔐 DSC (ACTIVE):', results.dsc.sent, 'emails sent');
-    // console.log('📋 Labour License:', results.labourLicense.sent, 'emails sent');
+    console.log('📋 Labour License (ACTIVE):', results.labourLicense.sent, 'emails sent');
     // console.log('🏭 Labour Inspection:', results.labourInspection.sent, 'emails sent');
     console.log('='.repeat(50));
     
@@ -41,7 +41,7 @@ async function runAutomaticRenewalReminders() {
     console.log('='.repeat(50));
 
     return results;
-  } catch (error) {
+    } catch (error) {
     console.error('❌ ERROR IN AUTOMATIC RENEWAL REMINDERS:', error);
     throw error;
   }
@@ -52,12 +52,12 @@ if (require.main === module) {
   runAutomaticRenewalReminders()
     .then(() => {
       console.log('🎯 Script execution completed successfully');
-      process.exit(0);
+    process.exit(0);
     })
     .catch(error => {
-      console.error('💥 Script execution failed:', error);
-      process.exit(1);
-    });
+    console.error('💥 Script execution failed:', error);
+    process.exit(1);
+  });
 }
 
 module.exports = runAutomaticRenewalReminders;
