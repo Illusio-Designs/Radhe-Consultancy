@@ -7,8 +7,16 @@ const { OAuth2Client } = require("google-auth-library");
 const multer = require("multer");
 const fs = require("fs").promises;
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+// Lazy load nodemailer to avoid memory issues on server startup
+let nodemailer = null;
 const { Op } = require("sequelize");
+
+function getNodemailer() {
+  if (!nodemailer) {
+    nodemailer = require("nodemailer");
+  }
+  return nodemailer;
+}
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, "..", "uploads", "profile-images");
@@ -341,6 +349,7 @@ class UserService {
 
       // Send email
       console.log("Configuring email transport...");
+      const nodemailer = getNodemailer();
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {

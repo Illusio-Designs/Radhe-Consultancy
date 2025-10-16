@@ -1,7 +1,17 @@
-const axios = require('axios');
+// Lazy load axios to avoid memory issues on server startup
+let axios = null;
+
+function getAxios() {
+  if (!axios) {
+    axios = require('axios');
+  }
+  return axios;
+}
 
 async function sendWhatsAppMessage(to, message) {
   try {
+    const axios = getAxios();
+    
     // Format the phone number to include country code if not present
     const formattedNumber = to.startsWith('+') ? to.slice(1) : to;
     

@@ -6,12 +6,12 @@ async function runAutomaticRenewalReminders() {
     console.log('='.repeat(50));
     console.log('🚀 AUTOMATIC RENEWAL REMINDER PROCESS STARTED');
     console.log('⏰ Time:', new Date().toLocaleString());
-    console.log('📌 Active: DSC + Labour License');
+    console.log('📌 Active: DSC + Labour License + Stability Management');
     console.log('='.repeat(50));
 
     const renewalService = new RenewalService();
 
-    // ⚠️ DSC + Labour License ACTIVE - Other types commented out
+    // ⚠️ DSC + Labour License + Stability Management ACTIVE - Other types commented out
     const results = {
       // vehicle: await renewalService.processVehicleInsuranceRenewals(),
       // health: await renewalService.processHealthInsuranceRenewals(),
@@ -20,6 +20,7 @@ async function runAutomaticRenewalReminders() {
       // ecp: await renewalService.processECPRenewals(),
       dsc: await renewalService.processDSCRenewals(),
       labourLicense: await renewalService.processLabourLicenseReminders(),
+      stabilityManagement: await renewalService.processStabilityManagementReminders(),
       // labourInspection: await renewalService.processLabourInspectionRenewals()
     };
 
@@ -33,6 +34,7 @@ async function runAutomaticRenewalReminders() {
     // console.log('🏢 ECP:', results.ecp.sent, 'emails sent');
     console.log('🔐 DSC (ACTIVE):', results.dsc.sent, 'emails sent');
     console.log('📋 Labour License (ACTIVE):', results.labourLicense.sent, 'emails sent');
+    console.log('🏗️ Stability Management (ACTIVE):', results.stabilityManagement.sent, 'emails sent');
     // console.log('🏭 Labour Inspection:', results.labourInspection.sent, 'emails sent');
     console.log('='.repeat(50));
     

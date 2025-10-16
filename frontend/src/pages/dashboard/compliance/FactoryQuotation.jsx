@@ -588,7 +588,8 @@ const RenewalModal = ({ isOpen, onClose, quotation, onRenewalCreated }) => {
       // First, check if company already exists with this GST number
       let existingCompany = null;
       try {
-        const companiesResponse = await companyAPI.getAllCompanies();
+        // Fetch all companies with a large page size to ensure we get all companies
+        const companiesResponse = await companyAPI.getAllCompanies({ pageSize: 9999 });
         if (companiesResponse.success && companiesResponse.data) {
           existingCompany = companiesResponse.data.find(
             company => company.gst_number === formData.gst_number

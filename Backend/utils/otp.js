@@ -1,5 +1,13 @@
-const axios = require('axios');
+// Lazy load axios to avoid memory issues on server startup
+let axios = null;
 const crypto = require('crypto');
+
+function getAxios() {
+  if (!axios) {
+    axios = require('axios');
+  }
+  return axios;
+}
 
 // Store OTPs in memory (in production, use Redis or similar)
 const otpStore = new Map();
@@ -43,6 +51,7 @@ async function sendWhatsAppOTP(phone) {
     storeOTP(formattedNumber, otp);
 
     // Send OTP via MSG91
+    const axios = getAxios();
     const response = await axios.post('https://api.msg91.com/api/v5/whatsapp', {
       template_id: process.env.MSG91_OTP_TEMPLATE_ID,
       short_url: "1",

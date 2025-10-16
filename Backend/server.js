@@ -2,7 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-const sequelize = require("./config/db");
+// Lazy load sequelize only when needed to avoid memory issues in production
+let sequelize;
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cron = require("node-cron");
@@ -144,31 +145,43 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
-    // Setup database and roles before starting server
-    const {
-      setupDatabase,
-      setupRolesAndPermissions,
-      setupAdminUser,
-      setupPlanManagers,
-      setupStabilityManagers,
-      verifyRequiredRoles,
-      setupRenewalSystem,
-    } = require("./scripts/serverSetup");
-
-    // Import account creation functions
-    const {
-      createAllAccounts
-    } = require("./scripts/createAccounts");
-
-    console.log("🚀 Starting complete server setup...");
+    // Check if we should skip setup (production mode)
+    const skipSetup = process.env.SKIP_SETUP === 'true' || process.env.CURRENT_ENV === 'production';
     
-    // Step 1: Database Setup
-    console.log("📊 Setting up database structure...");
-    const dbSetup = await setupDatabase();
-    if (!dbSetup) {
-      throw new Error("Database setup failed");
-    }
-    console.log("✅ Database structure setup completed");
+    if (skipSetup) {
+      console.log('\n' + '='.repeat(60));
+      console.log('🚀 PRODUCTION MODE - Starting server without setup...');
+      console.log('🔧 Skipping database setup and connection test');
+      console.log('📌 Database will connect on first API request');
+      console.log('='.repeat(60));
+    } else {
+      // Load sequelize only when needed for setup
+      sequelize = require("./config/db");
+      // Setup database and roles before starting server
+      const {
+        setupDatabase,
+        setupRolesAndPermissions,
+        setupAdminUser,
+        setupPlanManagers,
+        setupStabilityManagers,
+        verifyRequiredRoles,
+        setupRenewalSystem,
+      } = require("./scripts/serverSetup");
+
+      // Import account creation functions
+      const {
+        createAllAccounts
+      } = require("./scripts/createAccounts");
+
+      console.log("🚀 Starting complete server setup...");
+      
+      // Step 1: Database Setup
+      console.log("📊 Setting up database structure...");
+      const dbSetup = await setupDatabase();
+      if (!dbSetup) {
+        throw new Error("Database setup failed");
+      }
+      console.log("✅ Database structure setup completed");
 
     // Step 2: Roles and Permissions
     console.log("🔐 Setting up roles and permissions...");
@@ -195,23 +208,37 @@ const startServer = async () => {
       console.log("✅ All user accounts created/updated successfully");
     }
 
-    // Step 5: Setup Renewal Management System
-    console.log("🔧 Setting up Renewal Management System...");
-    await setupRenewalSystem();
-    console.log("✅ Renewal Management System setup completed");
+      // Step 5: Setup Renewal Management System
+      console.log("🔧 Setting up Renewal Management System...");
+      await setupRenewalSystem();
+      console.log("✅ Renewal Management System setup completed");
 
-    console.log("🎉 Complete server setup completed successfully!");
+      console.log("🎉 Complete server setup completed successfully!");
+    }
 
     const port = config.server.port;
     app.listen(port, () => {
+      console.log('\n' + '='.repeat(60));
       console.log(`🚀 Server running on port ${port}`);
       console.log(`🌍 Environment: ${config.server.nodeEnv}`);
       console.log(`🔗 Backend URL: ${config.server.backendUrl}`);
       console.log("✨ All systems ready!");
+      console.log('='.repeat(60));
       
       // Setup automatic renewal reminders cron job
       // Runs every day at 9:00 AM IST
-      const cronSchedule = process.env.RENEWAL_CRON_SCHEDULE || '0 9 * * *';
+      let cronSchedule = process.env.RENEWAL_CRON_SCHEDULE || '0 9 * * *';
+      
+      // Remove quotes if present (dotenv may include them)
+      cronSchedule = cronSchedule.replace(/^["']|["']$/g, '').trim();
+      
+      // Validate cron schedule - if invalid, use default
+      const cronPattern = /^(\*|([0-5]?\d)) (\*|([01]?\d|2[0-3])) (\*|(0?[1-9]|[12]\d|3[01])) (\*|(0?[1-9]|1[0-2])) (\*|[0-6])$/;
+      if (!cronPattern.test(cronSchedule)) {
+        console.warn(`⚠️  Invalid cron schedule detected: "${cronSchedule}"`);
+        cronSchedule = '0 9 * * *';
+        console.log(`✅ Using default schedule: ${cronSchedule}`);
+      }
       
       console.log('\n' + '='.repeat(50));
       console.log('⏰ AUTOMATIC RENEWAL REMINDER SCHEDULER');
@@ -248,6 +275,19 @@ signals.forEach((signal) => {
     console.log(`Received ${signal}. Starting graceful shutdown...`);
     process.exit(0);
   });
+});
+
+// Global error handlers to prevent crashes in production
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error.message);
+  console.error('Stack:', error.stack);
+  // Don't exit - keep server running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise);
+  console.error('Reason:', reason);
+  // Don't exit - keep server running
 });
 
 // Start the server

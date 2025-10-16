@@ -1007,6 +1007,83 @@ class EmailService {
     }
   }
 
+  // Send Stability Management renewal reminder
+  async sendStabilityManagementReminder(recordData, reminderData) {
+    try {
+      const { daysUntilExpiry, renewalDate, reminderNumber } = reminderData;
+
+      // Calculate days display (0 -> "today", 1 -> "1 day", 2+ -> "X days")
+      const daysDisplay = daysUntilExpiry === 0 ? 'today' : daysUntilExpiry === 1 ? '1 day' : `${daysUntilExpiry} days`;
+      const subjectDays = daysUntilExpiry === 0 ? 'Today' : daysUntilExpiry === 1 ? '1 Day' : `${daysUntilExpiry} Days`;
+
+      const emailHtml = this.generateStabilityManagementEmail(recordData, reminderData, daysDisplay);
+      const clientEmail = recordData.factoryQuotation?.email;
+
+      if (!clientEmail) {
+        return { success: false, error: 'No client email found' };
+      }
+
+      const result = await this.sendEmail({
+        to: clientEmail,
+        subject: `[RADHE ADVISORY] Stability Management Reminder #${reminderNumber} - ${subjectDays} Until Renewal`,
+        html: emailHtml
+      });
+      
+      return {
+        success: true,
+        messageId: result.messageId,
+        sentTo: clientEmail
+      };
+    } catch (error) {
+      console.error('❌ Error sending Stability Management renewal reminder email:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Generate Stability Management renewal email
+  generateStabilityManagementEmail(recordData, reminderData, daysDisplay) {
+    try {
+      const { daysUntilExpiry, renewalDate, reminderNumber } = reminderData;
+      
+      // Read the HTML template file
+      const templatePath = path.join(__dirname, '../email_templates/stability_management_renewal.html');
+      let template = fs.readFileSync(templatePath, 'utf8');
+      
+      // Replace placeholders with actual data
+      template = template.replace(/COMPANY_NAME/g, recordData.factoryQuotation?.companyName || 'Valued Client');
+      template = template.replace(/DAYS_UNTIL_EXPIRY/g, daysDisplay);
+      template = template.replace(/RENEWAL_DATE/g, renewalDate);
+      template = template.replace(/#PROJECT_ID/g, `#${recordData.id || 'N/A'}`);
+      template = template.replace(/CERTIFICATE_TYPE/g, recordData.factoryQuotation?.stabilityCertificateType || 'N/A');
+      template = template.replace(/PROJECT_TYPE/g, recordData.load_type === 'with_load' ? 'With Load' : 'Without Load');
+      template = template.replace(/CURRENT_STATUS/g, recordData.status || 'N/A');
+      template = template.replace(/₹CERTIFICATE_AMOUNT/g, `₹${recordData.factoryQuotation?.stabilityCertificateAmount?.toLocaleString('en-IN') || 'N/A'}`);
+      template = template.replace(/₹PROJECT_VALUE/g, `₹${recordData.factoryQuotation?.totalAmount?.toLocaleString('en-IN') || 'N/A'}`);
+      template = template.replace(/CURRENT_DATE/g, new Date().toLocaleDateString('en-IN'));
+      
+      return template;
+    } catch (error) {
+      console.error('❌ Error reading stability management email template:', error);
+      // Fallback to simple HTML if template reading fails
+      return `
+        <html>
+          <body>
+            <h2>Stability Management Renewal Reminder</h2>
+            <p>Dear ${recordData.factoryQuotation?.companyName || 'Valued Client'},</p>
+            <p>Your stability management project renewal is due in ${daysDisplay}.</p>
+            <p>Renewal Date: ${reminderData.renewalDate}</p>
+            <p>Please contact us for renewal assistance.</p>
+            <br>
+            <p>Best regards,<br>RADHE ADVISORY</p>
+          </body>
+        </html>
+      `;
+    }
+  }
+
 }
 
 module.exports = EmailService;

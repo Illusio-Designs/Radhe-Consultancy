@@ -121,7 +121,8 @@ const LabourInspectionForm = ({ inspection, onClose, onInspectionUpdated }) => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await companyAPI.getAllCompanies();
+      // Fetch all companies with a large page size to ensure we get all companies
+      const response = await companyAPI.getAllCompanies({ pageSize: 9999 });
       if (response.success) {
         setCompanies(response.companies || response.data || []);
       }

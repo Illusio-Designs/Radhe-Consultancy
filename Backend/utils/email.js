@@ -2,36 +2,52 @@ require('dotenv').config();
 const nodemailer = require('nodemailer');
 const { sendWhatsAppMessage } = require('./whatsapp');
 
-// Determine which email provider to use
-const useGmail = process.env.USE_GMAIL_SMTP === 'true';
+// Lazy-loaded transporter to avoid memory issues on server startup
+let transporter = null;
 
-// Create transporter based on configuration
-const transporter = useGmail 
-  ? nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // Use STARTTLS
-      auth: {
-        user: process.env.GMAIL_SMTP_USER,
-        pass: process.env.GMAIL_SMTP_PASSWORD
-      }
-    })
-  : nodemailer.createTransport({
-      host: process.env.RENEWAL_EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.RENEWAL_EMAIL_PORT ? parseInt(process.env.RENEWAL_EMAIL_PORT) : (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587),
-      secure: process.env.RENEWAL_EMAIL_PORT === '465' || process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.RENEWAL_EMAIL_USER || process.env.EMAIL_USER,
-        pass: process.env.RENEWAL_EMAIL_PASSWORD || process.env.EMAIL_PASSWORD
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      authMethod: 'PLAIN'
-    });
+// Function to get or create transporter
+function getTransporter() {
+  if (transporter) {
+    return transporter;
+  }
+
+  // Determine which email provider to use
+  const useGmail = process.env.USE_GMAIL_SMTP === 'true';
+
+  // Create transporter based on configuration
+  transporter = useGmail 
+    ? nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // Use STARTTLS
+        auth: {
+          user: process.env.GMAIL_SMTP_USER,
+          pass: process.env.GMAIL_SMTP_PASSWORD
+        }
+      })
+    : nodemailer.createTransport({
+        host: process.env.RENEWAL_EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.RENEWAL_EMAIL_PORT ? parseInt(process.env.RENEWAL_EMAIL_PORT) : (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587),
+        secure: process.env.RENEWAL_EMAIL_PORT === '465' || process.env.SMTP_PORT === '465',
+        auth: {
+          user: process.env.RENEWAL_EMAIL_USER || process.env.EMAIL_USER,
+          pass: process.env.RENEWAL_EMAIL_PASSWORD || process.env.EMAIL_PASSWORD
+        },
+        tls: {
+          rejectUnauthorized: false
+        },
+        authMethod: 'PLAIN'
+      });
+
+  return transporter;
+}
 
 async function sendEmail(to, subject, text, html = null) {
   try {
+    // Get transporter (lazy load)
+    const transporter = getTransporter();
+    const useGmail = process.env.USE_GMAIL_SMTP === 'true';
+    
     const from = useGmail 
       ? process.env.GMAIL_SMTP_FROM 
       : (process.env.RENEWAL_EMAIL_FROM || process.env.EMAIL_FROM || process.env.EMAIL_USER);

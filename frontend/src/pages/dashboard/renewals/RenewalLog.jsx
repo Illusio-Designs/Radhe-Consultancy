@@ -134,7 +134,7 @@ const RenewalLog = () => {
                 ⏰ Automatic emails sent daily at 9:00 AM IST
               </p>
               <p style={{ fontSize: '0.85em', color: '#ff6b00', marginTop: '0.3em', fontWeight: '600' }}>
-                🔐 Currently Active: DSC + Labour License
+                🔐 Currently Active: DSC + Labour License + Stability Management
               </p>
             </div>
           </div>

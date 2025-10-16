@@ -213,7 +213,8 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   useEffect(() => {
     const fetchICs = async () => {
       try {
-        const data = await insuranceCompanyAPI.getAllCompanies();
+        // Fetch all insurance companies with a large page size to ensure we get all companies
+        const data = await insuranceCompanyAPI.getAllCompanies({ pageSize: 9999 });
         const companies = Array.isArray(data)
           ? data
           : Array.isArray(data.data)

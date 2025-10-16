@@ -45,6 +45,12 @@ RENEWAL_EMAIL_SUBJECT_PREFIX=[RADHE ADVISORY]
 RENEWAL_CRON_SCHEDULE=0 9 * * *
 
 # ============================================
+# SERVER CONFIGURATION
+# ============================================
+CURRENT_ENV=production
+SKIP_SETUP=true
+
+# ============================================
 # DATABASE CONFIGURATION (YOUR PRODUCTION DB)
 # ============================================
 DB_HOST=localhost
@@ -53,6 +59,60 @@ DB_PASSWORD=your_production_db_password
 DB_NAME=your_production_db_name
 DB_PORT=3306
 DB_DIALECT=mysql
+```
+
+---
+
+## 🚀 Starting the Production Server
+
+### **Important: Production Mode Settings**
+
+The server now supports **lightweight production startup** that skips the memory-intensive database setup process. This is controlled by these environment variables:
+
+```env
+CURRENT_ENV=production
+SKIP_SETUP=true
+```
+
+When either of these is set, the server will:
+- ✅ Only test the database connection (lightweight)
+- ✅ Skip table creation and setup
+- ✅ Start the API server immediately
+- ✅ Activate the cron job for automatic renewals
+
+### **Start Server Command**
+
+```bash
+cd /home/radhe/Backend1
+unset RENEWAL_CRON_SCHEDULE  # Clear any shell environment variables
+/home/radhe/nodevenv/Backend1/20/bin/node --max-old-space-size=512 server.js
+```
+
+### **Expected Output**
+
+```
+============================================================
+🚀 PRODUCTION MODE - Starting server without setup...
+============================================================
+📊 Testing database connection...
+✅ Database connection successful
+
+============================================================
+🚀 Server running on port 4000
+🌍 Environment: production
+🔗 Backend URL: https://your-domain.com
+✨ All systems ready!
+============================================================
+
+============================================================
+⏰ AUTOMATIC RENEWAL REMINDER SCHEDULER
+============================================================
+📅 Schedule: 0 9 * * * (Cron format)
+🕐 Next run: Every day at 9:00 AM IST
+📌 Active services: DSC + Labour License + Stability Management
+============================================================
+
+✅ Automatic renewal reminder scheduler activated!
 ```
 
 ---

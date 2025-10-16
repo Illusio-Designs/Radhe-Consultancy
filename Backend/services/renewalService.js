@@ -7,6 +7,7 @@ const DSC = require('../models/dscModel');
 const FactoryQuotation = require('../models/factoryQuotationModel');
 const { LabourInspection } = require('../models');
 const { LabourLicense } = require('../models');
+const StabilityManagement = require('../models/stabilityManagementModel');
 const Company = require('../models/companyModel');
 const Consumer = require('../models/consumerModel');
 const ReminderLog = require('../models/reminderLogModel');
@@ -1640,6 +1641,155 @@ class RenewalService {
       }
     } catch (error) {
       console.error(`❌ Error processing labour license reminder for license ${license.license_id}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Process all Stability Management reminders
+  async processStabilityManagementReminders() {
+    try {
+      console.log('🔄 Starting stability management reminder processing...');
+      
+      // Get renewal configuration for stability management
+      const config = await RenewalConfig.getConfigByService('stability_management');
+      if (!config || !config.is_active) {
+        console.log('⚠️ Stability management renewals are not active');
+        return { sent: 0, errors: 0, message: 'Service not active' };
+      }
+
+      // Get stability records that need reminders
+      const stabilityRecords = await this.getStabilityRecordsNeedingReminders();
+      console.log(`📋 Found ${stabilityRecords.length} stability records needing reminders`);
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const record of stabilityRecords) {
+        try {
+          console.log(`📋 Processing Stability Management record ${record.id}...`);
+          const result = await this.processSingleStabilityRecord(record, config);
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error(`❌ Error processing stability record ${record.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      console.log(`✅ Stability management reminder processing completed:`);
+      console.log(`   - Total processed: ${stabilityRecords.length}`);
+      console.log(`   - Successful: ${successCount}`);
+      console.log(`   - Errors: ${errorCount}`);
+
+      return { sent: successCount, errors: errorCount };
+    } catch (error) {
+      console.error('❌ Error in stability management reminder processing:', error);
+      return { sent: 0, errors: 1, error: error.message };
+    }
+  }
+
+  // Get stability records that need renewal reminders
+  async getStabilityRecordsNeedingReminders() {
+    try {
+      const today = new Date();
+      const futureDate = new Date();
+      futureDate.setDate(today.getDate() + 90); // Check 90 days ahead
+
+      const records = await StabilityManagement.findAll({
+        where: {
+          renewal_date: {
+            [Op.lte]: futureDate,
+            [Op.gte]: today
+          },
+          status: {
+            [Op.in]: ['Approved', 'stability']
+          }
+        },
+        include: [
+          {
+            model: FactoryQuotation,
+            as: 'factoryQuotation',
+            attributes: ['id', 'companyName', 'email', 'phone', 'totalAmount', 'stabilityCertificateType', 'stabilityCertificateAmount', 'companyAddress', 'noOfWorkers', 'horsePower']
+          }
+        ]
+      });
+
+      return records;
+    } catch (error) {
+      console.error('❌ Error fetching stability records needing reminders:', error);
+      return [];
+    }
+  }
+
+  // Process a single stability record reminder
+  async processSingleStabilityRecord(record, config) {
+    try {
+      // Check if factory quotation exists
+      if (!record.factoryQuotation || !record.factoryQuotation.email) {
+        console.log(`⚠️ No email found for stability record ${record.id}`);
+        return { success: false, message: 'No email found' };
+      }
+
+      const renewalDate = new Date(record.renewal_date);
+      const today = new Date();
+      const daysUntilExpiry = this.getDaysUntilExpiry(renewalDate);
+
+      // Check if reminder should be sent based on config
+      const shouldSend = this.shouldSendReminder(daysUntilExpiry, config);
+      if (!shouldSend) {
+        return { success: false, message: 'Not time to send reminder yet' };
+      }
+
+      // Check if reminder was already sent today
+      const alreadySent = await this.wasReminderSentToday(record.id, 'stability_management');
+      if (alreadySent) {
+        console.log(`⚠️ Reminder already sent today for stability record ${record.id}`);
+        return { success: false, message: 'Reminder already sent today' };
+      }
+
+      // Determine reminder number based on days until expiry
+      let reminderNumber = 1;
+      if (daysUntilExpiry <= 7) reminderNumber = 3;
+      else if (daysUntilExpiry <= 30) reminderNumber = 2;
+      else reminderNumber = 1;
+
+      // Prepare reminder data
+      const reminderData = {
+        daysUntilExpiry,
+        renewalDate: renewalDate.toLocaleDateString('en-IN'),
+        reminderNumber
+      };
+
+      // Send email reminder
+      const emailResult = await this.emailService.sendStabilityManagementReminder(record, reminderData);
+      
+      if (emailResult.success) {
+        // Log the reminder
+        await ReminderLog.create({
+          policy_id: record.id,
+          policy_type: 'stability_management',
+          client_name: record.factoryQuotation?.companyName || 'Unknown Company',
+          client_email: record.factoryQuotation?.email || 'No email',
+          reminder_type: 'email',
+          reminder_day: daysUntilExpiry,
+          expiry_date: record.renewal_date,
+          sent_at: new Date(),
+          status: 'sent',
+          email_subject: `Stability Management Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Renewal`,
+          days_until_expiry: daysUntilExpiry
+        });
+
+        console.log(`✅ Stability management reminder #${reminderNumber} sent successfully for record ${record.id}`);
+        return { success: true, reminderNumber, daysUntilExpiry };
+      } else {
+        console.error(`❌ Failed to send stability management reminder for record ${record.id}:`, emailResult.error);
+        return { success: false, error: emailResult.error };
+      }
+    } catch (error) {
+      console.error(`❌ Error processing stability record reminder for record ${record.id}:`, error);
       return { success: false, error: error.message };
     }
   }
