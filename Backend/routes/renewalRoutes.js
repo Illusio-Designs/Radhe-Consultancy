@@ -36,16 +36,11 @@ router.post('/trigger', auth, async (req, res) => {
     
     console.log('🚀 Manual renewal trigger initiated');
     
-    // Process all policy types
+    // Process only active policy types (DSC, Labour License, Stability Management)
     const results = {
-      vehicle: await renewalService.processVehicleInsuranceRenewals(),
-      health: await renewalService.processHealthInsuranceRenewals(),
-      life: await renewalService.processLifeInsuranceRenewals(),
-      fire: await renewalService.processFirePolicyRenewals(),
-      ecp: await renewalService.processECPRenewals(),
       dsc: await renewalService.processDSCRenewals(),
-      labourLicense: await renewalService.processLabourLicenseRenewals(),
-      labourInspection: await renewalService.processLabourInspectionRenewals()
+      labourLicense: await renewalService.processLabourLicenseReminders(),
+      stabilityManagement: await renewalService.processStabilityManagementReminders()
     };
     
     console.log('✅ Renewal processing completed');
