@@ -1575,9 +1575,8 @@ class RenewalService {
   // Process single labour license reminder
   async processSingleLabourLicense(license, config) {
     try {
-      const today = new Date();
       const expiryDate = new Date(license.expiry_date);
-      const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiry = this.getDaysUntilExpiry(expiryDate);
 
       // Check if reminder should be sent based on configuration
       if (!config.shouldSendReminder(daysUntilExpiry)) {
@@ -1586,12 +1585,15 @@ class RenewalService {
       }
 
       // Check if reminder already sent today
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
       const existingReminder = await ReminderLog.findOne({
         where: {
           policy_id: license.license_id,
           policy_type: 'labour_license',
           sent_at: {
-            [Op.gte]: new Date(today.getFullYear(), today.getMonth(), today.getDate())
+            [Op.gte]: todayStart
           }
         }
       });
@@ -1645,14 +1647,14 @@ class RenewalService {
     }
   }
 
-  // Process all Stability Management reminders
+  // Process all Stability Certificate reminders
   async processStabilityManagementReminders() {
     try {
       console.log('🔄 Starting stability management reminder processing...');
       
       // Get renewal configuration for stability management
       const config = await RenewalConfig.getConfigByService('stability_management');
-      if (!config || !config.is_active) {
+      if (!config || !config.isActive) {
         console.log('⚠️ Stability management renewals are not active');
         return { sent: 0, errors: 0, message: 'Service not active' };
       }
@@ -1666,7 +1668,7 @@ class RenewalService {
 
       for (const record of stabilityRecords) {
         try {
-          console.log(`📋 Processing Stability Management record ${record.id}...`);
+          console.log(`📋 Processing Stability Certificate record ${record.id}...`);
           const result = await this.processSingleStabilityRecord(record, config);
           if (result.success) {
             successCount++;
@@ -1738,14 +1740,26 @@ class RenewalService {
       const daysUntilExpiry = this.getDaysUntilExpiry(renewalDate);
 
       // Check if reminder should be sent based on config
-      const shouldSend = this.shouldSendReminder(daysUntilExpiry, config);
+      const shouldSend = config.shouldSendReminder(daysUntilExpiry);
       if (!shouldSend) {
         return { success: false, message: 'Not time to send reminder yet' };
       }
 
       // Check if reminder was already sent today
-      const alreadySent = await this.wasReminderSentToday(record.id, 'stability_management');
-      if (alreadySent) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const existingReminder = await ReminderLog.findOne({
+        where: {
+          policy_id: record.id,
+          policy_type: 'stability_management',
+          sent_at: {
+            [Op.gte]: todayStart
+          }
+        }
+      });
+
+      if (existingReminder) {
         console.log(`⚠️ Reminder already sent today for stability record ${record.id}`);
         return { success: false, message: 'Reminder already sent today' };
       }
@@ -1778,14 +1792,14 @@ class RenewalService {
           expiry_date: record.renewal_date,
           sent_at: new Date(),
           status: 'sent',
-          email_subject: `Stability Management Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Renewal`,
+          email_subject: `Stability Certificate Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Renewal`,
           days_until_expiry: daysUntilExpiry
         });
 
-        console.log(`✅ Stability management reminder #${reminderNumber} sent successfully for record ${record.id}`);
+        console.log(`✅ Stability Certificate reminder #${reminderNumber} sent successfully for record ${record.id}`);
         return { success: true, reminderNumber, daysUntilExpiry };
       } else {
-        console.error(`❌ Failed to send stability management reminder for record ${record.id}:`, emailResult.error);
+        console.error(`❌ Failed to send Stability Certificate reminder for record ${record.id}:`, emailResult.error);
         return { success: false, error: emailResult.error };
       }
     } catch (error) {

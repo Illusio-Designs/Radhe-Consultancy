@@ -94,8 +94,9 @@ class EmailService {
         daysDisplay = `${daysUntilExpiry} days`;
         subjectDays = `${daysUntilExpiry} Days`;
       } else {
-        daysDisplay = 'N/A';
-        subjectDays = 'N/A';
+        // Handle negative or invalid values
+        daysDisplay = 'today';
+        subjectDays = 'Today';
       }
       
       const emailContent = this.generateLabourLicenseEmail(licenseData, reminderData, daysDisplay);
@@ -840,14 +841,24 @@ class EmailService {
       const templatePath = path.join(__dirname, '../email_templates/labour_license_reminder.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       
+      // Format expiry date
+      const formattedExpiryDate = new Date(expiryDate).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      
+      const reminderDate = new Date().toLocaleDateString('en-IN');
+      
       // Replace placeholders with actual data
-      template = template.replace('APEX ZIPPER', licenseData.company?.company_name || 'Valued Client');
-      template = template.replace('15 days', daysDisplay);
-      template = template.replace('2025-12-20', expiryDate);
-      template = template.replace('LIC-2025-001', licenseData.license_number || 'N/A');
-      template = template.replace('15/8/2025', new Date().toLocaleDateString('en-IN'));
-      template = template.replace('Reminder #2 of 3', `Reminder #${reminderNumber} of 3`);
-      template = template.replace('Type', licenseData.type || 'State');
+      template = template.replace(/\{\{COMPANY_NAME\}\}/g, licenseData.company?.company_name || 'Valued Client');
+      template = template.replace(/\{\{DAYS_UNTIL_EXPIRY\}\}/g, daysDisplay);
+      template = template.replace(/\{\{EXPIRY_DATE\}\}/g, formattedExpiryDate);
+      template = template.replace(/\{\{LICENSE_NUMBER\}\}/g, licenseData.license_number || 'N/A');
+      template = template.replace(/\{\{REMINDER_DATE\}\}/g, reminderDate);
+      template = template.replace(/\{\{REMINDER_NUMBER\}\}/g, reminderNumber);
+      template = template.replace(/\{\{STATUS\}\}/g, licenseData.status || 'Active');
+      template = template.replace(/\{\{LICENSE_TYPE\}\}/g, licenseData.type || 'State');
       
       return template;
     } catch (error) {
@@ -867,18 +878,18 @@ class EmailService {
     }
   }
 
-  // Send Stability Management renewal reminder email
+  // Send Stability Certificate renewal reminder email
   async sendStabilityManagementRenewalReminder(reminderData) {
     try {
       const { daysUntilExpiry, renewalDate, stabilityDetails, clientName, clientEmail } = reminderData;
       
       const emailContent = this.generateStabilityManagementRenewalEmail(reminderData);
-      const subject = `Stability Management Renewal Reminder - ${daysUntilExpiry} Days Until Expiry`;
+      const subject = `Stability Certificate Renewal Reminder - ${daysUntilExpiry} Days Until Expiry`;
       
       // Create plain text version for fallback
-      const plainText = `Stability Management Renewal Reminder: Your stability project #${stabilityDetails.stabilityId} expires in ${daysUntilExpiry} days on ${renewalDate}. Please contact us for renewal assistance.`;
+      const plainText = `Stability Certificate Renewal Reminder: Your stability certificate #${stabilityDetails.stabilityId} expires in ${daysUntilExpiry} days on ${renewalDate}. Please contact us for renewal assistance.`;
       const result = await sendEmail(clientEmail, subject, plainText, emailContent);
-      console.log('✅ Stability Management renewal reminder email sent successfully to:', clientEmail);
+      console.log('✅ Stability Certificate renewal reminder email sent successfully to:', clientEmail);
       
       return {
         success: true,
@@ -886,7 +897,7 @@ class EmailService {
         sentTo: clientEmail
       };
     } catch (error) {
-      console.error('❌ Error sending Stability Management renewal reminder email:', error);
+      console.error('❌ Error sending Stability Certificate renewal reminder email:', error);
       return {
         success: false,
         error: error.message
@@ -894,7 +905,7 @@ class EmailService {
     }
   }
 
-  // Generate professional HTML email content for Stability Management renewal
+  // Generate professional HTML email content for Stability Certificate renewal
   generateStabilityManagementRenewalEmail(reminderData) {
     try {
       const { daysUntilExpiry, renewalDate, stabilityDetails, clientName } = reminderData;
@@ -921,9 +932,9 @@ class EmailService {
         <!DOCTYPE html>
         <html>
         <body>
-          <h2>Stability Management Renewal Reminder</h2>
+          <h2>Stability Certificate Renewal Reminder</h2>
           <p>Dear ${reminderData.clientName || 'Valued Client'},</p>
-          <p>Your stability management project expires in ${reminderData.daysUntilExpiry} days.</p>
+          <p>Your stability certificate expires in ${reminderData.daysUntilExpiry} days.</p>
           <p>Please contact RADHE CONSULTANCY for assistance.</p>
         </body>
         </html>
@@ -1023,11 +1034,10 @@ class EmailService {
         return { success: false, error: 'No client email found' };
       }
 
-      const result = await this.sendEmail({
-        to: clientEmail,
-        subject: `[RADHE ADVISORY] Stability Management Reminder #${reminderNumber} - ${subjectDays} Until Renewal`,
-        html: emailHtml
-      });
+      const subject = `[RADHE ADVISORY] Stability Certificate Reminder #${reminderNumber} - ${subjectDays} Until Renewal`;
+      const plainText = `Stability Certificate Renewal Reminder: Your stability certificate expires ${daysDisplay}. Please contact RADHE CONSULTANCY for renewal assistance.`;
+      
+      const result = await sendEmail(clientEmail, subject, plainText, emailHtml);
       
       return {
         success: true,
@@ -1035,7 +1045,7 @@ class EmailService {
         sentTo: clientEmail
       };
     } catch (error) {
-      console.error('❌ Error sending Stability Management renewal reminder email:', error);
+      console.error('❌ Error sending Stability Certificate renewal reminder email:', error);
       return {
         success: false,
         error: error.message
@@ -1043,7 +1053,7 @@ class EmailService {
     }
   }
 
-  // Generate Stability Management renewal email
+  // Generate Stability Certificate renewal email
   generateStabilityManagementEmail(recordData, reminderData, daysDisplay) {
     try {
       const { daysUntilExpiry, renewalDate, reminderNumber } = reminderData;
@@ -1056,7 +1066,6 @@ class EmailService {
       template = template.replace(/COMPANY_NAME/g, recordData.factoryQuotation?.companyName || 'Valued Client');
       template = template.replace(/DAYS_UNTIL_EXPIRY/g, daysDisplay);
       template = template.replace(/RENEWAL_DATE/g, renewalDate);
-      template = template.replace(/#PROJECT_ID/g, `#${recordData.id || 'N/A'}`);
       template = template.replace(/CERTIFICATE_TYPE/g, recordData.factoryQuotation?.stabilityCertificateType || 'N/A');
       template = template.replace(/PROJECT_TYPE/g, recordData.load_type === 'with_load' ? 'With Load' : 'Without Load');
       template = template.replace(/CURRENT_STATUS/g, recordData.status || 'N/A');
@@ -1071,9 +1080,9 @@ class EmailService {
       return `
         <html>
           <body>
-            <h2>Stability Management Renewal Reminder</h2>
+            <h2>Stability Certificate Renewal Reminder</h2>
             <p>Dear ${recordData.factoryQuotation?.companyName || 'Valued Client'},</p>
-            <p>Your stability management project renewal is due in ${daysDisplay}.</p>
+            <p>Your stability certificate renewal is due in ${daysDisplay}.</p>
             <p>Renewal Date: ${reminderData.renewalDate}</p>
             <p>Please contact us for renewal assistance.</p>
             <br>

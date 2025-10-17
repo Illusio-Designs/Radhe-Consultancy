@@ -86,8 +86,9 @@
         .detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #e9ecef;
+            margin: 4px 0;
         }
         .detail-row:last-child {
             border-bottom: none;
@@ -95,6 +96,7 @@
         .detail-label {
             font-weight: 600;
             color: #2c3e50;
+            margin-right: 8px;
         }
         .detail-value {
             color: #6c757d;
@@ -169,7 +171,7 @@
             
             <p class="description">
                 Dear <strong>COMPANY_NAME</strong>,<br>
-                Your stability certificate project expires in <strong>DAYS_UNTIL_EXPIRY days</strong>.
+                Your stability certificate expires <strong>DAYS_UNTIL_EXPIRY</strong>.
             </p>
             
             <div class="alert-box">
@@ -179,10 +181,6 @@
             
             <div class="details-box">
                 <h3>📋 Certificate Information</h3>
-                <div class="detail-row">
-                    <span class="detail-label">Project ID:</span>
-                    <span class="detail-value">#PROJECT_ID</span>
-                </div>
                 <div class="detail-row">
                     <span class="detail-label">Company Name:</span>
                     <span class="detail-value">COMPANY_NAME</span>

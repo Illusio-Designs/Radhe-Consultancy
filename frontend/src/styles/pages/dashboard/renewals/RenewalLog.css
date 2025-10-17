@@ -264,6 +264,22 @@
   color: #065f46;
 }
 
+.days-badge.today {
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 700;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* No Logs State */
 .no-logs {
   text-align: center;

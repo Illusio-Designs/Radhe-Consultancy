@@ -1897,8 +1897,13 @@ function FactoryQuotation({ searchQuery = "" }) {
 
   const handleStabilityManagerSelect = async (stabilityManagerId, loadType) => {
     try {
-      console.log('Selected quotation:', selectedQuotation);
-      console.log('Creating stability management with:', {
+      console.log('🔄 Factory Quotation - Assigning to Stability Manager');
+      console.log('📋 Selected quotation:', {
+        id: selectedQuotation.id,
+        companyName: selectedQuotation.companyName,
+        status: selectedQuotation.status
+      });
+      console.log('👤 Assignment details:', {
         factory_quotation_id: selectedQuotation.id,
         stability_manager_id: stabilityManagerId,
         load_type: loadType
@@ -1910,20 +1915,32 @@ function FactoryQuotation({ searchQuery = "" }) {
         load_type: loadType
       });
       
+      console.log('📡 Stability Management API Response:', response);
+      
       if (response.success) {
+        console.log('✅ Stability manager assigned successfully');
         toast.success('Stability manager assigned successfully');
         await fetchQuotations(pagination.currentPage, pagination.pageSize);
         // Close modal after successful assignment
         setShowStabilityManagerModal(false);
+      } else {
+        console.error('❌ API returned success: false:', response);
+        toast.error('Failed to assign stability manager');
       }
     } catch (error) {
-      console.error('Error assigning stability manager:', error);
+      console.error('❌ Error assigning stability manager:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      
       if (error.message?.includes('already exists')) {
+        console.log('⚠️ Stability management already exists for this quotation');
         toast.error('Stability manager already assigned to this quotation');
         // Close modal if stability management already exists
         setShowStabilityManagerModal(false);
       } else {
-      toast.error('Failed to assign stability manager');
+        toast.error('Failed to assign stability manager');
       }
     }
   };

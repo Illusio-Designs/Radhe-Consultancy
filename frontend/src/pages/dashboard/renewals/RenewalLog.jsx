@@ -172,7 +172,7 @@ const RenewalLog = () => {
               <option value="factory">Factory License</option>
               <option value="labour_license">Labour License</option>
               <option value="labour_inspection">Labour Inspection</option>
-              <option value="stability">Stability Management</option>
+              <option value="stability_management">Stability Management</option>
               <option value="life">Life Insurance</option>
             </select>
           </div>
@@ -278,8 +278,20 @@ const RenewalLog = () => {
                 </div>
                 
                 <div className="table-cell days-until-expiry">
-                  <span className={`days-badge ${(log.days_until_expiry !== null && log.days_until_expiry !== undefined ? log.days_until_expiry : log.reminder_day) <= 7 ? 'urgent' : (log.days_until_expiry !== null && log.days_until_expiry !== undefined ? log.days_until_expiry : log.reminder_day) <= 30 ? 'warning' : 'normal'}`}>
-                    {(log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A'} days
+                  <span className={`days-badge ${(() => {
+                      const days = (log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A';
+                      if (days === 0) return 'today';
+                      if (days <= 7) return 'urgent';
+                      if (days <= 30) return 'warning';
+                      return 'normal';
+                    })()}`}>
+                    {(() => {
+                      const days = (log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A';
+                      if (days === 0) return 'Today';
+                      if (days === 1) return '1 day';
+                      if (days === 'N/A') return 'N/A';
+                      return `${days} days`;
+                    })()}
                   </span>
                 </div>
               </div>

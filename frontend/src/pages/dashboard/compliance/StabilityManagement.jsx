@@ -411,12 +411,27 @@ const StabilityManagement = ({ searchQuery = "" }) => {
   }, []);
 
   const fetchStabilityManagementRecords = async (page = 1, pageSize = 10) => {
+    console.log('🔄 Stability Management - Fetching records for page:', page, 'pageSize:', pageSize);
     setLoading(true);
     try {
       const response = await stabilityManagementAPI.getAllStabilityManagement({ page, pageSize });
-      console.log('Stability management API response:', response);
+      console.log('📡 Stability Management API Response:', {
+        success: response.success,
+        dataLength: response.data?.length || 0,
+        totalItems: response.totalItems || 0,
+        currentPage: response.currentPage || page,
+        totalPages: response.totalPages || 1
+      });
+      
       if (response.success) {
-        console.log('Stability management records:', response.data);
+        console.log('📊 Stability Management Records:', response.data.map(record => ({
+          id: record.id,
+          company: record.factoryQuotation?.companyName || 'N/A',
+          manager: record.stabilityManager?.username || 'N/A',
+          status: record.status,
+          loadType: record.load_type
+        })));
+        
         setStabilityRecords(response.data);
         if (response.currentPage) {
           setPagination({
@@ -429,14 +444,21 @@ const StabilityManagement = ({ searchQuery = "" }) => {
           setPagination((prev) => ({ ...prev, currentPage: page }));
         }
         setError(null);
+        console.log('✅ Stability Management records loaded successfully');
       } else {
+        console.error('❌ API returned success: false');
         setError("Failed to fetch stability management records");
       }
     } catch (err) {
-      console.error("Error fetching stability management records:", err);
+      console.error("❌ Error fetching stability management records:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      });
       setError("Failed to fetch stability management records");
     } finally {
       setLoading(false);
+      console.log('🏁 Stability Management fetch completed');
     }
   };
 

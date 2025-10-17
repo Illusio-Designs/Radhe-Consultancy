@@ -50,8 +50,20 @@ const getStabilityManagers = async (req, res) => {
 const getAllStabilityManagement = async (req, res) => {
   try {
     const { user } = req;
-    const isAdmin = user.roles.includes('Admin');
-    const isStabilityManager = user.roles.includes('Stability_manager');
+    console.log('📋 Stability Management - Fetching records for user:', user.user_id);
+    
+    // Handle both array and object formats
+    let userRoles = [];
+    if (Array.isArray(user.roles)) {
+      userRoles = user.roles.map(role => role.role_name || role);
+    } else if (user.roles) {
+      userRoles = [user.roles];
+    }
+    
+    const isAdmin = userRoles.includes('Admin');
+    const isStabilityManager = userRoles.includes('Stability_manager');
+
+    console.log('👤 User roles:', userRoles.join(', '), '- Admin:', isAdmin, 'Stability Manager:', isStabilityManager);
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || parseInt(req.query.pageSize) || 10;
@@ -62,6 +74,7 @@ const getAllStabilityManagement = async (req, res) => {
     // If user is stability manager, only show their assigned records
     if (isStabilityManager && !isAdmin) {
       whereClause.stability_manager_id = user.user_id;
+      console.log('🔍 Filtering records for stability manager:', user.user_id);
     }
 
     const { count, rows } = await StabilityManagement.findAndCountAll({
@@ -86,13 +99,20 @@ const getAllStabilityManagement = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
-    console.log('Stability records found:', count);
+    console.log('✅ Found', count, 'stability management records');
+    
     if (rows.length > 0) {
-      console.log('First record created_at:', rows[0].created_at);
-      console.log('First record createdAt:', rows[0].createdAt);
+      console.log('📊 Records summary:', rows.map(row => ({
+        id: row.id,
+        company: row.factoryQuotation?.companyName || 'N/A',
+        manager: row.stabilityManager?.username || 'N/A',
+        status: row.status
+      })));
+    } else {
+      console.log('⚠️ No stability records found for this user');
     }
 
     res.json({
@@ -180,7 +200,7 @@ const searchStabilityManagement = async (req, res) => {
           attributes: ['user_id', 'username', 'email']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     res.json({ success: true, data: stabilityRecords });
@@ -550,11 +570,18 @@ const uploadStabilityFiles = async (req, res) => {
 
     // Check if files were uploaded
     if (!req.files || req.files.length === 0) {
+      console.log('❌ No files uploaded for stability record:', id);
       return res.status(400).json({
         success: false,
         message: 'No files were uploaded'
       });
     }
+
+    console.log('✅ Files uploaded for stability record:', id, '- Count:', req.files.length);
+    console.log('📁 Current stability record files:', {
+      files: stabilityManagement.files,
+      filesType: typeof stabilityManagement.files
+    });
 
     // Process uploaded files
     const uploadedFiles = req.files.map(file => ({
@@ -567,8 +594,25 @@ const uploadStabilityFiles = async (req, res) => {
     }));
 
     // Get existing files or initialize empty array
-    const existingFiles = stabilityManagement.files ? JSON.parse(stabilityManagement.files) : [];
+    let existingFiles = [];
+    if (stabilityManagement.files) {
+      try {
+        // Handle both JSON string and already parsed object
+        existingFiles = typeof stabilityManagement.files === 'string' 
+          ? JSON.parse(stabilityManagement.files) 
+          : stabilityManagement.files;
+      } catch (error) {
+        console.error('Error parsing existing files:', error);
+        existingFiles = []; // Fallback to empty array if parsing fails
+      }
+    }
     const updatedFiles = [...existingFiles, ...uploadedFiles];
+
+    console.log('📊 File processing summary:', {
+      existingFilesCount: existingFiles.length,
+      newFilesCount: uploadedFiles.length,
+      totalFilesCount: updatedFiles.length
+    });
 
     // Update stability management with new files and status
     await stabilityManagement.update({
@@ -577,6 +621,8 @@ const uploadStabilityFiles = async (req, res) => {
       reviewed_at: new Date(),
       reviewed_by: user.user_id
     });
+
+    console.log('✅ Stability management record updated successfully');
 
     res.json({
       success: true,
@@ -588,7 +634,12 @@ const uploadStabilityFiles = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error uploading stability files:', error);
+    console.error('❌ Error uploading stability files:', {
+      message: error.message,
+      stack: error.stack,
+      recordId: req.params.id,
+      userId: req.user?.user_id
+    });
     res.status(500).json({
       success: false,
       message: 'Failed to upload files',
