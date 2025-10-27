@@ -1166,26 +1166,40 @@ class RenewalService {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(today.getDate() + 30);
 
-      // Get active quotations expiring within 30 days
+      // Get quotations with status 'renewal' or that have renewal_date set
       const quotations = await FactoryQuotation.findAll({
         where: {
-          status: {
-            [Op.in]: ['approved', 'plan', 'stability', 'application']
-          },
-          renewal_date: {
-            [Op.lte]: thirtyDaysFromNow
-          }
+          [Op.or]: [
+            {
+              status: 'renewal'
+            },
+            {
+              status: {
+                [Op.in]: ['approved', 'plan', 'stability', 'application']
+              },
+              renewal_date: {
+                [Op.ne]: null,
+                [Op.lte]: thirtyDaysFromNow
+              }
+            }
+          ]
         },
         order: [['renewal_date', 'ASC']]
       });
 
+      console.log(`📋 Found ${quotations.length} factory quotations to check`);
+
       // Filter quotations that need reminders today
       const quotationsNeedingReminders = [];
       for (const quotation of quotations) {
-        const daysUntilExpiry = Math.ceil((quotation.renewal_date - today) / (1000 * 60 * 60 * 24));
+        // If no renewal_date, set it to 30 days from now for processing
+        const renewalDate = quotation.renewal_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        const daysUntilExpiry = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
         
-        // Check if we should send a reminder today based on config
-        if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
+        console.log(`   Checking quotation ${quotation.id}: status=${quotation.status}, daysUntilExpiry=${daysUntilExpiry}`);
+        
+        // Accept all quotations with status 'renewal' or if they're within 30 days
+        if (quotation.status === 'renewal' || (daysUntilExpiry <= 30 && daysUntilExpiry >= -30)) {
           quotationsNeedingReminders.push(quotation);
         }
       }
@@ -1211,9 +1225,11 @@ class RenewalService {
 
       // Calculate days until expiry
       const today = new Date();
-      const daysUntilExpiry = Math.ceil((quotation.renewal_date - today) / (1000 * 60 * 60 * 24));
+      // If no renewal_date, set it to 30 days from now
+      const renewalDate = quotation.renewal_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const daysUntilExpiry = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
       
-      if (daysUntilExpiry <= 0) {
+      if (daysUntilExpiry < -7) {
         console.log(`⚠️ Quotation ${quotation.id} has already expired`);
         return { success: false, message: 'Quotation already expired' };
       }
@@ -1223,8 +1239,8 @@ class RenewalService {
       
       // Prepare reminder data
       const reminderData = {
-        daysUntilExpiry,
-        renewalDate: quotation.renewal_date.toLocaleDateString('en-IN'),
+        daysUntilExpiry: daysUntilExpiry > 0 ? daysUntilExpiry : 0,
+        renewalDate: renewalDate.toLocaleDateString('en-IN'),
         quotationDetails: {
           quotationId: quotation.id,
           companyName: quotation.companyName,

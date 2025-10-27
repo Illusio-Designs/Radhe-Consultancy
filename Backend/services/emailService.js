@@ -741,20 +741,30 @@ class EmailService {
   // Send Factory Quotation renewal reminder email
   async sendFactoryQuotationRenewalReminder(reminderData) {
     try {
-      const { daysUntilExpiry, renewalDate, quotationDetails, clientName } = reminderData;
+      const { daysUntilExpiry, renewalDate, quotationDetails, clientName, clientEmail } = reminderData;
+      
+      // Validate email
+      if (!clientEmail) {
+        console.error('❌ No email found for Factory Quotation:', quotationDetails.quotationId);
+        return {
+          success: false,
+          error: 'No email address provided'
+        };
+      }
       
       const emailContent = this.generateFactoryQuotationRenewalEmail(reminderData);
-      const subject = `Factory Quotation Renewal Reminder - ${daysUntilExpiry} Days Until Expiry`;
+      const daysDisplay = daysUntilExpiry <= 0 ? 'Today' : (daysUntilExpiry === 1 ? '1 Day' : `${daysUntilExpiry} Days`);
+      const subject = `Factory Quotation Renewal Reminder - ${daysDisplay} Until Expiry`;
       
       // Create plain text version for fallback
-      const plainText = `Factory Quotation Renewal Reminder: Your quotation #${quotationDetails.quotationId} expires in ${daysUntilExpiry} days on ${renewalDate}. Please contact us for renewal assistance.`;
-      const result = await sendEmail(quotationDetails.email, subject, plainText, emailContent);
-      console.log('✅ Factory Quotation renewal reminder email sent successfully to:', quotationDetails.email);
+      const plainText = `Factory Quotation Renewal Reminder: Your quotation #${quotationDetails.quotationId} expires ${daysUntilExpiry <= 0 ? 'today' : `in ${daysUntilExpiry} days`} on ${renewalDate}. Please contact us for renewal assistance.`;
+      const result = await sendEmail(clientEmail, subject, plainText, emailContent);
+      console.log('✅ Factory Quotation renewal reminder email sent successfully to:', clientEmail);
       
       return {
         success: true,
         messageId: result.messageId,
-        sentTo: quotationDetails.email
+        sentTo: clientEmail
       };
     } catch (error) {
       console.error('❌ Error sending Factory Quotation renewal reminder email:', error);
@@ -768,18 +778,31 @@ class EmailService {
   // Generate professional HTML email content for Factory Quotation renewal
   generateFactoryQuotationRenewalEmail(reminderData) {
     try {
-    const { daysUntilExpiry, renewalDate, quotationDetails, clientName } = reminderData;
+      const { daysUntilExpiry, renewalDate, quotationDetails, clientName } = reminderData;
       const templatePath = path.join(__dirname, '../email_templates/factory_quotation_renewal.html');
       let template = fs.readFileSync(templatePath, 'utf8');
-      template = template.replace('APEX ZIPPER', clientName || 'Valued Client');
-      template = template.replace('15 days', `${daysUntilExpiry} days`);
-      template = template.replace('2025-12-15', renewalDate);
-      template = template.replace('FQ-2025-001', quotationDetails?.quotationId || 'N/A');
-      template = template.replace('Active', quotationDetails?.status || 'N/A');
-      template = template.replace('₹500000', `₹${quotationDetails?.totalAmount || 'N/A'}`);
-      template = template.replace('15/8/2025', new Date().toLocaleDateString('en-IN'));
+      
+      // Format days display
+      const daysDisplay = daysUntilExpiry <= 0 ? 'today' : (daysUntilExpiry === 1 ? 'in 1 day' : `in ${daysUntilExpiry} days`);
+      
+      // Format amount with Indian currency
+      const formattedAmount = quotationDetails?.totalAmount 
+        ? `₹${quotationDetails.totalAmount.toLocaleString('en-IN')}` 
+        : 'N/A';
+      
+      // Replace all placeholders
+      template = template.replace(/{{COMPANY_NAME}}/g, clientName || 'Valued Client');
+      template = template.replace(/{{DAYS_UNTIL_EXPIRY}}/g, daysDisplay);
+      template = template.replace(/{{RENEWAL_DATE}}/g, renewalDate);
+      template = template.replace(/{{LICENSE_ID}}/g, `#${quotationDetails?.quotationId || 'N/A'}`);
+      template = template.replace(/{{STATUS}}/g, quotationDetails?.status || 'N/A');
+      template = template.replace(/{{TOTAL_AMOUNT}}/g, formattedAmount);
+      template = template.replace(/{{YEAR}}/g, quotationDetails?.year || 'N/A');
+      template = template.replace(/{{SENT_DATE}}/g, new Date().toLocaleDateString('en-IN'));
+      
       return template;
     } catch (error) {
+      console.error('❌ Error generating Factory Quotation renewal email:', error);
       return '<p>Factory Quotation Renewal Email Error</p>';
     }
   }

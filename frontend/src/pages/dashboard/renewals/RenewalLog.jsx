@@ -134,7 +134,7 @@ const RenewalLog = () => {
                 ⏰ Automatic emails sent daily at 9:00 AM IST
               </p>
               <p style={{ fontSize: '0.85em', color: '#ff6b00', marginTop: '0.3em', fontWeight: '600' }}>
-                🔐 Currently Active: DSC + Labour License + Stability Management
+                🔐 Currently Active: DSC + Labour License + Stability Management + Factory License
               </p>
             </div>
           </div>
@@ -196,6 +196,20 @@ const RenewalLog = () => {
             className="clear-filters-btn"
           >
             Clear Filters
+          </button>
+
+          <button 
+            className="refresh-button"
+            onClick={() => fetchRenewalLogs(pagination.page)}
+            disabled={loading}
+            style={{ 
+              padding: '8px 16px', 
+              fontSize: '14px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              marginLeft: '10px'
+            }}
+          >
+            {loading ? 'Refreshing...' : '🔄 Refresh Logs'}
           </button>
         </div>
 
@@ -327,14 +341,6 @@ const RenewalLog = () => {
                 Next
               </button>
             </div>
-            
-            <button 
-              className="refresh-button"
-              onClick={() => fetchRenewalLogs(pagination.page)}
-              disabled={loading}
-            >
-              {loading ? 'Refreshing...' : '🔄 Refresh Logs'}
-            </button>
           </div>
         )}
             </>

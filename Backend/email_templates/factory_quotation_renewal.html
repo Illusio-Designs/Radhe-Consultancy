@@ -21,39 +21,31 @@
       <h2 style="font-size: 20px; color: #1abc9c; margin: 0 0 20px 0; text-align: center; font-weight: 600;">⚠️ URGENT: Factory License Expiring Soon!</h2>
       
       <p style="font-size: 16px; color: #2c3e50; margin: 20px 0; text-align: center; line-height: 1.6;">
-        Dear <strong>APEX ZIPPER</strong>,<br>
-        Your factory license expires in <strong>15 days</strong>.
+        Dear <strong>{{COMPANY_NAME}}</strong>,<br>
+        Your factory license expires <strong>{{DAYS_UNTIL_EXPIRY}}</strong>.
       </p>
       
       <!-- Alert Box -->
       <div style="background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
         <h3 style="font-size: 18px; margin: 0 0 10px 0;">🚨 EXPIRY ALERT</h3>
-        <p style="margin: 0; font-size: 16px; font-weight: 600;">Renewal Date: <strong>30/8/2025</strong></p>
+        <p style="margin: 0; font-size: 16px; font-weight: 600;">Renewal Date: <strong>{{RENEWAL_DATE}}</strong></p>
       </div>
       
       <!-- Quotation Details -->
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
         <h3 style="color: #1abc9c; margin: 0 0 15px 0; font-size: 16px;">📋 License Information</h3>
-        <div style="display: grid; gap: 12px;">
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">License ID:</span>
-            <span style="color: #6c757d;">#FQ001</span>
+        <div style="display: grid; gap: 16px;">
+          <div style="padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50;">Company Name: </span>
+            <span style="color: #6c757d;">{{COMPANY_NAME}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Company Name:</span>
-            <span style="color: #6c757d;">APEX ZIPPER</span>
+          <div style="padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50;">Current Status: </span>
+            <span style="color: #6c757d;">{{STATUS}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Total Amount:</span>
-            <span style="color: #6c757d;">₹25,000</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Current Status:</span>
-            <span style="color: #6c757d;">Approved</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-            <span style="font-weight: 600; color: #2c3e50;">Year:</span>
-            <span style="color: #6c757d;">2025</span>
+          <div style="padding: 12px 0;">
+            <span style="font-weight: 600; color: #2c3e50;">Year: </span>
+            <span style="color: #6c757d;">{{YEAR}}</span>
           </div>
         </div>
       </div>
@@ -81,8 +73,8 @@
       <div style="height: 1px; background: #e9ecef; margin: 30px 0;"></div>
       
       <p style="text-align: center; font-size: 14px; color: #6c757d; margin: 0;">
-        <strong>Reminder Sent:</strong> 15/8/2025 | 
-        <strong>Days Until Expiry:</strong> 15
+        <strong>Reminder Sent:</strong> {{SENT_DATE}} | 
+        <strong>Days Until Expiry:</strong> {{DAYS_UNTIL_EXPIRY}}
       </p>
     </div>
     
