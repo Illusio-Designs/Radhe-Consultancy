@@ -284,6 +284,8 @@ const RenewalDashboard = () => {
 
   useEffect(() => {
     fetchData();
+    // Auto-load renewal list on mount
+    fetchRenewalList('all', 30);
   }, []);
 
   const fetchData = async () => {
@@ -727,42 +729,6 @@ const RenewalDashboard = () => {
       { value: 'life', label: 'Life Insurance' }
     ];
 
-    // If no data has been loaded yet, show empty state
-    if (renewalsList.length === 0 && serviceResults.length === 0 && !listLoading) {
-      return (
-        <div className="tab-content">
-          <div className="tab-header">
-            <h2>Upcoming Renewals List</h2>
-            <div className="tab-controls">
-              <Select
-                value={serviceTypeOptions.find(opt => opt.value === selectedServiceType)}
-                onChange={(option) => setSelectedServiceType(option.value)}
-                options={serviceTypeOptions}
-                placeholder="Select Service Type"
-                className="service-filter-select"
-                classNamePrefix="select"
-                isSearchable
-              />
-              <Button
-                variant="outlined"
-                onClick={() => fetchRenewalList(selectedServiceType)}
-                icon={<BiRefresh />}
-              >
-                Load Data
-              </Button>
-            </div>
-          </div>
-          <div className="empty-state">
-            <div className="empty-icon">
-              <BiListUl />
-            </div>
-            <h3>No Data Loaded</h3>
-            <p>Click "Load Data" to fetch upcoming renewals list.</p>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="tab-content">
         <div className="tab-header">
@@ -796,65 +762,52 @@ const RenewalDashboard = () => {
           </div>
         ) : (
           <div className="list-content">
-            {/* Service Results Summary */}
-            {serviceResults.length > 0 && selectedServiceType === 'all' && (
-              <div className="service-results-summary">
-                <h3>Service Results Summary</h3>
-                <div className="service-results-grid">
-                  {serviceResults.map((result, index) => (
-                    <div 
-                      key={index} 
-                      className={`service-result-card ${result.success ? 'success' : 'error'}`}
-                    >
-                      <div className="result-header">
-                        <div className="result-icon">{getServiceIcon(result.serviceType)}</div>
-                        <strong className="result-name">{result.serviceName}</strong>
-                      </div>
-                      <div className="result-info">
-                        {result.success ? (
-                          <span className="result-success">
-                            ✅ {result.count} renewals found
-                          </span>
-                        ) : (
-                          <span className="result-error">
-                            ❌ Error: {result.error}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Main Renewals List */}
             {renewalsList.length > 0 ? (
-              <div className="renewals-list">
-                <div className="renewals-list-header">
-                  <h3>Renewals ({renewalsList.length} total)</h3>
+              <div className="renewals-table-container">
+                <div className="renewals-table-header">
+                  <h3>Renewal Certificates ({renewalsList.length} Total)</h3>
                 </div>
-                <div className="renewals-list-content">
-                  {renewalsList.map((renewal, index) => (
-                    <div key={renewal.id || index} className="renewal-item">
-                      <div className="renewal-icon">
-                        {getServiceIcon(renewal.serviceType)}
-                      </div>
-                      <div className="renewal-details">
-                        <div className="renewal-title">{getServiceName(renewal.serviceType)}</div>
-                        <div className="renewal-meta">
-                          <span className="renewal-policy">Policy: {renewal.policyNumber}</span>
-                          <span className="renewal-client">Client: {renewal.clientName}</span>
-                          <span className="renewal-email">Email: {renewal.clientEmail}</span>
-                          <span className="renewal-date">Expires: {new Date(renewal.expiryDate).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="renewal-status">
-                        <span className={`status-badge ${getPriorityClass(renewal.daysUntilExpiry)}`}>
-                          {renewal.daysUntilExpiry} days
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="renewals-table-wrapper">
+                  <table className="renewals-table">
+                    <thead>
+                      <tr>
+                        <th>Service Type</th>
+                        <th>Policy/Certificate Number</th>
+                        <th>Client Name</th>
+                        <th>Email</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {renewalsList.map((renewal, index) => (
+                        <tr key={renewal.id || index} className="renewal-row">
+                          <td>
+                            <div className="service-cell">
+                              <span className="service-icon-small">{getServiceIcon(renewal.serviceType)}</span>
+                              <span className="service-name-text">{getServiceName(renewal.serviceType)}</span>
+                            </div>
+                          </td>
+                          <td className="policy-cell">{renewal.policyNumber}</td>
+                          <td className="client-cell">{renewal.clientName}</td>
+                          <td className="email-cell">{renewal.clientEmail}</td>
+                          <td className="date-cell">
+                            {new Date(renewal.expiryDate).toLocaleDateString('en-IN', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </td>
+                          <td className="days-cell">
+                            <span className={`days-badge ${getPriorityClass(renewal.daysUntilExpiry)}`}>
+                              {renewal.daysUntilExpiry} {renewal.daysUntilExpiry === 1 ? 'day' : 'days'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             ) : (

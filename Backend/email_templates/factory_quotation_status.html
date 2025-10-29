@@ -19,56 +19,43 @@
     <!-- Main Content -->
     <div style="padding: 40px 30px;">
       <h2 style="font-size: 20px; color: #27ae60; margin: 0 0 20px 0; text-align: center; font-weight: 600;">
-        ✅ Status Updated: APPROVED
+        ✅ Status Updated: {{STATUS}}
       </h2>
       
       <p style="font-size: 16px; color: #2c3e50; margin: 20px 0; text-align: center; line-height: 1.6;">
-        Dear <strong>APEX ZIPPER</strong>,<br>
+        Dear <strong>{{COMPANY_NAME}}</strong>,<br>
         Your factory quotation status has been updated. Here are the current details:
       </p>
       
       <!-- Status Box -->
       <div style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
         <h3 style="font-size: 18px; margin: 0 0 10px 0;">📊 CURRENT STATUS</h3>
-        <p style="margin: 0; font-size: 16px; font-weight: 600;">APPROVED</p>
+        <p style="margin: 0; font-size: 16px; font-weight: 600;">{{STATUS}}</p>
       </div>
       
       <!-- Quotation Details -->
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
         <h3 style="color: #27ae60; margin: 0 0 15px 0; font-size: 16px;">📋 Quotation Information</h3>
         <div style="display: grid; gap: 12px;">
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Quotation ID:</span>
-            <span style="color: #6c757d;">#FQ001</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Quotation ID:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{QUOTATION_ID}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Company Name:</span>
-            <span style="color: #6c757d;">APEX ZIPPER</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Company Name:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{COMPANY_NAME}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Total Amount:</span>
-            <span style="color: #6c757d;">₹25,000</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Total Amount:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{TOTAL_AMOUNT}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Assigned To:</span>
-            <span style="color: #6c757d;">Plan Management Team</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-            <span style="font-weight: 600; color: #2c3e50;">Year:</span>
-            <span style="color: #6c757d;">2025</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Assigned To:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{ASSIGNED_TO}}</span>
           </div>
         </div>
       </div>
       
-      <!-- Next Steps -->
-      <div style="background: #e8f5e8; border: 1px solid #c3e6c3; padding: 20px; border-radius: 8px; margin: 25px 0;">
-        <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #2d5a2d;">📝 Next Steps</h3>
-        <ul style="margin: 0; padding-left: 20px; color: #2d5a2d;">
-          <li style="margin: 6px 0;">Generate plan documents</li>
-          <li style="margin: 6px 0;">Assign plan management team</li>
-          <li style="margin: 6px 0;">Begin plan implementation</li>
-        </ul>
-      </div>
       
       <!-- Call to Action -->
       <div style="text-align: center; margin: 30px 0;">
@@ -81,8 +68,8 @@
       <div style="height: 1px; background: #e9ecef; margin: 30px 0;"></div>
       
       <p style="text-align: center; font-size: 14px; color: #6c757d; margin: 0;">
-        <strong>Status Updated:</strong> 15/8/2025 | 
-        <strong>Quotation ID:</strong> #FQ001
+        <strong>Status Updated:</strong> {{UPDATE_DATE}} | 
+        <strong>Quotation ID:</strong> {{QUOTATION_ID}}
       </p>
     </div>
     

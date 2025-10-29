@@ -134,7 +134,7 @@ const RenewalLog = () => {
                 ⏰ Automatic emails sent daily at 9:00 AM IST
               </p>
               <p style={{ fontSize: '0.85em', color: '#ff6b00', marginTop: '0.3em', fontWeight: '600' }}>
-                🔐 Currently Active: DSC + Labour License + Stability Management + Factory License
+                🔐 Currently Active: DSC + Labour License + Stability Certificate + Factory License (Renewal) + Factory Quotation Status
               </p>
             </div>
           </div>
@@ -169,7 +169,8 @@ const RenewalLog = () => {
               <option value="health">Health Insurance</option>
               <option value="fire">Fire Insurance</option>
               <option value="dsc">Digital Signature</option>
-              <option value="factory">Factory License</option>
+              <option value="factory">Factory License (Renewal)</option>
+              <option value="factory_quotation_status">Factory Quotation Status</option>
               <option value="labour_license">Labour License</option>
               <option value="labour_inspection">Labour Inspection</option>
               <option value="stability_management">Stability Management</option>
@@ -292,21 +293,27 @@ const RenewalLog = () => {
                 </div>
                 
                 <div className="table-cell days-until-expiry">
-                  <span className={`days-badge ${(() => {
-                      const days = (log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A';
-                      if (days === 0) return 'today';
-                      if (days <= 7) return 'urgent';
-                      if (days <= 30) return 'warning';
-                      return 'normal';
-                    })()}`}>
-                    {(() => {
-                      const days = (log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A';
-                      if (days === 0) return 'Today';
-                      if (days === 1) return '1 day';
-                      if (days === 'N/A') return 'N/A';
-                      return `${days} days`;
-                    })()}
-                  </span>
+                  {log.policy_type === 'factory_quotation_status' ? (
+                    <span className="days-badge normal" style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}>
+                      Status Update
+                    </span>
+                  ) : (
+                    <span className={`days-badge ${(() => {
+                        const days = (log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A';
+                        if (days === 0) return 'today';
+                        if (days <= 7) return 'urgent';
+                        if (days <= 30) return 'warning';
+                        return 'normal';
+                      })()}`}>
+                      {(() => {
+                        const days = (log.days_until_expiry !== null && log.days_until_expiry !== undefined) ? log.days_until_expiry : (log.reminder_day !== null && log.reminder_day !== undefined) ? log.reminder_day : 'N/A';
+                        if (days === 0) return 'Today';
+                        if (days === 1) return '1 day';
+                        if (days === 'N/A') return 'N/A';
+                        return `${days} days`;
+                      })()}
+                    </span>
+                  )}
                 </div>
               </div>
             ))

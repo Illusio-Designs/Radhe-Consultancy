@@ -642,7 +642,7 @@ class EmailService {
   // Send Factory Quotation status update email
   async sendFactoryQuotationStatusUpdate(quotationData) {
     try {
-      const { companyName, email, status, quotationId, totalAmount, assignedToRole } = quotationData;
+      const { companyName, email, status, quotationId, totalAmount, assignedToRole, quotationDbId } = quotationData;
       
       const emailContent = this.generateFactoryQuotationStatusEmail(quotationData);
       const subject = `Factory Quotation Status Update - ${status.toUpperCase()}`;
@@ -652,6 +652,23 @@ class EmailService {
       const result = await sendEmail(email, subject, plainText, emailContent);
       console.log('✅ Factory Quotation status update email sent successfully to:', email);
       
+      // Create reminder log entry
+      const logStatus = result && result.messageId ? 'sent' : 'failed';
+      await this.createReminderLog({
+        policy_id: quotationDbId || 0,
+        policy_type: 'factory_quotation_status',
+        client_name: companyName || 'Unknown Company',
+        client_email: email,
+        reminder_type: 'email',
+        reminder_day: 0, // Status updates are not tied to expiry days
+        expiry_date: null,
+        status: logStatus,
+        email_subject: subject,
+        response_data: result && result.messageId ? { messageId: result.messageId } : null,
+        error_message: logStatus === 'failed' ? 'Email sending failed' : null,
+        days_until_expiry: null
+      });
+      
       return {
         success: true,
         messageId: result.messageId,
@@ -659,6 +676,27 @@ class EmailService {
       };
     } catch (error) {
       console.error('❌ Error sending Factory Quotation status update email:', error);
+      
+      // Log the error even if email failed
+      try {
+        await this.createReminderLog({
+          policy_id: quotationData.quotationDbId || 0,
+          policy_type: 'factory_quotation_status',
+          client_name: quotationData.companyName || 'Unknown Company',
+          client_email: quotationData.email,
+          reminder_type: 'email',
+          reminder_day: 0,
+          expiry_date: null,
+          status: 'failed',
+          email_subject: `Factory Quotation Status Update - ${quotationData.status?.toUpperCase() || 'UNKNOWN'}`,
+          response_data: null,
+          error_message: error.message,
+          days_until_expiry: null
+        });
+      } catch (logError) {
+        console.error('❌ Error logging failed factory quotation status email:', logError);
+      }
+      
       return {
         success: false,
         error: error.message
@@ -672,15 +710,22 @@ class EmailService {
       const { companyName, status, quotationId, totalAmount, assignedToRole, year } = quotationData;
       const templatePath = path.join(__dirname, '../email_templates/factory_quotation_status.html');
       let template = fs.readFileSync(templatePath, 'utf8');
-      template = template.replace('APEX ZIPPER', companyName || 'Valued Client');
-      template = template.replace('FQ-2025-001', quotationId || 'N/A');
-      template = template.replace('Active', status || 'N/A');
-      template = template.replace('₹500000', `₹${totalAmount || 'N/A'}`);
-      template = template.replace('Admin', assignedToRole || 'N/A');
-      template = template.replace('2025', year || 'N/A');
-      template = template.replace('15/8/2025', new Date().toLocaleDateString('en-IN'));
+      
+      // Format total amount
+      const formattedAmount = totalAmount ? `₹${new Intl.NumberFormat('en-IN').format(totalAmount)}` : 'N/A';
+      
+      // Replace all placeholders
+      template = template.replace(/\{\{COMPANY_NAME\}\}/g, companyName || 'Valued Client');
+      template = template.replace(/\{\{QUOTATION_ID\}\}/g, quotationId || 'N/A');
+      template = template.replace(/\{\{STATUS\}\}/g, (status || 'N/A').toUpperCase());
+      template = template.replace(/\{\{TOTAL_AMOUNT\}\}/g, formattedAmount);
+      template = template.replace(/\{\{ASSIGNED_TO\}\}/g, assignedToRole || 'N/A');
+      template = template.replace(/\{\{YEAR\}\}/g, year || new Date().getFullYear());
+      template = template.replace(/\{\{UPDATE_DATE\}\}/g, new Date().toLocaleDateString('en-IN'));
+      
       return template;
     } catch (error) {
+      console.error('Error generating factory quotation status email:', error);
       return '<p>Factory Quotation Status Email Error</p>';
     }
   }

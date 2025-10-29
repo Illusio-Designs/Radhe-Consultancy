@@ -13,6 +13,7 @@ const {
   getNoOfWorkersOptions 
 } = require('../utils/factoryQuotationCalculator');
 const FactoryQuotationPDFGenerator = require('../utils/pdfGenerator');
+const EmailService = require('../services/emailService');
 
 // Get calculation options
 exports.getCalculationOptions = async (req, res) => {
@@ -462,6 +463,25 @@ exports.updateStatus = async (req, res) => {
         }
       ]
     });
+    
+    // Send status update email to client
+    try {
+      const emailService = new EmailService();
+      await emailService.sendFactoryQuotationStatusUpdate({
+        companyName: updatedQuotation.companyName,
+        email: updatedQuotation.email,
+        status: updatedQuotation.status,
+        quotationId: `FQ-${updatedQuotation.year}-${String(updatedQuotation.id).padStart(3, '0')}`,
+        totalAmount: updatedQuotation.totalAmount,
+        assignedToRole: updatedQuotation.assignedToRole || 'Admin',
+        year: updatedQuotation.year,
+        quotationDbId: updatedQuotation.id
+      });
+      console.log(`✅ Factory Quotation status update email sent to: ${updatedQuotation.email}`);
+    } catch (emailError) {
+      console.error('❌ Error sending status update email:', emailError);
+      // Don't fail the status update if email fails
+    }
     
     res.json({ success: true, data: updatedQuotation });
   } catch (error) {

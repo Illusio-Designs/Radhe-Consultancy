@@ -878,7 +878,7 @@ const getListByTypeAndPeriod = async (req, res) => {
               attributes: ['consumer_id', 'name', 'email']
             }
           ],
-          attributes: ['dsc_id', 'certificate_number', 'expiry_date', 'company_id', 'consumer_id']
+          attributes: ['dsc_id', 'certification_name', 'expiry_date', 'company_id', 'consumer_id', 'status']
         });
         break;
         
@@ -921,7 +921,7 @@ const getListByTypeAndPeriod = async (req, res) => {
       case 'labour_inspection':
         renewalList = await LabourInspection.findAll({
           where: {
-            inspection_date: {
+            expiry_date: {
               [Op.between]: [today, endDate]
             }
           },
@@ -932,7 +932,7 @@ const getListByTypeAndPeriod = async (req, res) => {
               attributes: ['company_id', 'company_name', 'company_email']
             }
           ],
-          attributes: ['inspection_id', 'inspection_number', 'inspection_date', 'company_id']
+          attributes: ['inspection_id', 'date_of_notice', 'expiry_date', 'company_id', 'officer_name', 'status']
         });
         break;
         
@@ -994,20 +994,20 @@ const getListByTypeAndPeriod = async (req, res) => {
     // Format the response data
     const formattedData = renewalList.map(item => {
       const data = item.toJSON();
-      const daysUntilExpiry = Math.ceil((new Date(data.policy_end_date || data.expiry_date || data.inspection_date || data.renewal_date) - today) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiry = Math.ceil((new Date(data.policy_end_date || data.expiry_date || data.renewal_date) - today) / (1000 * 60 * 60 * 24));
       
       return {
-        id: data.id,
-        policyNumber: data.policy_number || data.certificate_number || data.id || data.license_number || data.inspection_number || data.current_policy_number,
-        expiryDate: data.policy_end_date || data.expiry_date || data.inspection_date || data.renewal_date,
+        id: data.id || data.dsc_id || data.inspection_id || data.license_id,
+        policyNumber: data.policy_number || data.certification_name || data.license_number || data.current_policy_number || data.dsc_id || data.inspection_id || data.id || 'N/A',
+        expiryDate: data.policy_end_date || data.expiry_date || data.renewal_date,
         daysUntilExpiry,
         serviceType: type,
-        companyName: data.companyPolicyHolder?.company_name || data.company?.company_name || data.factoryQuotation?.company?.company_name || 'N/A',
-        companyEmail: data.companyPolicyHolder?.company_email || data.company?.company_email || data.factoryQuotation?.company?.company_email || 'N/A',
+        companyName: data.policyHolder?.company_name || data.companyPolicyHolder?.company_name || data.company?.company_name || data.factoryQuotation?.company?.company_name || 'N/A',
+        companyEmail: data.policyHolder?.company_email || data.companyPolicyHolder?.company_email || data.company?.company_email || data.factoryQuotation?.company?.company_email || 'N/A',
         consumerName: data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
         consumerEmail: data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A',
-        clientName: data.companyPolicyHolder?.company_name || data.company?.company_name || data.factoryQuotation?.company?.company_name || data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
-        clientEmail: data.companyPolicyHolder?.company_email || data.company?.company_email || data.factoryQuotation?.company?.company_email || data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A'
+        clientName: data.policyHolder?.company_name || data.companyPolicyHolder?.company_name || data.company?.company_name || data.factoryQuotation?.company?.company_name || data.consumerPolicyHolder?.name || data.consumer?.name || 'N/A',
+        clientEmail: data.policyHolder?.company_email || data.companyPolicyHolder?.company_email || data.company?.company_email || data.factoryQuotation?.company?.company_email || data.consumerPolicyHolder?.email || data.consumer?.email || 'N/A'
       };
     });
     
