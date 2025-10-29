@@ -872,19 +872,68 @@ class EmailService {
       const templatePath = path.join(__dirname, '../email_templates/labour_inspection_reminder.html');
       let template = fs.readFileSync(templatePath, 'utf8');
       
-      // Replace placeholders with actual data
-      template = template.replace('APEX ZIPPER', inspectionData.company?.company_name || 'Valued Client');
-      template = template.replace('10 days', `${daysUntilExpiry} days`);
-      template = template.replace('2025-12-20', expiryDate);
-      template = template.replace('05/12/2025', inspectionData.date_of_notice ? new Date(inspectionData.date_of_notice).toLocaleDateString('en-IN') : 'N/A');
-      template = template.replace('Mr. Ramesh Kumar', inspectionData.officer_name || 'N/A');
-      template = template.replace('Running', inspectionData.status || 'N/A');
-      template = template.replace('15/8/2025', new Date().toLocaleDateString('en-IN'));
-      template = template.replace('Reminder #2 of 5', `Reminder #${reminderNumber} of 5`);
+      // Format days display
+      let daysDisplay;
+      if (daysUntilExpiry === 0) {
+        daysDisplay = 'today';
+      } else if (daysUntilExpiry === 1) {
+        daysDisplay = '1 day';
+      } else {
+        daysDisplay = `${daysUntilExpiry} days`;
+      }
+      
+      // Format expiry date - handle both Date objects and date strings
+      let formattedExpiryDate = 'N/A';
+      if (expiryDate) {
+        try {
+          const dateObj = expiryDate instanceof Date ? expiryDate : new Date(expiryDate);
+          if (!isNaN(dateObj.getTime())) {
+            formattedExpiryDate = dateObj.toLocaleDateString('en-IN', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+          }
+        } catch (error) {
+          console.error('Error formatting expiry date:', error);
+          formattedExpiryDate = expiryDate.toString() || 'N/A';
+        }
+      }
+      
+      // Format notice date - handle both Date objects and date strings
+      let noticeDate = 'N/A';
+      if (inspectionData.date_of_notice) {
+        try {
+          const noticeDateObj = inspectionData.date_of_notice instanceof Date 
+            ? inspectionData.date_of_notice 
+            : new Date(inspectionData.date_of_notice);
+          if (!isNaN(noticeDateObj.getTime())) {
+            noticeDate = noticeDateObj.toLocaleDateString('en-IN', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+          }
+        } catch (error) {
+          console.error('Error formatting notice date:', error);
+          noticeDate = inspectionData.date_of_notice?.toString() || 'N/A';
+        }
+      }
+      
+      // Replace all placeholders using regex (global replace)
+      template = template.replace(/\{\{COMPANY_NAME\}\}/g, inspectionData.company?.company_name || 'Valued Client');
+      template = template.replace(/\{\{DAYS_UNTIL_EXPIRY\}\}/g, daysDisplay);
+      template = template.replace(/\{\{EXPIRY_DATE\}\}/g, formattedExpiryDate);
+      template = template.replace(/\{\{REMINDER_NUMBER\}\}/g, reminderNumber || 1);
+      template = template.replace(/\{\{NOTICE_DATE\}\}/g, noticeDate);
+      template = template.replace(/\{\{OFFICER_NAME\}\}/g, inspectionData.officer_name || 'N/A');
+      template = template.replace(/\{\{STATUS\}\}/g, inspectionData.status || 'N/A');
+      template = template.replace(/\{\{DAYS_DISPLAY\}\}/g, daysDisplay);
+      template = template.replace(/\{\{REMINDER_DATE\}\}/g, new Date().toLocaleDateString('en-IN'));
       
       return template;
     } catch (error) {
-      console.error('❌ Error reading labour inspection email template:', error);
+      console.error('❌ Error generating labour inspection email:', error);
       // Fallback to simple HTML if template reading fails
       return `
         <!DOCTYPE html>

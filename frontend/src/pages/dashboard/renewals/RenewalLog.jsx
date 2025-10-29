@@ -122,6 +122,22 @@ const RenewalLog = () => {
     });
   };
 
+  const formatPolicyType = (policyType) => {
+    const typeMap = {
+      'vehicle': 'Vehicle Insurance',
+      'health': 'Health Insurance',
+      'fire': 'Fire Insurance',
+      'dsc': 'Digital Signature',
+      'factory': 'Factory License',
+      'factory_quotation_status': 'Factory Quotation Status',
+      'labour_license': 'Labour License',
+      'labour_inspection': 'Labour Inspection',
+      'stability_management': 'Stability Certificate',
+      'life': 'Life Insurance'
+    };
+    return typeMap[policyType] || policyType?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
+  };
+
   return (
     <div className="insurance">
       <div className="insurance-container">
@@ -134,7 +150,7 @@ const RenewalLog = () => {
                 ⏰ Automatic emails sent daily at 9:00 AM IST
               </p>
               <p style={{ fontSize: '0.85em', color: '#ff6b00', marginTop: '0.3em', fontWeight: '600' }}>
-                🔐 Currently Active: DSC + Labour License + Stability Certificate + Factory License (Renewal) + Factory Quotation Status
+                🔐 Currently Active: DSC + Labour License + Stability Certificate + Factory License (Renewal) + Factory Quotation Status + Labour Inspection
               </p>
             </div>
           </div>
@@ -263,7 +279,7 @@ const RenewalLog = () => {
             logs.map((log, index) => (
               <div key={log.id || index} className="table-row">
                 <div className="table-cell policy-info">
-                  <div className="policy-type">{log.policy_type?.toUpperCase() || 'UNKNOWN'}</div>
+                  <div className="policy-type">{formatPolicyType(log.policy_type)}</div>
                   {log.email_subject && (
                     <div className="email-subject">{log.email_subject}</div>
                   )}
@@ -278,7 +294,9 @@ const RenewalLog = () => {
                   <div className="reminder-type">
                     {getReminderTypeIcon(log.reminder_type)} {log.reminder_type?.toUpperCase() || 'EMAIL'}
                   </div>
-                  <div className="reminder-day">Day {log.reminder_day}</div>
+                  {log.reminder_day !== null && log.reminder_day !== undefined && log.policy_type !== 'factory_quotation_status' && (
+                    <div className="reminder-day">Day {log.reminder_day}</div>
+                  )}
                   {log.expiry_date && (
                     <div className="expiry-date">Expires: {formatDate(log.expiry_date)}</div>
                   )}

@@ -21,40 +21,40 @@
       <h2 style="font-size: 20px; color: #e74c3c; margin: 0 0 20px 0; text-align: center; font-weight: 600;">⚠️ URGENT: Labour Inspection Expiring Soon!</h2>
       
       <p style="font-size: 16px; color: #2c3e50; margin: 20px 0; text-align: center; line-height: 1.6;">
-        Dear <strong>APEX ZIPPER</strong>,<br>
-        Your labour inspection expires in <strong>10 days</strong>.
+        Dear <strong>{{COMPANY_NAME}}</strong>,<br>
+        Your labour inspection expires <strong>{{DAYS_UNTIL_EXPIRY}}</strong>.
       </p>
       
       <!-- Alert Box -->
       <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
         <h3 style="font-size: 18px; margin: 0 0 10px 0;">🚨 EXPIRY ALERT</h3>
-        <p style="margin: 0; font-size: 16px; font-weight: 600;">Expiry Date: <strong>2025-12-20</strong></p>
-        <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Reminder #2 of 5</p>
+        <p style="margin: 0; font-size: 16px; font-weight: 600;">Expiry Date: <strong>{{EXPIRY_DATE}}</strong></p>
+        <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Reminder #{{REMINDER_NUMBER}} of 5</p>
       </div>
       
       <!-- Inspection Details -->
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
         <h3 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 16px;">🏭 Inspection Information</h3>
         <div style="display: grid; gap: 12px;">
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Company Name:</span>
-            <span style="color: #6c757d;">APEX ZIPPER</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Company Name:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{COMPANY_NAME}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Notice Date:</span>
-            <span style="color: #6c757d;">05/12/2025</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Notice Date:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{NOTICE_DATE}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Officer Name:</span>
-            <span style="color: #6c757d;">Mr. Ramesh Kumar</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Officer Name:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{OFFICER_NAME}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-            <span style="font-weight: 600; color: #2c3e50;">Current Status:</span>
-            <span style="color: #6c757d;">Running</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Current Status:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{STATUS}}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-            <span style="font-weight: 600; color: #2c3e50;">Days Until Expiry:</span>
-            <span style="color: #6c757d;">10 days</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+            <span style="font-weight: 600; color: #2c3e50; min-width: 140px;">Days Until Expiry:&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="color: #6c757d;">{{DAYS_DISPLAY}}</span>
           </div>
         </div>
       </div>
@@ -81,9 +81,9 @@
       <div style="height: 1px; background: #e9ecef; margin: 30px 0;"></div>
       
       <p style="text-align: center; font-size: 14px; color: #6c757d; margin: 0;">
-        <strong>Reminder Sent:</strong> 15/8/2025 | 
-        <strong>Days Until Expiry:</strong> 10 | 
-        <strong>Reminder #2 of 5</strong>
+        <strong>Reminder Sent:</strong> {{REMINDER_DATE}} | 
+        <strong>Days Until Expiry:</strong> {{DAYS_UNTIL_EXPIRY}} | 
+        <strong>Reminder #{{REMINDER_NUMBER}} of 5</strong>
       </p>
     </div>
     

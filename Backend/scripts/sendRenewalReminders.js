@@ -6,12 +6,12 @@ async function runAutomaticRenewalReminders() {
     console.log('='.repeat(50));
     console.log('🚀 AUTOMATIC RENEWAL REMINDER PROCESS STARTED');
     console.log('⏰ Time:', new Date().toLocaleString());
-    console.log('📌 Active: DSC + Labour License + Stability Management + Factory');
+    console.log('📌 Active: DSC + Labour License + Stability Management + Factory + Labour Inspection');
     console.log('='.repeat(50));
 
     const renewalService = new RenewalService();
 
-    // ⚠️ DSC + Labour License + Stability Management + Factory ACTIVE - Other types commented out
+    // ⚠️ DSC + Labour License + Stability Management + Factory + Labour Inspection ACTIVE - Other types commented out
     const results = {
       // vehicle: await renewalService.processVehicleInsuranceRenewals(),
       // health: await renewalService.processHealthInsuranceRenewals(),
@@ -22,7 +22,7 @@ async function runAutomaticRenewalReminders() {
       labourLicense: await renewalService.processLabourLicenseReminders(),
       stabilityManagement: await renewalService.processStabilityManagementReminders(),
       factoryLicense: await renewalService.processFactoryQuotationRenewals(),
-      // labourInspection: await renewalService.processLabourInspectionRenewals()
+      labourInspection: await renewalService.processLabourInspectionReminders()
     };
 
     console.log('\n' + '='.repeat(50));
@@ -37,7 +37,7 @@ async function runAutomaticRenewalReminders() {
     console.log('📋 Labour License (ACTIVE):', results.labourLicense.successful || 0, 'emails sent');
     console.log('🏗️ Stability Management (ACTIVE):', results.stabilityManagement.successful || 0, 'emails sent');
     console.log('🏭 Factory License (ACTIVE):', results.factoryLicense.successful || 0, 'emails sent');
-    // console.log('🏭 Labour Inspection:', results.labourInspection.successful, 'emails sent');
+    console.log('🔍 Labour Inspection (ACTIVE):', results.labourInspection.successful || 0, 'emails sent');
     console.log('='.repeat(50));
     
     const totalSent = Object.values(results).reduce((sum, r) => sum + (r.successful || 0), 0);

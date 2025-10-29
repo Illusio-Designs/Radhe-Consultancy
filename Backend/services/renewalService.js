@@ -1464,10 +1464,10 @@ class RenewalService {
         }
       }
 
-      // Prepare reminder data
+      // Prepare reminder data - pass Date object for proper formatting in email service
       const reminderData = {
         daysUntilExpiry,
-        expiryDate: expiryDate.toLocaleDateString('en-IN'),
+        expiryDate: expiryDate, // Pass Date object, format it in email service
         reminderNumber
       };
 
