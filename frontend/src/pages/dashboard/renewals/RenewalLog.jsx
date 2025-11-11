@@ -144,7 +144,7 @@ const RenewalLog = () => {
         <div className="insurance-content">
           <div className="insurance-header">
             <div>
-              <h1 className="insurance-title">📋 Renewal Log History</h1>
+            <h1 className="insurance-title">📋 Renewal Log History</h1>
               <p>Complete history of all renewal reminders sent automatically</p>
               <p style={{ fontSize: '0.9em', color: '#666', marginTop: '0.5em' }}>
                 ⏰ Automatic emails sent daily at 9:00 AM IST
@@ -295,7 +295,7 @@ const RenewalLog = () => {
                     {getReminderTypeIcon(log.reminder_type)} {log.reminder_type?.toUpperCase() || 'EMAIL'}
                   </div>
                   {log.reminder_day !== null && log.reminder_day !== undefined && log.policy_type !== 'factory_quotation_status' && (
-                    <div className="reminder-day">Day {log.reminder_day}</div>
+                  <div className="reminder-day">Day {log.reminder_day}</div>
                   )}
                   {log.expiry_date && (
                     <div className="expiry-date">Expires: {formatDate(log.expiry_date)}</div>
@@ -330,7 +330,7 @@ const RenewalLog = () => {
                         if (days === 'N/A') return 'N/A';
                         return `${days} days`;
                       })()}
-                    </span>
+                  </span>
                   )}
                 </div>
               </div>

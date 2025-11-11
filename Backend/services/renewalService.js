@@ -17,6 +17,55 @@ const { Op } = require('sequelize');
 class RenewalService {
   constructor() {
     this.emailService = new EmailService();
+    // Define 5 reminder intervals: 30, 22, 15, 7, 1 days before expiry
+    this.reminderIntervals = [30, 22, 15, 7, 1];
+  }
+
+  // Check if a reminder should be sent today based on days until expiry
+  // Returns the reminder number (1-5) if today is the right day, or 0 if not
+  shouldSendReminderToday(daysUntilExpiry) {
+    // Check each interval with ±1 day tolerance to account for script timing
+    // Intervals: 30, 22, 15, 7, 1 days before expiry
+    for (let i = 0; i < this.reminderIntervals.length; i++) {
+      const interval = this.reminderIntervals[i];
+      const tolerance = 1; // Allow ±1 day
+      
+      // Check if daysUntilExpiry matches this interval (within tolerance)
+      if (daysUntilExpiry >= interval - tolerance && daysUntilExpiry <= interval + tolerance) {
+        // For intervals other than the last one, make sure we're not too close to the next interval
+        if (i < this.reminderIntervals.length - 1) {
+          const nextInterval = this.reminderIntervals[i + 1];
+          // Only send if we're closer to this interval than the next one
+          if (Math.abs(daysUntilExpiry - interval) <= Math.abs(daysUntilExpiry - nextInterval)) {
+            return i + 1;
+          }
+        } else {
+          // Last interval (1 day) - send if within tolerance
+          return i + 1;
+        }
+      }
+    }
+    return 0; // No reminder due today
+  }
+
+  // Check if a reminder for a specific interval has already been sent
+  async hasReminderBeenSent(policyId, policyType, targetDays) {
+    try {
+      // Check if a reminder was sent for this policy with reminder_day close to targetDays
+      const existingReminder = await ReminderLog.findOne({
+        where: {
+          policy_id: policyId,
+          policy_type: policyType,
+          reminder_day: {
+            [Op.between]: [targetDays - 1, targetDays + 1] // Allow ±1 day tolerance
+          }
+        }
+      });
+      return !!existingReminder;
+    } catch (error) {
+      console.error(`❌ Error checking existing reminder:`, error);
+      return false;
+    }
   }
 
   // Process all vehicle insurance renewals that need reminders
@@ -879,24 +928,11 @@ class RenewalService {
   async processSingleDSC(certificate, config) {
     try {
       console.log(`📋 Processing DSC ${certificate.dsc_id}...`);
-      
-      // Check if reminder already sent today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const existingReminder = await ReminderLog.findOne({
-        where: {
-          policy_id: certificate.dsc_id,
-          policy_type: 'dsc',
-          sent_at: {
-            [Op.gte]: today
-          }
-        }
-      });
 
-      if (existingReminder) {
-        console.log(`⚠️ Reminder already sent today for DSC ${certificate.dsc_id}`);
-        return { success: false, message: 'Reminder already sent today' };
+      // Skip if already renewed/completed/closed
+      if (['renewed', 'completed', 'closed', 'inactive', 'done'].includes((certificate.status || '').toLowerCase())) {
+        console.log(`⏭️ DSC ${certificate.dsc_id}: Skipping, status is '${certificate.status}'`);
+        return { success: false, skipped: true, reason: 'Already renewed/completed' };
       }
 
       // Get client details
@@ -914,6 +950,23 @@ class RenewalService {
       // Calculate days until expiry
       const daysUntilExpiry = this.getDaysUntilExpiry(certificate.expiry_date);
       
+      // Check if today is the right day to send a reminder (one of the 5 intervals)
+      const reminderNumber = this.shouldSendReminderToday(daysUntilExpiry);
+      if (reminderNumber === 0) {
+        console.log(`⏭️ DSC ${certificate.dsc_id}: No reminder due today (${daysUntilExpiry} days until expiry)`);
+        return { success: false, message: 'Not a reminder day', skipped: true };
+      }
+
+      // Get the target days for this reminder
+      const targetDays = this.reminderIntervals[reminderNumber - 1];
+      
+      // Check if this specific reminder has already been sent
+      const alreadySent = await this.hasReminderBeenSent(certificate.dsc_id, 'dsc', targetDays);
+      if (alreadySent) {
+        console.log(`⚠️ DSC ${certificate.dsc_id}: Reminder #${reminderNumber} (${targetDays} days) already sent`);
+        return { success: false, message: `Reminder #${reminderNumber} already sent` };
+      }
+      
       // Prepare reminder data
       const reminderData = {
         policyId: certificate.dsc_id,
@@ -923,6 +976,7 @@ class RenewalService {
         daysUntilExpiry,
         expiryDate: certificate.expiry_date,
         policyType: 'dsc',
+        reminderNumber,
         policyDetails: {
           certificateName: certificate.certification_name,
           status: certificate.status,
@@ -937,8 +991,8 @@ class RenewalService {
       await this.logDSCReminder(certificate, reminderData, emailResult);
 
       if (emailResult.success) {
-        console.log(`✅ DSC renewal reminder sent successfully for certificate ${certificate.dsc_id}`);
-        return { success: true, messageId: emailResult.messageId };
+        console.log(`✅ DSC renewal reminder #${reminderNumber} sent successfully for certificate ${certificate.dsc_id}`);
+        return { success: true, messageId: emailResult.messageId, reminderNumber };
       } else {
         console.log(`❌ Failed to send DSC renewal reminder for certificate ${certificate.dsc_id}`);
         return { success: false, error: emailResult.error };
@@ -1058,24 +1112,27 @@ class RenewalService {
   // Log DSC renewal reminder
   async logDSCReminder(certificate, reminderData, emailResult) {
     try {
+      const reminderNumber = reminderData.reminderNumber || 1;
+      const targetDays = this.reminderIntervals[reminderNumber - 1] || reminderData.daysUntilExpiry;
+      
       const logData = {
         policy_id: certificate.dsc_id,
         policy_type: 'dsc',
         client_name: reminderData.clientName,
         client_email: reminderData.clientEmail,
         reminder_type: 'email',
-        reminder_day: reminderData.daysUntilExpiry,
+        reminder_day: targetDays, // Store the target interval, not the actual days until expiry
         expiry_date: certificate.expiry_date,
         sent_at: new Date(),
         status: emailResult.success ? 'sent' : 'failed',
-        email_subject: `DSC Renewal Reminder - ${reminderData.daysUntilExpiry} days remaining`,
-        response_data: emailResult.success ? { messageId: emailResult.messageId || 'unknown' } : null,
+        email_subject: `DSC Renewal Reminder #${reminderNumber} - ${reminderData.daysUntilExpiry} days remaining`,
+        response_data: emailResult.success ? { messageId: emailResult.messageId || 'unknown', reminderNumber } : null,
         error_message: emailResult.success ? null : emailResult.error || 'Unknown error',
         days_until_expiry: reminderData.daysUntilExpiry
       };
 
       await ReminderLog.create(logData);
-      console.log(`📝 DSC renewal reminder logged successfully`);
+      console.log(`📝 DSC renewal reminder #${reminderNumber} logged successfully`);
     } catch (error) {
       console.error(`❌ Error logging DSC renewal reminder:`, error);
     }
@@ -1215,12 +1272,11 @@ class RenewalService {
   async processSingleFactoryQuotation(quotation, config) {
     try {
       console.log(`🏭 Processing Factory Quotation ${quotation.id} for renewal...`);
-      
-      // Check if we've already sent a reminder for this quotation today
-      const existingReminder = await this.checkExistingFactoryQuotationReminder(quotation.id);
-      if (existingReminder) {
-        console.log(`⚠️ Reminder already sent for quotation ${quotation.id} today`);
-        return { success: false, message: 'Reminder already sent today' };
+
+      // Skip if already renewed/completed/closed
+      if (['renewed', 'completed', 'closed', 'inactive', 'done'].includes((quotation.status || '').toLowerCase())) {
+        console.log(`⏭️ Factory Quotation ${quotation.id}: Skipping, status is '${quotation.status}'`);
+        return { success: false, skipped: true, reason: 'Already renewed/completed' };
       }
 
       // Calculate days until expiry
@@ -1234,6 +1290,23 @@ class RenewalService {
         return { success: false, message: 'Quotation already expired' };
       }
 
+      // Check if today is the right day to send a reminder (one of the 5 intervals)
+      const reminderNumber = this.shouldSendReminderToday(daysUntilExpiry);
+      if (reminderNumber === 0) {
+        console.log(`⏭️ Factory Quotation ${quotation.id}: No reminder due today (${daysUntilExpiry} days until expiry)`);
+        return { success: false, message: 'Not a reminder day', skipped: true };
+      }
+
+      // Get the target days for this reminder
+      const targetDays = this.reminderIntervals[reminderNumber - 1];
+      
+      // Check if this specific reminder has already been sent
+      const alreadySent = await this.hasReminderBeenSent(quotation.id, 'factory', targetDays);
+      if (alreadySent) {
+        console.log(`⚠️ Factory Quotation ${quotation.id}: Reminder #${reminderNumber} (${targetDays} days) already sent`);
+        return { success: false, message: `Reminder #${reminderNumber} already sent` };
+      }
+
       // Extract client data
       const clientData = this.extractFactoryQuotationClientData(quotation);
       
@@ -1241,6 +1314,7 @@ class RenewalService {
       const reminderData = {
         daysUntilExpiry: daysUntilExpiry > 0 ? daysUntilExpiry : 0,
         renewalDate: renewalDate.toLocaleDateString('en-IN'),
+        reminderNumber,
         quotationDetails: {
           quotationId: quotation.id,
           companyName: quotation.companyName,
@@ -1259,8 +1333,8 @@ class RenewalService {
       await this.logFactoryQuotationReminder(quotation, reminderData, emailResult);
       
       if (emailResult.success) {
-        console.log(`✅ Factory Quotation renewal reminder sent successfully to ${clientData.clientName}`);
-        return { success: true, messageId: emailResult.messageId };
+        console.log(`✅ Factory Quotation renewal reminder #${reminderNumber} sent successfully to ${clientData.clientName}`);
+        return { success: true, messageId: emailResult.messageId, reminderNumber };
       } else {
         console.error(`❌ Failed to send Factory Quotation renewal reminder:`, emailResult.error);
         return { success: false, error: emailResult.error };
@@ -1271,28 +1345,6 @@ class RenewalService {
     }
   }
 
-  // Check if reminder already sent for Factory Quotation today
-  async checkExistingFactoryQuotationReminder(quotationId) {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const existingReminder = await ReminderLog.findOne({
-        where: {
-          policy_id: quotationId,
-          policy_type: 'factory',
-          sent_at: {
-            [Op.gte]: today
-          }
-        }
-      });
-      
-      return !!existingReminder;
-    } catch (error) {
-      console.error('❌ Error checking existing Factory Quotation reminder:', error);
-      return false;
-    }
-  }
 
   // Extract client data from Factory Quotation
   extractFactoryQuotationClientData(quotation) {
@@ -1305,24 +1357,27 @@ class RenewalService {
   // Log Factory Quotation renewal reminder
   async logFactoryQuotationReminder(quotation, reminderData, emailResult) {
     try {
+      const reminderNumber = reminderData.reminderNumber || 1;
+      const targetDays = this.reminderIntervals[reminderNumber - 1] || reminderData.daysUntilExpiry;
+      
       const logData = {
         policy_id: quotation.id,
         policy_type: 'factory',
         client_name: reminderData.clientName,
         client_email: reminderData.clientEmail,
         reminder_type: 'email',
-        reminder_day: reminderData.daysUntilExpiry,
+        reminder_day: targetDays, // Store the target interval
         expiry_date: quotation.renewal_date,
         sent_at: new Date(),
         status: emailResult.success ? 'sent' : 'failed',
-        email_subject: `Factory Quotation Renewal Reminder - ${reminderData.daysUntilExpiry} days remaining`,
-        response_data: emailResult.success ? { messageId: emailResult.messageId || 'unknown' } : null,
+        email_subject: `Factory Quotation Renewal Reminder #${reminderNumber} - ${reminderData.daysUntilExpiry} days remaining`,
+        response_data: emailResult.success ? { messageId: emailResult.messageId || 'unknown', reminderNumber } : null,
         error_message: emailResult.success ? null : emailResult.error || 'Unknown error',
         days_until_expiry: reminderData.daysUntilExpiry
       };
 
       await ReminderLog.create(logData);
-      console.log(`📝 Factory Quotation renewal reminder logged successfully`);
+      console.log(`📝 Factory Quotation renewal reminder #${reminderNumber} logged successfully`);
     } catch (error) {
       console.error(`❌ Error logging Factory Quotation renewal reminder:`, error);
     }
@@ -1388,17 +1443,17 @@ class RenewalService {
   async getLabourInspectionsNeedingReminders() {
     try {
       const today = new Date();
-      const fifteenDaysFromNow = new Date();
-      fifteenDaysFromNow.setDate(today.getDate() + 15);
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(today.getDate() + 30);
 
-      // Get active inspections expiring within 15 days
+      // Get active inspections expiring within 30 days
       const inspections = await LabourInspection.findAll({
         where: {
           status: {
             [Op.in]: ['pending', 'running']
           },
           expiry_date: {
-            [Op.lte]: fifteenDaysFromNow
+            [Op.lte]: thirtyDaysFromNow
           }
         },
         include: [
@@ -1425,43 +1480,21 @@ class RenewalService {
       const expiryDate = new Date(inspection.expiry_date);
       const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
 
-      // Check if reminder should be sent based on configuration
-      if (!config.shouldSendReminder(daysUntilExpiry)) {
-        console.log(`⏭️ Skipping reminder for inspection ${inspection.inspection_id} - ${daysUntilExpiry} days until expiry`);
-        return { success: false, message: 'Reminder not due yet' };
+      // Check if today is the right day to send a reminder (one of the 5 intervals)
+      const reminderNumber = this.shouldSendReminderToday(daysUntilExpiry);
+      if (reminderNumber === 0) {
+        console.log(`⏭️ Labour Inspection ${inspection.inspection_id}: No reminder due today (${daysUntilExpiry} days until expiry)`);
+        return { success: false, message: 'Not a reminder day', skipped: true };
       }
 
-      // Check if reminder already sent today
-      const existingReminder = await ReminderLog.findOne({
-        where: {
-          policy_id: inspection.inspection_id,
-          policy_type: 'labour_inspection',
-          sent_at: {
-            [Op.gte]: new Date(today.getFullYear(), today.getMonth(), today.getDate())
-          }
-        }
-      });
-
-      if (existingReminder) {
-        console.log(`⏭️ Reminder already sent today for inspection ${inspection.inspection_id}`);
-        return { success: false, message: 'Reminder already sent today' };
-      }
-
-      // Determine reminder number based on days until expiry
-      let reminderNumber = 1;
-      if (daysUntilExpiry <= 3) reminderNumber = 5;
-      else if (daysUntilExpiry <= 6) reminderNumber = 4;
-      else if (daysUntilExpiry <= 9) reminderNumber = 3;
-      else if (daysUntilExpiry <= 12) reminderNumber = 2;
-      else reminderNumber = 1;
-
-      // Use dynamic reminder timing from config if available
-      if (config.calculateReminderNumber) {
-        reminderNumber = config.calculateReminderNumber(daysUntilExpiry);
-        if (reminderNumber === 0) {
-          console.log(`⏭️ No reminder due for inspection ${inspection.inspection_id} - ${daysUntilExpiry} days until expiry`);
-          return { success: false, message: 'No reminder due yet' };
-        }
+      // Get the target days for this reminder
+      const targetDays = this.reminderIntervals[reminderNumber - 1];
+      
+      // Check if this specific reminder has already been sent
+      const alreadySent = await this.hasReminderBeenSent(inspection.inspection_id, 'labour_inspection', targetDays);
+      if (alreadySent) {
+        console.log(`⚠️ Labour Inspection ${inspection.inspection_id}: Reminder #${reminderNumber} (${targetDays} days) already sent`);
+        return { success: false, message: `Reminder #${reminderNumber} already sent` };
       }
 
       // Prepare reminder data - pass Date object for proper formatting in email service
@@ -1482,12 +1515,13 @@ class RenewalService {
           client_name: inspection.company?.company_name || 'Unknown Company',
           client_email: inspection.company?.company_email || 'No email',
           reminder_type: 'email',
-          reminder_day: daysUntilExpiry,
+          reminder_day: targetDays, // Store the target interval
           expiry_date: inspection.expiry_date,
           sent_at: new Date(),
           status: 'sent',
           email_subject: `Labour Inspection Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Expiry`,
-          days_until_expiry: daysUntilExpiry
+          days_until_expiry: daysUntilExpiry,
+          response_data: { reminderNumber }
         });
 
         console.log(`✅ Labour inspection reminder #${reminderNumber} sent successfully for inspection ${inspection.inspection_id}`);
@@ -1564,9 +1598,7 @@ class RenewalService {
       // Get active licenses expiring within 30 days
       const licenses = await LabourLicense.findAll({
         where: {
-          status: {
-            [Op.in]: ['active', 'renewed']
-          },
+          status: 'active',
           expiry_date: {
             [Op.lte]: thirtyDaysFromNow
           }
@@ -1591,39 +1623,31 @@ class RenewalService {
   // Process single labour license reminder
   async processSingleLabourLicense(license, config) {
     try {
+      // Skip if already renewed/completed/closed
+      if (['renewed', 'completed', 'closed', 'inactive', 'done'].includes((license.status || '').toLowerCase())) {
+        console.log(`⏭️ Labour License ${license.license_id}: Skipping, status is '${license.status}'`);
+        return { success: false, skipped: true, reason: 'Already renewed/completed' };
+      }
+
       const expiryDate = new Date(license.expiry_date);
       const daysUntilExpiry = this.getDaysUntilExpiry(expiryDate);
 
-      // Check if reminder should be sent based on configuration
-      if (!config.shouldSendReminder(daysUntilExpiry)) {
-        console.log(`⏭️ Skipping reminder for license ${license.license_id} - ${daysUntilExpiry} days until expiry`);
-        return { success: false, message: 'Reminder not due yet' };
+      // Check if today is the right day to send a reminder (one of the 5 intervals)
+      const reminderNumber = this.shouldSendReminderToday(daysUntilExpiry);
+      if (reminderNumber === 0) {
+        console.log(`⏭️ Labour License ${license.license_id}: No reminder due today (${daysUntilExpiry} days until expiry)`);
+        return { success: false, message: 'Not a reminder day', skipped: true };
       }
 
-      // Check if reminder already sent today
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      // Get the target days for this reminder
+      const targetDays = this.reminderIntervals[reminderNumber - 1];
       
-      const existingReminder = await ReminderLog.findOne({
-        where: {
-          policy_id: license.license_id,
-          policy_type: 'labour_license',
-          sent_at: {
-            [Op.gte]: todayStart
-          }
-        }
-      });
-
-      if (existingReminder) {
-        console.log(`⏭️ Reminder already sent today for license ${license.license_id}`);
-        return { success: false, message: 'Reminder already sent today' };
+      // Check if this specific reminder has already been sent
+      const alreadySent = await this.hasReminderBeenSent(license.license_id, 'labour_license', targetDays);
+      if (alreadySent) {
+        console.log(`⚠️ Labour License ${license.license_id}: Reminder #${reminderNumber} (${targetDays} days) already sent`);
+        return { success: false, message: `Reminder #${reminderNumber} already sent` };
       }
-
-      // Determine reminder number based on days until expiry
-      let reminderNumber = 1;
-      if (daysUntilExpiry <= 7) reminderNumber = 3;
-      else if (daysUntilExpiry <= 15) reminderNumber = 2;
-      else reminderNumber = 1;
 
       // Prepare reminder data
       const reminderData = {
@@ -1643,12 +1667,13 @@ class RenewalService {
           client_name: license.company?.company_name || 'Unknown Company',
           client_email: license.company?.company_email || 'No email',
           reminder_type: 'email',
-          reminder_day: daysUntilExpiry,
+          reminder_day: targetDays, // Store the target interval
           expiry_date: license.expiry_date,
           sent_at: new Date(),
           status: 'sent',
           email_subject: `Labour License Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Expiry`,
-          days_until_expiry: daysUntilExpiry
+          days_until_expiry: daysUntilExpiry,
+          response_data: { reminderNumber }
         });
 
         console.log(`✅ Labour license reminder #${reminderNumber} sent successfully for license ${license.license_id}`);
@@ -1755,36 +1780,22 @@ class RenewalService {
       const today = new Date();
       const daysUntilExpiry = this.getDaysUntilExpiry(renewalDate);
 
-      // Check if reminder should be sent based on config
-      const shouldSend = config.shouldSendReminder(daysUntilExpiry);
-      if (!shouldSend) {
-        return { success: false, message: 'Not time to send reminder yet' };
+      // Check if today is the right day to send a reminder (one of the 5 intervals)
+      const reminderNumber = this.shouldSendReminderToday(daysUntilExpiry);
+      if (reminderNumber === 0) {
+        console.log(`⏭️ Stability Record ${record.id}: No reminder due today (${daysUntilExpiry} days until expiry)`);
+        return { success: false, message: 'Not a reminder day', skipped: true };
       }
 
-      // Check if reminder was already sent today
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      // Get the target days for this reminder
+      const targetDays = this.reminderIntervals[reminderNumber - 1];
       
-      const existingReminder = await ReminderLog.findOne({
-        where: {
-          policy_id: record.id,
-          policy_type: 'stability_management',
-          sent_at: {
-            [Op.gte]: todayStart
-          }
-        }
-      });
-
-      if (existingReminder) {
-        console.log(`⚠️ Reminder already sent today for stability record ${record.id}`);
-        return { success: false, message: 'Reminder already sent today' };
+      // Check if this specific reminder has already been sent
+      const alreadySent = await this.hasReminderBeenSent(record.id, 'stability_management', targetDays);
+      if (alreadySent) {
+        console.log(`⚠️ Stability Record ${record.id}: Reminder #${reminderNumber} (${targetDays} days) already sent`);
+        return { success: false, message: `Reminder #${reminderNumber} already sent` };
       }
-
-      // Determine reminder number based on days until expiry
-      let reminderNumber = 1;
-      if (daysUntilExpiry <= 7) reminderNumber = 3;
-      else if (daysUntilExpiry <= 30) reminderNumber = 2;
-      else reminderNumber = 1;
 
       // Prepare reminder data
       const reminderData = {
@@ -1804,12 +1815,13 @@ class RenewalService {
           client_name: record.factoryQuotation?.companyName || 'Unknown Company',
           client_email: record.factoryQuotation?.email || 'No email',
           reminder_type: 'email',
-          reminder_day: daysUntilExpiry,
+          reminder_day: targetDays, // Store the target interval
           expiry_date: record.renewal_date,
           sent_at: new Date(),
           status: 'sent',
           email_subject: `Stability Certificate Reminder #${reminderNumber} - ${daysUntilExpiry} Days Until Renewal`,
-          days_until_expiry: daysUntilExpiry
+          days_until_expiry: daysUntilExpiry,
+          response_data: { reminderNumber }
         });
 
         console.log(`✅ Stability Certificate reminder #${reminderNumber} sent successfully for record ${record.id}`);
