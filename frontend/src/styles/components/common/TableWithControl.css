@@ -30,9 +30,18 @@
 .table-container {
   position: relative;
   overflow-x: auto;
+  overflow-y: auto;
   max-height: 600px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.table-container table {
+  margin: 0;
+  width: 100%;
+  table-layout: auto;
 }
 
 .table-container::-webkit-scrollbar {
@@ -52,9 +61,4 @@
 
 .table-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
-}
-
-/* Firefox scrollbar styles */
-.table-container {
-  scrollbar-width: none;
 }

@@ -1,14 +1,17 @@
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   border-radius: 12px;
-  overflow: hidden;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 thead {
   background-color: #f3f4f6;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 th, td {
@@ -21,6 +24,19 @@ th {
   color: #1f2937;
   font-weight: 600;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background-color: #f3f4f6;
+  z-index: 101;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+th:first-child {
+  border-top-left-radius: 12px;
+}
+
+th:last-child {
+  border-top-right-radius: 12px;
 }
 
 td {
