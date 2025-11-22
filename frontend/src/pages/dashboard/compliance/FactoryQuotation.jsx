@@ -1,6 +1,6 @@
 // This file is now FactoryQuotation.jsx
 import React, { useState, useEffect } from "react";
-import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload, BiShield, BiTrendingUp, BiCalendar, BiDownload } from "react-icons/bi";
+import { BiPlus, BiEdit, BiErrorCircle, BiFile, BiUpload, BiShield, BiTrendingUp, BiCalendar, BiDownload, BiShow } from "react-icons/bi";
 import { factoryQuotationAPI, planManagementAPI, userAPI, stabilityManagementAPI, applicationManagementAPI, companyAPI, renewalStatusAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Button from "../../../components/common/Button/Button";
@@ -18,6 +18,303 @@ import "../../../styles/pages/dashboard/companies/Vendor.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../../contexts/AuthContext";
+
+// View Quotation Modal Component
+const ViewQuotationModal = ({ isOpen, onClose, quotation }) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB");
+  };
+
+  if (!quotation) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Factory Quotation Details">
+      <div className="insurance-form">
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Company Name
+            </label>
+            <div className="view-field">{quotation.companyName || "-"}</div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Company Code
+            </label>
+            <div className="view-field">
+              {quotation.company?.company_code || "-"}
+            </div>
+          </div>
+
+          <div
+            className="insurance-form-group"
+            style={{ gridColumn: "span 2" }}
+          >
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Company Address
+            </label>
+            <div className="view-field" style={{ whiteSpace: "pre-line" }}>
+              {quotation.companyAddress || "-"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Phone Number
+            </label>
+            <div className="view-field">{quotation.phone || "-"}</div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Email
+            </label>
+            <div className="view-field">{quotation.email || "-"}</div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Number of Workers
+            </label>
+            <div className="view-field">{quotation.noOfWorkers || "-"}</div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Horse Power
+            </label>
+            <div className="view-field">{quotation.horsePower || "-"}</div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Calculated Amount
+            </label>
+            <div className="view-field">
+              ₹{quotation.calculatedAmount?.toLocaleString() || "0"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Year
+            </label>
+            <div className="view-field">
+              {quotation.year || 1} year{quotation.year > 1 ? "s" : ""}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Stability Certificate Type
+            </label>
+            <div className="view-field">
+              {quotation.stabilityCertificateType === "with load"
+                ? "With Load"
+                : quotation.stabilityCertificateType === "without load"
+                ? "Without Load"
+                : quotation.stabilityCertificateType || "-"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Stability Certificate Amount
+            </label>
+            <div className="view-field">
+              ₹{quotation.stabilityCertificateAmount?.toLocaleString() || "0"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Administration Charge
+            </label>
+            <div className="view-field">
+              ₹{quotation.administrationCharge?.toLocaleString() || "0"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Consultancy Fees
+            </label>
+            <div className="view-field">
+              ₹{quotation.consultancyFees?.toLocaleString() || "0"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Plan Charge
+            </label>
+            <div className="view-field">
+              ₹{quotation.planCharge?.toLocaleString() || "0"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Total Amount
+            </label>
+            <div
+              className="view-field"
+              style={{ fontWeight: "bold", fontSize: "1.1em" }}
+            >
+              ₹{quotation.totalAmount?.toLocaleString() || "0"}
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Status
+            </label>
+            <div className="view-field">
+              <span
+                className={`status-badge ${
+                  quotation.status === "approved"
+                    ? "status-badge-approved"
+                    : quotation.status === "maked"
+                    ? "status-badge-maked"
+                    : quotation.status === "plan"
+                    ? "status-badge-plan"
+                    : quotation.status === "stability"
+                    ? "status-badge-stability"
+                    : quotation.status === "application"
+                    ? "status-badge-application"
+                    : quotation.status === "renewal"
+                    ? "status-badge-renewal"
+                    : "status-badge-maked"
+                }`}
+              >
+                {quotation.status?.charAt(0).toUpperCase() +
+                  quotation.status?.slice(1) || "-"}
+              </span>
+            </div>
+          </div>
+
+          <div className="insurance-form-group">
+            <label
+              style={{
+                fontWeight: 500,
+                marginBottom: "0.5rem",
+                display: "block",
+              }}
+            >
+              Created At
+            </label>
+            <div className="view-field">{formatDate(quotation.created_at)}</div>
+          </div>
+        </div>
+
+        <div className="insurance-form-actions">
+          <button type="button" className="btn btn-outlined" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
 
 // Plan Manager Selection Modal
 const PlanManagerSelectionModal = ({ isOpen, onClose, onSelect, quotation }) => {
@@ -1612,6 +1909,8 @@ function FactoryQuotation({ searchQuery = "" }) {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showApplicationRejectModal, setShowApplicationRejectModal] = useState(false);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingQuotation, setViewingQuotation] = useState(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
@@ -1769,6 +2068,11 @@ function FactoryQuotation({ searchQuery = "" }) {
   const handleEdit = (quotation) => {
     setSelectedQuotation(quotation);
     setShowModal(true);
+  };
+
+  const handleViewQuotation = (quotation) => {
+    setViewingQuotation(quotation);
+    setShowViewModal(true);
   };
 
   const handleModalClose = () => {
@@ -2299,6 +2603,14 @@ function FactoryQuotation({ searchQuery = "" }) {
       render: (_, quotation) => (
         <div className="insurance-actions">
           <ActionButton
+            onClick={() => handleViewQuotation(quotation)}
+            variant="secondary"
+            size="small"
+            title="View Quotation Details"
+          >
+            <BiShow />
+          </ActionButton>
+          <ActionButton
             onClick={() => handleEdit(quotation)}
             variant="secondary"
             size="small"
@@ -2464,6 +2776,16 @@ function FactoryQuotation({ searchQuery = "" }) {
           onClose={() => setShowRenewalModal(false)}
           quotation={selectedQuotation}
           onRenewalCreated={handleQuotationUpdated}
+        />
+
+        {/* View Quotation Modal */}
+        <ViewQuotationModal
+          isOpen={showViewModal}
+          onClose={() => {
+            setShowViewModal(false);
+            setViewingQuotation(null);
+          }}
+          quotation={viewingQuotation}
         />
       </div>
     </div>
