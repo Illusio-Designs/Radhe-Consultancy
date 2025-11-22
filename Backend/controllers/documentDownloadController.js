@@ -38,12 +38,59 @@ exports.downloadDocument = async (req, res) => {
       });
     }
 
-    // Construct file path - handle both directory structures
-    let filePath = path.join(__dirname, '..', uploadDir, recordId, filename);
+    // For stability-management, files are stored directly in uploads/stability/ directory
+    // and filenames are stored in the database record
+    let filePath;
     
-    // If file doesn't exist in recordId subdirectory, try direct directory
-    if (!fs.existsSync(filePath)) {
+    if (system === 'stability-management') {
+      // Files are stored directly in uploads/stability/ (not in recordId subdirectory)
       filePath = path.join(__dirname, '..', uploadDir, filename);
+      
+      // Verify the file belongs to this record by checking the database
+      try {
+        const StabilityManagement = require('../models/stabilityManagementModel');
+        const stabilityRecord = await StabilityManagement.findOne({ where: { id: recordId } });
+        
+        if (!stabilityRecord || !stabilityRecord.files) {
+          return res.status(404).json({
+            success: false,
+            message: 'Record not found or has no files'
+          });
+        }
+
+        // Parse files from database
+        let recordFiles = [];
+        try {
+          recordFiles = typeof stabilityRecord.files === 'string' 
+            ? JSON.parse(stabilityRecord.files) 
+            : stabilityRecord.files;
+        } catch (e) {
+          console.error('Error parsing stability files:', e);
+        }
+
+        // Verify the requested filename exists in this record's files
+        const fileExists = recordFiles.some(file => file.filename === filename);
+        if (!fileExists) {
+          return res.status(404).json({
+            success: false,
+            message: 'File not found for this record'
+          });
+        }
+      } catch (error) {
+        console.error('Error verifying stability file:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Error verifying file ownership'
+        });
+      }
+    } else {
+      // For other systems, try recordId subdirectory first, then direct directory
+      filePath = path.join(__dirname, '..', uploadDir, recordId, filename);
+      
+      // If file doesn't exist in recordId subdirectory, try direct directory
+      if (!fs.existsSync(filePath)) {
+        filePath = path.join(__dirname, '..', uploadDir, filename);
+      }
     }
     
     // Check if file exists
@@ -112,6 +159,51 @@ exports.getDocumentList = async (req, res) => {
       });
     }
 
+    // For stability-management, get files from database record instead of filesystem
+    if (system === 'stability-management') {
+      try {
+        const StabilityManagement = require('../models/stabilityManagementModel');
+        const stabilityRecord = await StabilityManagement.findOne({ where: { id: recordId } });
+        
+        if (!stabilityRecord) {
+          return res.json({
+            success: true,
+            data: []
+          });
+        }
+
+        // Parse files from database
+        let recordFiles = [];
+        if (stabilityRecord.files) {
+          try {
+            recordFiles = typeof stabilityRecord.files === 'string' 
+              ? JSON.parse(stabilityRecord.files) 
+              : stabilityRecord.files;
+          } catch (e) {
+            console.error('Error parsing stability files:', e);
+            recordFiles = [];
+          }
+        }
+
+        // Return files with metadata
+        const documents = recordFiles.map(file => ({
+          filename: file.filename,
+          originalName: file.originalName,
+          size: file.size || 0,
+          uploadDate: file.uploadedAt || new Date()
+        }));
+
+        return res.json({
+          success: true,
+          data: documents
+        });
+      } catch (error) {
+        console.error('Error fetching stability files from database:', error);
+        // Fall through to filesystem method as fallback
+      }
+    }
+
+    // For other systems, use filesystem approach
     // Try both directory structures
     let recordPath = path.join(__dirname, '..', uploadDir, recordId);
     let files = [];
