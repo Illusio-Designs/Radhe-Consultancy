@@ -122,7 +122,46 @@ const FactoryQuotationRenewal = memo(() => {
       key: "companyAddress",
       label: "Address",
       sortable: true,
-      render: (_, quotation) => quotation.companyAddress || "-",
+      render: (_, quotation) => {
+        const address = quotation.companyAddress;
+        if (!address) return "-";
+        
+        // Format address with proper line breaks
+        // Handle both comma-separated and newline-separated addresses
+        let formattedAddress = address;
+        
+        // If address contains commas but no newlines, split by commas
+        if (address.includes(',') && !address.includes('\n')) {
+          formattedAddress = address
+            .split(',')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n');
+        }
+        // If address already has newlines, preserve them
+        else if (address.includes('\n')) {
+          formattedAddress = address
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n');
+        }
+        
+        return (
+          <div 
+            className="address-display"
+            style={{ 
+              whiteSpace: 'pre-line',
+              lineHeight: '1.6',
+              fontSize: '0.875rem',
+              maxWidth: '300px',
+              wordBreak: 'break-word'
+            }}
+          >
+            {formattedAddress}
+          </div>
+        );
+      },
     },
     {
       key: "contact",
