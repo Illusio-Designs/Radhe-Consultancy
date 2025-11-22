@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { userRoleWorkLogAPI } from '../../../services/api';
 import { consumerAPI } from '../../../services/api';
 import { companyAPI } from '../../../services/api';
@@ -15,6 +15,9 @@ const UserRoleWorkLog = ({ searchQuery }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(10);
+  
+  // Ref to prevent multiple simultaneous fetches
+  const fetchingRef = useRef(false);
   
   // Caching states for company and consumer names
   const [companyNameCache, setCompanyNameCache] = useState({});
@@ -80,9 +83,46 @@ const UserRoleWorkLog = ({ searchQuery }) => {
     }
   };
 
+  // Fetch company and consumer names when logs change
+  useEffect(() => {
+    const companyIdsToFetch = [];
+    const consumerIdsToFetch = [];
+    
+    logs.forEach(log => {
+      if (!log.details) return;
+      
+      try {
+        const parsedDetails = JSON.parse(log.details);
+        const companyId = parsedDetails.company_id || (parsedDetails.changes && parsedDetails.changes.company_id);
+        const consumerId = parsedDetails.consumer_id || (parsedDetails.changes && parsedDetails.changes.consumer_id);
+        
+        if (companyId && companyNameCache[companyId] === undefined && !loadingCompanyIds.includes(companyId)) {
+          companyIdsToFetch.push(companyId);
+        }
+        
+        if (consumerId && consumerNameCache[consumerId] === undefined && !loadingConsumerIds.includes(consumerId)) {
+          consumerIdsToFetch.push(consumerId);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    });
+    
+    // Fetch company names
+    companyIdsToFetch.forEach(companyId => {
+      fetchCompanyName(companyId);
+    });
+    
+    // Fetch consumer names
+    consumerIdsToFetch.forEach(consumerId => {
+      fetchConsumerName(consumerId);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logs]);
+
   // Get details display with priority: company_name -> consumer_name -> proposer_name -> username -> '-'
   const getDetailsDisplay = (log) => {
-    if (!log.details) return '-';
+    if (!log || !log.details) return '-';
     
     let parsedDetails;
     try {
@@ -96,9 +136,6 @@ const UserRoleWorkLog = ({ searchQuery }) => {
     if (companyId) {
       if (companyNameCache[companyId] !== undefined) {
         return companyNameCache[companyId];
-      } else if (!loadingCompanyIds.includes(companyId)) {
-        fetchCompanyName(companyId);
-        return 'Loading...';
       } else {
         return 'Loading...';
       }
@@ -109,9 +146,6 @@ const UserRoleWorkLog = ({ searchQuery }) => {
     if (consumerId) {
       if (consumerNameCache[consumerId] !== undefined) {
         return consumerNameCache[consumerId];
-      } else if (!loadingConsumerIds.includes(consumerId)) {
-        fetchConsumerName(consumerId);
-        return 'Loading...';
       } else {
         return 'Loading...';
       }
@@ -126,7 +160,7 @@ const UserRoleWorkLog = ({ searchQuery }) => {
 
   // Get tooltip content for details
   const getTooltipContent = (log) => {
-    if (!log.details) return 'No details available';
+    if (!log || !log.details) return 'No details available';
     
     try {
       const parsedDetails = JSON.parse(log.details);
@@ -136,61 +170,73 @@ const UserRoleWorkLog = ({ searchQuery }) => {
     }
   };
 
-  // Fetch logs
-  const fetchLogs = async (page = 1, search = '') => {
+  // Fetch logs - memoized to prevent infinite loops
+  const fetchLogs = useCallback(async (page = 1, search = '') => {
+    // Prevent concurrent requests
+    if (fetchingRef.current) {
+      return;
+    }
+
     try {
+      fetchingRef.current = true;
       setLoading(true);
+      setError(null);
       const response = await userRoleWorkLogAPI.getUserRoleWorkLogs(page, pageSize, search);
       
-      if (response.success) {
+      if (response && response.success) {
         setLogs(response.data.logs || []);
         setTotalPages(response.data.totalPages || 1);
         setTotalCount(response.data.totalCount || 0);
         setCurrentPage(page);
       } else {
-        setError(response.message || 'Failed to fetch logs');
+        const errorMessage = response?.message || response?.error || 'Failed to fetch logs';
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
-      setError('An error occurred while fetching logs');
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'An error occurred while fetching logs';
+      setError(errorMessage);
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
-  };
+  }, [pageSize]);
 
   // Handle search
-  const handleSearch = (query) => {
+  const handleSearch = useCallback((query) => {
     setCurrentPage(1);
     fetchLogs(1, query);
-  };
+  }, [fetchLogs]);
 
   // Handle page change
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
-    fetchLogs(page, searchQuery);
-  };
+    fetchLogs(page, searchQuery || '');
+  }, [fetchLogs, searchQuery]);
 
-  // Initial load
+  // Initial load - only when searchQuery changes
   useEffect(() => {
     fetchLogs(1, searchQuery || '');
-  }, [searchQuery]);
+  }, [searchQuery, fetchLogs]);
 
   // Table columns
+  // Note: Table component passes render(value, row, index, pagination)
+  // where value is row[col.key] and row is the full row object
   const columns = [
     {
       key: 'id',
-      header: 'ID',
-      render: (log) => log.id
+      label: 'ID',
+      render: (value, row) => row.id || value || '-'
     },
     {
       key: 'actor',
-      header: 'Actor',
-      render: (log) => log.actor?.username || '-'
+      label: 'Actor',
+      render: (value, row) => row.actor?.username || row.user?.username || '-'
     },
     {
       key: 'action',
-      header: 'Action',
-      render: (log) => {
+      label: 'Action',
+      render: (value, row) => {
         const actionMap = {
           'created_health_policy': 'Created Health Policy',
           'created_vehicle_policy': 'Created Vehicle Policy',
@@ -201,32 +247,40 @@ const UserRoleWorkLog = ({ searchQuery }) => {
           'updated_user': 'Updated User',
           'updated_role': 'Updated Role'
         };
-        return actionMap[log.action] || log.action;
+        const action = row.action || value;
+        return actionMap[action] || action || '-';
       }
     },
     {
       key: 'details',
-      header: 'Details',
-      render: (log) => (
-        <span title={getTooltipContent(log)}>
-          {getDetailsDisplay(log)}
+      label: 'Details',
+      render: (value, row) => (
+        <span title={getTooltipContent(row)}>
+          {getDetailsDisplay(row)}
         </span>
       )
     },
     {
       key: 'targetUser',
-      header: 'Target User',
-      render: (log) => log.targetUser?.username || '-'
+      label: 'Target User',
+      render: (value, row) => row.targetUser?.username || value?.username || '-'
     },
     {
       key: 'role',
-      header: 'Role',
-      render: (log) => log.role?.role_name || '-'
+      label: 'Role',
+      render: (value, row) => {
+        // value is row.role (the role object), row is the full log object
+        const role = row.role || value;
+        return role?.role_name || '-';
+      }
     },
     {
       key: 'created_at',
-      header: 'Date',
-      render: (log) => new Date(log.created_at).toLocaleDateString()
+      label: 'Date',
+      render: (value, row) => {
+        const date = row.created_at || value;
+        return date ? new Date(date).toLocaleDateString() : '-';
+      }
     }
   ];
 

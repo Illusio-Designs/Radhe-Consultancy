@@ -1876,6 +1876,23 @@ export const userRoleWorkLogAPI = {
       throw error;
     }
   },
+  getUserRoleWorkLogs: async (page = 1, pageSize = 10, search = '') => {
+    try {
+      const params = {
+        page,
+        pageSize,
+        limit: pageSize
+      };
+      if (search && search.trim()) {
+        params.search = search.trim();
+      }
+      const response = await api.get('/user-role-logs', { params });
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Error fetching user role work logs:', error);
+      throw error;
+    }
+  },
   createLog: async (logData) => {
     try {
       const response = await api.post('/user-role-logs', logData);
