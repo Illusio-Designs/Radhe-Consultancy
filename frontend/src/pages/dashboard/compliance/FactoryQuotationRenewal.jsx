@@ -126,19 +126,26 @@ const FactoryQuotationRenewal = memo(() => {
         const address = quotation.companyAddress;
         if (!address) return "-";
         
-        // Format address with proper line breaks
-        // Handle both comma-separated and newline-separated addresses
+        // Format address with proper line breaks - each component on new line
         let formattedAddress = address;
         
-        // If address contains commas but no newlines, split by commas
-        if (address.includes(',') && !address.includes('\n')) {
+        // If address contains commas, split by commas and put each on new line
+        if (address.includes(',')) {
           formattedAddress = address
             .split(',')
-            .map(line => line.trim())
+            .map(line => {
+              // Trim whitespace
+              let trimmed = line.trim();
+              // Handle special cases like "Dist:", "State:", "Pin:" - keep them with their values
+              if (trimmed.match(/^(Dist|District|State|Pin|Pincode):/i)) {
+                return trimmed;
+              }
+              return trimmed;
+            })
             .filter(line => line.length > 0)
             .join('\n');
         }
-        // If address already has newlines, preserve them
+        // If address already has newlines, preserve them but clean up
         else if (address.includes('\n')) {
           formattedAddress = address
             .split('\n')
@@ -152,10 +159,12 @@ const FactoryQuotationRenewal = memo(() => {
             className="address-display"
             style={{ 
               whiteSpace: 'pre-line',
-              lineHeight: '1.6',
+              lineHeight: '1.8',
               fontSize: '0.875rem',
-              maxWidth: '300px',
-              wordBreak: 'break-word'
+              maxWidth: '350px',
+              wordBreak: 'break-word',
+              color: '#374151',
+              fontFamily: 'inherit'
             }}
           >
             {formattedAddress}
