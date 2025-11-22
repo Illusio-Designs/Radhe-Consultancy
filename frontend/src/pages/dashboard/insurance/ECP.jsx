@@ -60,7 +60,8 @@ const CreateInsuranceCompanyModal = ({ isOpen, onClose, onCreated }) => {
       onCreated(created);
       onClose();
     } catch (err) {
-      const msg = err?.response?.data?.message || "Failed to create insurance company";
+      const msg =
+        err?.response?.data?.message || "Failed to create insurance company";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -135,31 +136,37 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   useEffect(() => {
     if (policy) {
-      console.log('PolicyForm: Received policy data:', policy);
+      console.log("PolicyForm: Received policy data:", policy);
       const formatDate = (dateStr) => (dateStr ? dateStr.slice(0, 10) : "");
-      
+
       const formDataToSet = {
         businessType: policy.businessType || policy.business_type || "",
         customerType: policy.customerType || policy.customer_type || "",
-        insuranceCompanyId: policy.insuranceCompanyId || policy.insurance_company_id || "",
+        insuranceCompanyId:
+          policy.insuranceCompanyId || policy.insurance_company_id || "",
         companyId: policy.companyId || policy.company_id || "",
         policyNumber: policy.policyNumber || policy.policy_number || "",
         email: policy.email || "",
         mobileNumber: policy.mobileNumber || policy.mobile_number || "",
-        policyStartDate: formatDate(policy.policyStartDate || policy.policy_start_date),
-        policyEndDate: formatDate(policy.policyEndDate || policy.policy_end_date),
+        policyStartDate: formatDate(
+          policy.policyStartDate || policy.policy_start_date
+        ),
+        policyEndDate: formatDate(
+          policy.policyEndDate || policy.policy_end_date
+        ),
         medicalCover: policy.medicalCover || policy.medical_cover || "",
         netPremium: policy.netPremium || policy.net_premium || "",
         gstNumber: policy.gstNumber || policy.gst_number || "",
         panNumber: policy.panNumber || policy.pan_number || "",
         remarks: policy.remarks || "",
       };
-      
-      console.log('PolicyForm: Setting form data:', formDataToSet);
+
+      console.log("PolicyForm: Setting form data:", formDataToSet);
       setFormData(formDataToSet);
 
       setFileNames({
-        policyDocument: policy.policyDocumentName || policy.policy_document_name || "",
+        policyDocument:
+          policy.policyDocumentName || policy.policy_document_name || "",
       });
     }
   }, [policy]);
@@ -190,7 +197,9 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     const fetchICs = async () => {
       try {
         // Fetch all insurance companies with a large page size to ensure we get all companies
-        const data = await insuranceCompanyAPI.getAllCompanies({ pageSize: 9999 });
+        const data = await insuranceCompanyAPI.getAllCompanies({
+          pageSize: 9999,
+        });
         // Support both array and {success, data: array} and {success, companies: array}
         const companies = Array.isArray(data)
           ? data
@@ -393,7 +402,10 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
       onPolicyUpdated();
       onClose();
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Error saving company';
+      const errorMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Error saving company";
       toast.error(errorMsg);
     } finally {
       setLoading(false);
@@ -402,19 +414,19 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // If GST number is being updated, auto-fill PAN number
-    if (name === 'gstNumber' && value.length >= 12) {
+    if (name === "gstNumber" && value.length >= 12) {
       const extractedPAN = value.substring(2, 12).toUpperCase();
       setFormData((prev) => ({
         ...prev,
         [name]: value.toUpperCase(),
-        panNumber: extractedPAN
+        panNumber: extractedPAN,
       }));
-    } else if (name === 'gstNumber') {
+    } else if (name === "gstNumber") {
       setFormData((prev) => ({
         ...prev,
-        [name]: value.toUpperCase()
+        [name]: value.toUpperCase(),
       }));
     } else {
       setFormData((prev) => ({
@@ -796,25 +808,25 @@ function ECP({ searchQuery = "" }) {
 
   const fetchECPStatistics = async () => {
     try {
-      console.log('[ECP] fetchECPStatistics called');
+      console.log("[ECP] fetchECPStatistics called");
       setStatsLoading(true);
-      
-      console.log('[ECP] Calling getECPStatistics API...');
+
+      console.log("[ECP] Calling getECPStatistics API...");
       const response = await employeeCompensationAPI.getECPStatistics();
-      console.log('[ECP] API response received:', response);
-      
+      console.log("[ECP] API response received:", response);
+
       if (response.success) {
-        console.log('[ECP] Setting statistics:', response.data);
+        console.log("[ECP] Setting statistics:", response.data);
         setStatistics(response.data);
       } else {
-        console.log('[ECP] API returned success: false');
+        console.log("[ECP] API returned success: false");
       }
     } catch (error) {
-      console.error('[ECP] Error fetching ECP statistics:', error);
-      console.error('[ECP] Error details:', {
+      console.error("[ECP] Error fetching ECP statistics:", error);
+      console.error("[ECP] Error details:", {
         message: error.message,
         status: error.response?.status,
-        data: error.response?.data
+        data: error.response?.data,
       });
     } finally {
       setStatsLoading(false);
@@ -838,12 +850,13 @@ function ECP({ searchQuery = "" }) {
 
       if (response && response.policies && Array.isArray(response.policies)) {
         // Transform the policies to ensure consistent data structure
-        const transformedPolicies = response.policies.map(policy => ({
+        const transformedPolicies = response.policies.map((policy) => ({
           ...policy,
           // Ensure policyHolder is available for company name display
           policyHolder: policy.policyHolder || policy.companyPolicyHolder,
           // Keep original properties for backward compatibility
-          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          companyPolicyHolder:
+            policy.policyHolder || policy.companyPolicyHolder,
           consumerPolicyHolder: policy.consumerPolicyHolder,
         }));
         setPolicies(transformedPolicies);
@@ -856,12 +869,13 @@ function ECP({ searchQuery = "" }) {
         setError(null);
       } else if (Array.isArray(response)) {
         // Transform the policies to ensure consistent data structure
-        const transformedPolicies = response.map(policy => ({
+        const transformedPolicies = response.map((policy) => ({
           ...policy,
           // Ensure policyHolder is available for company name display
           policyHolder: policy.policyHolder || policy.companyPolicyHolder,
           // Keep original properties for backward compatibility
-          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          companyPolicyHolder:
+            policy.policyHolder || policy.companyPolicyHolder,
           consumerPolicyHolder: policy.consumerPolicyHolder,
         }));
         setPolicies(transformedPolicies);
@@ -895,12 +909,13 @@ function ECP({ searchQuery = "" }) {
       // Handle both expected format and direct array response
       if (response && response.success && Array.isArray(response.policies)) {
         // Transform the policies to ensure consistent data structure
-        const transformedPolicies = response.policies.map(policy => ({
+        const transformedPolicies = response.policies.map((policy) => ({
           ...policy,
           // Ensure policyHolder is available for company name display
           policyHolder: policy.policyHolder || policy.companyPolicyHolder,
           // Keep original properties for backward compatibility
-          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          companyPolicyHolder:
+            policy.policyHolder || policy.companyPolicyHolder,
           consumerPolicyHolder: policy.consumerPolicyHolder,
         }));
         setPolicies(transformedPolicies);
@@ -914,12 +929,13 @@ function ECP({ searchQuery = "" }) {
       } else if (Array.isArray(response)) {
         // Handle case where response is directly an array
         // Transform the policies to ensure consistent data structure
-        const transformedPolicies = response.map(policy => ({
+        const transformedPolicies = response.map((policy) => ({
           ...policy,
           // Ensure policyHolder is available for company name display
           policyHolder: policy.policyHolder || policy.companyPolicyHolder,
           // Keep original properties for backward compatibility
-          companyPolicyHolder: policy.policyHolder || policy.companyPolicyHolder,
+          companyPolicyHolder:
+            policy.policyHolder || policy.companyPolicyHolder,
           consumerPolicyHolder: policy.consumerPolicyHolder,
         }));
         setPolicies(transformedPolicies);
@@ -978,14 +994,27 @@ function ECP({ searchQuery = "" }) {
         policy.plan_name,
         policy.medical_cover,
         policy.net_premium,
-        policy.remarks
-      ].some(field => field && field.toString().toLowerCase().includes(searchLower));
-      const companyName = policy.policyHolder?.company_name || policy.companyPolicyHolder?.company_name || policy.company?.company_name || policy.company_name;
-      const companyMatch = companyName && companyName.toLowerCase().includes(searchLower);
-      const consumerName = policy.consumerPolicyHolder?.name || policy.consumer?.name || policy.consumer_name;
-      const consumerMatch = consumerName && consumerName.toLowerCase().includes(searchLower);
+        policy.remarks,
+      ].some(
+        (field) => field && field.toString().toLowerCase().includes(searchLower)
+      );
+      const companyName =
+        policy.policyHolder?.company_name ||
+        policy.companyPolicyHolder?.company_name ||
+        policy.company?.company_name ||
+        policy.company_name;
+      const companyMatch =
+        companyName && companyName.toLowerCase().includes(searchLower);
+      const consumerName =
+        policy.consumerPolicyHolder?.name ||
+        policy.consumer?.name ||
+        policy.consumer_name;
+      const consumerMatch =
+        consumerName && consumerName.toLowerCase().includes(searchLower);
       const insuranceCompanyName = policy.provider?.name;
-      const insuranceMatch = insuranceCompanyName && insuranceCompanyName.toLowerCase().includes(searchLower);
+      const insuranceMatch =
+        insuranceCompanyName &&
+        insuranceCompanyName.toLowerCase().includes(searchLower);
       return policyFields || companyMatch || consumerMatch || insuranceMatch;
     });
   }, [filteredPolicies, searchQuery]);
@@ -1036,8 +1065,8 @@ function ECP({ searchQuery = "" }) {
   const handleEdit = (policy) => {
     // Transform the policy data to camelCase for the form
     const transformedPolicy = toCamelCase(policy);
-    console.log('ECP: Original policy data:', policy);
-    console.log('ECP: Transformed policy data for edit:', transformedPolicy);
+    console.log("ECP: Original policy data:", policy);
+    console.log("ECP: Transformed policy data for edit:", transformedPolicy);
     setSelectedPolicy(transformedPolicy);
     setShowModal(true);
   };
@@ -1060,14 +1089,14 @@ function ECP({ searchQuery = "" }) {
 
   const handlePageSizeChange = async (newPageSize) => {
     console.log("ECP: Page size changed to:", newPageSize);
-    
+
     // Update pagination state first
     setPagination((prev) => ({
       ...prev,
       currentPage: 1,
       pageSize: newPageSize,
     }));
-    
+
     // Then fetch policies with the new page size
     await fetchPolicies(1, newPageSize);
   };
@@ -1165,9 +1194,9 @@ function ECP({ searchQuery = "" }) {
           policy.consumer_name ||
           policy.company?.company_name ||
           policy.consumer?.name ||
-          '-'
+          "-"
         );
-      }
+      },
     },
     { key: "policy_number", label: "Policy Number", sortable: true },
     { key: "business_type", label: "Business Type", sortable: true },
@@ -1201,8 +1230,12 @@ function ECP({ searchQuery = "" }) {
             buttonText=""
             buttonClass="action-button action-button-secondary action-button-small"
             showIcon={true}
-            filePath={policy.policy_document_path ? `/uploads/employee_policies/${policy.policy_document_path}` : null}
-            fileName={policy.policy_document_path || 'policy-document.pdf'}
+            filePath={
+              policy.policy_document_path
+                ? `/uploads/employee_policies/${policy.policy_document_path}`
+                : null
+            }
+            fileName={policy.policy_document_path || "policy-document.pdf"}
           />
         </div>
       ),
@@ -1212,53 +1245,53 @@ function ECP({ searchQuery = "" }) {
   return (
     <div className="insurance">
       <div className="insurance-container">
-      <div className="insurance-content">
-        <div className="insurance-header">
-          <h1 className="insurance-title">Employee Compensation Policies</h1>
-          <Button
-            variant="contained"
-            onClick={() => setShowModal(true)}
-            icon={<BiPlus />}
-          >
-            Add Policy
-          </Button>
-        </div>
-
-        {/* ECP Statistics */}
-        <StatisticsCards />
-        {error && (
-          <div className="insurance-error">
-            <BiErrorCircle className="inline mr-2" /> {error}
+        <div className="insurance-content">
+          <div className="insurance-header">
+            <h1 className="insurance-title">Employee Compensation Policies</h1>
+            <Button
+              variant="contained"
+              onClick={() => setShowModal(true)}
+              icon={<BiPlus />}
+            >
+              Add Policy
+            </Button>
           </div>
-        )}
-        {loading ? (
-          <Loader size="large" color="primary" />
-        ) : (
-          <TableWithControl
-            data={searchFilteredPolicies}
-            columns={columns}
-            defaultPageSize={pagination.pageSize}
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            serverSidePagination={true}
-          />
-        )}
-      </div>
-      <Modal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        title={selectedPolicy ? "Edit Policy" : "Add New Policy"}
-      >
-        <PolicyForm
-          policy={selectedPolicy}
+
+          {/* ECP Statistics */}
+          <StatisticsCards />
+          {error && (
+            <div className="insurance-error">
+              <BiErrorCircle className="inline mr-2" /> {error}
+            </div>
+          )}
+          {loading ? (
+            <Loader size="large" color="primary" />
+          ) : (
+            <TableWithControl
+              data={searchFilteredPolicies}
+              columns={columns}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
+            />
+          )}
+        </div>
+        <Modal
+          isOpen={showModal}
           onClose={handleModalClose}
-          onPolicyUpdated={handlePolicyUpdated}
-        />
-      </Modal>
-    </div>
+          title={selectedPolicy ? "Edit Policy" : "Add New Policy"}
+        >
+          <PolicyForm
+            policy={selectedPolicy}
+            onClose={handleModalClose}
+            onPolicyUpdated={handlePolicyUpdated}
+          />
+        </Modal>
+      </div>
     </div>
   );
 }

@@ -3,13 +3,16 @@ import { factoryQuotationAPI } from "../../../services/api";
 import Loader from "../../../components/common/Loader/Loader";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import { toast } from "react-toastify";
-import { BiErrorCircle, BiDownload } from "react-icons/bi";
+import { BiErrorCircle } from "react-icons/bi";
 import "../../../styles/pages/dashboard/home/CombinedDashboard.css";
+import DocumentDownload from "../../../components/common/DocumentDownload/DocumentDownload";
 
 const FactoryQuotationRenewal = memo(() => {
   const [renewals, setRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
@@ -69,27 +72,10 @@ const FactoryQuotationRenewal = memo(() => {
     return date.toLocaleDateString("en-GB");
   }, []);
 
-  // Handle PDF download for factory quotation
-  const handleDownloadPDF = useCallback(async (quotation) => {
-    try {
-      const response = await factoryQuotationAPI.downloadPDF(quotation.id);
-      
-      // Create blob and download
-      const blob = new Blob([response], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `factory-quotation-${quotation.id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Factory quotation PDF downloaded successfully');
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast.error('Failed to download factory quotation PDF');
-    }
+  // Memoize handleDownloadDocuments
+  const handleDownloadDocuments = useCallback((quotation) => {
+    setSelectedQuotation(quotation);
+    setShowDocumentModal(true);
   }, []);
 
   // Memoize columns to prevent recreation on every render
@@ -122,55 +108,7 @@ const FactoryQuotationRenewal = memo(() => {
       key: "companyAddress",
       label: "Address",
       sortable: true,
-      render: (_, quotation) => {
-        const address = quotation.companyAddress;
-        if (!address) return "-";
-        
-        // Format address with proper line breaks - each component on new line
-        let formattedAddress = address;
-        
-        // If address contains commas, split by commas and put each on new line
-        if (address.includes(',')) {
-          formattedAddress = address
-            .split(',')
-            .map(line => {
-              // Trim whitespace
-              let trimmed = line.trim();
-              // Handle special cases like "Dist:", "State:", "Pin:" - keep them with their values
-              if (trimmed.match(/^(Dist|District|State|Pin|Pincode):/i)) {
-                return trimmed;
-              }
-              return trimmed;
-            })
-            .filter(line => line.length > 0)
-            .join('\n');
-        }
-        // If address already has newlines, preserve them but clean up
-        else if (address.includes('\n')) {
-          formattedAddress = address
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0)
-            .join('\n');
-        }
-        
-        return (
-          <div 
-            className="address-display"
-            style={{ 
-              whiteSpace: 'pre-line',
-              lineHeight: '1.8',
-              fontSize: '0.875rem',
-              maxWidth: '350px',
-              wordBreak: 'break-word',
-              color: '#374151',
-              fontFamily: 'inherit'
-            }}
-          >
-            {formattedAddress}
-          </div>
-        );
-      },
+      render: (_, quotation) => quotation.companyAddress || "-",
     },
     {
       key: "contact",
@@ -205,17 +143,19 @@ const FactoryQuotationRenewal = memo(() => {
       sortable: false,
       render: (_, quotation) => (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleDownloadPDF(quotation)}
-            className="action-button action-button-secondary action-button-small"
-            title="Download Factory Quotation PDF"
-          >
-            <BiDownload className="download-icon" />
-          </button>
+          <DocumentDownload
+            system="renewal-status"
+            recordId={quotation.id}
+            buttonText=""
+            buttonClass="action-button action-button-secondary action-button-small"
+            showIcon={true}
+            filePath={quotation.upload_option ? `/uploads/renewal_status/${quotation.upload_option}` : null}
+            fileName={quotation.upload_option || 'renewal-document.pdf'}
+          />
         </div>
       ),
     },
-  ], [formatDate, handleDownloadPDF]);
+  ], [formatDate]);
 
   return (
     <div className="insurance">
@@ -247,6 +187,17 @@ const FactoryQuotationRenewal = memo(() => {
           />
         )}
         </div>
+
+        {/* Document Download Modal */}
+        {showDocumentModal && selectedQuotation && (
+          <DocumentDownload
+            isOpen={showDocumentModal}
+            onClose={() => setShowDocumentModal(false)}
+            system="renewal-status"
+            recordId={selectedQuotation.id}
+            recordName={selectedQuotation.companyName || selectedQuotation.company?.company_name}
+          />
+        )}
       </div>
     </div>
   );
