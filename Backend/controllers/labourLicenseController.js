@@ -117,10 +117,13 @@ const getAllLabourLicenses = async (req, res) => {
       success: true,
       data: rows,
       pagination: {
+        totalItems: count,
+        currentPage: parseInt(page),
+        itemsPerPage: actualLimit,
+        totalPages: Math.ceil(count / actualLimit),
         total: count,
         page: parseInt(page),
-        limit: actualLimit,
-        pages: Math.ceil(count / limit)
+        limit: actualLimit
       }
     });
   } catch (error) {

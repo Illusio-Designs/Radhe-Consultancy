@@ -212,11 +212,8 @@ const LabourLicense = ({ searchQuery = "" }) => {
   // Handle status filter
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
-    if (status === 'all') {
-      setFilteredLicenses(licenses);
-    } else {
-      setFilteredLicenses(licenses.filter(license => license.status === status));
-    }
+    // Refetch licenses with new status filter
+    fetchLicenses(1, pagination.pageSize);
   };
 
   // Handle status update
@@ -540,7 +537,13 @@ const LabourLicense = ({ searchQuery = "" }) => {
             <TableWithControl
               data={filteredLicenses}
               columns={columns}
-              defaultPageSize={10}
+              defaultPageSize={pagination.pageSize}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              serverSidePagination={true}
             />
           )}
         </div>
