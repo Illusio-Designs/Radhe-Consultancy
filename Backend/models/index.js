@@ -8,6 +8,7 @@ const Company = require("./companyModel");
 const Consumer = require("./consumerModel");
 const InsuranceCompany = require("./insuranceCompanyModel");
 const EmployeeCompensationPolicy = require("./employeeCompensationPolicyModel");
+const PreviousEmployeeCompensationPolicy = require("./previousEmployeeCompensationPolicyModel");
 const VehiclePolicy = require("./vehiclePolicyModel");
 const HealthPolicies = require("./healthPolicyModel");
 const FirePolicy = require("./firePolicyModel");
@@ -70,6 +71,12 @@ EmployeeCompensationPolicy.belongsTo(Company, { foreignKey: 'company_id', as: 'p
 EmployeeCompensationPolicy.belongsTo(InsuranceCompany, { foreignKey: 'insurance_company_id', as: 'provider' });
 Company.hasMany(EmployeeCompensationPolicy, { foreignKey: 'company_id', as: 'employeeCompensationPolicies' });
 InsuranceCompany.hasMany(EmployeeCompensationPolicy, { foreignKey: 'insurance_company_id', as: 'employeeCompensationPolicies' });
+
+// Previous Employee Compensation Policy Associations
+PreviousEmployeeCompensationPolicy.belongsTo(Company, { foreignKey: 'company_id', as: 'policyHolder' });
+PreviousEmployeeCompensationPolicy.belongsTo(InsuranceCompany, { foreignKey: 'insurance_company_id', as: 'provider' });
+Company.hasMany(PreviousEmployeeCompensationPolicy, { foreignKey: 'company_id', as: 'previousEmployeeCompensationPolicies' });
+InsuranceCompany.hasMany(PreviousEmployeeCompensationPolicy, { foreignKey: 'insurance_company_id', as: 'previousEmployeeCompensationPolicies' });
 
 // Vehicle Policy Associations
 VehiclePolicy.belongsTo(Company, { foreignKey: 'company_id', as: 'companyPolicyHolder' });
@@ -143,6 +150,7 @@ module.exports = {
   Consumer,
   InsuranceCompany,
   EmployeeCompensationPolicy,
+  PreviousEmployeeCompensationPolicy,
   VehiclePolicy,
   HealthPolicies,
   FirePolicy,

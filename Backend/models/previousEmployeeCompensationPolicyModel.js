@@ -1,17 +1,22 @@
-// EmployeeCompensationPolicy Model
-// This model represents employee compensation insurance policies.
-// It includes relations to Company and InsuranceCompany, and stores GST, gross premium, and remarks.
+// PreviousEmployeeCompensationPolicy Model
+// This model stores historical/previous employee compensation insurance policies
+// when they are renewed. Multiple previous policies can exist for the same company/consumer.
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const InsuranceCompany = require('./insuranceCompanyModel');
 const Company = require('./companyModel');
 
-const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy', {
+const PreviousEmployeeCompensationPolicy = sequelize.define('PreviousEmployeeCompensationPolicy', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
+  },
+  original_policy_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Reference to the original policy ID before it was moved to previous'
   },
   business_type: {
     type: DataTypes.ENUM('Fresh/New', 'Renewal/Rollover', 'Endorsement'),
@@ -72,24 +77,6 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
       isDate: true,
       notNull: {
         msg: 'Policy end date is required'
-      },
-      isAfterStartDate(value) {
-        // Ensure we have valid dates to compare
-        if (!this.policy_start_date || !value) {
-          return;
-        }
-        
-        const startDate = new Date(this.policy_start_date);
-        const endDate = new Date(value);
-        
-        // Check if dates are valid
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          throw new Error('Invalid date format provided');
-        }
-        
-        if (endDate <= startDate) {
-          throw new Error('Policy end date must be after start date');
-        }
       }
     }
   },
@@ -134,7 +121,7 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   },
   policy_document_path: {
     type: DataTypes.STRING,
-    allowNull: false, // Changed to false to make it required
+    allowNull: false,
     validate: {
       notEmpty: true
     }
@@ -145,24 +132,22 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
   },
   status: {
     type: DataTypes.ENUM('active', 'expired', 'cancelled'),
-    defaultValue: 'active'
+    defaultValue: 'expired',
+    comment: 'Status when the policy was moved to previous (usually expired)'
   },
-  previous_policy_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    comment: 'Reference to the previous policy ID that was renewed (if this is a renewal)'
+  renewed_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    comment: 'Date when this policy was renewed and moved to previous'
   }
 }, {
-  tableName: 'EmployeeCompensationPolicies',
+  tableName: 'PreviousEmployeeCompensationPolicies',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-  modelName: 'EmployeeCompensationPolicy',
+  modelName: 'PreviousEmployeeCompensationPolicy',
   indexes: [
-    {
-      unique: true,
-      fields: ['policy_number']
-    },
     {
       fields: ['company_id']
     },
@@ -171,6 +156,12 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
     },
     {
       fields: ['policy_end_date']
+    },
+    {
+      fields: ['original_policy_id']
+    },
+    {
+      fields: ['renewed_at']
     }
   ],
   hooks: {
@@ -181,6 +172,9 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
       }
       if (policy.policy_end_date && typeof policy.policy_end_date === 'string') {
         policy.policy_end_date = new Date(policy.policy_end_date);
+      }
+      if (policy.renewed_at && typeof policy.renewed_at === 'string') {
+        policy.renewed_at = new Date(policy.renewed_at);
       }
 
       // Convert string numbers to decimals if needed
@@ -193,20 +187,9 @@ const EmployeeCompensationPolicy = sequelize.define('EmployeeCompensationPolicy'
       if (typeof policy.gross_premium === 'string') {
         policy.gross_premium = parseFloat(policy.gross_premium);
       }
-    },
-    beforeCreate: async (policy) => {
-      // Validate that policy document is provided
-      if (!policy.policy_document_path) {
-        throw new Error('Policy document is required');
-      }
-
-      // Validate that gross premium equals net premium plus GST
-      const calculatedGross = parseFloat(policy.net_premium) + parseFloat(policy.gst);
-      if (Math.abs(calculatedGross - parseFloat(policy.gross_premium)) > 0.01) {
-        throw new Error('Gross premium must equal net premium plus GST');
-      }
     }
   }
 });
 
-module.exports = EmployeeCompensationPolicy; 
+module.exports = PreviousEmployeeCompensationPolicy;
+

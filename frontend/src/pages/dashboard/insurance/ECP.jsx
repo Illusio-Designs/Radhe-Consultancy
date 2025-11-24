@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   BiPlus,
   BiEdit,
@@ -15,6 +15,7 @@ import {
   BiErrorCircle,
   BiCheck,
   BiX,
+  BiRefresh,
 } from "react-icons/bi";
 import {
   employeeCompensationAPI,
@@ -27,6 +28,7 @@ import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import "../../../styles/pages/dashboard/insurance/ECP.css";
 import "../../../styles/components/StatCards.css";
+import "../../../styles/pages/dashboard/renewals/RenewalDashboard.css";
 import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
@@ -768,11 +770,629 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   );
 };
 
+// Renewal Form Component - Similar to PolicyForm but for renewing policies
+const RenewalForm = ({ policy, onClose, onRenewalCompleted }) => {
+  const [formData, setFormData] = useState({
+    businessType: "Renewal/Rollover",
+    customerType: "",
+    insuranceCompanyId: "",
+    companyId: "",
+    policyNumber: "",
+    email: "",
+    mobileNumber: "",
+    policyStartDate: "",
+    policyEndDate: "",
+    medicalCover: "",
+    netPremium: "",
+    gstNumber: "",
+    panNumber: "",
+    remarks: "",
+  });
+
+  const [files, setFiles] = useState({
+    policyDocument: null,
+  });
+
+  const [fileNames, setFileNames] = useState({
+    policyDocument: "",
+  });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [insuranceCompanies, setInsuranceCompanies] = useState([]);
+  const [showCreateICModal, setShowCreateICModal] = useState(false);
+  const [gst, setGst] = useState(0);
+  const [grossPremium, setGrossPremium] = useState(0);
+  const [newICId, setNewICId] = useState(null);
+
+  useEffect(() => {
+    if (policy) {
+      console.log("RenewalForm: Received policy data:", policy);
+      const formatDate = (dateStr) => (dateStr ? dateStr.slice(0, 10) : "");
+
+      // Pre-fill form with current policy data, but clear policy number for new renewal
+      const companyIdValue = policy.companyId || policy.company_id;
+      const formDataToSet = {
+        businessType: "Renewal/Rollover", // Always set to Renewal
+        customerType: policy.customerType || policy.customer_type || "",
+        insuranceCompanyId:
+          policy.insuranceCompanyId || policy.insurance_company_id || "",
+        companyId: companyIdValue || "", // Keep as number to match PolicyForm
+        policyNumber: "", // Clear policy number - user must enter new one
+        email: policy.email || "",
+        mobileNumber: policy.mobileNumber || policy.mobile_number || "",
+        policyStartDate: "", // Clear dates - user must enter new dates
+        policyEndDate: "",
+        medicalCover: policy.medicalCover || policy.medical_cover || "",
+        netPremium: "", // Clear premium - user must enter new values
+        gstNumber: policy.gstNumber || policy.gst_number || "",
+        panNumber: policy.panNumber || policy.pan_number || "",
+        remarks: "",
+      };
+
+      console.log("RenewalForm: Setting form data:", formDataToSet);
+      setFormData(formDataToSet);
+    }
+  }, [policy]);
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true);
+        const response = await employeeCompensationAPI.getActiveCompanies();
+        if (Array.isArray(response)) {
+          setCompanies(response);
+        } else {
+          console.error("Invalid response format:", response);
+          toast.error("Invalid response format from server");
+        }
+      } catch (err) {
+        console.error("Error fetching companies:", err);
+        toast.error(err.response?.data?.message || "Failed to fetch companies");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  useEffect(() => {
+    const fetchICs = async () => {
+      try {
+        const data = await insuranceCompanyAPI.getAllCompanies({
+          page: 1,
+          pageSize: 1000,
+        });
+        const companiesList =
+          data.companies || data.data || (Array.isArray(data) ? data : []);
+        setInsuranceCompanies(companiesList);
+      } catch (err) {
+        console.error("Error fetching insurance companies:", err);
+        toast.error(
+          err.response?.data?.message || "Failed to fetch insurance companies"
+        );
+      }
+    };
+
+    fetchICs();
+  }, []);
+
+  useEffect(() => {
+    if (newICId) {
+      setFormData((prev) => ({
+        ...prev,
+        insuranceCompanyId: newICId.toString(),
+      }));
+      setNewICId(null);
+    }
+  }, [newICId]);
+
+  // Don't use memoization - calculate inline like PolicyForm does
+
+  useEffect(() => {
+    const netPremium = parseFloat(formData.netPremium) || 0;
+    const calculatedGst = netPremium * 0.18; // 18% GST
+    const calculatedGross = netPremium + calculatedGst;
+    setGst(calculatedGst.toFixed(2));
+    setGrossPremium(calculatedGross.toFixed(2));
+  }, [formData.netPremium]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
+  };
+
+  const handleFileChange = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFiles((prev) => ({ ...prev, [type]: file }));
+      setFileNames((prev) => ({ ...prev, [type]: file.name }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    // Validate required fields
+    if (!formData.companyId || formData.companyId === "") {
+      setError("Company selection is required");
+      setLoading(false);
+      toast.error("Please select a company");
+      return;
+    }
+
+    if (!formData.insuranceCompanyId || formData.insuranceCompanyId === "") {
+      setError("Insurance company selection is required");
+      setLoading(false);
+      toast.error("Please select an insurance company");
+      return;
+    }
+
+    if (!formData.policyNumber || formData.policyNumber.trim() === "") {
+      setError("Policy number is required");
+      setLoading(false);
+      toast.error("Please enter a policy number");
+      return;
+    }
+
+    if (!formData.policyStartDate) {
+      setError("Policy start date is required");
+      setLoading(false);
+      toast.error("Please select a policy start date");
+      return;
+    }
+
+    if (!formData.policyEndDate) {
+      setError("Policy end date is required");
+      setLoading(false);
+      toast.error("Please select a policy end date");
+      return;
+    }
+
+    try {
+      const formDataToSend = new FormData();
+
+      // Validate company_id is explicitly selected (not just pre-filled)
+      if (
+        !formData.companyId ||
+        formData.companyId === "" ||
+        formData.companyId === "undefined"
+      ) {
+        setError("Company selection is required");
+        setLoading(false);
+        toast.error("Please select a company");
+        return;
+      }
+
+      // Append all form fields
+      Object.keys(formData).forEach((key) => {
+        const value = formData[key];
+        if (value !== null && value !== undefined && value !== "") {
+          // Convert camelCase to snake_case for backend
+          const snakeKey = key
+            .replace(/([A-Z])/g, "_$1")
+            .toLowerCase()
+            .replace(/^_/, "");
+          formDataToSend.append(snakeKey, value);
+        }
+      });
+
+      // Explicitly append company_id to ensure it's sent
+      formDataToSend.append("company_id", formData.companyId);
+
+      // Append GST and gross premium
+      formDataToSend.append("gst", gst);
+      formDataToSend.append("gross_premium", grossPremium);
+
+      // Append file
+      if (files.policyDocument) {
+        formDataToSend.append("policyDocument", files.policyDocument);
+      } else {
+        setError("Policy document is required");
+        setLoading(false);
+        return;
+      }
+
+      console.log("[RenewalForm] Submitting renewal for policy:", policy.id);
+      await employeeCompensationAPI.renewPolicy(policy.id, formDataToSend);
+
+      toast.success("Policy renewed successfully!");
+      onRenewalCompleted();
+      onClose();
+    } catch (err) {
+      console.error("Error renewing policy:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Failed to renew policy";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const CustomMenuList = (props) => (
+    <components.MenuList {...props}>
+      <div style={{ padding: "8px" }}>
+        <Button
+          type="button"
+          variant="outlined"
+          size="small"
+          onClick={() => setShowCreateICModal(true)}
+          style={{ width: "100%" }}
+        >
+          <BiPlus /> Create New Insurance Company
+        </Button>
+      </div>
+      {props.children}
+    </components.MenuList>
+  );
+
+  return (
+    <>
+      <form onSubmit={handleSubmit} className="insurance-form">
+        {error && (
+          <div className="insurance-error" style={{ marginBottom: "16px" }}>
+            {error}
+          </div>
+        )}
+
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <label>Business Type</label>
+            <select
+              name="businessType"
+              value={formData.businessType}
+              onChange={handleChange}
+              className="insurance-form-input"
+              required
+              disabled
+            >
+              <option value="Renewal/Rollover">Renewal/Rollover</option>
+            </select>
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Customer Type</label>
+            <select
+              name="customerType"
+              value={formData.customerType}
+              onChange={handleChange}
+              className="insurance-form-input"
+              required
+            >
+              <option value="">Select Customer Type</option>
+              <option value="Organisation">Organisation</option>
+              <option value="Individual">Individual</option>
+            </select>
+          </div>
+
+          <div className="insurance-form-group">
+            <label>
+              Company <span style={{ color: "red" }}>*</span>
+            </label>
+            <Select
+              options={companies.map((company) => ({
+                value: company.company_id,
+                label: company.company_name,
+                data: company,
+              }))}
+              value={
+                companies
+                  .map((company) => ({
+                    value: company.company_id,
+                    label: company.company_name,
+                    data: company,
+                  }))
+                  .find((opt) => {
+                    // Handle both string and number comparison
+                    const optValue = opt.value;
+                    const formValue = formData.companyId;
+                    return (
+                      String(optValue) === String(formValue) ||
+                      optValue === formValue
+                    );
+                  }) || null
+              }
+              onChange={(option) => {
+                const selectedCompany = option ? option.data : null;
+                setFormData((prev) => ({
+                  ...prev,
+                  companyId: option ? option.value : "", // Clear if no option selected
+                  email: selectedCompany ? selectedCompany.company_email : "",
+                  mobileNumber: selectedCompany
+                    ? selectedCompany.contact_number
+                    : "",
+                  gstNumber: selectedCompany ? selectedCompany.gst_number : "",
+                  panNumber: selectedCompany ? selectedCompany.pan_number : "",
+                }));
+                setError(""); // Clear error when company is selected
+              }}
+              placeholder="Select Company (Required)"
+              isClearable
+              isSearchable={true}
+              required
+              styles={{
+                menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                control: (provided, state) => ({
+                  ...provided,
+                  minHeight: "44px",
+                  borderRadius: "8px",
+                  borderColor: !formData.companyId
+                    ? "#dc2626"
+                    : state.isFocused
+                    ? "#1F4F9C"
+                    : "#d1d5db",
+                  boxShadow: state.isFocused
+                    ? "0 0 0 1px #1F4F9C"
+                    : provided.boxShadow,
+                }),
+              }}
+            />
+            {!formData.companyId && (
+              <span
+                style={{
+                  color: "#dc2626",
+                  fontSize: "12px",
+                  marginTop: "4px",
+                  display: "block",
+                }}
+              >
+                Company selection is required
+              </span>
+            )}
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Insurance Company</label>
+            <Select
+              value={
+                formData.insuranceCompanyId
+                  ? insuranceCompanies.find(
+                      (ic) => ic.id.toString() === formData.insuranceCompanyId
+                    )
+                  : null
+              }
+              onChange={(option) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  insuranceCompanyId: option ? option.value : "",
+                }))
+              }
+              options={insuranceCompanies.map((ic) => ({
+                label: ic.name,
+                value: ic.id.toString(),
+              }))}
+              placeholder="Select Insurance Company"
+              isClearable
+              components={{ MenuList: CustomMenuList }}
+              styles={{
+                menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: "44px",
+                  borderRadius: "8px",
+                  borderColor: "#d1d5db",
+                }),
+              }}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Policy Number *</label>
+            <input
+              type="text"
+              name="policyNumber"
+              value={formData.policyNumber}
+              onChange={handleChange}
+              className="insurance-form-input"
+              placeholder="Enter new policy number"
+              required
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="insurance-form-input"
+              required
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Mobile Number</label>
+            <PhoneInput
+              international
+              defaultCountry="IN"
+              flags={flags}
+              value={formData.mobileNumber}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, mobileNumber: value || "" }))
+              }
+              className="phone-input-container"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Policy Start Date</label>
+            <input
+              type="date"
+              name="policyStartDate"
+              value={formData.policyStartDate}
+              onChange={handleChange}
+              className="insurance-form-input"
+              required
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Policy End Date</label>
+            <input
+              type="date"
+              name="policyEndDate"
+              value={formData.policyEndDate}
+              onChange={handleChange}
+              className="insurance-form-input"
+              required
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Medical Cover</label>
+            <select
+              name="medicalCover"
+              value={formData.medicalCover}
+              onChange={handleChange}
+              className="insurance-form-input"
+              required
+            >
+              <option value="">Select Medical Cover</option>
+              <option value="25k">25k</option>
+              <option value="50k">50k</option>
+              <option value="1 lac">1 lac</option>
+              <option value="2 lac">2 lac</option>
+              <option value="3 lac">3 lac</option>
+              <option value="5 lac">5 lac</option>
+              <option value="actual">actual</option>
+            </select>
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Net Premium</label>
+            <input
+              type="number"
+              name="netPremium"
+              value={formData.netPremium}
+              onChange={handleChange}
+              className="insurance-form-input"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>GST (18%)</label>
+            <input
+              type="number"
+              value={gst}
+              className="insurance-form-input"
+              readOnly
+              step="0.01"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Gross Premium</label>
+            <input
+              type="number"
+              value={grossPremium}
+              className="insurance-form-input"
+              readOnly
+              step="0.01"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>GST Number</label>
+            <input
+              type="text"
+              name="gstNumber"
+              value={formData.gstNumber}
+              onChange={handleChange}
+              className="insurance-form-input"
+              placeholder="Enter GST number"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>PAN Number</label>
+            <input
+              type="text"
+              name="panNumber"
+              value={formData.panNumber}
+              onChange={handleChange}
+              className="insurance-form-input"
+              placeholder="Enter PAN number"
+            />
+          </div>
+
+          <div className="insurance-form-group file-upload-group">
+            <label className="file-upload-label">
+              <span>Policy Document *</span>
+              <div className="file-upload-container">
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, "policyDocument")}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="file-upload-input"
+                  required
+                />
+                <div className="file-upload-button">
+                  <BiUpload />{" "}
+                  {fileNames.policyDocument || "Upload Policy Document"}
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div
+            className="insurance-form-group"
+            style={{ gridColumn: "span 2" }}
+          >
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              placeholder="Remarks"
+              className="insurance-form-input"
+              rows={2}
+            />
+          </div>
+        </div>
+
+        <div className="insurance-form-actions">
+          <Button type="button" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading ? "Renewing..." : "Renew Policy"}
+          </Button>
+        </div>
+      </form>
+      <CreateInsuranceCompanyModal
+        isOpen={showCreateICModal}
+        onClose={() => setShowCreateICModal(false)}
+        onCreated={(created) => {
+          setShowCreateICModal(false);
+          if (created && created.id) setNewICId(created.id);
+        }}
+      />
+    </>
+  );
+};
+
 function ECP({ searchQuery = "" }) {
+  const [activeTab, setActiveTab] = useState("running"); // "running" or "all"
   const [showModal, setShowModal] = useState(false);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [selectedPolicyForRenewal, setSelectedPolicyForRenewal] =
+    useState(null);
   const [policies, setPolicies] = useState([]);
+  const [groupedPolicies, setGroupedPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [groupedLoading, setGroupedLoading] = useState(false);
   const [error, setError] = useState(null);
   const [statistics, setStatistics] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -792,19 +1412,29 @@ function ECP({ searchQuery = "" }) {
   useEffect(() => {
     fetchPolicies(1, 10);
     fetchECPStatistics();
-  }, []);
+    if (activeTab === "all") {
+      fetchGroupedPolicies();
+    }
+  }, [activeTab]);
 
   // Handle search when searchQuery changes
   useEffect(() => {
     console.log("ECP: searchQuery changed:", searchQuery);
-    if (searchQuery && searchQuery.length >= 3) {
-      console.log("ECP: Triggering server search for:", searchQuery);
-      handleSearchPolicies(searchQuery);
-    } else if (searchQuery === "") {
-      console.log("ECP: Clearing search, fetching all policies");
-      fetchPolicies(1, pagination.pageSize);
+    if (activeTab === "running") {
+      if (searchQuery && searchQuery.length >= 3) {
+        console.log("ECP: Triggering server search for:", searchQuery);
+        handleSearchPolicies(searchQuery);
+      } else if (searchQuery === "") {
+        console.log("ECP: Clearing search, fetching all policies");
+        fetchPolicies(1, pagination.pageSize);
+      }
+    } else if (activeTab === "all") {
+      // For "All Policy" tab, we filter client-side after fetching grouped policies
+      if (searchQuery === "") {
+        fetchGroupedPolicies();
+      }
     }
-  }, [searchQuery, pagination.pageSize]);
+  }, [searchQuery, pagination.pageSize, activeTab]);
 
   const fetchECPStatistics = async () => {
     try {
@@ -850,15 +1480,23 @@ function ECP({ searchQuery = "" }) {
 
       if (response && response.policies && Array.isArray(response.policies)) {
         // Transform the policies to ensure consistent data structure
-        const transformedPolicies = response.policies.map((policy) => ({
-          ...policy,
-          // Ensure policyHolder is available for company name display
-          policyHolder: policy.policyHolder || policy.companyPolicyHolder,
-          // Keep original properties for backward compatibility
-          companyPolicyHolder:
-            policy.policyHolder || policy.companyPolicyHolder,
-          consumerPolicyHolder: policy.consumerPolicyHolder,
-        }));
+        const transformedPolicies = response.policies.map((policy) => {
+          // Debug: Log policy document path
+          if (policy.policy_document_path) {
+            console.log(`[ECP] Policy ${policy.id} document path:`, policy.policy_document_path);
+          } else {
+            console.warn(`[ECP] Policy ${policy.id} has no document path`);
+          }
+          return {
+            ...policy,
+            // Ensure policyHolder is available for company name display
+            policyHolder: policy.policyHolder || policy.companyPolicyHolder,
+            // Keep original properties for backward compatibility
+            companyPolicyHolder:
+              policy.policyHolder || policy.companyPolicyHolder,
+            consumerPolicyHolder: policy.consumerPolicyHolder,
+          };
+        });
         setPolicies(transformedPolicies);
         setPagination({
           currentPage: response.currentPage || page,
@@ -1071,15 +1709,57 @@ function ECP({ searchQuery = "" }) {
     setShowModal(true);
   };
 
+  const handleRenewal = (policy) => {
+    // Transform the policy data to camelCase for the renewal form
+    const transformedPolicy = toCamelCase(policy);
+    console.log("ECP: Original policy data for renewal:", policy);
+    console.log("ECP: Transformed policy data for renewal:", transformedPolicy);
+    setSelectedPolicyForRenewal(transformedPolicy);
+    setShowRenewalModal(true);
+  };
+
   const handleModalClose = () => {
     setSelectedPolicy(null);
     setShowModal(false);
   };
 
+  const handleRenewalModalClose = () => {
+    setSelectedPolicyForRenewal(null);
+    setShowRenewalModal(false);
+  };
+
   const handlePolicyUpdated = async () => {
     await fetchPolicies(pagination.currentPage, pagination.pageSize);
     await fetchECPStatistics();
-    handleModalClose();
+    if (activeTab === "all") {
+      await fetchGroupedPolicies();
+    }
+  };
+
+  const handleRenewalCompleted = async () => {
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
+    await fetchECPStatistics();
+    if (activeTab === "all") {
+      await fetchGroupedPolicies();
+    }
+  };
+
+  const fetchGroupedPolicies = async () => {
+    try {
+      setGroupedLoading(true);
+      const response = await employeeCompensationAPI.getAllPoliciesGrouped();
+      if (response.success && response.policies) {
+        setGroupedPolicies(response.policies);
+      } else {
+        setGroupedPolicies([]);
+      }
+    } catch (err) {
+      console.error("Error fetching grouped policies:", err);
+      setGroupedPolicies([]);
+      toast.error("Failed to fetch grouped policies");
+    } finally {
+      setGroupedLoading(false);
+    }
   };
 
   const handlePageChange = async (page) => {
@@ -1206,39 +1886,151 @@ function ECP({ searchQuery = "" }) {
     { key: "medical_cover", label: "Medical Cover", sortable: true },
     { key: "net_premium", label: "Net Premium", sortable: true },
     {
+      key: "policy_type",
+      label: "Policy Type",
+      sortable: true,
+      render: (_, policy) => {
+        const isRunning =
+          policy.status === "active" || policy.policy_type === "running";
+        const isPrevious =
+          policy.status === "expired" || policy.policy_type === "previous";
+
+        if (isRunning) {
+          return (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "6px 14px",
+                borderRadius: "16px",
+                fontSize: "12px",
+                fontWeight: "600",
+                backgroundColor: "#d1fae5",
+                color: "#065f46",
+                border: "1px solid #6ee7b7",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Running
+            </span>
+          );
+        } else if (isPrevious) {
+          return (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "6px 14px",
+                borderRadius: "16px",
+                fontSize: "12px",
+                fontWeight: "600",
+                backgroundColor: "#fee2e2",
+                color: "#991b1b",
+                border: "1px solid #fca5a5",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Previous
+            </span>
+          );
+        }
+
+        return null;
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (value) => {
+        const statusText = value
+          ? value.charAt(0).toUpperCase() + value.slice(1)
+          : "Unknown";
+        const statusColors = {
+          active: { bg: "#d1fae5", color: "#065f46", border: "#6ee7b7" },
+          expired: { bg: "#fee2e2", color: "#991b1b", border: "#fca5a5" },
+          cancelled: { bg: "#f3f4f6", color: "#374151", border: "#d1d5db" },
+        };
+        const colors =
+          statusColors[value?.toLowerCase()] || statusColors.cancelled;
+
+        return (
+          <span
+            style={{
+              display: "inline-block",
+              padding: "4px 12px",
+              borderRadius: "12px",
+              fontSize: "12px",
+              fontWeight: "600",
+              backgroundColor: colors.bg,
+              color: colors.color,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            {statusText}
+          </span>
+        );
+      },
+    },
+    {
       key: "actions",
       label: "Actions",
-      render: (_, policy) => (
-        <div className="insurance-actions">
-          <ActionButton
-            onClick={() => handleEdit(policy)}
-            variant="secondary"
-            size="small"
-          >
-            <BiEdit />
-          </ActionButton>
-          <ActionButton
-            onClick={() => handleDelete(policy.id)}
-            variant="danger"
-            size="small"
-          >
-            <BiTrash />
-          </ActionButton>
-          <DocumentDownload
-            system="employee-compensation"
-            recordId={policy.id}
-            buttonText=""
-            buttonClass="action-button action-button-secondary action-button-small"
-            showIcon={true}
-            filePath={
-              policy.policy_document_path
-                ? `/uploads/employee_policies/${policy.policy_document_path}`
-                : null
-            }
-            fileName={policy.policy_document_path || "policy-document.pdf"}
-          />
-        </div>
-      ),
+      render: (_, policy) => {
+        const isActive =
+          policy.status === "active" || policy.policy_type === "running";
+        const isPrevious =
+          policy.status === "expired" || policy.policy_type === "previous";
+
+        return (
+          <div className="insurance-actions">
+            {isActive && (
+              <>
+                <ActionButton
+                  onClick={() => handleEdit(policy)}
+                  variant="secondary"
+                  size="small"
+                >
+                  <BiEdit />
+                </ActionButton>
+                <ActionButton
+                  onClick={() => handleRenewal(policy)}
+                  variant="secondary"
+                  size="small"
+                  title="Renew Policy"
+                >
+                  <BiRefresh />
+                </ActionButton>
+                <ActionButton
+                  onClick={() => handleDelete(policy.id)}
+                  variant="danger"
+                  size="small"
+                >
+                  <BiTrash />
+                </ActionButton>
+              </>
+            )}
+            {isPrevious && (
+              <span style={{ color: "#6b7280", fontSize: "12px" }}>
+                Expired
+              </span>
+            )}
+            <DocumentDownload
+              system="employee-compensation"
+              recordId={policy.id}
+              buttonText=""
+              buttonClass="action-button action-button-secondary action-button-small"
+              showIcon={true}
+              filePath={
+                policy.policy_document_path
+                  ? `/uploads/employee_policies/${policy.policy_document_path}`
+                  : null
+              }
+              fileName={policy.policy_document_path || `policy-${policy.id}-document.pdf`}
+              documentType="documents"
+            />
+          </div>
+        );
+      },
     },
   ];
 
@@ -1259,25 +2051,164 @@ function ECP({ searchQuery = "" }) {
 
           {/* ECP Statistics */}
           <StatisticsCards />
+
+          {/* Tab Navigation */}
+          <div className="tab-navigation" style={{ marginBottom: "24px" }}>
+            <button
+              className={`tab-button ${
+                activeTab === "running" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("running")}
+            >
+              <BiTrendingUp className="tab-icon" />
+              Running
+            </button>
+            <button
+              className={`tab-button ${activeTab === "all" ? "active" : ""}`}
+              onClick={() => setActiveTab("all")}
+            >
+              <BiShield className="tab-icon" />
+              All Policy
+            </button>
+          </div>
+
           {error && (
             <div className="insurance-error">
               <BiErrorCircle className="inline mr-2" /> {error}
             </div>
           )}
-          {loading ? (
+
+          {/* Tab Content */}
+          {activeTab === "running" ? (
+            loading ? (
+              <Loader size="large" color="primary" />
+            ) : (
+              <TableWithControl
+                data={searchFilteredPolicies}
+                columns={columns}
+                defaultPageSize={pagination.pageSize}
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                serverSidePagination={true}
+              />
+            )
+          ) : groupedLoading ? (
             <Loader size="large" color="primary" />
           ) : (
-            <TableWithControl
-              data={searchFilteredPolicies}
-              columns={columns}
-              defaultPageSize={pagination.pageSize}
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              totalItems={pagination.totalItems}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              serverSidePagination={true}
-            />
+            (() => {
+              // Flatten all policies grouped by company: running first, then previous
+              let allPoliciesFlat = [];
+              groupedPolicies.forEach((companyGroup) => {
+                // Add running policies first
+                companyGroup.running.forEach((policy) => {
+                  allPoliciesFlat.push({
+                    ...policy,
+                    policyHolder:
+                      policy.policyHolder || policy.companyPolicyHolder,
+                    companyPolicyHolder:
+                      policy.policyHolder || policy.companyPolicyHolder,
+                    company_group_name: companyGroup.company_name,
+                    company_group_id: companyGroup.company_id,
+                  });
+                });
+                // Then add previous policies
+                companyGroup.previous.forEach((policy) => {
+                  allPoliciesFlat.push({
+                    ...policy,
+                    policyHolder:
+                      policy.policyHolder || policy.companyPolicyHolder,
+                    companyPolicyHolder:
+                      policy.policyHolder || policy.companyPolicyHolder,
+                    company_group_name: companyGroup.company_name,
+                    company_group_id: companyGroup.company_id,
+                  });
+                });
+              });
+
+              // Apply search filter if searchQuery exists
+              if (searchQuery && searchQuery.length >= 3) {
+                const searchLower = searchQuery.toLowerCase();
+                allPoliciesFlat = allPoliciesFlat.filter((policy) => {
+                  const policyFields = [
+                    policy.policy_number,
+                    policy.business_type,
+                    policy.customer_type,
+                    policy.email,
+                    policy.mobile_number,
+                    policy.medical_cover,
+                    policy.net_premium,
+                    policy.remarks,
+                    policy.status,
+                  ].some(
+                    (field) =>
+                      field &&
+                      field.toString().toLowerCase().includes(searchLower)
+                  );
+                  const companyName =
+                    policy.policyHolder?.company_name ||
+                    policy.companyPolicyHolder?.company_name ||
+                    policy.company?.company_name ||
+                    policy.company_name ||
+                    policy.company_group_name;
+                  const companyMatch =
+                    companyName &&
+                    companyName.toLowerCase().includes(searchLower);
+                  const consumerName =
+                    policy.consumerPolicyHolder?.name ||
+                    policy.consumer?.name ||
+                    policy.consumer_name;
+                  const consumerMatch =
+                    consumerName &&
+                    consumerName.toLowerCase().includes(searchLower);
+                  const insuranceCompanyName = policy.provider?.name;
+                  const insuranceMatch =
+                    insuranceCompanyName &&
+                    insuranceCompanyName.toLowerCase().includes(searchLower);
+                  return (
+                    policyFields ||
+                    companyMatch ||
+                    consumerMatch ||
+                    insuranceMatch
+                  );
+                });
+              }
+
+              // Use the same columns for grouped view
+              const groupedColumns = columns;
+
+              return allPoliciesFlat.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px" }}>
+                  <p>
+                    No policies found
+                    {searchQuery && searchQuery.length >= 3
+                      ? ` matching "${searchQuery}"`
+                      : ""}
+                  </p>
+                </div>
+              ) : (
+                <TableWithControl
+                  data={allPoliciesFlat}
+                  columns={groupedColumns}
+                  defaultPageSize={pagination.pageSize}
+                  currentPage={1}
+                  totalPages={Math.ceil(
+                    allPoliciesFlat.length / pagination.pageSize
+                  )}
+                  totalItems={allPoliciesFlat.length}
+                  onPageChange={(page) => {}}
+                  onPageSizeChange={(newSize) => {
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageSize: newSize,
+                    }));
+                  }}
+                  serverSidePagination={false}
+                />
+              );
+            })()
           )}
         </div>
         <Modal
@@ -1289,6 +2220,17 @@ function ECP({ searchQuery = "" }) {
             policy={selectedPolicy}
             onClose={handleModalClose}
             onPolicyUpdated={handlePolicyUpdated}
+          />
+        </Modal>
+        <Modal
+          isOpen={showRenewalModal}
+          onClose={handleRenewalModalClose}
+          title="Renew Policy"
+        >
+          <RenewalForm
+            policy={selectedPolicyForRenewal}
+            onClose={handleRenewalModalClose}
+            onRenewalCompleted={handleRenewalCompleted}
           />
         </Modal>
       </div>

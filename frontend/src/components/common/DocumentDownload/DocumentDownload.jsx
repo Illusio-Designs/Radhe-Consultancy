@@ -40,11 +40,25 @@ const DocumentDownload = ({
 
   const downloadDirectFile = async (filePath, fileName) => {
     try {
-      // Create the full URL for the file
-      const baseUrl = process.env.REACT_APP_API_URL || 'https://api.radheconsultancy.co.in';
-      const fileUrl = `${baseUrl}${filePath}`;
+      // Use VITE_DOWNLOAD_URL for file downloads, fallback to API URL, then default
+      const downloadBaseUrl = import.meta.env.VITE_DOWNLOAD_URL 
+        || import.meta.env.VITE_API_URL?.replace('/api', '') 
+        || 'http://localhost:4000';
+      
+      // filePath already includes /uploads/..., so we just need the base URL
+      // If VITE_DOWNLOAD_URL is set to http://localhost:4000/uploads, we need to remove /uploads from filePath
+      let finalFilePath = filePath;
+      if (downloadBaseUrl.endsWith('/uploads') && filePath.startsWith('/uploads')) {
+        // Remove /uploads from filePath since it's already in the base URL
+        finalFilePath = filePath.replace(/^\/uploads/, '');
+      }
+      
+      const fileUrl = `${downloadBaseUrl}${finalFilePath}`;
       
       console.log('Downloading file from:', fileUrl);
+      console.log('Download base URL:', downloadBaseUrl);
+      console.log('Original file path:', filePath);
+      console.log('Final file path:', finalFilePath);
       
       // Fetch the file
       const response = await fetch(fileUrl);

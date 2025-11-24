@@ -882,6 +882,18 @@ export const employeeCompensationAPI = {
     }
   },
 
+  getAllPoliciesGrouped: async () => {
+    try {
+      console.log("API Service: Fetching grouped employee compensation policies");
+      const response = await api.get("/employee-compensation/all-grouped");
+      console.log("API Service: Grouped policies fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching grouped policies:", error);
+      throw error;
+    }
+  },
+
   getActiveCompanies: async () => {
     try {
       console.log("API Service: Fetching active companies");
@@ -1018,6 +1030,43 @@ export const employeeCompensationAPI = {
       return response.data;
     } catch (error) {
       console.error("API Service: Error deleting policy:", error);
+      throw error;
+    }
+  },
+
+  renewPolicy: async (id, formData) => {
+    try {
+      console.log("[API] Renewing employee compensation policy:", id);
+      console.log("[API] FormData contents:");
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString(),
+          });
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+
+      const response = await api.post(`/employee-compensation/${id}/renew`, formData, {
+        headers: {
+          "Content-Type": undefined, // Let the browser set the correct Content-Type with boundary
+        },
+        timeout: 30000, // 30 second timeout for large files
+        maxContentLength: 10 * 1024 * 1024, // 10MB
+        maxBodyLength: 10 * 1024 * 1024, // 10MB
+        transformRequest: [(data) => data], // Prevent axios from transforming FormData
+      });
+      console.log("API Service: Policy renewed successfully");
+      return response.data;
+    } catch (error) {
+      console.error("[API] Error renewing employee compensation policy:", error);
+      if (error.response) {
+        console.error("[API] Error response:", error.response.data);
+      }
       throw error;
     }
   },
