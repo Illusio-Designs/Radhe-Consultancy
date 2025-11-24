@@ -1247,6 +1247,50 @@ export const vehiclePolicyAPI = {
       throw error;
     }
   },
+  renewPolicy: async (id, formData) => {
+    try {
+      console.log("[API] Renewing vehicle policy:", id);
+      const response = await api.post(
+        `/vehicle-policies/${id}/renew`,
+        formData,
+        {
+          headers: {
+            "Content-Type": undefined,
+          },
+          timeout: 30000,
+          maxContentLength: 10 * 1024 * 1024,
+          maxBodyLength: 10 * 1024 * 1024,
+          transformRequest: [(data) => data],
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "[API] Error renewing vehicle policy:",
+        error
+      );
+      if (error.response) {
+        console.error("[API] Error response:", error.response.data);
+      }
+      throw error;
+    }
+  },
+  getAllPoliciesGrouped: async () => {
+    try {
+      const response = await api.get("/vehicle-policies/all-grouped");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getVehicleStatistics: async () => {
+    try {
+      const response = await api.get("/vehicle-policies/statistics");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
   getVehicleStatistics: async () => {
     try {
       const response = await api.get("/vehicle-policies/statistics");
