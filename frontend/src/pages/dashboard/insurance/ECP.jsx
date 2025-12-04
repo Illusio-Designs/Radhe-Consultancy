@@ -861,33 +861,30 @@ const RenewalForm = ({ policy, onClose, onRenewalCompleted }) => {
   useEffect(() => {
     const fetchICs = async () => {
       try {
+        // Fetch all insurance companies with a large page size to ensure we get all companies
         const data = await insuranceCompanyAPI.getAllCompanies({
-          page: 1,
-          pageSize: 1000,
+          pageSize: 9999,
         });
-        const companiesList =
-          data.companies || data.data || (Array.isArray(data) ? data : []);
-        setInsuranceCompanies(companiesList);
-      } catch (err) {
-        console.error("Error fetching insurance companies:", err);
-        toast.error(
-          err.response?.data?.message || "Failed to fetch insurance companies"
-        );
+        // Support both array and {success, data: array} and {success, companies: array}
+        const companies = Array.isArray(data)
+          ? data
+          : Array.isArray(data.data)
+          ? data.data
+          : Array.isArray(data.companies)
+          ? data.companies
+          : [];
+        setInsuranceCompanies(companies);
+        if (newICId) {
+          setFormData((prev) => ({ ...prev, insuranceCompanyId: newICId }));
+          setNewICId(null);
+        }
+      } catch {
+        setInsuranceCompanies([]);
       }
     };
-
     fetchICs();
-  }, []);
-
-  useEffect(() => {
-    if (newICId) {
-      setFormData((prev) => ({
-        ...prev,
-        insuranceCompanyId: newICId.toString(),
-      }));
-      setNewICId(null);
-    }
-  }, [newICId]);
+    // eslint-disable-next-line
+  }, [showCreateICModal]);
 
   // Don't use memoization - calculate inline like PolicyForm does
 
@@ -1017,21 +1014,37 @@ const RenewalForm = ({ policy, onClose, onRenewalCompleted }) => {
     }
   };
 
+  // Prepare options for react-select
+  const insuranceCompanyOptions = insuranceCompanies.map((ic) => ({
+    value: ic.id,
+    label: ic.name,
+  }));
+
   const CustomMenuList = (props) => (
-    <components.MenuList {...props}>
-      <div style={{ padding: "8px" }}>
-        <Button
-          type="button"
-          variant="outlined"
-          size="small"
-          onClick={() => setShowCreateICModal(true)}
-          style={{ width: "100%" }}
-        >
-          <BiPlus /> Create New Insurance Company
-        </Button>
-      </div>
-      {props.children}
-    </components.MenuList>
+    <>
+      <components.MenuList {...props}>
+        {props.children}
+        <div style={{ padding: 8, borderTop: "1px solid #eee" }}>
+          <button
+            style={{
+              width: "100%",
+              background: "#1F4F9C",
+              color: "#fff",
+              border: "none",
+              padding: 8,
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setShowCreateICModal(true);
+            }}
+          >
+            + Create Insurance Company
+          </button>
+        </div>
+      </components.MenuList>
+    </>
   );
 
   return (
@@ -1150,14 +1163,21 @@ const RenewalForm = ({ policy, onClose, onRenewalCompleted }) => {
           </div>
 
           <div className="insurance-form-group">
-            <label>Insurance Company</label>
+            <label>
+              Insurance Company <span style={{ color: "red" }}>*</span>
+            </label>
             <Select
+              options={insuranceCompanyOptions}
               value={
-                formData.insuranceCompanyId
-                  ? insuranceCompanies.find(
-                      (ic) => ic.id.toString() === formData.insuranceCompanyId
-                    )
-                  : null
+                insuranceCompanyOptions.find((opt) => {
+                  // Handle both string and number comparison
+                  const optValue = opt.value;
+                  const formValue = formData.insuranceCompanyId;
+                  return (
+                    String(optValue) === String(formValue) ||
+                    optValue === formValue
+                  );
+                }) || null
               }
               onChange={(option) =>
                 setFormData((prev) => ({
@@ -1165,23 +1185,38 @@ const RenewalForm = ({ policy, onClose, onRenewalCompleted }) => {
                   insuranceCompanyId: option ? option.value : "",
                 }))
               }
-              options={insuranceCompanies.map((ic) => ({
-                label: ic.name,
-                value: ic.id.toString(),
-              }))}
               placeholder="Select Insurance Company"
               isClearable
               components={{ MenuList: CustomMenuList }}
               styles={{
                 menu: (provided) => ({ ...provided, zIndex: 9999 }),
-                control: (provided) => ({
+                control: (provided, state) => ({
                   ...provided,
                   minHeight: "44px",
                   borderRadius: "8px",
-                  borderColor: "#d1d5db",
+                  borderColor: !formData.insuranceCompanyId
+                    ? "#dc2626"
+                    : state.isFocused
+                    ? "#1F4F9C"
+                    : "#d1d5db",
+                  boxShadow: state.isFocused
+                    ? "0 0 0 1px #1F4F9C"
+                    : provided.boxShadow,
                 }),
               }}
             />
+            {!formData.insuranceCompanyId && (
+              <span
+                style={{
+                  color: "#dc2626",
+                  fontSize: "12px",
+                  marginTop: "4px",
+                  display: "block",
+                }}
+              >
+                Insurance company selection is required
+              </span>
+            )}
           </div>
 
           <div className="insurance-form-group">
@@ -1483,7 +1518,10 @@ function ECP({ searchQuery = "" }) {
         const transformedPolicies = response.policies.map((policy) => {
           // Debug: Log policy document path
           if (policy.policy_document_path) {
-            console.log(`[ECP] Policy ${policy.id} document path:`, policy.policy_document_path);
+            console.log(
+              `[ECP] Policy ${policy.id} document path:`,
+              policy.policy_document_path
+            );
           } else {
             console.warn(`[ECP] Policy ${policy.id} has no document path`);
           }
@@ -2025,7 +2063,10 @@ function ECP({ searchQuery = "" }) {
                   ? `/uploads/employee_policies/${policy.policy_document_path}`
                   : null
               }
-              fileName={policy.policy_document_path || `policy-${policy.id}-document.pdf`}
+              fileName={
+                policy.policy_document_path ||
+                `policy-${policy.id}-document.pdf`
+              }
               documentType="documents"
             />
           </div>
@@ -2106,6 +2147,8 @@ function ECP({ searchQuery = "" }) {
                 companyGroup.running.forEach((policy) => {
                   allPoliciesFlat.push({
                     ...policy,
+                    status: "active", // Ensure status is active for running policies
+                    policy_type: "running", // Ensure policy_type is running
                     policyHolder:
                       policy.policyHolder || policy.companyPolicyHolder,
                     companyPolicyHolder:
@@ -2118,6 +2161,8 @@ function ECP({ searchQuery = "" }) {
                 companyGroup.previous.forEach((policy) => {
                   allPoliciesFlat.push({
                     ...policy,
+                    status: "expired", // Ensure status is expired for previous policies
+                    policy_type: "previous", // Ensure policy_type is previous
                     policyHolder:
                       policy.policyHolder || policy.companyPolicyHolder,
                     companyPolicyHolder:

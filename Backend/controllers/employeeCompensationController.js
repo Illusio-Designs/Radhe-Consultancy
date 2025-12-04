@@ -711,11 +711,17 @@ exports.renewPolicy = async (req, res) => {
 
       // Step 2: Create new policy with renewal data
       // Validate that company_id is provided in the request
-      if (!req.body.company_id || req.body.company_id === "" || req.body.company_id === "undefined") {
+      if (
+        !req.body.company_id ||
+        req.body.company_id === "" ||
+        req.body.company_id === "undefined"
+      ) {
         await transaction.rollback();
-        console.error("[EmployeeCompensation] Company ID is required for renewal");
-        return res.status(400).json({ 
-          message: "Company selection is required for policy renewal" 
+        console.error(
+          "[EmployeeCompensation] Company ID is required for renewal"
+        );
+        return res.status(400).json({
+          message: "Company selection is required for policy renewal",
         });
       }
 
@@ -759,7 +765,7 @@ exports.renewPolicy = async (req, res) => {
         previousPolicyId: previousPolicy.id,
         newPolicyId: createdPolicy.id,
         documentPath: createdPolicy.policy_document_path,
-        fileExists: createdPolicy.policy_document_path ? 'Yes' : 'No',
+        fileExists: createdPolicy.policy_document_path ? "Yes" : "No",
       });
 
       // Log the action
@@ -903,6 +909,7 @@ exports.getAllPoliciesGrouped = async (req, res) => {
       }
       groupedPolicies[companyId].previous.push({
         ...policy.toJSON(),
+        status: "expired", // Ensure status is expired for previous policies
         policy_type: "previous",
       });
     });

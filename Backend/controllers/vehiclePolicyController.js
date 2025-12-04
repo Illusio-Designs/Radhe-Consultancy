@@ -1031,7 +1031,11 @@ exports.getAllPoliciesGrouped = async (req, res) => {
           previous: [],
         };
       }
-      groupedPolicies[groupKey].running.push(policy);
+      groupedPolicies[groupKey].running.push({
+        ...policy.toJSON(),
+        status: "active", // Ensure status is active for running policies
+        policy_type: "running",
+      });
     });
 
     // Add previous policies
