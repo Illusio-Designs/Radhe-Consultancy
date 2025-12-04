@@ -1056,7 +1056,11 @@ exports.getAllPoliciesGrouped = async (req, res) => {
           previous: [],
         };
       }
-      groupedPolicies[groupKey].previous.push(policy);
+      groupedPolicies[groupKey].previous.push({
+        ...policy.toJSON(),
+        status: "expired", // Ensure status is expired for previous policies
+        policy_type: "previous",
+      });
     });
 
     // Convert to array and sort by company/consumer name
