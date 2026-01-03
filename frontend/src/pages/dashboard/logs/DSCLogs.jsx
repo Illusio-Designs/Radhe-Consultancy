@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { dscAPI, companyAPI } from "../../../services/api";
-import "../../../styles/pages/dashboard/dsc/DSC.css";
+import "../../../styles/pages/dashboard/dsc/Dsc.css";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
 import Loader from "../../../components/common/Loader/Loader";
 
