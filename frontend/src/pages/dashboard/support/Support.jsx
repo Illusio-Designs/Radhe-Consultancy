@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../styles/pages/dashboard/support/support.css"; // Import the CSS file for styling
+import "../../../styles/pages/dashboard/support/Support.css"; // Import the CSS file for styling
 import { toast } from "react-toastify";
 
 const Support = () => {
