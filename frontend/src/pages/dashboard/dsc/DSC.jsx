@@ -16,7 +16,7 @@ import ActionButton from "../../../components/common/ActionButton/ActionButton";
 import Modal from "../../../components/common/Modal/Modal";
 import Loader from "../../../components/common/Loader/Loader";
 import Dropdown from "../../../components/common/Dropdown/Dropdown";
-import "../../../styles/pages/dashboard/dsc/DSC.css";
+import "../../../styles/pages/dashboard/dsc/Dsc.css";
 import "../../../styles/components/StatCards.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
