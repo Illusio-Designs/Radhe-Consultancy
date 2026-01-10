@@ -9,6 +9,7 @@ import {
   BiTrendingUp,
   BiCalendar,
   BiDownload,
+  BiRefresh,
 } from "react-icons/bi";
 import { firePolicyAPI, insuranceCompanyAPI } from "../../../services/api";
 import TableWithControl from "../../../components/common/Table/TableWithControl";
@@ -217,6 +218,14 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
     };
     fetchICs();
   }, [showCreateICModal]);
+
+  useEffect(() => {
+    const netPremium = parseFloat(formData.netPremium) || 0;
+    const calculatedGst = netPremium * 0.18; // 18% GST
+    const calculatedGross = netPremium + calculatedGst;
+    setGst(calculatedGst.toFixed(2));
+    setGrossPremium(calculatedGross.toFixed(2));
+  }, [formData.netPremium]);
 
   useEffect(() => {
     const net = parseFloat(formData.netPremium) || 0;
@@ -753,6 +762,515 @@ const PolicyForm = ({ policy, onClose, onPolicyUpdated }) => {
   );
 };
 
+// --- RenewalForm Component ---
+const RenewalForm = ({ policy, onClose, onPolicyRenewed }) => {
+  const [formData, setFormData] = useState({
+    businessType: "Renewal/Rollover",
+    customerType: "",
+    insuranceCompanyId: "",
+    companyId: "",
+    consumerId: "",
+    proposerName: "",
+    policyNumber: "",
+    email: "",
+    mobileNumber: "",
+    policyStartDate: "",
+    policyEndDate: "",
+    propertyAddress: "",
+    propertyType: "",
+    sumInsured: "",
+    netPremium: "",
+    gst: "",
+    grossPremium: "",
+    remarks: "",
+  });
+
+  const [policyDocument, setPolicyDocument] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [consumers, setConsumers] = useState([]);
+  const [combinedOptions, setCombinedOptions] = useState([]);
+  const [insuranceCompanies, setInsuranceCompanies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [documentError, setDocumentError] = useState("");
+  const [gst, setGst] = useState(0);
+  const [grossPremium, setGrossPremium] = useState(0);
+
+  useEffect(() => {
+    if (policy) {
+      console.log("RenewalForm: Received policy data:", policy);
+      const formatDate = (dateStr) => (dateStr ? dateStr.slice(0, 10) : "");
+
+      // Pre-fill form with current policy data, but clear policy number for new renewal
+      const formDataToSet = {
+        businessType: "Renewal/Rollover", // Always set to Renewal
+        customerType: policy.customerType || policy.customer_type || "",
+        insuranceCompanyId: policy.insuranceCompanyId || policy.insurance_company_id || "",
+        companyId: policy.companyId || policy.company_id || "",
+        consumerId: policy.consumerId || policy.consumer_id || "",
+        proposerName: policy.proposerName || policy.proposer_name || "",
+        policyNumber: "", // Clear policy number - user must enter new one
+        email: policy.email || "",
+        mobileNumber: policy.mobileNumber || policy.mobile_number || "",
+        policyStartDate: "", // Clear dates - user must enter new dates
+        policyEndDate: "",
+        propertyAddress: policy.propertyAddress || policy.property_address || "",
+        propertyType: policy.propertyType || policy.property_type || "",
+        sumInsured: policy.sumInsured || policy.sum_insured || "",
+        netPremium: "", // Clear premium - user must enter new values
+        gst: "",
+        grossPremium: "",
+        remarks: "",
+      };
+
+      console.log("RenewalForm: Setting form data:", formDataToSet);
+      setFormData(formDataToSet);
+    }
+  }, [policy]);
+
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
+
+  const fetchDropdownData = async () => {
+    try {
+      const [companiesRes, consumersRes, insuranceRes] = await Promise.all([
+        firePolicyAPI.getActiveCompanies(),
+        firePolicyAPI.getActiveConsumers(),
+        firePolicyAPI.getActiveInsuranceCompanies(),
+      ]);
+      
+      setCompanies(companiesRes || []);
+      setConsumers(consumersRes || []);
+      setInsuranceCompanies(insuranceRes || []);
+
+      // Create combined options like Vehicle component
+      const options = [
+        {
+          label: "Companies",
+          options: (companiesRes || []).map((company) => ({
+            value: `company_${company.company_id}`,
+            label: company.company_name,
+            type: "company",
+            data: company,
+          })),
+        },
+        {
+          label: "Consumers",
+          options: (consumersRes || []).map((consumer) => ({
+            value: `consumer_${consumer.consumer_id}`,
+            label: consumer.name,
+            type: "consumer",
+            data: consumer,
+          })),
+        },
+      ];
+      setCombinedOptions(options);
+    } catch (err) {
+      console.error("Error fetching dropdown data:", err);
+      toast.error("Failed to load form data");
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
+
+    // Auto-calculate GST and gross premium when net premium changes
+    if (name === "netPremium") {
+      const netPremium = parseFloat(value) || 0;
+      const gst = netPremium * 0.18;
+      const grossPremium = netPremium + gst;
+      setFormData((prev) => ({
+        ...prev,
+        gst: gst.toFixed(2),
+        grossPremium: grossPremium.toFixed(2),
+      }));
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        setDocumentError('Please select a PDF or Word document');
+        setPolicyDocument(null);
+        return;
+      }
+
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setDocumentError('File size must be less than 10MB');
+        setPolicyDocument(null);
+        return;
+      }
+
+      setPolicyDocument(file);
+      setDocumentError("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!policyDocument) {
+      setDocumentError('Policy document is required for renewal');
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const formDataToSend = new FormData();
+      
+      // Add all form fields
+      Object.keys(formData).forEach((key) => {
+        let value = formData[key];
+        
+        // Convert camelCase to snake_case for backend
+        const backendKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        
+        // Handle special field mappings
+        if (key === 'businessType') {
+          formDataToSend.append('business_type', value);
+        } else if (key === 'customerType') {
+          formDataToSend.append('customer_type', value);
+        } else if (key === 'insuranceCompanyId') {
+          formDataToSend.append('insurance_company_id', value);
+        } else if (key === 'companyId') {
+          formDataToSend.append('company_id', value || '');
+        } else if (key === 'consumerId') {
+          formDataToSend.append('consumer_id', value || '');
+        } else if (key === 'proposerName') {
+          formDataToSend.append('proposer_name', value);
+        } else if (key === 'policyNumber') {
+          formDataToSend.append('policy_number', value);
+        } else if (key === 'mobileNumber') {
+          formDataToSend.append('mobile_number', value);
+        } else if (key === 'policyStartDate') {
+          formDataToSend.append('policy_start_date', value);
+        } else if (key === 'policyEndDate') {
+          formDataToSend.append('policy_end_date', value);
+        } else if (key === 'propertyAddress') {
+          formDataToSend.append('property_address', value);
+        } else if (key === 'propertyType') {
+          formDataToSend.append('property_type', value);
+        } else if (key === 'sumInsured') {
+          formDataToSend.append('sum_insured', value);
+        } else if (key === 'netPremium') {
+          formDataToSend.append('net_premium', value);
+        } else if (key === 'grossPremium') {
+          formDataToSend.append('gross_premium', value);
+        } else {
+          formDataToSend.append(backendKey, value);
+        }
+      });
+
+      // Add the policy document
+      formDataToSend.append('policyDocument', policyDocument);
+
+      // Call the renewal API
+      await firePolicyAPI.renewPolicy(policy.id, formDataToSend);
+      
+      toast.success(`Fire policy renewed successfully! New policy number: ${formData.policyNumber}`);
+      onPolicyRenewed();
+    } catch (err) {
+      console.error("Error renewing policy:", err);
+      const errorMessage = err.response?.data?.message || "Failed to renew policy";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create customer options for react-select
+  const customerOptions = [
+    {
+      label: 'Companies',
+      options: companies.map(company => ({
+        value: company.company_id,
+        label: company.company_name,
+        type: 'Organisation',
+        ...company
+      }))
+    },
+    {
+      label: 'Consumers',
+      options: consumers.map(consumer => ({
+        value: consumer.consumer_id,
+        label: consumer.name,
+        type: 'Individual',
+        ...consumer
+      }))
+    }
+  ];
+
+  const insuranceCompanyOptions = insuranceCompanies.map(company => ({
+    value: company.id,
+    label: company.name
+  }));
+
+  return (
+    <form onSubmit={handleSubmit} className="insurance-form">
+      <div className="insurance-form-section">
+        <h3>Renewal Information</h3>
+        <div className="insurance-form-grid">
+          <div className="insurance-form-group">
+            <label>Business Type *</label>
+            <input
+              type="text"
+              name="businessType"
+              value={formData.businessType}
+              readOnly
+              className="insurance-form-input"
+              style={{ backgroundColor: '#f5f5f5' }}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Customer Type *</label>
+            <input
+              type="text"
+              name="customerType"
+              value={formData.customerType}
+              readOnly
+              className="insurance-form-input"
+              style={{ backgroundColor: '#f5f5f5' }}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Insurance Company *</label>
+            <Select
+              value={insuranceCompanyOptions.find(opt => opt.value === formData.insuranceCompanyId)}
+              onChange={(selected) => setFormData(prev => ({ ...prev, insuranceCompanyId: selected?.value || '' }))}
+              options={insuranceCompanyOptions}
+              placeholder="Select insurance company"
+              className="insurance-form-select"
+              isDisabled={true}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  backgroundColor: '#f5f5f5'
+                })
+              }}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Proposer Name *</label>
+            <input
+              type="text"
+              name="proposerName"
+              value={formData.proposerName}
+              readOnly
+              className="insurance-form-input"
+              style={{ backgroundColor: '#f5f5f5' }}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>New Policy Number *</label>
+            <input
+              type="text"
+              name="policyNumber"
+              value={formData.policyNumber}
+              onChange={handleChange}
+              placeholder="Enter new policy number"
+              required
+              className="insurance-form-input"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Email *</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Mobile Number *</label>
+            <PhoneInput
+              international
+              countryCallingCodeEditable={false}
+              defaultCountry="IN"
+              value={formData.mobileNumber}
+              onChange={(value) => setFormData(prev => ({ ...prev, mobileNumber: value || '' }))}
+              className="insurance-form-phone"
+              flags={flags}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Policy Start Date *</label>
+            <input
+              type="date"
+              name="policyStartDate"
+              value={formData.policyStartDate}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Policy End Date *</label>
+            <input
+              type="date"
+              name="policyEndDate"
+              value={formData.policyEndDate}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Property Address *</label>
+            <input
+              type="text"
+              name="propertyAddress"
+              value={formData.propertyAddress}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Property Type *</label>
+            <select
+              name="propertyType"
+              value={formData.propertyType}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+            >
+              <option value="">Select Property Type</option>
+              <option value="Residential">Residential</option>
+              <option value="Commercial">Commercial</option>
+              <option value="Industrial">Industrial</option>
+              <option value="Institutional">Institutional</option>
+            </select>
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Sum Insured *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="sumInsured"
+              value={formData.sumInsured}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+              placeholder="Enter sum insured"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Net Premium *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="netPremium"
+              value={formData.netPremium}
+              onChange={handleChange}
+              required
+              className="insurance-form-input"
+              placeholder="Enter net premium"
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>GST (18%) *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="gst"
+              value={formData.gst}
+              readOnly
+              className="insurance-form-input"
+              style={{ backgroundColor: '#f5f5f5' }}
+            />
+          </div>
+
+          <div className="insurance-form-group">
+            <label>Gross Premium *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="grossPremium"
+              value={formData.grossPremium}
+              readOnly
+              className="insurance-form-input"
+              style={{ backgroundColor: '#f5f5f5' }}
+            />
+          </div>
+
+          <div className="insurance-form-group insurance-form-group-full">
+            <label>Policy Document *</label>
+            <div className="insurance-file-upload">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+                className="insurance-form-input"
+                required
+              />
+              <small className="insurance-form-help">
+                Upload new policy document (PDF or Word, max 10MB)
+              </small>
+              {documentError && (
+                <div className="insurance-error">{documentError}</div>
+              )}
+            </div>
+          </div>
+
+          <div className="insurance-form-group insurance-form-group-full">
+            <label>Remarks</label>
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              placeholder="Enter any remarks for the renewal"
+              className="insurance-form-textarea"
+              rows="3"
+            />
+          </div>
+        </div>
+      </div>
+
+      {error && <div className="insurance-error">{error}</div>}
+
+      <div className="insurance-form-actions">
+        <Button type="button" variant="outlined" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="contained" disabled={loading}>
+          {loading ? "Renewing..." : "Renew Policy"}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 // --- StatisticsCards Component ---
 const StatisticsCards = ({ statistics, loading }) => {
   if (loading) {
@@ -821,10 +1339,15 @@ const StatisticsCards = ({ statistics, loading }) => {
 };
 
 function Fire({ searchQuery = "" }) {
+  const [activeTab, setActiveTab] = useState("running"); // "running" or "all"
   const [showModal, setShowModal] = useState(false);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [selectedPolicyForRenewal, setSelectedPolicyForRenewal] = useState(null);
   const [policies, setPolicies] = useState([]);
+  const [groupedPolicies, setGroupedPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [groupedLoading, setGroupedLoading] = useState(false);
   const [error, setError] = useState(null);
   const [statistics, setStatistics] = useState({
     totalPolicies: 0,
@@ -849,19 +1372,29 @@ function Fire({ searchQuery = "" }) {
   useEffect(() => {
     fetchPolicies(1, 10);
     fetchFireStatistics();
-  }, []);
+    if (activeTab === "all") {
+      fetchGroupedPolicies();
+    }
+  }, [activeTab]);
 
   // Handle search when searchQuery changes
   useEffect(() => {
     console.log('Fire: searchQuery changed:', searchQuery);
-    if (searchQuery && searchQuery.length >= 3) {
-      console.log('Fire: Triggering server search for:', searchQuery);
-      handleSearchPolicies(searchQuery);
-    } else if (searchQuery === "") {
-      console.log('Fire: Clearing search, fetching all policies');
-      fetchPolicies(1, pagination.pageSize);
+    if (activeTab === "running") {
+      if (searchQuery && searchQuery.length >= 3) {
+        console.log('Fire: Triggering server search for:', searchQuery);
+        handleSearchPolicies(searchQuery);
+      } else if (searchQuery === "") {
+        console.log('Fire: Clearing search, fetching all policies');
+        fetchPolicies(1, pagination.pageSize);
+      }
+    } else if (activeTab === "all") {
+      // For "All Policy" tab, we filter client-side after fetching grouped policies
+      if (searchQuery === "") {
+        fetchGroupedPolicies(); // Refetch all grouped policies
+      }
     }
-  }, [searchQuery]);
+  }, [searchQuery, pagination.pageSize, activeTab]);
 
   const fetchPolicies = async (page = 1, pageSize = 10) => {
     try {
@@ -1006,7 +1539,66 @@ function Fire({ searchQuery = "" }) {
   const handlePolicyUpdated = async () => {
     await fetchPolicies(pagination.currentPage, pagination.pageSize);
     await fetchFireStatistics();
+    if (activeTab === "all") {
+      await fetchGroupedPolicies();
+    }
     handleModalClose();
+  };
+
+  const handleRenewal = (policy) => {
+    // Transform the policy data to camelCase for the renewal form
+    const transformedPolicy = {
+      id: policy.id,
+      business_type: policy.business_type,
+      customer_type: policy.customer_type,
+      insurance_company_id: policy.insurance_company_id,
+      company_id: policy.company_id,
+      consumer_id: policy.consumer_id,
+      proposer_name: policy.proposer_name,
+      policy_number: policy.policy_number,
+      email: policy.email,
+      mobile_number: policy.mobile_number,
+      policy_start_date: policy.policy_start_date,
+      policy_end_date: policy.policy_end_date,
+      property_address: policy.property_address,
+      property_type: policy.property_type,
+      sum_insured: policy.sum_insured,
+      net_premium: policy.net_premium,
+    };
+    setSelectedPolicyForRenewal(transformedPolicy);
+    setShowRenewalModal(true);
+  };
+
+  const handleRenewalModalClose = () => {
+    setSelectedPolicyForRenewal(null);
+    setShowRenewalModal(false);
+  };
+
+  const handleRenewalCompleted = async () => {
+    await fetchPolicies(pagination.currentPage, pagination.pageSize);
+    await fetchFireStatistics();
+    if (activeTab === "all") {
+      await fetchGroupedPolicies();
+    }
+    handleRenewalModalClose();
+  };
+
+  const fetchGroupedPolicies = async () => {
+    try {
+      setGroupedLoading(true);
+      const response = await firePolicyAPI.getAllPoliciesGrouped();
+      if (response.success && response.policies) {
+        setGroupedPolicies(response.policies);
+      } else {
+        setGroupedPolicies([]);
+      }
+    } catch (err) {
+      console.error("Error fetching grouped fire policies:", err);
+      setGroupedPolicies([]);
+      toast.error("Failed to fetch grouped policies");
+    } finally {
+      setGroupedLoading(false);
+    }
   };
 
   const handlePageChange = async (page) => {
@@ -1079,6 +1671,14 @@ function Fire({ searchQuery = "" }) {
             <BiEdit />
           </ActionButton>
           <ActionButton
+            onClick={() => handleRenewal(policy)}
+            variant="secondary"
+            size="small"
+            title="Renew Policy"
+          >
+            <BiRefresh />
+          </ActionButton>
+          <ActionButton
             onClick={() => handleDelete(policy.id)}
             variant="danger"
             size="small"
@@ -1116,25 +1716,247 @@ function Fire({ searchQuery = "" }) {
           
           <StatisticsCards statistics={statistics} loading={statsLoading} />
           
+          {/* Tab Navigation */}
+          <div className="tab-navigation" style={{ marginBottom: "24px" }}>
+            <button
+              className={`tab-button ${
+                activeTab === "running" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("running")}
+            >
+              <BiTrendingUp className="tab-icon" />
+              Running
+            </button>
+            <button
+              className={`tab-button ${activeTab === "all" ? "active" : ""}`}
+              onClick={() => setActiveTab("all")}
+            >
+              <BiShield className="tab-icon" />
+              All Policy
+            </button>
+          </div>
+          
           {error && (
             <div className="insurance-error">
               <BiErrorCircle className="inline mr-2" /> {error}
             </div>
           )}
-          {loading ? (
+
+          {/* Tab Content */}
+          {activeTab === "running" ? (
+            loading ? (
+              <Loader size="large" color="primary" />
+            ) : (
+              <TableWithControl
+                data={searchFilteredPolicies}
+                columns={columns}
+                defaultPageSize={pagination.pageSize}
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                serverSidePagination={true}
+              />
+            )
+          ) : groupedLoading ? (
             <Loader size="large" color="primary" />
           ) : (
-            <TableWithControl
-              data={searchFilteredPolicies}
-              columns={columns}
-              defaultPageSize={pagination.pageSize}
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              totalItems={pagination.totalItems}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              serverSidePagination={true}
-            />
+            (() => {
+              // Flatten all policies grouped by company: running first, then previous
+              let allPoliciesFlat = [];
+              groupedPolicies.forEach((companyGroup) => {
+                // Add running policies first
+                companyGroup.running.forEach((policy) => {
+                  allPoliciesFlat.push({
+                    ...policy,
+                    status: "active", // Ensure status is active for running policies
+                    policy_type: "running", // Ensure policy_type is running
+                    companyPolicyHolder:
+                      policy.companyPolicyHolder || policy.policyHolder,
+                    consumerPolicyHolder:
+                      policy.consumerPolicyHolder || policy.consumer,
+                    company_group_name: companyGroup.company_name,
+                    company_group_id: companyGroup.company_id,
+                    consumer_group_id: companyGroup.consumer_id,
+                  });
+                });
+                // Then add previous policies
+                companyGroup.previous.forEach((policy) => {
+                  allPoliciesFlat.push({
+                    ...policy,
+                    status: "expired", // Ensure status is expired for previous policies
+                    policy_type: "previous", // Ensure policy_type is previous
+                    companyPolicyHolder:
+                      policy.companyPolicyHolder || policy.policyHolder,
+                    consumerPolicyHolder:
+                      policy.consumerPolicyHolder || policy.consumer,
+                    company_group_name: companyGroup.company_name,
+                    company_group_id: companyGroup.company_id,
+                    consumer_group_id: companyGroup.consumer_id,
+                  });
+                });
+              });
+
+              // Apply search filter if searchQuery exists
+              if (searchQuery && searchQuery.length >= 3) {
+                const searchLower = searchQuery.toLowerCase();
+                allPoliciesFlat = allPoliciesFlat.filter((policy) => {
+                  const policyFields = [
+                    policy.policy_number,
+                    policy.business_type,
+                    policy.customer_type,
+                    policy.email,
+                    policy.mobile_number,
+                    policy.property_address,
+                    policy.property_type,
+                    policy.total_sum_insured,
+                    policy.net_premium,
+                    policy.remarks,
+                    policy.status,
+                  ].some(
+                    (field) =>
+                      field &&
+                      field.toString().toLowerCase().includes(searchLower)
+                  );
+                  const companyName =
+                    policy.companyPolicyHolder?.company_name ||
+                    policy.company?.company_name ||
+                    policy.company_name ||
+                    policy.company_group_name;
+                  const consumerName =
+                    policy.consumerPolicyHolder?.name ||
+                    policy.consumer?.name ||
+                    policy.consumer_name;
+                  const holderName = companyName || consumerName;
+
+                  return (
+                    policyFields ||
+                    (holderName &&
+                      holderName.toLowerCase().includes(searchLower))
+                  );
+                });
+              }
+
+              return (
+                <TableWithControl
+                  data={allPoliciesFlat}
+                  columns={[
+                    ...columns.slice(0, -1), // All columns except actions
+                    {
+                      key: "policy_type",
+                      label: "Policy Type",
+                      sortable: true,
+                      render: (_, policy) => {
+                        const isRunning =
+                          policy.status === "active" || policy.policy_type === "running";
+                        const isPrevious =
+                          policy.status === "expired" || policy.policy_type === "previous";
+
+                        if (isRunning) {
+                          return (
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "6px 14px",
+                                borderRadius: "16px",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                backgroundColor: "#d1fae5",
+                                color: "#065f46",
+                                border: "1px solid #6ee7b7",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Running
+                            </span>
+                          );
+                        } else if (isPrevious) {
+                          return (
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "6px 14px",
+                                borderRadius: "16px",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                backgroundColor: "#fee2e2",
+                                color: "#991b1b",
+                                border: "1px solid #fca5a5",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Previous
+                            </span>
+                          );
+                        }
+
+                        return null;
+                      },
+                    },
+                    {
+                      key: "actions",
+                      label: "Actions",
+                      render: (_, policy) => {
+                        const isActive =
+                          policy.status === "active" || policy.policy_type === "running";
+                        const isPrevious =
+                          policy.status === "expired" || policy.policy_type === "previous";
+
+                        return (
+                          <div className="insurance-actions">
+                            {isActive && (
+                              <>
+                                <ActionButton
+                                  onClick={() => handleEdit(policy)}
+                                  variant="secondary"
+                                  size="small"
+                                >
+                                  <BiEdit />
+                                </ActionButton>
+                                <ActionButton
+                                  onClick={() => handleRenewal(policy)}
+                                  variant="secondary"
+                                  size="small"
+                                  title="Renew Policy"
+                                >
+                                  <BiRefresh />
+                                </ActionButton>
+                                <ActionButton
+                                  onClick={() => handleDelete(policy.id)}
+                                  variant="danger"
+                                  size="small"
+                                >
+                                  <BiTrash />
+                                </ActionButton>
+                              </>
+                            )}
+                            {isPrevious && (
+                              <span style={{ color: "#6b7280", fontSize: "12px" }}>
+                                Expired
+                              </span>
+                            )}
+                            <DocumentDownload
+                              system="fire-policies"
+                              recordId={policy.id}
+                              buttonText=""
+                              buttonClass="action-button action-button-secondary action-button-small"
+                              showIcon={true}
+                              filePath={policy.policy_document_path ? `/uploads/fire_policies/${policy.policy_document_path}` : null}
+                              fileName={policy.policy_document_path || 'policy-document.pdf'}
+                            />
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                  defaultPageSize={10}
+                  serverSidePagination={false}
+                />
+              );
+            })()
           )}
         </div>
         <Modal
@@ -1146,6 +1968,17 @@ function Fire({ searchQuery = "" }) {
             policy={selectedPolicy}
             onClose={handleModalClose}
             onPolicyUpdated={handlePolicyUpdated}
+          />
+        </Modal>
+        <Modal
+          isOpen={showRenewalModal}
+          onClose={handleRenewalModalClose}
+          title="Renew Fire Policy"
+        >
+          <RenewalForm
+            policy={selectedPolicyForRenewal}
+            onClose={handleRenewalModalClose}
+            onPolicyRenewed={handleRenewalCompleted}
           />
         </Modal>
         {/* Document Download Modal */}

@@ -88,6 +88,9 @@ router.get('/', auth, lifePolicyController.getAllPolicies);
 // Statistics endpoint
 router.get('/statistics', auth, lifePolicyController.getLifeStatistics);
 
+// Grouped policies endpoint
+router.get('/all-grouped', auth, lifePolicyController.getAllPoliciesGrouped);
+
 router.get('/search', auth, lifePolicyController.searchPolicies);
 router.get('/:id', auth, lifePolicyController.getPolicy);
 
@@ -137,5 +140,39 @@ router.put('/:id',
 );
 
 router.delete('/:id', auth, lifePolicyController.deletePolicy);
+
+// Renewal routes
+router.post('/:id/renew',
+  auth,
+  logRequest,
+  upload.single('policy_document'),
+  lifePolicyController.logFormData,
+  validateFileType,
+  [
+    check('business_type').equals('Renewal/Rollover').withMessage('Business type must be Renewal/Rollover for renewal'),
+    check('customer_type').isIn(['Organisation', 'Individual']).withMessage('Invalid customer type'),
+    check('insurance_company_id').notEmpty().withMessage('Insurance company is required'),
+    check('proposer_name').notEmpty().withMessage('Proposer name is required'),
+    check('date_of_birth').isISO8601().withMessage('Please provide a valid date of birth'),
+    check('plan_name').notEmpty().withMessage('Plan name is required'),
+    check('sub_product').notEmpty().withMessage('Sub product is required'),
+    check('pt').isFloat({ min: 0 }).withMessage('PT must be a positive number'),
+    check('ppt').isInt({ min: 1 }).withMessage('PPT must be a positive integer'),
+    check('policy_start_date').isISO8601().withMessage('Please provide a valid start date'),
+    check('issue_date').isISO8601().withMessage('Please provide a valid issue date'),
+    check('current_policy_number').notEmpty().withMessage('Current policy number is required'),
+    check('net_premium').isFloat({ min: 0 }).withMessage('Net premium must be a positive number'),
+    check('gst').isFloat({ min: 0 }).withMessage('GST must be a positive number'),
+    check('gross_premium').isFloat({ min: 0 }).withMessage('Gross premium must be a positive number'),
+    check('remarks').optional().isString().withMessage('Remarks must be a string')
+  ],
+  validatePolicy,
+  checkFileUpload,
+  lifePolicyController.renewPolicy
+);
+
+// Previous policies routes
+router.get('/previous', auth, lifePolicyController.getPreviousPolicies);
+router.get('/previous/:id', auth, lifePolicyController.getPreviousPolicyById);
 
 module.exports = router; 

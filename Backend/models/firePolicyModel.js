@@ -101,6 +101,15 @@ const FirePolicy = sequelize.define('FirePolicy', {
   status: {
     type: DataTypes.ENUM('active', 'expired', 'cancelled'),
     defaultValue: 'active'
+  },
+  previous_policy_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'PreviousFirePolicies',
+      key: 'id'
+    },
+    comment: 'Reference to the previous policy ID that was renewed (if this is a renewal)'
   }
 }, {
   tableName: 'FirePolicies',

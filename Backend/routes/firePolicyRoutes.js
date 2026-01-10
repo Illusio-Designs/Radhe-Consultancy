@@ -34,6 +34,9 @@ router.get('/', auth, firePolicyController.getAllPolicies);
 // Statistics endpoint
 router.get('/statistics', auth, firePolicyController.getFireStatistics);
 
+// Grouped policies endpoint
+router.get('/all-grouped', auth, firePolicyController.getAllPoliciesGrouped);
+
 router.get('/:id', auth, firePolicyController.getPolicy);
 
 router.post('/',
@@ -83,5 +86,35 @@ router.delete('/:id', auth, firePolicyController.deletePolicy);
 
 // Search endpoint
 router.get('/search', auth, firePolicyController.searchPolicies);
+
+// Renewal routes
+router.post('/:id/renew',
+  auth,
+  uploadFirePolicyDocument.single('policyDocument'),
+  firePolicyController.logFormData,
+  [
+    check('business_type').equals('Renewal/Rollover').withMessage('Business type must be Renewal/Rollover for renewal'),
+    check('customer_type').isIn(['Organisation', 'Individual']).withMessage('Invalid customer type'),
+    check('insurance_company_id').notEmpty().withMessage('Insurance company is required'),
+    check('policy_number').notEmpty().withMessage('Policy number is required'),
+    check('proposer_name').notEmpty().withMessage('Proposer name is required'),
+    check('email').isEmail().withMessage('Please provide a valid email'),
+    check('mobile_number').matches(/^[0-9+\-\s()]+$/).withMessage('Please provide a valid mobile number'),
+    check('policy_start_date').isISO8601().withMessage('Please provide a valid start date'),
+    check('policy_end_date').isISO8601().withMessage('Please provide a valid end date'),
+    check('total_sum_insured').isFloat({ min: 0 }).withMessage('Total sum insured must be a positive number'),
+    check('net_premium').isFloat({ min: 0 }).withMessage('Net premium must be a positive number'),
+    check('gst').isFloat({ min: 0 }).withMessage('GST must be a positive number'),
+    check('gross_premium').isFloat({ min: 0 }).withMessage('Gross premium must be a positive number'),
+    check('remarks').optional()
+  ],
+  validatePolicy,
+  checkFileUpload,
+  firePolicyController.renewPolicy
+);
+
+// Previous policies routes
+router.get('/previous', auth, firePolicyController.getPreviousPolicies);
+router.get('/previous/:id', auth, firePolicyController.getPreviousPolicyById);
 
 module.exports = router; 

@@ -320,6 +320,17 @@ async function setupDatabase() {
       }
     }
 
+    // Setup policy tables and renewal system
+    console.log('🏗️  Setting up policy tables and renewal system...');
+    const { setupPolicyTables } = require('./setupPolicyTables');
+    const policyTablesSetup = await setupPolicyTables();
+    
+    if (!policyTablesSetup) {
+      console.warn('⚠️  Policy tables setup failed, but continuing with database setup...');
+    } else {
+      console.log('✅ Policy tables and renewal system setup completed');
+    }
+
     logToFile('Database setup completed');
     console.log('✅ Database setup completed');
     return true;

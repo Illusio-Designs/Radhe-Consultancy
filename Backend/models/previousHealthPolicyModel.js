@@ -1,14 +1,23 @@
+// PreviousHealthPolicy Model
+// This model stores historical/previous health insurance policies
+// when they are renewed. Multiple previous policies can exist for the same company/consumer.
+
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const InsuranceCompany = require('./insuranceCompanyModel');
 const Company = require('./companyModel');
 const Consumer = require('./consumerModel');
 
-const HealthPolicy = sequelize.define('HealthPolicy', {
+const PreviousHealthPolicy = sequelize.define('PreviousHealthPolicy', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
+  },
+  original_policy_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Reference to the original policy ID before it was moved to previous'
   },
   business_type: {
     type: DataTypes.ENUM('Fresh/New', 'Renewal/Rollover', 'Endorsement'),
@@ -28,7 +37,7 @@ const HealthPolicy = sequelize.define('HealthPolicy', {
   },
   company_id: {
     type: DataTypes.INTEGER,
-    allowNull: true, // For Organisation
+    allowNull: true,
     references: {
       model: 'Companies',
       key: 'company_id'
@@ -36,7 +45,7 @@ const HealthPolicy = sequelize.define('HealthPolicy', {
   },
   consumer_id: {
     type: DataTypes.INTEGER,
-    allowNull: true, // For Individual
+    allowNull: true,
     references: {
       model: 'Consumers',
       key: 'consumer_id'
@@ -52,11 +61,14 @@ const HealthPolicy = sequelize.define('HealthPolicy', {
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: true // Auto fetch
+    allowNull: false,
+    validate: {
+      isEmail: true
+    }
   },
   mobile_number: {
     type: DataTypes.STRING,
-    allowNull: true // Auto fetch
+    allowNull: false
   },
   policy_start_date: {
     type: DataTypes.DATE,
@@ -71,20 +83,29 @@ const HealthPolicy = sequelize.define('HealthPolicy', {
     allowNull: false
   },
   medical_cover: {
-    type: DataTypes.ENUM('5', '7', '10', '15', '20', '25'), // in lac
+    type: DataTypes.ENUM('1 lac', '2 lac', '3 lac', '5 lac', '10 lac', '15 lac', '20 lac', '25 lac', '30 lac', '50 lac', '1 crore', '2 crore', '5 crore'),
     allowNull: false
   },
   net_premium: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   gst: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   gross_premium: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   policy_document_path: {
     type: DataTypes.STRING,
@@ -96,29 +117,44 @@ const HealthPolicy = sequelize.define('HealthPolicy', {
   },
   status: {
     type: DataTypes.ENUM('active', 'expired', 'cancelled'),
-    defaultValue: 'active'
+    defaultValue: 'expired',
+    comment: 'Status when the policy was moved to previous (usually expired)'
   },
-  previous_policy_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'PreviousHealthPolicies',
-      key: 'id'
-    },
-    comment: 'Reference to the previous policy ID that was renewed (if this is a renewal)'
+  renewed_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    comment: 'Date when this policy was renewed and moved to previous'
   }
 }, {
-  tableName: 'HealthPolicies',
+  tableName: 'PreviousHealthPolicies',
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  modelName: 'HealthPolicies',
   indexes: [
     {
-      unique: true,
       fields: ['policy_number']
+    },
+    {
+      fields: ['company_id']
+    },
+    {
+      fields: ['consumer_id']
+    },
+    {
+      fields: ['insurance_company_id']
+    },
+    {
+      fields: ['policy_end_date']
+    },
+    {
+      fields: ['original_policy_id']
+    },
+    {
+      fields: ['renewed_at']
+    },
+    {
+      fields: ['policy_start_date', 'policy_end_date']
     }
   ]
 });
 
-module.exports = HealthPolicy; 
+module.exports = PreviousHealthPolicy;

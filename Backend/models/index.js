@@ -12,8 +12,11 @@ const PreviousEmployeeCompensationPolicy = require("./previousEmployeeCompensati
 const VehiclePolicy = require("./vehiclePolicyModel");
 const PreviousVehiclePolicy = require("./previousVehiclePolicyModel");
 const HealthPolicies = require("./healthPolicyModel");
+const PreviousHealthPolicy = require("./previousHealthPolicyModel");
 const FirePolicy = require("./firePolicyModel");
+const PreviousFirePolicy = require("./previousFirePolicyModel");
 const LifePolicy = require("./lifePolicyModel");
+const PreviousLifePolicy = require("./previousLifePolicyModel");
 const DSC = require("./dscModel");
 const ReminderLog = require("./reminderLogModel");
 const DSCLog = require("./dscLogModel");
@@ -238,6 +241,10 @@ HealthPolicies.belongsTo(InsuranceCompany, {
   foreignKey: "insurance_company_id",
   as: "provider",
 });
+HealthPolicies.belongsTo(PreviousHealthPolicy, {
+  foreignKey: "previous_policy_id",
+  as: "previousPolicy",
+});
 Company.hasMany(HealthPolicies, {
   foreignKey: "company_id",
   as: "healthPolicies",
@@ -249,6 +256,36 @@ Consumer.hasMany(HealthPolicies, {
 InsuranceCompany.hasMany(HealthPolicies, {
   foreignKey: "insurance_company_id",
   as: "healthPolicies",
+});
+
+// Previous Health Policy Associations
+PreviousHealthPolicy.belongsTo(Company, {
+  foreignKey: "company_id",
+  as: "companyPolicyHolder",
+});
+PreviousHealthPolicy.belongsTo(Consumer, {
+  foreignKey: "consumer_id",
+  as: "consumerPolicyHolder",
+});
+PreviousHealthPolicy.belongsTo(InsuranceCompany, {
+  foreignKey: "insurance_company_id",
+  as: "provider",
+});
+PreviousHealthPolicy.hasOne(HealthPolicies, {
+  foreignKey: "previous_policy_id",
+  as: "renewedPolicy",
+});
+Company.hasMany(PreviousHealthPolicy, {
+  foreignKey: "company_id",
+  as: "previousHealthPolicies",
+});
+Consumer.hasMany(PreviousHealthPolicy, {
+  foreignKey: "consumer_id",
+  as: "previousHealthPolicies",
+});
+InsuranceCompany.hasMany(PreviousHealthPolicy, {
+  foreignKey: "insurance_company_id",
+  as: "previousHealthPolicies",
 });
 
 // Fire Policy Associations
@@ -264,11 +301,45 @@ FirePolicy.belongsTo(InsuranceCompany, {
   foreignKey: "insurance_company_id",
   as: "provider",
 });
+FirePolicy.belongsTo(PreviousFirePolicy, {
+  foreignKey: "previous_policy_id",
+  as: "previousPolicy",
+});
 Company.hasMany(FirePolicy, { foreignKey: "company_id", as: "firePolicies" });
 Consumer.hasMany(FirePolicy, { foreignKey: "consumer_id", as: "firePolicies" });
 InsuranceCompany.hasMany(FirePolicy, {
   foreignKey: "insurance_company_id",
   as: "firePolicies",
+});
+
+// Previous Fire Policy Associations
+PreviousFirePolicy.belongsTo(Company, {
+  foreignKey: "company_id",
+  as: "companyPolicyHolder",
+});
+PreviousFirePolicy.belongsTo(Consumer, {
+  foreignKey: "consumer_id",
+  as: "consumerPolicyHolder",
+});
+PreviousFirePolicy.belongsTo(InsuranceCompany, {
+  foreignKey: "insurance_company_id",
+  as: "provider",
+});
+PreviousFirePolicy.hasOne(FirePolicy, {
+  foreignKey: "previous_policy_id",
+  as: "renewedPolicy",
+});
+Company.hasMany(PreviousFirePolicy, {
+  foreignKey: "company_id",
+  as: "previousFirePolicies",
+});
+Consumer.hasMany(PreviousFirePolicy, {
+  foreignKey: "consumer_id",
+  as: "previousFirePolicies",
+});
+InsuranceCompany.hasMany(PreviousFirePolicy, {
+  foreignKey: "insurance_company_id",
+  as: "previousFirePolicies",
 });
 
 // Life Policy Associations
@@ -284,11 +355,45 @@ LifePolicy.belongsTo(InsuranceCompany, {
   foreignKey: "insurance_company_id",
   as: "provider",
 });
+LifePolicy.belongsTo(PreviousLifePolicy, {
+  foreignKey: "previous_policy_id",
+  as: "previousPolicy",
+});
 Company.hasMany(LifePolicy, { foreignKey: "company_id", as: "lifePolicies" });
 Consumer.hasMany(LifePolicy, { foreignKey: "consumer_id", as: "lifePolicies" });
 InsuranceCompany.hasMany(LifePolicy, {
   foreignKey: "insurance_company_id",
   as: "lifePolicies",
+});
+
+// Previous Life Policy Associations
+PreviousLifePolicy.belongsTo(Company, {
+  foreignKey: "company_id",
+  as: "companyPolicyHolder",
+});
+PreviousLifePolicy.belongsTo(Consumer, {
+  foreignKey: "consumer_id",
+  as: "consumerPolicyHolder",
+});
+PreviousLifePolicy.belongsTo(InsuranceCompany, {
+  foreignKey: "insurance_company_id",
+  as: "provider",
+});
+PreviousLifePolicy.hasOne(LifePolicy, {
+  foreignKey: "previous_policy_id",
+  as: "renewedPolicy",
+});
+Company.hasMany(PreviousLifePolicy, {
+  foreignKey: "company_id",
+  as: "previousLifePolicies",
+});
+Consumer.hasMany(PreviousLifePolicy, {
+  foreignKey: "consumer_id",
+  as: "previousLifePolicies",
+});
+InsuranceCompany.hasMany(PreviousLifePolicy, {
+  foreignKey: "insurance_company_id",
+  as: "previousLifePolicies",
 });
 
 // DSC Associations
@@ -362,8 +467,11 @@ module.exports = {
   VehiclePolicy,
   PreviousVehiclePolicy,
   HealthPolicies,
+  PreviousHealthPolicy,
   FirePolicy,
+  PreviousFirePolicy,
   LifePolicy,
+  PreviousLifePolicy,
   DSC,
   ReminderLog,
   DSCLog,

@@ -59,6 +59,9 @@ router.get('/', auth, healthPolicyController.getAllPolicies);
 // Statistics endpoint
 router.get('/statistics', auth, healthPolicyController.getHealthStatistics);
 
+// Grouped policies endpoint
+router.get('/all-grouped', auth, healthPolicyController.getAllPoliciesGrouped);
+
 router.get('/search', auth, healthPolicyController.searchPolicies);
 router.get('/:id', auth, healthPolicyController.getPolicy);
 
@@ -112,5 +115,38 @@ router.put('/:id',
 );
 
 router.delete('/:id', auth, healthPolicyController.deletePolicy);
+
+// Renewal routes
+router.post('/:id/renew',
+  auth,
+  logRequest,
+  uploadHealthPolicyDocument.single('policyDocument'),
+  healthPolicyController.logFormData,
+  validateFileType,
+  [
+    check('business_type').equals('Renewal/Rollover').withMessage('Business type must be Renewal/Rollover for renewal'),
+    check('customer_type').isIn(['Organisation', 'Individual']).withMessage('Invalid customer type'),
+    check('insurance_company_id').notEmpty().withMessage('Insurance company is required'),
+    check('policy_number').notEmpty().withMessage('Policy number is required'),
+    check('proposer_name').notEmpty().withMessage('Proposer name is required'),
+    check('email').isEmail().withMessage('Please provide a valid email'),
+    check('mobile_number').matches(/^[0-9+\-\s()]+$/).withMessage('Please provide a valid mobile number'),
+    check('policy_start_date').isISO8601().withMessage('Please provide a valid start date'),
+    check('policy_end_date').isISO8601().withMessage('Please provide a valid end date'),
+    check('plan_name').notEmpty().withMessage('Plan name is required'),
+    check('medical_cover').isIn(['1 lac', '2 lac', '3 lac', '5 lac', '10 lac', '15 lac', '20 lac', '25 lac', '30 lac', '50 lac', '1 crore', '2 crore', '5 crore']).withMessage('Invalid medical cover'),
+    check('net_premium').isFloat({ min: 0 }).withMessage('Net premium must be a positive number'),
+    check('gst').isFloat({ min: 0 }).withMessage('GST must be a positive number'),
+    check('gross_premium').isFloat({ min: 0 }).withMessage('Gross premium must be a positive number'),
+    check('remarks').optional()
+  ],
+  validatePolicy,
+  checkFileUpload,
+  healthPolicyController.renewPolicy
+);
+
+// Previous policies routes
+router.get('/previous', auth, healthPolicyController.getPreviousPolicies);
+router.get('/previous/:id', auth, healthPolicyController.getPreviousPolicyById);
 
 module.exports = router; 

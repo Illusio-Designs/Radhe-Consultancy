@@ -1409,6 +1409,56 @@ export const healthPolicyAPI = {
     } catch (error) {
       throw error;
     }
+  },
+
+  getAllPoliciesGrouped: async () => {
+    try {
+      console.log("API Service: Fetching grouped health policies");
+      const response = await api.get("/health-policies/all-grouped");
+      console.log("API Service: Grouped health policies fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching grouped health policies:", error);
+      throw error;
+    }
+  },
+
+  renewPolicy: async (id, formData) => {
+    try {
+      console.log("[API] Renewing health policy:", id);
+      console.log("[API] FormData contents:");
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString(),
+          });
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+
+      const response = await api.post(`/health-policies/${id}/renew`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024,
+        maxBodyLength: 10 * 1024 * 1024,
+        transformRequest: [(data) => data],
+      });
+
+      console.log("[API] Health policy renewal response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "[API] Error renewing health policy:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
   }
 };
 
@@ -1518,6 +1568,56 @@ export const firePolicyAPI = {
       const response = await api.get("/fire-policies/statistics");
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  getAllPoliciesGrouped: async () => {
+    try {
+      console.log("API Service: Fetching grouped fire policies");
+      const response = await api.get("/fire-policies/all-grouped");
+      console.log("API Service: Grouped fire policies fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching grouped fire policies:", error);
+      throw error;
+    }
+  },
+
+  renewPolicy: async (id, formData) => {
+    try {
+      console.log("[API] Renewing fire policy:", id);
+      console.log("[API] FormData contents:");
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString(),
+          });
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+
+      const response = await api.post(`/fire-policies/${id}/renew`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024,
+        maxBodyLength: 10 * 1024 * 1024,
+        transformRequest: [(data) => data],
+      });
+
+      console.log("[API] Fire policy renewal response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "[API] Error renewing fire policy:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -1685,6 +1785,56 @@ export const lifePolicyAPI = {
       const response = await api.get("/life-policies/statistics");
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  getAllPoliciesGrouped: async () => {
+    try {
+      console.log("API Service: Fetching grouped life policies");
+      const response = await api.get("/life-policies/all-grouped");
+      console.log("API Service: Grouped life policies fetched successfully");
+      return response.data;
+    } catch (error) {
+      console.error("API Service: Error fetching grouped life policies:", error);
+      throw error;
+    }
+  },
+
+  renewPolicy: async (id, formData) => {
+    try {
+      console.log("[API] Renewing life policy:", id);
+      console.log("[API] FormData contents:");
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(pair[0], {
+            name: pair[1].name,
+            type: pair[1].type,
+            size: pair[1].size,
+            lastModified: new Date(pair[1].lastModified).toISOString(),
+          });
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+
+      const response = await api.post(`/life-policies/${id}/renew`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 30000,
+        maxContentLength: 10 * 1024 * 1024,
+        maxBodyLength: 10 * 1024 * 1024,
+        transformRequest: [(data) => data],
+      });
+
+      console.log("[API] Life policy renewal response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "[API] Error renewing life policy:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }

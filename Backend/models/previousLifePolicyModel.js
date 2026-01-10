@@ -1,14 +1,23 @@
+// PreviousLifePolicy Model
+// This model stores historical/previous life insurance policies
+// when they are renewed. Multiple previous policies can exist for the same company/consumer.
+
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const InsuranceCompany = require('./insuranceCompanyModel');
 const Company = require('./companyModel');
 const Consumer = require('./consumerModel');
 
-const LifePolicy = sequelize.define('LifePolicy', {
+const PreviousLifePolicy = sequelize.define('PreviousLifePolicy', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
+  },
+  original_policy_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Reference to the original policy ID before it was moved to previous'
   },
   business_type: {
     type: DataTypes.ENUM('Fresh/New', 'Renewal/Rollover', 'Endorsement'),
@@ -44,6 +53,10 @@ const LifePolicy = sequelize.define('LifePolicy', {
       key: 'consumer_id'
     }
   },
+  proposer_name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
   date_of_birth: {
     type: DataTypes.DATE,
     allowNull: false
@@ -58,11 +71,17 @@ const LifePolicy = sequelize.define('LifePolicy', {
   },
   pt: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   ppt: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 1
+    }
   },
   policy_start_date: {
     type: DataTypes.DATE,
@@ -74,14 +93,9 @@ const LifePolicy = sequelize.define('LifePolicy', {
   },
   policy_end_date: {
     type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Calculated as policy_start_date + ppt years'
-  },
-  current_policy_number: {
-    type: DataTypes.STRING,
     allowNull: false
   },
-  proposer_name: {
+  current_policy_number: {
     type: DataTypes.STRING,
     allowNull: false
   },
@@ -127,29 +141,50 @@ const LifePolicy = sequelize.define('LifePolicy', {
   },
   status: {
     type: DataTypes.ENUM('active', 'expired', 'cancelled'),
-    defaultValue: 'active'
+    defaultValue: 'expired',
+    comment: 'Status when the policy was moved to previous (usually expired)'
   },
-  previous_policy_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'PreviousLifePolicies',
-      key: 'id'
-    },
-    comment: 'Reference to the previous policy ID that was renewed (if this is a renewal)'
+  renewed_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    comment: 'Date when this policy was renewed and moved to previous'
   }
 }, {
-  tableName: 'LifePolicies',
+  tableName: 'PreviousLifePolicies',
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  modelName: 'LifePolicy',
   indexes: [
     {
-      unique: true,
       fields: ['current_policy_number']
+    },
+    {
+      fields: ['company_id']
+    },
+    {
+      fields: ['consumer_id']
+    },
+    {
+      fields: ['insurance_company_id']
+    },
+    {
+      fields: ['policy_end_date']
+    },
+    {
+      fields: ['original_policy_id']
+    },
+    {
+      fields: ['renewed_at']
+    },
+    {
+      fields: ['policy_start_date', 'policy_end_date']
+    },
+    {
+      fields: ['date_of_birth']
+    },
+    {
+      fields: ['issue_date']
     }
   ]
 });
 
-module.exports = LifePolicy; 
+module.exports = PreviousLifePolicy;

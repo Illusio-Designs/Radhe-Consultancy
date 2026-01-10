@@ -10,6 +10,7 @@
     "dev:unix": "NODE_OPTIONS=--no-deprecation nodemon",
     "setup": "node scripts/serverSetup.js",
     "setup:renewal": "node scripts/setupRenewalOnly.js",
+    "setup:policies": "node scripts/runPolicySetup.js",
     "send:reminders": "node scripts/sendRenewalReminders.js"
   },
   "dependencies": {
