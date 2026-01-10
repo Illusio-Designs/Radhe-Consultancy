@@ -3,24 +3,34 @@ import '../styles/components/Testimonial.css';
 
 const testimonials = [
   {
-    text: "I had been facing challenges with family law for months until I discovered abc. They not only resolved my issues effectively but also guided me on how to avoid similar problems in the future. Their team is highly skilled, patient, and always prioritizes customer satisfaction. I truly appreciate their support and would highly recommend them to others.",
-    author: "Teresa Hamilton",
+    text: "Radhe Consultancy helped us renew our factory license within just 15 days without any production downtime. Their team handled all documentation and regulatory coordination seamlessly. Their expertise in Factory Act compliance is unmatched, and their proactive approach saved us both time and money. Highly recommend their services to any manufacturing business.",
+    author: "Rajesh Patel",
     rating: 5,
-    image: "https://randomuser.me/api/portraits/women/44.jpg"
+    image: "https://randomuser.me/api/portraits/men/32.jpg"
   },
   {
-    text: "Navigating family law issues was overwhelming until I came across abc. They empowered me with knowledge to manage such situations better. Their expertise and dedication to client satisfaction left a lasting impression.",
-    author: "Monks Millar",
+    text: "Our ESIC registration was completed smoothly thanks to Radhe Consultancy's expert guidance. They explained every step clearly and ensured all our employees were properly covered. Their knowledge of labor law compliance is exceptional, and they continue to support us with ongoing compliance requirements.",
+    author: "Priya Sharma",
     rating: 5
   },
   {
-    text: "Best decision ever! abc helped me resolve complex family issues swiftly and professionally. I can't recommend them enough.",
-    author: "John Doe",
+    text: "When our commercial vehicle met with an accident, Radhe Consultancy processed our motor insurance claim of ₹2.5 lakhs within 30 days. Their documentation support and follow-up with the insurance company was outstanding. They truly understand the insurance industry inside out.",
+    author: "Amit Desai",
     rating: 5
   },
   {
-    text: "Superb experience! Professional, patient, and knowledgeable. abc made the whole process smooth and stress-free.",
-    author: "Jane Smith",
+    text: "DSC implementation for our 50+ employees was handled professionally by Radhe Consultancy. They provided complete training and setup, making our digital operations seamless. Their technical expertise and customer service approach is commendable. Best investment for our company's digital transformation.",
+    author: "Neha Mehta",
+    rating: 5
+  },
+  {
+    text: "Fire insurance claim of ₹15 lakhs for our textile factory was settled successfully with Radhe Consultancy's support. They prepared all documentation meticulously and coordinated with insurance surveyors effectively. Their experience in handling complex insurance claims is remarkable.",
+    author: "Kiran Shah",
+    rating: 5
+  },
+  {
+    text: "Labour license compliance audit for our 100+ employee unit was conducted thoroughly by Radhe Consultancy. They identified all gaps and helped us achieve full compliance within the deadline. Their systematic approach and regulatory knowledge is impressive.",
+    author: "Vikram Joshi",
     rating: 5
   }
 ];

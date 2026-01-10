@@ -38,7 +38,7 @@ const Footer = () => {
         </div>
         <div className="footer-col center-logo">
           <OptimizedImage src={img} alt="logo" className="footer-logo" />
-          <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+          <p>Radhe Consultancy is your trusted partner in HR & Labor Law Compliance since 2016. We provide comprehensive compliance solutions, insurance services, and legal consultation across 7 branches in Gujarat.</p>
           <div className="social-icons">
             <div className="social-icon">
               <FaFacebookF />

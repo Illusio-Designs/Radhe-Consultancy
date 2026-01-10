@@ -54,15 +54,15 @@ const Bloginner = () => {
         <div className="bloginner-main">
           <h2>23 Cases Have Been Successfully</h2>
 
-          <p>Lorem ipsum dolor sit amet consectetur. Commodo pulvinar molestie pellentesque urna libero velit porta. Velit pellentesque hac gravida pellentesque est semper. Duis lectus gravida ultricies eleifend in pharetra faucibus orci sem. Proin ac a cursus praesent. Malesuada risus amet nunc posuere rhoncus accumsan congue id dolor. Convallis maecenas sed in pellentesque. Diam tristique semper mauris dolor amet. Dolor elit nunc et purus quam amet laoreet eu risus.Cum mattis mollis odio gravida adipiscing. Facilisis scelerisque non lacinia tincidunt faucibus tortor vel. Erat risus etiam quam pretium ornare. Semper orci arcu pulvinar adipiscing pretium.</p><br />
+          <p>Factory License Renewal is a critical compliance requirement for manufacturing businesses in Gujarat. At Radhe Consultancy, we have successfully processed over 500+ factory license renewals, ensuring zero production downtime for our clients. Our streamlined process includes document verification, application submission, and follow-up with regulatory authorities.</p><br />
 
-          <p>Erat facilisis dis arcu senectus sit mi fermentum eu aliquam. Felis neque posuere pharetra porttitor lacinia proin pretium. Et et pharetra tincidunt vel egestas risus sed mollis adipiscing. Lobortis risus mauris vitae pellentesque lobortis sapien. Mi convallis leo nisl pharetra quam arcu blandit. Metus nisl volutpat ut sed sit sit est. At molestie eu dictum ipsum pretium magna. Sed eget pretium lacus et fermentum nunc. Odio neque turpis tortor a pharetra a faucibus quis. A morbi sociis diam egestas varius id vitae suscipit. Cursus mauris hendrerit pellentesque erat gravida vel.Augue tristique quis fringilla.</p><br />
+          <p>The Factory Act of 1948 mandates that all manufacturing units employing 10 or more workers with power, or 20 or more workers without power, must obtain and regularly renew their factory license. Our expert team ensures complete compliance with all regulatory requirements, including safety protocols, worker welfare measures, and environmental clearances.</p><br />
 
-        <p>Erat pellentesque elementum consequat quis volutpat diam praesent molestie. Molestie scelerisque eleifend eu amet quam vitae fusce aliquam ornare. Accumsan est ut at tristique arcu. Semper lectus vulputate volutpat consectetur gravida ac gravida. Sem placerat pellentesque turpis tellus etiam porttitor sed. Scelerisque condimentum volutpat tempus lobortis. Accumsan dui felis turpis elementum. Leo nibh magnis sociis diam purus dui. Amet nulla urna curabitur consequat augue risus faucibus cursus. Egestas eros rutrum etiam mauris. Facilisis cras elementum diam bibendum.</p><br />
+        <p>Our comprehensive factory license renewal service includes pre-renewal audit, documentation preparation, regulatory liaison, and post-approval compliance monitoring. We work closely with the Factory Inspector's office to ensure smooth processing and timely approval. Our clients benefit from our deep understanding of Gujarat's industrial regulations and our established relationships with regulatory authorities.</p><br />
 
-          <p>Magna facilisi egestas sapien phasellus consectetur arcu faucibus. Mattis sapien tellus id rutrum. Amet in nunc risus lectus nec turpis praesent et.Vehicula lacus convallis dui orci eget ultrices. Mi non et commodo ut mauris. Ultrices lectus tempor sed habitasse massa leo aliquam in sollicitudin. Vestibulum convallis aliquam morbi aliquam sit dolor faucibus neque cursus. Nullam tincidunt semper lorem interdum facilisis. Nullam aliquam nulla tortor egestas neque in. Eget sed leo tellus at convallis orci malesuada. Rhoncus vivamus amet nisl turpis in mauris. Et urna sed bibendum vivamus justo dignissim ut. Diam felis varius nisi in. Non sodales risus tempor orci ipsum consequat. Tristique leo risus convallis at vestibulum nascetur neque. </p><br />
+          <p>The renewal process typically involves submission of Form 2A along with required documents such as building plan approval, fire safety certificate, pollution clearance, and worker welfare compliance certificates. Our team meticulously prepares all documentation to avoid any delays or rejections. We also provide ongoing compliance support to ensure your factory operations remain legally compliant throughout the license period.</p><br />
 
-          <p>Odio at arcu arcu aliquet orci morbi. Facilisis integer tincidunt sed pharetra mus scelerisque porta.Proin lorem egestas faucibus pulvinar a sapien nunc tellus. Venenatis velit consequat adipiscing posuere aliquet vel sit. Eu aliquet rhoncus mauris morbi. Mollis aliquet ut feugiat turpis duis cras. Lectus et mi eget est tincidunt lacus diam odio facilisis. Ullamcorper iaculis donec hac enim sit viverra vulputate. Massa mattis non molestie ullamcorper scelerisque est lectus non. Vestibulum vestibulum volutpat a ultrices. Arcu congue consectetur gravida in eget. Diam odio quis condimentum urna ultrices imperdiet eget. Sed aliquet ac quis tristique eu sit et vel.</p>
+          <p>With our proven track record of 100% success rate in factory license renewals, Radhe Consultancy has become the trusted partner for manufacturing companies across Gujarat. Our clients include textile mills, chemical plants, pharmaceutical companies, and engineering units. We pride ourselves on delivering timely, cost-effective solutions that keep your business operations running smoothly while maintaining full regulatory compliance.</p>
 
         </div>
         {/* Recommendation News Sidebar */}
@@ -71,22 +71,22 @@ const Bloginner = () => {
           <div className="sidebar-news-item">
             <OptimizedImage src={img} alt="news" />
             <div>
-              <h2>23 cases have been successfully</h2>
-             <p>Lorem ipsum dolor sit amet. read more</p>
+              <h2>ESIC Compliance Made Simple</h2>
+             <p>Complete guide to ESIC registration process. read more</p>
             </div>
           </div>
           <div className="sidebar-news-item">
             <OptimizedImage src={img1} alt="news" />
             <div>
-              <h2>23 cases have been successfully</h2>
-              <p>Lorem ipsum dolor sit amet. read more</p>
+              <h2>Motor Insurance Claim Success</h2>
+              <p>₹2.5 lakhs claim settled within 30 days. read more</p>
             </div>
           </div>
           <div className="sidebar-news-item">
             <OptimizedImage src={img} alt="news" />
             <div>
-              <h2>23 cases have been successfully</h2>
-              <p>Lorem ipsum dolor sit amet. read more</p>
+              <h2>DSC Implementation Guide</h2>
+              <p>Digital signatures for 50+ employees setup. read more</p>
             </div>
           </div>
         </div>
@@ -104,9 +104,9 @@ const Bloginner = () => {
             <h2>Mysterious Murder Cases in Manila City</h2>
           </div>
         </div>
-        <p>Lorem ipsum dolor sit amet consectetur. Commodo pulvinar molestie pellentesque urna libero velit porta. Velit pellentesque hac gravida pellentesque est semper. Duis lectus gravida ultricies eleifend in pharetra faucibus orci sem. Proin ac a cursus praesent. Malesuada risus amet nunc posuere rhoncus accumsan congue id dolor. Convallis maecenas sed in pellentesque. Diam tristique semper mauris dolor amet. Dolor elit nunc et purus quam amet laoreet eu risus.Cum mattis mollis odio gravida adipiscing. Facilisis scelerisque non lacinia tincidunt faucibus tortor vel. Erat risus etiam quam pretium ornare. Semper orci arcu pulvinar adipiscing pretium.</p><br /> 
-        <p>Erat facilisis dis arcu senectus sit mi fermentum eu aliquam. Felis neque posuere pharetra porttitor lacinia proin pretium. Et et pharetra tincidunt vel egestas risus sed mollis adipiscing. Lobortis risus mauris vitae pellentesque lobortis sapien. Mi convallis leo nisl pharetra quam arcu blandit. Metus nisl volutpat ut sed sit sit est. At molestie eu dictum ipsum pretium magna. Sed eget pretium lacus et fermentum nunc. Odio neque turpis tortor a pharetra a faucibus quis. A morbi sociis diam egestas varius id vitae suscipit. Cursus mauris hendrerit pellentesque erat gravida vel.Augue tristique qui.</p><br />
-        <p>Erat pellentesque elementum consequat quis volutpat diam praesent molestie. Molestie scelerisque eleifend eu amet quam vitae fusce aliquam ornare. Accumsan est ut at tristique arcu. Semper lectus vulputate volutpat consectetur gravida ac gravida. Sem placerat pellentesque turpis tellus etiam porttitor sed. Scelerisque condimentum volutpat tempus lobortis. Accumsan dui felis turpis elementum. Leo nibh magnis sociis diam purus dui. Amet nulla urna curabitur consequat augue risus faucibus cursus. Egestas eros rutrum etiam mauris. Facilisis cras elementum diam bibendum. </p>
+        <p>Our most complex cases demonstrate our expertise in handling challenging compliance and insurance scenarios. The Giant Theft case involved comprehensive insurance claim processing and legal documentation for a major financial institution, while the Manila City case required extensive investigation and regulatory compliance coordination. These cases showcase our ability to manage multi-faceted legal and compliance challenges.</p><br /> 
+        <p>Each complex case requires detailed documentation, regulatory coordination, and strategic planning. Our team works closely with legal experts, insurance companies, and regulatory authorities to ensure comprehensive resolution. We maintain detailed case files and provide regular updates to clients throughout the process, ensuring transparency and accountability at every step.</p><br />
+        <p>The success of these challenging cases has established Radhe Consultancy as a leader in complex compliance and insurance matters. Our systematic approach, combined with deep regulatory knowledge and strong industry relationships, enables us to deliver successful outcomes even in the most difficult situations. We continue to build our expertise through continuous learning and adaptation to evolving regulatory landscapes.</p>
       </div>
         </div>
       </div>
@@ -114,7 +114,7 @@ const Bloginner = () => {
       <NewsUpdates />
         <div className="help">
           <h1>We Help You With Quality Legal Lawyer</h1>
-          <p>Lorem ipsum dolor sit amet consectetur. Commodo pulvinar molestie pellentesque urna libero velit porta. Velit pellentesque hac gravida pellentesque est semper. Duis lectus gravida ultricies eleifend in pharetra faucibus orci sem. </p>
+          <p>With over 8 years of experience in HR & Labor Law Compliance, Radhe Consultancy provides expert legal consultation and comprehensive compliance solutions. Our team of qualified professionals ensures your business stays compliant with all regulatory requirements while maximizing operational efficiency.</p>
           <div className="help-btn" onClick={handleContactClick}>Contact Now →</div>
         </div>
         <Testimonials />

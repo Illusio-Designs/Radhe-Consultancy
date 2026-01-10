@@ -14,75 +14,75 @@ import '../styles/pages/Blog.css';
 const blogPosts = [
   {
     id: 1,
-    title: '23 cases have been successfully',
+    title: 'Factory License Renewal Success Story',
     image: img,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'How we helped a manufacturing company renew their factory license within 15 days, ensuring zero production downtime.'
   },
   {
     id: 2,
-    title: '23 cases have been successfully',
+    title: 'ESIC Compliance Made Simple',
     image: img1,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Complete guide to ESIC registration and compliance for small businesses with step-by-step documentation process.'
   },
   {
     id: 3,
-    title: '23 cases have been successfully',
+    title: 'Motor Insurance Claim Settlement',
     image: img,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Successfully processed motor insurance claim worth ₹2.5 lakhs for commercial vehicle accident within 30 days.'
   },
   {
     id: 4,
-    title: '23 cases have been successfully',
+    title: 'Health Policy Benefits Maximized',
     image: img1,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'How proper health insurance planning saved a family ₹8 lakhs in medical expenses during critical illness.'
   },
   {
     id: 5,
-    title: '23 cases have been successfully',
+    title: 'DSC Implementation for SMEs',
     image: img,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Digital Signature Certificate setup and training for 50+ employees in manufacturing sector for seamless operations.'
   },
   {
     id: 6,
-    title: '23 cases have been successfully',
+    title: 'Fire Insurance Claim Success',
     image: img1,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Complete fire insurance claim settlement of ₹15 lakhs for textile factory with proper documentation support.'
   },
   {
     id: 7,
-    title: '23 cases have been successfully',
+    title: 'Employee Compensation Case Win',
     image: img,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Successfully secured employee compensation for workplace injury with full legal support and documentation.'
   },
   {
     id: 8,
-    title: '23 cases have been successfully',
+    title: 'Labour License Compliance Guide',
     image: img1,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Comprehensive labour license compliance checklist for construction companies operating in Gujarat.'
   },
   {
     id: 9,
-    title: '23 cases have been successfully',
+    title: 'Life Insurance Planning Success',
     image: img,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Strategic life insurance planning that provided ₹50 lakhs coverage with optimal premium structure for young professionals.'
   },
   {
     id: 10,
-    title: '23 cases have been successfully',
+    title: 'Factory Act Compliance Audit',
     image: img1,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Complete Factory Act compliance audit and rectification for 100+ employee manufacturing unit in Ahmedabad.'
   },
   {
     id: 11,
-    title: '23 cases have been successfully',
+    title: 'Vehicle Policy Renewal Automation',
     image: img,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Automated vehicle policy renewal system implementation for fleet of 25 commercial vehicles saving 60% time.'
   },
   {
     id: 12,
-    title: '23 cases have been successfully',
+    title: 'Legal Consultation Success Story',
     image: img1,
-    excerpt: 'Lorem ipsum dolor sit amet consecter Commodo pulvinar molestie pellentesque urna libero'
+    excerpt: 'Resolved complex labour dispute through expert legal consultation, avoiding costly litigation for manufacturing company.'
   }
 ];
 

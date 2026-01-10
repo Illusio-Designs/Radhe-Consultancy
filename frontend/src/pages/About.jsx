@@ -109,7 +109,7 @@ const About = () => {
 
 <div className="help">
   <h1>We Help You With Quality Legal Lawyer</h1>
-  <p>Lorem ipsum dolor sit amet consectetur. Commodo pulvinar molestie pellentesque urna libero velit porta. Velit pellentesque hac gravida pellentesque est semper. Duis lectus gravida ultricies eleifend in pharetra faucibus orci sem. </p>
+  <p>Since 2016, Radhe Consultancy has been Gujarat's leading HR & Labor Law Compliance partner, serving 1000+ satisfied clients across 7 branches. We specialize in factory licensing, insurance solutions, and comprehensive legal consultation to keep your business compliant and protected.</p>
   <div className="help-btn" onClick={handleContactClick}>Contact Now →</div>
 </div>
 

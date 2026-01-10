@@ -50,7 +50,7 @@
 
 .bloginner-main p {
   color: #868686;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .bloginner-sidebar {
@@ -99,7 +99,7 @@
 
 .longest-cases-section p {
   color: #868686;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .longest-cases-cards {
@@ -135,7 +135,7 @@
     font-size: 30px;
   }
   .bloginner-main p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .bloginner-sidebar img {
     width: 150px;
@@ -155,7 +155,7 @@
     font-size: 30px;
   }
   .longest-cases-section p {
-    font-size: 12px;
+    font-size: 14px;
   }
 }
 
@@ -173,7 +173,7 @@
     font-size: 20px;
   }
   .bloginner-main p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .bloginner-sidebar img {
     width: 100px;
@@ -192,7 +192,7 @@
     font-size: 25px;
   }
   .longest-cases-section p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .longest-cases-cards img {
     width: 320px;
@@ -223,9 +223,6 @@
   .bloginner-main h2 {
     font-size: 18px;
   }
-  .bloginner-main p {
-    font-size: 10px;
-  } 
   .bloginner-sidebar img {
     width: 100px;
     height: 100px;
@@ -238,9 +235,6 @@
   }
   .longest-cases-section h2 {
     font-size: 20px;
-  }
-  .longest-cases-section p {
-    font-size: 10px;
   }
   .longest-cases-cards img {
     width: 150px;
