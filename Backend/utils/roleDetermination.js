@@ -53,7 +53,7 @@ const determineUserRole = async (email) => {
       include: [
         {
           model: User,
-          as: "User",
+          as: "user",
           include: [
             {
               model: Role,
@@ -66,24 +66,24 @@ const determineUserRole = async (email) => {
       ],
     });
 
-    if (company && company.User) {
+    if (company && company.user) {
       // Get primary role or first role
       const primaryRole =
-        company.User.roles.find((role) => role.UserRole?.is_primary) ||
-        company.User.roles[0];
+        company.user.roles.find((role) => role.UserRole?.is_primary) ||
+        company.user.roles[0];
       const roleName = primaryRole ? primaryRole.role_name : "Company";
 
       console.log("User found in Company table:", {
-        userId: company.User.user_id,
+        userId: company.user.user_id,
         role: roleName,
-        allRoles: company.User.roles
-          ? company.User.roles.map((r) => r.role_name)
+        allRoles: company.user.roles
+          ? company.user.roles.map((r) => r.role_name)
           : [],
       });
       return {
         found: true,
         role: roleName,
-        userData: company.User,
+        userData: company.user,
       };
     }
 
@@ -93,7 +93,7 @@ const determineUserRole = async (email) => {
       include: [
         {
           model: User,
-          as: "User",
+          as: "user",
           include: [
             {
               model: Role,
@@ -106,24 +106,24 @@ const determineUserRole = async (email) => {
       ],
     });
 
-    if (consumer && consumer.User) {
+    if (consumer && consumer.user) {
       // Get primary role or first role
       const primaryRole =
-        consumer.User.roles.find((role) => role.UserRole?.is_primary) ||
-        consumer.User.roles[0];
+        consumer.user.roles.find((role) => role.UserRole?.is_primary) ||
+        consumer.user.roles[0];
       const roleName = primaryRole ? primaryRole.role_name : "Consumer";
 
       console.log("User found in Consumer table:", {
-        userId: consumer.User.user_id,
+        userId: consumer.user.user_id,
         role: roleName,
-        allRoles: consumer.User.roles
-          ? consumer.User.roles.map((r) => r.role_name)
+        allRoles: consumer.user.roles
+          ? consumer.user.roles.map((r) => r.role_name)
           : [],
       });
       return {
         found: true,
         role: roleName,
-        userData: consumer.User,
+        userData: consumer.user,
       };
     }
 
