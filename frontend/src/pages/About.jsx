@@ -75,7 +75,7 @@ const About = () => {
     <span className="about-story-label">About Us</span>
     <h1>Discover Our Story</h1>
     <p className="about-story-desc">
-      Raj Consultancy is Hr & Labor Law Compliance Outsourcing Company. Our Team Consist Of Extremely Proficient And Dedicated Labor Law Experts With Remarkable 09 Years Of Experience In This Field Who Ensures Complete Compliance Under Various Labour Law. We Have Expanded Our 7 Branches In Gujarat, With More Than 1000+ Satisfied Clients.
+      Radhe Consultancy is Hr & Labor Law Compliance Outsourcing Company. Our Team Consist Of Extremely Proficient And Dedicated Labor Law Experts With Remarkable 09 Years Of Experience In This Field Who Ensures Complete Compliance Under Various Labour Law. We Have Expanded Our 7 Branches In Gujarat, With More Than 1000+ Satisfied Clients.
     </p>
     <p className="about-story-highlight">
       We Provide Best Consultancy services Since 2016 for business.
@@ -92,7 +92,7 @@ const About = () => {
     </div>
       
     <p>
-      At raj consultancy, our mission is clear and resolute – to empower organizations and individuals to thrive in today's dynamic and ever-evolving landscape. We believe that success is achieved through strategic excellence, and we are committed to being your partner on this journey.
+      At Radhe Consultancy, our mission is clear and resolute – to empower organizations and individuals to thrive in today's dynamic and ever-evolving landscape. We believe that success is achieved through strategic excellence, and we are committed to being your partner on this journey.
     </p>
   </div>
   <div className="mission-section">
@@ -102,7 +102,7 @@ const About = () => {
       
     </div>
     <p>
-      At raj consultancy, our vision is to be the guiding light that illuminates the path to success for individuals and organizations alike. We aspire to be the catalyst that empowers our clients to embrace change, embrace innovation, and shape a future that surpasses their greatest expectations.
+      At Radhe Consultancy, our vision is to be the guiding light that illuminates the path to success for individuals and organizations alike. We aspire to be the catalyst that empowers our clients to embrace change, embrace innovation, and shape a future that surpasses their greatest expectations.
     </p>
   </div>
 </div>
